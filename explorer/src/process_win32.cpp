@@ -66,6 +66,12 @@ namespace micro_profiler
 			{
 				if (auto handle = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, entry.th32ProcessID))
 				{
+					BOOL wow64 = FALSE;
+
+					// TODO: untested
+					if (::IsWow64Process(handle, &wow64))
+						p.architecture = wow64 ? process_info::x86 : process_info::x64;
+
 					p.handle.reset(handle, &::CloseHandle);
 				}
 				else

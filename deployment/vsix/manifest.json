@@ -20,6 +20,11 @@
 		{"fileName":"/libmicro-profiler_x86.so","sha256":"!hashlinuxmpx86!"},
 		{"fileName":"/libmicro-profiler_x64.so","sha256":"!hashlinuxmpx64!"},
 
+		{"fileName":"/micro-profiler_sandbox_Win32.exe","sha256":"!hashsbxx86!"},
+		{"fileName":"/micro-profiler_sandbox_x64.exe","sha256":"!hashsbxx64!"},
+		{"fileName":"/micro-profiler_injector_Win32.dll","sha256":"!hashinjx86!"},
+		{"fileName":"/micro-profiler_injector_x64.dll","sha256":"!hashinjx64!"},
+
 		{"fileName":"/windows7+/x64/api-ms-win-downlevel-kernel32-l2-1-0.dll","sha256":"!hashkernel32downlevelapix64!"},
 		{"fileName":"/windows7+/x64/dbghelp.dll","sha256":"!hashdbghelpx64!"},
 		{"fileName":"/windows7+/x86/api-ms-win-downlevel-kernel32-l2-1-0.dll","sha256":"!hashkernel32downlevelapix86!"},

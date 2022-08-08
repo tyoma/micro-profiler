@@ -16,9 +16,6 @@
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
-    <ClCompile Include="frontend\inject_profiler.cpp">
-      <Filter>frontend</Filter>
-    </ClCompile>
     <ClCompile Include="visualstudio\vs-extension\helpers.cpp">
       <Filter>visualstudio\vs-extension</Filter>
     </ClCompile>
@@ -103,9 +100,6 @@
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\stylesheet.h">
       <Filter>visualstudio\vs-extension</Filter>
-    </ClInclude>
-    <ClInclude Include="frontend\inject_profiler.h">
-      <Filter>frontend</Filter>
     </ClInclude>
     <ClInclude Include="visualstudio\vs-extension\ui_helpers.h">
       <Filter>visualstudio\vs-extension</Filter>

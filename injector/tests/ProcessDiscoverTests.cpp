@@ -54,7 +54,7 @@ namespace micro_profiler
 			test( MissingProcessCannotBeOpened )
 			{
 				// ACT / ASSERT
-				assert_throws(process::open(123123), runtime_error); // the number is quite bug for usual Windows processes
+				assert_throws(auto p = make_shared<process>(123123), runtime_error); // the number is quite bug for usual Windows processes
 			}
 
 
@@ -66,7 +66,7 @@ namespace micro_profiler
 				controller->wait_connection();
 
 				// INIT / ACT / ASSERT
-				assert_not_null(process::open(child->get_pid()));
+				assert_not_null(make_shared<process>(child->get_pid()));
 			}
 
 
@@ -79,7 +79,7 @@ namespace micro_profiler
 				id.push_back(char());
 				controller->wait_connection();
 
-				shared_ptr<process> remote = process::open(child->get_pid());
+				auto remote = make_shared<process>(child->get_pid());
 
 				// ACT
 				remote->remote_execute(&make_connection, mkrange(id));

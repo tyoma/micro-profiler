@@ -89,7 +89,7 @@ namespace micro_profiler
 				for (auto i = arguments.begin(); i != arguments.end(); ++i)
 					append_quoted(command_line, unicode(*i));
 				command_line.back() = 0;
-				if (!::CreateProcessW(NULL, command_line.data(), NULL, NULL, TRUE, 0, NULL, NULL, &si, &process))
+				if (!::CreateProcessW(NULL, command_line.data(), NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &process))
 					throw server_exe_not_found(("Server executable not found: " + spawned_path).c_str());
 
 				::CloseHandle(process.hProcess);

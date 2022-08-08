@@ -20,11 +20,12 @@
 
 #pragma once
 
-#include <string>
+#include <ipc/endpoint.h>
+#include <vector>
 
-namespace micro_profiler
-{
-	struct process;
+#ifndef MP_EXPORT_PREFIX
+	#define MP_EXPORT_PREFIX
+#endif
 
-	void inject_profiler(process &process_, const std::string &frontend_id);
-}
+extern "C" MP_EXPORT_PREFIX void ipc_spawn_server(micro_profiler::ipc::channel_ptr_t &session,
+	const std::vector<std::string> &arguments, micro_profiler::ipc::channel &outbound);

@@ -20,28 +20,33 @@
 
 #pragma once
 
-#include <common/noncopyable.h>
-#include <common/range.h>
-#include <memory>
 #include <string>
 
 namespace micro_profiler
 {
-	class process : noncopyable
-	{
-	public:
-		typedef void (injection_function_t)(const_byte_range payload);
-
-	public:
-		process(unsigned int pid);
-		~process();
-
-		void remote_execute(injection_function_t *injection_function, const_byte_range payload);
-
-	private:
-		class impl;
-
-	private:
-		impl *_impl;
+	enum injector_messages_id {
+		request_injection,
+		response_injected,
 	};
+
+	struct injection_info
+	{
+		std::string collector_path;
+		std::string frontend_endpoint_id;
+		unsigned int pid;
+	};
+
+
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, injection_info &info)
+	{
+		archive(info.collector_path);
+		archive(info.frontend_endpoint_id);
+		archive(info.pid);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, injector_messages_id &data)
+	{	archive(reinterpret_cast<int &>(data));	}
 }

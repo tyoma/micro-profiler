@@ -18,30 +18,32 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
+#include <sandbox/sandbox.h>
 
-#include <common/noncopyable.h>
-#include <common/range.h>
-#include <memory>
-#include <string>
+#include <common/module.h>
+#include <ipc/endpoint_spawn.h>
+#include <tuple>
+#include <windows.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
-	class process : noncopyable
+	namespace ipc
 	{
-	public:
-		typedef void (injection_function_t)(const_byte_range payload);
+		channel_ptr_t spawn::create_session(const vector<string> &arguments, channel &outbound)
+		{
+			typedef tuple<shared_ptr<void>, channel_ptr_t> composite_t;
 
-	public:
-		process(unsigned int pid);
-		~process();
+			auto m = load_library(arguments.at(0));
+			auto factory = reinterpret_cast<decltype(&ipc_spawn_server)>(::GetProcAddress(static_cast<HMODULE>(m.get()),
+				"ipc_spawn_server"));
+			channel_ptr_t session;
+			vector<string> arguments2(arguments.begin() + 1, arguments.end());
+			const auto composite = make_shared<composite_t>(m, session);
 
-		void remote_execute(injection_function_t *injection_function, const_byte_range payload);
-
-	private:
-		class impl;
-
-	private:
-		impl *_impl;
-	};
+			factory(get<1>(*composite), arguments2, outbound);
+			return channel_ptr_t(composite, get<1>(*composite).get());
+		}
+	}
 }

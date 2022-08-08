@@ -19,16 +19,23 @@
 //	THE SOFTWARE.
 
 #include "attach_ui.h"
-#include "inject_profiler.h"
 
+#include <common/constants.h>
+#include <common/module.h>
+#include <common/path.h>
 #include <frontend/columns_layout.h>
 #include <frontend/headers_model.h>
 #include <frontend/process_list.h>
 #include <frontend/selection_model.h>
-#include <injector/process.h>
+#include <injector/injector.h>
+#include <ipc/client_session.h>
+#include <ipc/endpoint_spawn.h>
+#include <logger/log.h>
 #include <wpl/controls.h>
 #include <wpl/controls/integrated.h>
 #include <wpl/factory.h>
+
+#define PREAMBLE "Injector controller: "
 
 using namespace std;
 using namespace wpl;
@@ -38,25 +45,92 @@ namespace micro_profiler
 	namespace
 	{
 		const auto secondary = agge::style::height(10);
+		const string c_profiler_module_32 = "micro-profiler_Win32.dll";
+		const string c_profiler_module_64 = "micro-profiler_x64.dll";
+		const string c_sandbox_32 = "micro-profiler_sandbox_Win32.exe";
+		const string c_sandbox_64 = "micro-profiler_sandbox_x64.exe";
+		const string c_injector_32 = "micro-profiler_injector_Win32.dll";
+		const string c_injector_64 = "micro-profiler_injector_x64.dll";
 
 		struct pid
 		{
 			id_t operator ()(const process_info &record) const {	return record.pid;	}
+		};
+
+		class injection_controller
+		{
+		public:
+			injection_controller(const string &dir, const string &frontend_endpoint_id)
+				: _dir(dir), _frontend_endpoint_id(frontend_endpoint_id),
+					_injector_32(create_injector(c_sandbox_32, c_injector_32)),
+					_injector_64(create_injector(c_sandbox_64, c_injector_64))
+			{	}
+
+			void attach(process_info process)
+			{
+				if (const auto injector = process.architecture == process_info::x86 ? _injector_32 : _injector_64)
+				{
+					const auto profiler_module = process.architecture == process_info::x86
+						? c_profiler_module_32 : c_profiler_module_64;
+
+					injection_info info = {
+						_dir & profiler_module,
+						_frontend_endpoint_id,
+						process.pid,
+					};
+					auto &req = *_requests.insert(_requests.end(), shared_ptr<void>());
+
+					LOG(PREAMBLE "requesting injection...") % A(this) % A(process.pid);
+					injector->request(req, request_injection, info, response_injected, [this, process] (ipc::deserializer &) {
+						LOG(PREAMBLE "injection complete") % A(this) % A(process.pid);
+					});
+				}
+			}
+
+		private:
+			shared_ptr<ipc::client_session> create_injector(string sandbox, string injector)
+			{
+				sandbox = _dir & sandbox;
+				injector = _dir & injector;
+
+				try
+				{
+					auto injector_ = make_shared<ipc::client_session>([this, sandbox, injector] (ipc::channel &inbound) {
+						return ipc::spawn::connect_client(sandbox, vector<string>(1, injector), inbound);
+					});
+
+					LOG(PREAMBLE "injector created...") % A(this) % A(sandbox) % A(injector);
+					return injector_;
+				}
+				catch (...)
+				{
+					LOGE(PREAMBLE "failed to create injector...") % A(this) % A(sandbox) % A(injector);
+					return nullptr;
+				}
+			}
+
+		private:
+			const string _dir;
+			const string _frontend_endpoint_id;
+			shared_ptr<ipc::client_session> _injector_32, _injector_64;
+			std::vector< std::shared_ptr<void> > _requests;
 		};
 	}
 
 	attach_ui::attach_ui(const factory &factory_, shared_ptr<tables::processes> processes, const string &frontend_id)
 		: wpl::stack(false, factory_.context.cursor_manager_)
 	{
+		const auto controller = make_shared<injection_controller>(~get_module_info(&secondary).path, frontend_id);
 		shared_ptr<stack> toolbar;
 		shared_ptr<button> btn;
 		const auto lv = factory_.create_control<listview>("listview");
 		const auto model = process_list(processes, c_processes_columns);
 		const auto selection_ = make_shared< sdb::table<id_t> >();
 		const auto cmodel = make_shared<headers_model>(c_processes_columns, 0, true);
-		const auto attach = [this, frontend_id, selection_] (...) {
+		const auto &idx = sdb::unique_index<pid>(*processes);
+		const auto attach = [this, frontend_id, selection_, &idx, controller] (...) {
 			for (auto i = selection_->begin(); i != selection_->end(); ++i)
-				inject_profiler(*process::open(*i), frontend_id);
+				controller->attach(idx[*i]);
 			close();
 		};
 

@@ -142,8 +142,12 @@
 		<Component Id="compCollectorWindows" Guid="47674731-7CDF-4D96-ABE6-BC85BCA68161" KeyPath="yes" Directory="TARGETDIR">
 			<?ifdef SOURCEDIRWX64?>
 				<File Id="fileCollectorDLL_x64" Source="$(var.SOURCEDIRWX64)/micro-profiler_x64.dll" Vital="yes" />
+				<File Id="fileInjectorDLL_x64" Source="$(var.SOURCEDIRWX64)/micro-profiler_injector_x64.dll" Vital="yes" />
+				<File Id="fileSandbox_x64" Source="$(var.SOURCEDIRWX64)/micro-profiler_sandbox_x64.exe" Vital="yes" />
 			<?endif?>
 			<File Id="fileCollectorDLL_x86" Source="$(var.SOURCEDIRWX86)/micro-profiler_Win32.dll" Vital="yes" />
+			<File Id="fileInjectorDLL_x86" Source="$(var.SOURCEDIRWX86)/micro-profiler_injector_Win32.dll" Vital="yes" />
+			<File Id="fileSandbox_x86" Source="$(var.SOURCEDIRWX86)/micro-profiler_sandbox_Win32.exe" Vital="yes" />
 		</Component>
 		<?ifdef SOURCEDIRLINUXX86?>
 			<Component Id="compCollectorLinuxX86" Guid="5A9890DA-1B8D-48EA-986D-8DB26073B79C" KeyPath="yes" Directory="TARGETDIR">

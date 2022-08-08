@@ -58,7 +58,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="frontend\attach_ui.cpp" />
-    <ClCompile Include="frontend\inject_profiler.cpp" />
     <ClCompile Include="module\main.cpp" />
     <ClCompile Include="visualstudio\dispatch.cpp" />
     <ClCompile Include="visualstudio\vs-extension\commands-instance.cpp" />
@@ -66,7 +65,6 @@
     <ClCompile Include="visualstudio\vs-extension\stylesheet.cpp" />
     <ClCompile Include="visualstudio\vs-extension\vcmodel-impl.cpp" />
     <ClInclude Include="frontend\attach_ui.h" />
-    <ClInclude Include="frontend\inject_profiler.h" />
     <ClInclude Include="visualstudio\dispatch.h" />
     <ClInclude Include="visualstudio\vs-extension\helpers.h" />
     <ClInclude Include="visualstudio\vs-extension\stylesheet.h" />

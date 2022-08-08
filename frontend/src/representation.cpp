@@ -36,7 +36,7 @@ namespace micro_profiler
 		{
 			using thread_id::operator ();
 			id_t operator ()(const call_statistics &) const
-			{	return threads_model::cumulative;	}
+			{	return static_cast<id_t>(threads_model::cumulative);	}
 		};
 	}
 
@@ -51,7 +51,7 @@ namespace micro_profiler
 			template <typename I>
 			void operator ()(call_statistics &aggregated, I group_begin, I group_end) const
 			{
-				aggregated.thread_id = threads_model::cumulative;
+				aggregated.thread_id = static_cast<id_t>(threads_model::cumulative);
 				static_cast<function_statistics &>(aggregated) = function_statistics();
 				for (auto i = group_begin; i != group_end; ++i)
 					add(aggregated, *i);

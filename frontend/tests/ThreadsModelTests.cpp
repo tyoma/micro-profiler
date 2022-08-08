@@ -148,7 +148,7 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_is_false(m->get_key(thread_id, 0));
 				assert_is_true(m->get_key(thread_id, 1));
-				assert_equal(threads_model::cumulative, thread_id);
+				assert_equal((unsigned)threads_model::cumulative, thread_id);
 				assert_is_true(m->get_key(thread_id, 2));
 				assert_equal(110u, thread_id);
 				assert_is_true(m->get_key(thread_id, 3));

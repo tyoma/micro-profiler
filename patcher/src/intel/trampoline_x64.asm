@@ -25,15 +25,14 @@
 		push	r8
 		push	r9
 		rdtsc
-		mov	rcx, 3141592600000001h ; 1st argument, interceptor
+		mov	rcx, [interceptor]
 		shl	rdx, 20h
 		or		rdx, rax
 		mov	r8, rdx ; 3rd argument, timestamp
 		lea	rdx, qword ptr [rsp + 20h] ; 2nd argument, stack_ptr
-		mov	r9, 3141592600000002h ; 4th argument, callee
-		mov	rax, 3141592600000003h ; on_enter address
+		mov	r9, [callee_id]
 		sub	rsp, 028h
-		call	rax
+		call	[on_enter]
 		add	rsp, 028h
 		pop	r9
 		pop	r8
@@ -41,29 +40,34 @@
 		pop	rcx
 
 		add	rsp, 08h
-		mov	rax, 3141592600000005h ; target address
-		call	rax
+		call	[target]
 		sub	rsp, 08h
 
 		push	rax
 		rdtsc
-		mov	rcx, 3141592600000001h ; 1st argument, interceptor
+		mov	rcx, [interceptor]
 		shl	rdx, 20h
 		or		rdx, rax
 		mov	r8, rdx ; 3rd argument, timestamp
 		lea	rdx, qword ptr [rsp + 8h] ; 2nd argument, stack_ptr
-		mov	rax, 3141592600000004h ; on_exit address
 		sub	rsp, 020h
-		call	rax
+		call	[on_exit]
 		add	rsp, 020h
 		mov	qword ptr [rsp + 8h], rax ; restore return address
 		pop	rax
 		ret
+
+		interceptor	dq	3141592600000001h
+		callee_id	dq	3141592600000002h
+		on_enter	dq	3141592600000003h
+		on_exit	dq	3141592600000004h
+		target	dq	3141592600000005h
 	trampoline_proto_end:
 
 	jumper_proto:
-		mov	rax, 3141592600000001h ; trampoline address
-		jmp	rax
+		jmp	[jumper_target]
+
+		jumper_target	dq	3141592600000001h
 	jumper_proto_end:
 
 .data

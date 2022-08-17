@@ -22,36 +22,50 @@
 .code
 	trampoline_proto: ; fastcall argument passing: ECX, EDX, <stack>
 		push	eax ; some MS CRT functions accept arguments in EAX register...
+		push	ebx
 		push	ecx
 		push	edx
 		rdtsc
-		mov	ecx, 31415901h ; 1st argument, interceptor
-		push	31415902h ; 4th argument, callee
+		call	base_1
+	base_1:
+		pop	ebx
+		mov	ecx, dword ptr [ebx + (interceptor - base_1)] ; 1st argument, interceptor
+		push	dword ptr [ebx + (callee_id - base_1)] ; 4th argument, callee
 		push	edx
 		push	eax ; 3rd argument, timestamp
-		lea	edx, dword ptr [esp + 18h] ; 2nd argument, stack_ptr
-		call	on_enter + 31415983h ; on_enter address (displacement)
-	on_enter:
+		lea	edx, dword ptr [esp + 1Ch] ; 2nd argument, stack_ptr
+		call	dword ptr [ebx + (on_enter - base_1)]
+		mov	ecx, dword ptr [ebx + (target - base_1)]
+		mov	dword ptr [esp], ecx
 		pop	edx
 		pop	ecx
+		pop	ebx
 		pop	eax
 
-		lea	esp, dword ptr [esp + 04h]		
-		call	target + 31415985h ; target address
-	target:
-		lea	esp, dword ptr [esp - 04h]
+		add	esp, 4
+		call	dword ptr [esp - 14h]
+		sub	esp, 4
 
 		push	eax
 		rdtsc
-		mov	ecx, 31415901h ; 1st argument, interceptor
+		call	base_2
+	base_2:
+		pop	ecx
 		push	edx
 		push	eax ; 3rd argument, timestamp
 		lea	edx, dword ptr [esp + 0Ch] ; 2nd argument, stack_ptr
-		call	on_exit + 31415984h ; on_exit address (displacement)
-	on_exit:
+		mov	eax, ecx
+		mov	ecx, dword ptr [eax + (interceptor - base_2)] ; 1st argument
+		call	dword ptr [eax + (on_exit - base_2)]
 		mov	dword ptr [esp + 04h], eax ; restore return address
 		pop	eax
 		ret
+
+		interceptor	dd	31415901h
+		target		dd	31415905h
+		callee_id	dd	31415902h
+		on_enter		dd	31415903h
+		on_exit		dd	31415904h
 	trampoline_proto_end:
 
 	jumper_proto:

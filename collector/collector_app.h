@@ -37,7 +37,9 @@ namespace micro_profiler
 			patch_manager &patch_manager_);
 		~collector_app();
 
-		active_server_app &get_server();
+		void connect(const active_server_app::client_factory_t &factory, bool injected);
+
+		scheduler::queue &get_queue();
 
 	private:
 		virtual void initialize_session(ipc::server_session &session) override;
@@ -50,6 +52,7 @@ namespace micro_profiler
 		const std::unique_ptr<analyzer> _analyzer;
 		thread_monitor &_thread_monitor;
 		patch_manager &_patch_manager;
+		bool _injected;
 		active_server_app _server;
 	};
 }

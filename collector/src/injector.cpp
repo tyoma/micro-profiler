@@ -18,12 +18,14 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <injector/injector.h>
+#include "main.h"
 
 #include <common/constants.h>
 #include <common/module.h>
 #include <common/stream.h>
+#include <injector/injector.h>
 #include <injector/process.h>
+#include <ipc/endpoint.h>
 #include <ipc/endpoint_spawn.h>
 #include <ipc/server_session.h>
 #include <sandbox/sandbox.h>
@@ -34,8 +36,6 @@ using namespace micro_profiler;
 using namespace micro_profiler::ipc;
 using namespace std;
 
-extern "C" int setenv(const char *name, const char *value, int overwrite);
-
 namespace
 {
 	void inject_profiler_worker(const_byte_range payload)
@@ -45,15 +45,17 @@ namespace
 		injection_info injection;
 
 		d(injection);
-		setenv(constants::frontend_id_ev, injection.frontend_endpoint_id.c_str(), 1);
-		setenv(constants::profiler_injected_ev, "1", 1);
-		load_library(injection.collector_path); // No need to hold the handle, as profiler pins to the process.
+		g_instance.connect([injection] (ipc::channel &inbound) {
+			return ipc::connect_client(injection.frontend_endpoint_id, inbound);
+		});
 	}
 }
 
-extern "C" MP_EXPORT_PREFIX void ipc_spawn_server(micro_profiler::ipc::channel_ptr_t &session_,
-	const vector<string> &/*arguments*/, micro_profiler::ipc::channel &outbound)
+extern "C" void ipc_spawn_server(micro_profiler::ipc::channel_ptr_t &session_, const vector<string> &/*arguments*/,
+	micro_profiler::ipc::channel &outbound)
 {
+	g_instance.block_auto_connect();
+
 	const auto session = make_shared<server_session>(outbound);
 
 	session->add_handler(request_injection, [] (server_session::response &response, const injection_info &injection) {

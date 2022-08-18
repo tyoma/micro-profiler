@@ -28,6 +28,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
+    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
   </ImportGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -45,6 +46,7 @@
     <ClCompile Include="process_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\injector.h" />
     <ClInclude Include="..\process.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

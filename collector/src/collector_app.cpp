@@ -47,7 +47,13 @@ namespace micro_profiler
 	collector_app::~collector_app()
 	{	_collector.flush();	}
 
-	active_server_app &collector_app::get_server()
+	void collector_app::connect(const active_server_app::client_factory_t &factory, bool injected)
+	{
+		_injected = injected;
+		_server.connect(factory);
+	}
+
+	scheduler::queue &collector_app::get_queue()
 	{	return _server;	}
 
 	void collector_app::initialize_session(ipc::server_session &session)
@@ -122,11 +128,11 @@ namespace micro_profiler
 		});
 
 
-		session.message(init, [] (ipc::serializer &ser) {
+		session.message(init, [this] (ipc::serializer &ser) {
 			initialization_data idata = {
 				get_current_executable(),
 				ticks_per_second(),
-				!!getenv(constants::profiler_injected_ev),
+				_injected,
 			};
 
 			ser(idata);

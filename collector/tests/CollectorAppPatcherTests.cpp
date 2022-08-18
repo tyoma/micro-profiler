@@ -71,7 +71,7 @@ namespace micro_profiler
 				vector< vector<unsigned> > rva_log;
 				mt::event ready;
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
@@ -135,7 +135,7 @@ namespace micro_profiler
 				vector<patch_manager::apply_results> log;
 				mt::event ready;
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
@@ -189,7 +189,7 @@ namespace micro_profiler
 				vector< vector<unsigned> > rva_log;
 				mt::event ready;
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
@@ -251,7 +251,7 @@ namespace micro_profiler
 				vector<patch_manager::revert_results> log;
 				mt::event ready;
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});

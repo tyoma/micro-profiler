@@ -49,8 +49,6 @@ namespace micro_profiler
 		const string c_profiler_module_64 = "micro-profiler_x64.dll";
 		const string c_sandbox_32 = "micro-profiler_sandbox_Win32.exe";
 		const string c_sandbox_64 = "micro-profiler_sandbox_x64.exe";
-		const string c_injector_32 = "micro-profiler_injector_Win32.dll";
-		const string c_injector_64 = "micro-profiler_injector_x64.dll";
 
 		struct pid
 		{
@@ -62,8 +60,8 @@ namespace micro_profiler
 		public:
 			injection_controller(const string &dir, const string &frontend_endpoint_id)
 				: _dir(dir), _frontend_endpoint_id(frontend_endpoint_id),
-					_injector_32(create_injector(c_sandbox_32, c_injector_32)),
-					_injector_64(create_injector(c_sandbox_64, c_injector_64))
+					_injector_32(create_injector(c_sandbox_32, c_profiler_module_32)),
+					_injector_64(create_injector(c_sandbox_64, c_profiler_module_64))
 			{	}
 
 			void attach(process_info process)

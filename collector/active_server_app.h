@@ -38,7 +38,7 @@ namespace micro_profiler
 		typedef std::shared_ptr<channel> channel_ptr_t;
 	}
 
-	class active_server_app : noncopyable, scheduler::queue
+	class active_server_app : public scheduler::queue, noncopyable
 	{
 	public:
 		struct events;

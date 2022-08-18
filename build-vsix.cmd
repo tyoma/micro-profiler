@@ -28,14 +28,12 @@ pushd "%~dp0_build.windows.x86\_bin"
 	call sha256 hashmpx86lib micro-profiler_Win32.lib
 	
 	call sha256 hashsbxx86 micro-profiler_sandbox_Win32.exe
-	call sha256 hashinjx86 micro-profiler_injector_Win32.dll
 popd
 pushd "%~dp0_build.windows.x64\_bin"
 	call sha256 hashmpx64 micro-profiler_x64.dll
 	call sha256 hashmpx64lib micro-profiler_x64.lib
 
 	call sha256 hashsbxx64 micro-profiler_sandbox_x64.exe
-	call sha256 hashinjx64 micro-profiler_injector_x64.dll
 popd
 pushd "%~dp0_build.linux.x86\_bin"
 	call sha256 hashlinuxmpx86 libmicro-profiler_x86.so
@@ -76,14 +74,12 @@ pushd "%~dp0_build.windows.x86\_bin"
 	call mkzip micro-profiler_Win32.lib "%OUTPUT%"
 
 	call mkzip micro-profiler_sandbox_Win32.exe "%OUTPUT%"
-	call mkzip micro-profiler_injector_Win32.dll "%OUTPUT%"
 popd
 pushd "%~dp0_build.windows.x64\_bin"
 	call mkzip micro-profiler_x64.dll "%OUTPUT%"
 	call mkzip micro-profiler_x64.lib "%OUTPUT%"
 
 	call mkzip micro-profiler_sandbox_x64.exe "%OUTPUT%"
-	call mkzip micro-profiler_injector_x64.dll "%OUTPUT%"
 popd
 pushd "%~dp0_build.linux.x86\_bin"
 	call mkzip libmicro-profiler_x86.so "%OUTPUT%"

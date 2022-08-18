@@ -69,7 +69,6 @@ namespace micro_profiler
 			{
 				subscriptions.clear();
 				client.reset();
-				unsetenv(constants::profiler_injected_ev);
 			}
 
 
@@ -90,7 +89,7 @@ namespace micro_profiler
 
 				// ACT
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 				initialized.wait();
 
 				// ASERT
@@ -115,11 +114,9 @@ namespace micro_profiler
 					c.subscribe(subscription, init, on_init);
 				};
 
-				setenv(constants::profiler_injected_ev, "1", 1);
-
 				// ACT
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
-				app.get_server().connect(factory);
+				app.connect(factory, true);
 				initialized.wait();
 
 				// ASERT
@@ -134,7 +131,7 @@ namespace micro_profiler
 				shared_ptr<void> subs;
 				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
 
-				app->get_server().connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto &stopping_ = stopping;
 					auto client_ = make_shared<ipc::client_session>(outbound);
 
@@ -144,7 +141,7 @@ namespace micro_profiler
 					});
 					client_ready.set();
 					return client_;
-				});
+				}, false);
 
 				client_ready.wait();
 
@@ -167,7 +164,7 @@ namespace micro_profiler
 
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 				client_ready.wait();
 
 				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &) {
@@ -218,7 +215,7 @@ namespace micro_profiler
 
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 				client_ready.wait();
 
 				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
@@ -276,7 +273,7 @@ namespace micro_profiler
 
 				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
 
-				app->get_server().connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
 					auto &flushed_ = flushed;
 					auto &flushed_at_exit_ = flushed_at_exit;
@@ -286,7 +283,7 @@ namespace micro_profiler
 						client_->disconnect_session();
 					});
 					return client_;
-				});
+				}, false);
 
 				// ACT
 				app.reset();
@@ -324,7 +321,7 @@ namespace micro_profiler
 				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
 				mt::thread t([&] {	app.reset();	});
 
-				app->get_server().connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
 					auto &ready_ = ready;
 
@@ -333,7 +330,7 @@ namespace micro_profiler
 						ready_.set();
 					});
 					return client_;
-				});
+				}, false);
 
 				// ACT
 				ready.wait();
@@ -366,7 +363,7 @@ namespace micro_profiler
 
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 
 				// ACT / ASSERT (must exit)
 				done.wait();
@@ -403,7 +400,7 @@ namespace micro_profiler
 
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 				client_ready.wait();
 
 				// ACT
@@ -466,13 +463,13 @@ namespace micro_profiler
 
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
-				app.get_server().connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
+				app.connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
 
 					pclient = client_.get();
 					client_ready.set();
 					return client_;
-				});
+				}, false);
 
 				client_ready.wait();
 				pclient->disconnect_session();
@@ -512,11 +509,11 @@ namespace micro_profiler
 				};
 
 				unique_ptr<collector_app> app1(new collector_app(*tracer1, o1, tmonitor, pmanager));
-				app1->get_server().connect(factory);
+				app1->connect(factory, false);
 				client_ready.wait();
 				auto client1 = client;
 				unique_ptr<collector_app> app2(new collector_app(*tracer2, o2, tmonitor, pmanager));
-				app2->get_server().connect(factory);
+				app2->connect(factory, false);
 				client_ready.wait();
 				auto client2 = client;
 
@@ -561,7 +558,7 @@ namespace micro_profiler
 
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 				client_ready.wait();
 
 				image image0(c_symbol_container_1);
@@ -633,7 +630,7 @@ namespace micro_profiler
 
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
-				app.get_server().connect(factory);
+				app.connect(factory, false);
 				client_ready.wait();
 
 				// ACT

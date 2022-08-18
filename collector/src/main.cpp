@@ -51,6 +51,7 @@
 using namespace std;
 
 const size_t c_trace_limit = 5000000;
+const mt::milliseconds c_auto_connect_delay(50);
 #ifdef _MSC_VER
 	extern "C"
 #endif
@@ -118,12 +119,12 @@ namespace micro_profiler
 		return log::create_writer(constants::data_directory() & logname);
 	}
 
-	collector_app_instance::collector_app_instance(const active_server_app::client_factory_t &frontend_factory,
+	collector_app_instance::collector_app_instance(const active_server_app::client_factory_t &auto_frontend_factory,
 			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr)
 		: _logger(create_writer(), (log::g_logger = &_logger, &get_datetime)),
 			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
 			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks),
-			_patch_manager(_collector, _eallocator)
+			_patch_manager(_collector, _eallocator), _auto_connect(true)
 	{
 		collector_ptr = &_collector;
 
@@ -134,7 +135,10 @@ namespace micro_profiler
 
 		LOG(PREAMBLE "overhead calibrated...") % A(inner_ns) % A(total_ns);
 		_app.reset(new collector_app(_collector, oh, *_thread_monitor, _patch_manager));
-		_app->get_server().schedule([this, frontend_factory] {	_app->get_server().connect(frontend_factory);	});
+		_app->get_queue().schedule([this, auto_frontend_factory] {
+			if (_auto_connect)
+				_app->connect(auto_frontend_factory, false);
+		}, c_auto_connect_delay);
 		platform_specific_init();
 		LOG(PREAMBLE "initialized...")
 			% A(get_current_executable()) % A(getpid()) % A(get_module_info(&g_collector_ptr).path);
@@ -149,6 +153,16 @@ namespace micro_profiler
 	void collector_app_instance::terminate() throw()
 	{	_app.reset();	}
 
+	void collector_app_instance::block_auto_connect()
+	{	_app->get_queue().schedule([this] {	_auto_connect = false;	});	}
+
+	void collector_app_instance::connect(const active_server_app::client_factory_t &frontend_factory)
+	{
+		_app->get_queue().schedule([this, frontend_factory] {
+			_auto_connect = false;
+			_app->connect(frontend_factory, true);
+		});
+	}
 }
 
 #if defined(__clang__) || defined(__GNUC__)

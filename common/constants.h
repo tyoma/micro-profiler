@@ -32,7 +32,6 @@ namespace micro_profiler
 		static const char *home_ev;
 		static const char *profiler_name;
 		static const char *profilerdir_ev;
-		static const char *profiler_injected_ev;
 		static const char *frontend_id_ev;
 		static const guid_t standalone_frontend_id;
 		static const guid_t integrated_frontend_id;

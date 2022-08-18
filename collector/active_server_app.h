@@ -24,6 +24,7 @@
 #include <memory>
 #include <mt/chrono.h>
 #include <mt/thread.h>
+#include <scheduler/scheduler.h>
 #include <scheduler/task_queue.h>
 
 namespace micro_profiler
@@ -31,33 +32,37 @@ namespace micro_profiler
 	namespace ipc
 	{
 		struct channel;
+		class marshalled_active_session;
 		class server_session;
 
 		typedef std::shared_ptr<channel> channel_ptr_t;
 	}
 
-	class active_server_app : noncopyable
+	class active_server_app : noncopyable, scheduler::queue
 	{
 	public:
 		struct events;
 
-		typedef std::function<ipc::channel_ptr_t (ipc::channel &inbound)> frontend_factory_t;
+		typedef std::function<ipc::channel_ptr_t (ipc::channel &inbound)> client_factory_t;
 
 	public:
-		active_server_app(events &events_, const frontend_factory_t &factory);
+		active_server_app(events &events_);
 		~active_server_app();
 
-		void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0));
+		void connect(const client_factory_t &factory);
+
+		virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0)) override;
 
 	private:
-		void worker(const frontend_factory_t &factory);
+		void worker();
 
 	private:
 		events &_events;
 		ipc::server_session *_session;
 		bool _exit_requested, _exit_confirmed;
 		scheduler::task_queue _queue;
-		mt::thread _frontend_thread;
+		std::unique_ptr<ipc::marshalled_active_session> _active_session;
+		mt::thread _thread;
 	};
 
 	struct active_server_app::events

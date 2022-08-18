@@ -38,14 +38,17 @@ using namespace std;
 
 namespace micro_profiler
 {
-	collector_app::collector_app(const active_server_app::frontend_factory_t &factory, calls_collector_i &collector,
-			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_)
+	collector_app::collector_app(calls_collector_i &collector, const overhead &overhead_,
+			thread_monitor &thread_monitor_, patch_manager &patch_manager_)
 		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(thread_monitor_),
-			_patch_manager(patch_manager_), _server(*this, factory)
+			_patch_manager(patch_manager_), _server(*this)
 	{	}
 
 	collector_app::~collector_app()
 	{	_collector.flush();	}
+
+	active_server_app &collector_app::get_server()
+	{	return _server;	}
 
 	void collector_app::initialize_session(ipc::server_session &session)
 	{

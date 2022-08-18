@@ -33,9 +33,11 @@ namespace micro_profiler
 	class collector_app : active_server_app::events
 	{
 	public:
-		collector_app(const active_server_app::frontend_factory_t &factory, calls_collector_i &collector,
-			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_);
+		collector_app(calls_collector_i &collector, const overhead &overhead_, thread_monitor &thread_monitor_,
+			patch_manager &patch_manager_);
 		~collector_app();
+
+		active_server_app &get_server();
 
 	private:
 		virtual void initialize_session(ipc::server_session &session) override;

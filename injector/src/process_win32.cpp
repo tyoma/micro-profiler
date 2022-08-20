@@ -57,11 +57,10 @@ namespace micro_profiler
 			const auto injection_offset = (byte *)injection - m.base;
 			const auto payload_size = payload.length();
 			const auto fpayload = foreign_allocate(sizeof(injection_offset) + sizeof(payload_size) + payload.length());
-			const auto hkernel = module::load_library("kernel32");
+			const auto kernel = module::load("kernel32");
 
 			::WriteProcessMemory(_hprocess.get(), fpath.get(), m.path.c_str(), m.path.size() + 1, NULL);
-			foreign_execute((PTHREAD_START_ROUTINE)::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "LoadLibraryA"),
-				fpath.get());
+			foreign_execute(kernel / "LoadLibraryA", fpath.get());
 
 			auto fbase = static_cast<byte *>(find_loaded_module(m.path));
 
@@ -74,8 +73,7 @@ namespace micro_profiler
 			foreign_execute((PTHREAD_START_ROUTINE)(fbase + ((byte *)&foreign_worker - m.base)), fpayload.get());
 
 			// TODO: untested
-			foreign_execute((PTHREAD_START_ROUTINE)::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "FreeLibrary"),
-				fbase);
+			foreign_execute(kernel / "FreeLibrary", fbase);
 		}
 
 	private:

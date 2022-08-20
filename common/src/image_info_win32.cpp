@@ -34,8 +34,6 @@
 #include <stdexcept>
 #include <common/unordered_map.h>
 
-#define GET_PROC_ADDRESS(hmodule, symbol) reinterpret_cast<decltype(::symbol) *>(::GetProcAddress(hmodule, #symbol))
-
 using namespace std;
 using namespace std::placeholders;
 
@@ -69,7 +67,7 @@ namespace micro_profiler
 				PCWSTR ModuleName, DWORD64 BaseOfDll,DWORD DllSize, PMODLOAD_DATA Data, DWORD Flags);
 
 		private:
-			shared_ptr<void> _module;
+			shared_ptr<module::dynamic> _module;
 
 			decltype(::SymInitialize) *_SymInitialize;
 			decltype(::SymCleanup) *_SymCleanup;
@@ -103,18 +101,16 @@ namespace micro_profiler
 			for (auto i = begin(c_dbghelps); !_module && i != end(c_dbghelps); ++i)
 			{
 				::SetEnvironmentVariableW(L"PATH", (wstring(path_env) + L";" + unicode(~*i)).c_str());
-				_module = module::load_library(*i);
+				_module = module::load(*i);
 			}
 			::SetEnvironmentVariableW(L"PATH", path_env);
 
-			const auto hmodule = static_cast<HMODULE>(_module.get());
-
-			SymEnumSymbols = GET_PROC_ADDRESS(hmodule, SymEnumSymbols);
-			SymGetLineFromAddr64 = GET_PROC_ADDRESS(hmodule, SymGetLineFromAddr64);
-			_SymInitialize = GET_PROC_ADDRESS(hmodule, SymInitialize);
-			_SymCleanup = GET_PROC_ADDRESS(hmodule, SymCleanup);
-			_SymLoadModuleExW = GET_PROC_ADDRESS(hmodule, SymLoadModuleExW);
-			_SymLoadModule64 = GET_PROC_ADDRESS(hmodule, SymLoadModule64);
+			SymEnumSymbols = _module / "SymEnumSymbols";
+			SymGetLineFromAddr64 = _module / "SymGetLineFromAddr64";
+			_SymInitialize = _module / "SymInitialize";
+			_SymCleanup = _module / "SymCleanup";
+			_SymLoadModuleExW = _module / "SymLoadModuleExW";
+			_SymLoadModule64 = _module / "SymLoadModule64";
 
 			if (!_SymInitialize(this, NULL, FALSE))
 				throw 0;

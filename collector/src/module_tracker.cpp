@@ -113,7 +113,7 @@ namespace micro_profiler
 		auto l = make_shared<locked_mapping>();
 
 		l->module_ = *i->second.mapping;
-		l->lock = module::load_library(i->second.path);
+		l->lock = module::load(i->second.path);
 		return shared_ptr<module::mapping_instance>(l, &l->module_);
 	}
 

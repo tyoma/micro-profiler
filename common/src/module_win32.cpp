@@ -60,8 +60,17 @@ namespace micro_profiler
 		}
 	}
 
-	shared_ptr<void> module::load_library(const string &path)
-	{	return shared_ptr<void>(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);	}
+
+
+	void *module::dynamic::find_function(const char *name) const
+	{	return GetProcAddress(static_cast<HMODULE>(_handle.get()), name);	}
+
+
+	shared_ptr<module::dynamic> module::load(const string &path)
+	{
+		shared_ptr<void> handle(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);
+		return handle ? shared_ptr<dynamic>(new dynamic(handle)) : nullptr;
+	}
 
 	string module::executable()
 	{

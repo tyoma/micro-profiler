@@ -34,13 +34,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-	    <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <ProjectReference>
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="loader_win32.cpp" />
+    <ClCompile Include="loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\sandbox.h" />

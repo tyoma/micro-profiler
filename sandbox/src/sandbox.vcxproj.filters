@@ -9,7 +9,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="loader_win32.cpp">
+    <ClCompile Include="loader.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -168,9 +168,9 @@ namespace micro_profiler
 				mt::thread t1([&] {
 					while (!exit)
 					{
-						auto m1 = module::load_library(c_symbol_container_1);
-						auto m2 = module::load_library(c_symbol_container_2);
-						auto m3 = module::load_library(c_symbol_container_3_nosymbols);
+						auto m1 = module::load(c_symbol_container_1);
+						auto m2 = module::load(c_symbol_container_2);
+						auto m3 = module::load(c_symbol_container_3_nosymbols);
 					}
 				});
 				mt::thread t2([&] {

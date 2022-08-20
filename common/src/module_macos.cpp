@@ -28,12 +28,18 @@ using namespace std;
 
 namespace micro_profiler
 {
-	shared_ptr<void> module::load_library(const string &path)
+	void *module::dynamic::find_function(const char *name) const
+	{	return ::dlsym(_handle.get(), name);	}
+
+
+	shared_ptr<module::dynamic> module::load(const string &path)
 	{
-		return shared_ptr<void>(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
+		shared_ptr<void> handle(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
 			if (h)
 				::dlclose(h);
 		});
+
+		return handle ? shared_ptr<module::dynamic>(new module::dynamic(handle)) : nullptr;
 	}
 
 	string module::executable()

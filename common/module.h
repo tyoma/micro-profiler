@@ -32,6 +32,8 @@ namespace micro_profiler
 {
 	struct module
 	{
+		class dynamic;
+
 		struct mapping
 		{
 			std::string path;
@@ -50,9 +52,62 @@ namespace micro_profiler
 		typedef std::function<void (const mapping &m)> mapping_callback_t;
 		typedef std::pair<unsigned int /*instance_id*/, mapping_ex> mapping_instance;
 
-		static std::shared_ptr<void> load_library(const std::string &path);
+		static std::shared_ptr<dynamic> load(const std::string &path);
 		static std::string executable();
 		static mapping locate(const void *address);
 		static void enumerate_mapped(const mapping_callback_t &callback);
 	};
+
+	class module::dynamic
+	{
+	public:
+		struct unsafe_auto_cast;
+
+	public:
+		void *find_function(const char *name) const;
+
+	private:
+		explicit dynamic(std::shared_ptr<void> handle);
+
+	private:
+		const std::shared_ptr<void> _handle;
+
+	private:
+		friend module;
+	};
+
+	struct module::dynamic::unsafe_auto_cast
+	{
+		template <typename T>
+		operator T() const;
+
+		void *const address;
+	};
+
+
+
+	inline module::dynamic::dynamic(std::shared_ptr<void> handle)
+		: _handle(handle)
+	{	}
+
+
+	inline module::dynamic::unsafe_auto_cast operator /(const std::shared_ptr<module::dynamic> &library,
+		const char *function_name)
+	{
+		module::dynamic::unsafe_auto_cast uac = {	library->find_function(function_name)	};
+		return uac;
+	}
+
+
+	template <typename T>
+	inline module::dynamic::unsafe_auto_cast::operator T() const
+	{
+		union {
+			void *address_;
+			T result;
+		};
+
+		address_ = address;
+		return result;
+	}
 }

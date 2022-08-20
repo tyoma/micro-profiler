@@ -23,7 +23,6 @@
 #include <common/module.h>
 #include <ipc/endpoint_spawn.h>
 #include <tuple>
-#include <windows.h>
 
 using namespace std;
 
@@ -33,11 +32,10 @@ namespace micro_profiler
 	{
 		channel_ptr_t spawn::create_session(const vector<string> &arguments, channel &outbound)
 		{
-			typedef tuple<shared_ptr<void>, channel_ptr_t> composite_t;
+			typedef tuple<shared_ptr<module::dynamic>, channel_ptr_t> composite_t;
 
-			auto m = module::load_library(arguments.at(0));
-			auto factory = reinterpret_cast<decltype(&ipc_spawn_server)>(::GetProcAddress(static_cast<HMODULE>(m.get()),
-				"ipc_spawn_server"));
+			auto m = module::load(arguments.at(0));
+			decltype(&ipc_spawn_server) factory = m / "ipc_spawn_server";
 			channel_ptr_t session;
 			vector<string> arguments2(arguments.begin() + 1, arguments.end());
 			const auto composite = make_shared<composite_t>(m, session);

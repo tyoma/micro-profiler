@@ -23,6 +23,7 @@
 #include "detour.h"
 #include "main.h"
 
+#include <common/module.h>
 #include <tchar.h>
 #include <windows.h>
 
@@ -53,11 +54,10 @@ namespace micro_profiler
 		g_instance_singleton = this;
 		g_exit_process_detour = &exit_process_detour;
 
+		const auto kernel32 = module::load("kernel32");
+		const decltype(&ExitProcess) exit_process = kernel32 / "ExitProcess";
+
 		HMODULE hmodule;
-
-		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, _T("kernel32"), &hmodule);
-
-		const auto exit_process = ::GetProcAddress(hmodule, "ExitProcess");
 
 		::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
 			reinterpret_cast<LPCTSTR>(&ExitProcessHooked), &hmodule);

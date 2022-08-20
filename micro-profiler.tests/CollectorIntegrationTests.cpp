@@ -10,6 +10,7 @@
 #include <mt/event.h>
 #include <stdlib.h>
 #include <strmd/serializer.h>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/process.h>
 #include <ut/assert.h>
@@ -128,7 +129,7 @@ namespace micro_profiler
 				frontend_state->modules_loaded = bind(&mt::event::set, &ready);
 
 				// ACT
-				controller->sessions[0]->load_module("symbol_container_2_instrumented");
+				controller->sessions[0]->load_module(c_symbol_container_2_instrumented);
 				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
 					ser(request_update), ser(0u);
 				});
@@ -145,7 +146,7 @@ namespace micro_profiler
 
 				frontend_state->modules_loaded = bind(&mt::event::set, &ready);
 				frontend_state->modules_unloaded = bind(&mt::event::set, &ready2);
-				controller->sessions[0]->load_module("symbol_container_2_instrumented");
+				controller->sessions[0]->load_module(c_symbol_container_2_instrumented);
 				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
 					ser(request_update), ser(0u);
 				});
@@ -153,7 +154,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ACT
-				controller->sessions[0]->unload_module("symbol_container_2_instrumented");
+				controller->sessions[0]->unload_module(c_symbol_container_2_instrumented);
 				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
 					ser(request_update), ser(0u);
 				});
@@ -183,7 +184,7 @@ namespace micro_profiler
 					ready.set();
 				};
 				
-				guineapig.reset(new image("symbol_container_2_instrumented"));
+				guineapig.reset(new image(c_symbol_container_2_instrumented));
 
 				f22_t *f22 = guineapig->get_symbol<f22_t>("guinea_snprintf");
 				f2F_t *f2F = guineapig->get_symbol<f2F_t>("bubble_sort_expose");

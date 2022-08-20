@@ -5,6 +5,7 @@
 #include <common/module.h>
 #include <common/path.h>
 #include <mt/event.h>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -31,20 +32,17 @@ namespace micro_profiler
 			begin_test_suite( SpawnEndpointClientTests )
 				mt::event ready;
 				mocks::channel inbound;
-				string image_directory;
-
-				init( Init )
-				{
-					image_directory = ~module::locate(&g_dummy).path;
-				}
 
 
 				test( AttemptToSpawnAMissingFileThrows )
 				{
+					// INIT
+					const auto image_directory = ~module::locate(&g_dummy).path;
+
 					// INIT / ACT / ASSERT
 					assert_throws(spawn::connect_client("zubazuba", vector<string>(), inbound),
 						spawn::server_exe_not_found);
-					assert_throws(spawn::connect_client(image_directory & "abc" & "guinea_ipc_spawn.exe", vector<string>(), inbound),
+					assert_throws(spawn::connect_client(image_directory & normalize::exe("abc\\guinea_ipc_spawn"), vector<string>(), inbound),
 						spawn::server_exe_not_found);
 				}
 
@@ -55,7 +53,7 @@ namespace micro_profiler
 					inbound.on_disconnect = [&] {	ready.set();	};
 
 					// INIT / ACT
-					auto outbound = spawn::connect_client(image_directory & "guinea_ipc_spawn.exe", vector<string>(), inbound);
+					auto outbound = spawn::connect_client(c_guinea_ipc_spawn, vector<string>(), inbound);
 
 					// ASSERT
 					assert_not_null(outbound);
@@ -71,16 +69,15 @@ namespace micro_profiler
 					inbound.on_disconnect = [&] {	ready.set();	};
 
 					// INIT / ACT
-					auto outbound = spawn::connect_client(image_directory & "guinea_ipc_spawn.exe",
-						plural + (string)"sleep" + (string)"100", inbound);
+					auto outbound = spawn::connect_client(c_guinea_ipc_spawn, plural + (string)"sleep" + (string)"100",
+						inbound);
 
 					// ACT / ASSERT
 					assert_is_false(ready.wait(mt::milliseconds(50)));
 					assert_is_true(ready.wait(mt::milliseconds(100)));
 
 					// INIT / ACT
-					outbound = spawn::connect_client(image_directory & "guinea_ipc_spawn.exe",
-						plural + (string)"sleep" + (string)"300", inbound);
+					outbound = spawn::connect_client(c_guinea_ipc_spawn, plural + (string)"sleep" + (string)"300", inbound);
 
 					// ACT / ASSERT
 					assert_is_false(ready.wait(mt::milliseconds(250)));
@@ -100,7 +97,7 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					auto outbound = spawn::connect_client(image_directory & "guinea_ipc_spawn.exe",
+					auto outbound = spawn::connect_client(c_guinea_ipc_spawn,
 						plural + (string)"seq" + (string)"Lorem" + (string)"ipsum" + (string)"amet dolor", inbound);
 
 					// ACT
@@ -118,7 +115,7 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					outbound = spawn::connect_client(image_directory & "guinea_ipc_spawn.exe",
+					outbound = spawn::connect_client(c_guinea_ipc_spawn,
 						plural + (string)"seq" + (string)"Quick brown fox" + (string)"jumps over the\nlazy dog", inbound);
 
 					// ACT
@@ -149,8 +146,7 @@ namespace micro_profiler
 						ready.set();
 					};
 
-					auto outbound = spawn::connect_client(image_directory & "guinea_ipc_spawn.exe",
-						plural + (string)"echo", inbound);
+					auto outbound = spawn::connect_client(c_guinea_ipc_spawn, plural + (string)"echo", inbound);
 
 					// ACT
 					*outbound << data1;
@@ -180,8 +176,7 @@ namespace micro_profiler
 				{
 					// INIT
 					auto disconnected = false;
-					auto outbound = spawn::connect_client(image_directory & "guinea_ipc_spawn.exe",
-						plural + (string)"echo", inbound);
+					auto outbound = spawn::connect_client(c_guinea_ipc_spawn, plural + (string)"echo", inbound);
 
 					inbound.on_disconnect = [&] {	disconnected = true;	};
 

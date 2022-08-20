@@ -7,6 +7,7 @@
 #include <ipc/endpoint_sockets.h>
 #include <ipc/misc.h>
 #include <mt/event.h>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -32,12 +33,11 @@ namespace micro_profiler
 				shared_ptr<mocks::server> otherside;
 				shared_ptr<void> hserver;
 				vector<byte> message1, message2, message3;
-				string server_image, otherside_id;
+				string otherside_id;
 				mt::event ready;
 
 				init( Init )
 				{
-					server_image = ~module::locate(&g_dummy).path & "guinea_ipc_spawn_server.exe";
 					otherside = make_shared<mocks::server>();
 					for (uint16_t port = 6200; port != 6250; ++port)
 					{
@@ -69,7 +69,7 @@ namespace micro_profiler
 					otherside->session_created = [&] (shared_ptr<mocks::session>) {	ready.set();	};
 
 					// INIT / ACT
-					auto outbound = spawn::connect_client(server_image, plural + otherside_id, inbound);
+					auto outbound = spawn::connect_client(c_guinea_ipc_spawn_server, plural + otherside_id, inbound);
 
 					// ACT / ASSERT
 					ready.wait();
@@ -97,7 +97,7 @@ namespace micro_profiler
 						connected.set();
 					};
 
-					auto outbound = spawn::connect_client(server_image, plural + otherside_id, inbound);
+					auto outbound = spawn::connect_client(c_guinea_ipc_spawn_server, plural + otherside_id, inbound);
 
 					connected.wait();
 
@@ -156,7 +156,7 @@ namespace micro_profiler
 							ready.set();
 					};
 
-					auto outbound = spawn::connect_client(server_image, plural + otherside_id, inbound);
+					auto outbound = spawn::connect_client(c_guinea_ipc_spawn_server, plural + otherside_id, inbound);
 
 					connected.wait();
 

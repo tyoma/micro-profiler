@@ -61,10 +61,12 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const wstring c_profilerdir_macro = L"$(" + unicode(constants::profilerdir_ev) + L")";
+			const string c_profilerdir_macro_a = string("$(") + constants::profilerdir_ev + ")";
+			const wstring c_profilerdir_macro = unicode(c_profilerdir_macro_a);
 			const wstring c_initializer_cpp_filename = L"micro-profiler.initializer.cpp";
-			const wstring c_profiler_library_filename = L"micro-profiler_$(PlatformName).lib";
-			const wstring c_profiler_library = c_profilerdir_macro & c_profiler_library_filename;
+			const string c_profiler_library_filename_a = "micro-profiler_$(PlatformName).lib";
+			const wstring c_profiler_library_filename = unicode(c_profiler_library_filename_a);
+			const wstring c_profiler_library = unicode(c_profilerdir_macro_a & c_profiler_library_filename_a);
 			const wstring c_profiler_library_quoted = L"\"" + c_profiler_library + L"\"";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
@@ -91,7 +93,7 @@ namespace micro_profiler
 				vcmodel::file_ptr file;
 
 				project.enum_files([&] (vcmodel::file_ptr f) {
-					if (!file && wcsicmp(*f->unexpanded_relative_path(), filename.c_str()) == 0)
+					if (!file && wcsicmp(unicode(*unicode(f->unexpanded_relative_path())).c_str(), filename.c_str()) == 0)
 						file = f;
 				});
 				return file;
@@ -99,7 +101,7 @@ namespace micro_profiler
 
 			bool has_instrumentation(vcmodel::compiler_tool &compiler)
 			{
-				wstring options = compiler.additional_options();
+				auto options = compiler.additional_options();
 
 				return wstring::npos != options.find(c_GH_option) && wstring::npos != options.find(c_Gh_option);
 			}
@@ -107,7 +109,7 @@ namespace micro_profiler
 			template <typename LinkerT>
 			bool has_library(LinkerT &linker)
 			{
-				wstring deps = linker.additional_dependencies();
+				auto deps = linker.additional_dependencies();
 
 				return wstring::npos != deps.find(c_profiler_library_filename);
 			}
@@ -120,9 +122,9 @@ namespace micro_profiler
 
 				void visit(vcmodel::compiler_tool &compiler) const
 				{
-					bool changed = false;
-					const wstring options_were = compiler.additional_options();
-					wstring options = options_were;
+					auto changed = false;
+					const auto options_were = compiler.additional_options();
+					auto options = options_were;
 
 					if (_enable)
 					{
@@ -170,9 +172,9 @@ namespace micro_profiler
 				template <typename LinkerT>
 				void apply(LinkerT &linker, bool is_static) const
 				{
-					bool changed = false;
-					const wstring deps_were = linker.additional_dependencies();
-					wstring deps = deps_were;
+					auto changed = false;
+					const auto deps_were = linker.additional_dependencies();
+					auto deps = deps_were;
 
 					if (_enable)
 					{

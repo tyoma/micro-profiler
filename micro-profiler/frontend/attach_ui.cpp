@@ -45,10 +45,10 @@ namespace micro_profiler
 	namespace
 	{
 		const auto secondary = agge::style::height(10);
-		const string c_profiler_module_32 = "micro-profiler_Win32.dll";
-		const string c_profiler_module_64 = "micro-profiler_x64.dll";
-		const string c_sandbox_32 = "micro-profiler_sandbox_Win32.exe";
-		const string c_sandbox_64 = "micro-profiler_sandbox_x64.exe";
+		const auto c_profiler_module_32 = normalize::lib("micro-profiler_Win32");
+		const auto c_profiler_module_64 = normalize::lib("micro-profiler_x64");
+		const auto c_sandbox_32 = normalize::exe("micro-profiler_sandbox_Win32");
+		const auto c_sandbox_64 = normalize::exe("micro-profiler_sandbox_x64");
 
 		struct pid
 		{

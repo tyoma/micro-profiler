@@ -73,6 +73,9 @@
     <ClCompile Include="file_stream.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="path.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

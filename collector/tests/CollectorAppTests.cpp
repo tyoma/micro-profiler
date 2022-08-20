@@ -590,7 +590,7 @@ namespace micro_profiler
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
-				assert_equal((string)c_symbol_container_2, md.path);
+				assert_equal((file_id)c_symbol_container_2, (file_id)md.path);
 
 				// ACT
 				client->request(req, request_module_metadata, mmi[0].second.persistent_id, response_module_metadata,
@@ -607,7 +607,7 @@ namespace micro_profiler
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
-				assert_equal((string)c_symbol_container_1, md.path);
+				assert_equal((file_id)c_symbol_container_1, (file_id)md.path);
 			}
 
 

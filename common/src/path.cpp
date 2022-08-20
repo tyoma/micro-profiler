@@ -18,21 +18,55 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
-
-#include <string>
+#include <common/path.h>
 
 namespace micro_profiler
 {
-	struct normalize
+	std::string operator &(const std::string &lhs, const std::string &rhs)
 	{
-		static std::string exe(const std::string &path);
-		static std::string lib(const std::string &path);
-	};
+		if (lhs.empty())
+			return rhs;
+		if (lhs.back() == '\\' || lhs.back() =='/')
+			return lhs + rhs;
+		return lhs + '/' + rhs;
+	}
+
+	std::string operator ~(const std::string &value)
+	{
+		const char separators[] = {	'\\', '/', '\0'	};
+		const auto pos = value.find_last_of(separators);
+
+		if (pos != std::string::npos)
+			return value.substr(0, pos);
+		return std::string();
+	}
+
+	const char *operator *(const std::string &value)
+	{
+		const char separators[] = {	'\\', '/', '\0'	};
+		const auto pos = value.find_last_of(separators);
+
+		return value.c_str() + (pos != std::string::npos ? pos + 1 : 0u);
+	}
 
 
+	std::string normalize::exe(const std::string &path)
+	{
+#if defined(_WIN32)
+		return path + ".exe";
+#else
+		return path;
+#endif
+	}
 
-	std::string operator &(const std::string &lhs, const std::string &rhs); // path combine
-	std::string operator ~(const std::string &value); // directory
-	const char *operator *(const std::string &value); // filename
+	std::string normalize::lib(const std::string &path)
+	{
+#if defined(_WIN32)
+		return path + ".dll";
+#elif defined(__APPLE__)
+		return ~path & (std::string("lib") + *path + ".dylib");
+#else
+		return ~path & (std::string("lib") + *path + ".so");
+#endif
+	}
 }

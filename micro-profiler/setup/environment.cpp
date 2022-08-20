@@ -48,7 +48,7 @@ namespace micro_profiler
 		const string c_profilerdir_ev_decorated = "%" + string(constants::profilerdir_ev) + "%";
 		const char c_path_separator_char = ';';
 		const string c_path_separator(1, c_path_separator_char);
-		const string c_profiler_directory = ~get_module_info(&c_profiler_directory).path;
+		const string c_profiler_directory = ~module::locate(&c_profiler_directory).path;
 
 		struct pid
 		{

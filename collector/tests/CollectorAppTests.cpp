@@ -94,7 +94,7 @@ namespace micro_profiler
 
 				// ASERT
 				assert_is_false(!!id.injected);
-				assert_equal(get_current_executable(), id.executable);
+				assert_equal(module::executable(), id.executable);
 				assert_approx_equal(ticks_per_second(), id.ticks_per_second, 0.05);
 			}
 
@@ -207,7 +207,7 @@ namespace micro_profiler
 				// INIT
 				mt::event ready;
 				shared_ptr<void> req;
-				unordered_map<unsigned, mapped_module_ex> l;
+				unordered_map<unsigned, module::mapping_ex> l;
 				unloaded_modules u;
 				unique_ptr<image> image0(new image(c_symbol_container_1));
 				unique_ptr<image> image1(new image(c_symbol_container_2));
@@ -553,7 +553,7 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<void> req;
 				mt::event ready;
-				unordered_map<unsigned, mapped_module_ex> l;
+				unordered_map<unsigned, module::mapping_ex> l;
 				module_info_metadata md;
 
 				collector_app app(collector, c_overhead, tmonitor, pmanager);
@@ -570,7 +570,7 @@ namespace micro_profiler
 				});
 				ready.wait();
 
-				const mapped_module_identified mmi[] = {
+				const module::mapping_instance mmi[] = {
 					*find_module(l, image0.absolute_path()),
 					*find_module(l, image1.absolute_path()),
 				};

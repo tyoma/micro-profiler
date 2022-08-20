@@ -35,7 +35,7 @@ namespace micro_profiler
 		{
 			typedef tuple<shared_ptr<void>, channel_ptr_t> composite_t;
 
-			auto m = load_library(arguments.at(0));
+			auto m = module::load_library(arguments.at(0));
 			auto factory = reinterpret_cast<decltype(&ipc_spawn_server)>(::GetProcAddress(static_cast<HMODULE>(m.get()),
 				"ipc_spawn_server"));
 			channel_ptr_t session;

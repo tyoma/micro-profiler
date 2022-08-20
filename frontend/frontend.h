@@ -75,7 +75,7 @@ namespace micro_profiler
 
 		void store_metadata(const std::string &cache_path, const module_info_metadata &metadata);
 
-		std::string construct_cache_path(const mapped_module_ex &mapping) const;
+		std::string construct_cache_path(const module::mapping_ex &mapping) const;
 		requests_t::iterator new_request_handle();
 
 	private:

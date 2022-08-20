@@ -34,7 +34,7 @@ namespace strmd
 {
 	template <> struct version<micro_profiler::initialization_data> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::function_statistics> {	enum {	value = 5	};	};
-	template <> struct version<micro_profiler::mapped_module_ex> {	enum {	value = 6	};	};
+	template <> struct version<micro_profiler::module::mapping_ex> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::symbol_info> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::module_info_metadata> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::thread_info> {	enum {	value = 4	};	};
@@ -74,7 +74,7 @@ namespace micro_profiler
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, mapped_module_ex &data, unsigned int ver)
+	inline void serialize(ArchiveT &archive, module::mapping_ex &data, unsigned int ver)
 	{
 		unsigned int dummy = 0;
 

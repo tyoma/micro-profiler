@@ -35,7 +35,7 @@ namespace micro_profiler
 
 		temporary_directory::temporary_directory()
 		{
-			const auto base_path = ~get_module_info(&dummy).path;
+			const auto base_path = ~module::locate(&dummy).path;
 
 			for (unsigned index = 1; index < 1000; ++index)
 			{

@@ -34,33 +34,33 @@ namespace micro_profiler
 				: controllee_session(outbound)
 			{	}
 
-			void load_module(const string &module)
+			void load_module(const string &module_)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter> s(b);
 
 				s(tests::load_module);
-				s(module);
+				s(module_);
 				send(mkrange<byte>(b.buffer));
 			}
 
-			void unload_module(const string &module)
+			void unload_module(const string &module_)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter> s(b);
 
 				s(tests::unload_module);
-				s(module);
+				s(module_);
 				send(mkrange<byte>(b.buffer));
 			}
 
-			void execute_function(const string &module, const string &fn)
+			void execute_function(const string &module_, const string &fn)
 			{
 				vector_adapter b;
 				strmd::serializer<vector_adapter> s(b);
 
 				s(tests::execute_function);
-				s(module);
+				s(module_);
 				s(fn);
 				send(mkrange<byte>(b.buffer));
 			}

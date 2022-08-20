@@ -35,7 +35,7 @@ namespace micro_profiler
 	{
 		struct locked_mapping
 		{
-			mapped_module_identified module_;
+			module::mapping_instance module_;
 			shared_ptr<void> lock;
 		};
 	}
@@ -69,17 +69,22 @@ namespace micro_profiler
 	{
 		unordered_set<unsigned> in_snapshot;
 
-		enumerate_process_modules([&] (const mapped_module &mm) {
+		module::enumerate_mapped([&] (const module::mapping &mm) {
 			const auto persistent_id = register_path(mm.path);
 			auto &mi = _modules_registry.find(persistent_id)->second; // Guaranteed to present after register_path().
 
 			if (!mi.mapping)
 			{
-				auto mmi = mapped_module_ex::from(_next_instance_id++, persistent_id, mm);
+				module::mapping_ex m = {
+					persistent_id,
+					mm.path,
+					reinterpret_cast<long_address_t>(mm.base),
+					mi.hash
+				};
+				const auto mmi = make_shared<module::mapping_instance>(_next_instance_id++, m);
 
-				mmi.second.hash = mi.hash;
-				mi.mapping.reset(new mapped_module_identified(mmi));
-				_lqueue.push_back(mmi);
+				mi.mapping = mmi;
+				_lqueue.push_back(*mmi);
 			}
 			in_snapshot.insert(persistent_id);
 		});
@@ -99,7 +104,7 @@ namespace micro_profiler
 		swap(unloaded_modules_, _uqueue);
 	}
 
-	shared_ptr<mapped_module_identified> module_tracker::lock_mapping(unsigned int persistent_id)
+	shared_ptr<module::mapping_instance> module_tracker::lock_mapping(unsigned int persistent_id)
 	{
 		const auto i = _modules_registry.find(persistent_id);
 
@@ -108,8 +113,8 @@ namespace micro_profiler
 		auto l = make_shared<locked_mapping>();
 
 		l->module_ = *i->second.mapping;
-		l->lock = load_library(i->second.path);
-		return shared_ptr<mapped_module_identified>(l, &l->module_);
+		l->lock = module::load_library(i->second.path);
+		return shared_ptr<module::mapping_instance>(l, &l->module_);
 	}
 
 	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int persistent_id) const

@@ -118,7 +118,7 @@ namespace micro_profiler
 	attach_ui::attach_ui(const factory &factory_, shared_ptr<tables::processes> processes, const string &frontend_id)
 		: wpl::stack(false, factory_.context.cursor_manager_)
 	{
-		const auto controller = make_shared<injection_controller>(~get_module_info(&secondary).path, frontend_id);
+		const auto controller = make_shared<injection_controller>(~module::locate(&secondary).path, frontend_id);
 		shared_ptr<stack> toolbar;
 		shared_ptr<button> btn;
 		const auto lv = factory_.create_control<listview>("listview");

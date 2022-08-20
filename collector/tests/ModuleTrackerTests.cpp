@@ -34,7 +34,7 @@ namespace micro_profiler
 				return symbol;
 			}
 
-			const mapped_module_identified *get_loaded(const loaded_modules &loaded, const string &path)
+			const module::mapping_instance *get_loaded(const loaded_modules &loaded, const string &path)
 			{
 				for (auto i = loaded.begin(); i != loaded.end(); ++i)
 					if (file_id(path) == file_id(i->second.path))
@@ -102,7 +102,7 @@ namespace micro_profiler
 				assert_equal(2u, loaded_images.size());
 				assert_is_empty(unloaded_images);
 
-				const mapped_module_identified *mmi[] ={
+				const module::mapping_instance *mmi[] ={
 					find_module(loaded_images, c_symbol_container_2),
 					find_module(loaded_images, c_symbol_container_3_nosymbols),
 				};
@@ -206,7 +206,7 @@ namespace micro_profiler
 				unique_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 				t.get_changes(l[0], u);
 
-				const mapped_module_identified *mmi[] = {
+				const module::mapping_instance *mmi[] = {
 					find_module(l[0], c_symbol_container_1),
 					find_module(l[0], c_symbol_container_2),
 					find_module(l[0], c_symbol_container_3_nosymbols),
@@ -244,7 +244,7 @@ namespace micro_profiler
 				unique_ptr<image> image1(new image(c_symbol_container_2));
 				t.get_changes(l[0], u);
 
-				const mapped_module_identified *mmi[] = { find_module(l[0], c_symbol_container_1), find_module(l[0], c_symbol_container_2), };
+				const module::mapping_instance *mmi[] = { find_module(l[0], c_symbol_container_1), find_module(l[0], c_symbol_container_2), };
 
 				// ACT
 				image image2(c_symbol_container_3_nosymbols);
@@ -278,11 +278,11 @@ namespace micro_profiler
 				image2.reset();
 				t.get_changes(l[1], u);
 
-				const mapped_module_identified *mmi[] = {
+				const module::mapping_instance *mmi[] = {
 					find_module(l[0], c_symbol_container_1), find_module(l[0], c_symbol_container_2), find_module(l[0], c_symbol_container_3_nosymbols),
 				};
 				const unsigned initial_iid_max = max_element(l[0].begin(), l[0].end(),
-					[] (mapped_module_identified lhs, mapped_module_identified rhs) {
+					[] (module::mapping_instance lhs, module::mapping_instance rhs) {
 					return lhs.first < rhs.first;
 				})->first;
 
@@ -419,7 +419,7 @@ namespace micro_profiler
 
 				unique_ptr<image> image0(new image(c_symbol_container_1));
 				t.get_changes(l, u);
-				const mapped_module_identified mmi = *find_module(l, c_symbol_container_1);
+				const module::mapping_instance mmi = *find_module(l, c_symbol_container_1);
 
 				//ACT
 				image0.reset();

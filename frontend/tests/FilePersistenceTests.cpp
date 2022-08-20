@@ -91,7 +91,7 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer, 4> dser4;
 
 			module_info_metadata modules[3];
-			mapped_module_ex mappings[3];
+			module::mapping_ex mappings[3];
 			vector< pair<legacy_function_key, call_graph_types<legacy_function_key>::node> > statistics[4];
 			vector< pair<call_graph_types<long_address_t>::key, call_graph_types<long_address_t>::node> > ustatistics[2];
 			vector<tables::thread> threads[2];
@@ -112,7 +112,7 @@ namespace micro_profiler
 				symbol_info symbols3[] = {
 					{	"stable_sort", 0xFFF, 97,	},
 				};
-				mapped_module_ex mappings_[] = {
+				module::mapping_ex mappings_[] = {
 					{	10u, "c:\\windows\\kernel32.exe", 0x100000 },
 					{	4u, "/usr/bin/TEST", 0xF00010 },
 					{	2u, "c:\\Program File\\test\\test.exe", 0x9000000 },

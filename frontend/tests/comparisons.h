@@ -45,7 +45,7 @@ namespace micro_profiler
 			lhs.state.active < rhs.state.active;
 	}
 
-	inline bool operator <(const mapped_module_ex &lhs, const mapped_module_ex &rhs)
+	inline bool operator <(const module::mapping_ex &lhs, const module::mapping_ex &rhs)
 	{
 		return std::make_tuple(lhs.persistent_id, lhs.path, lhs.base)
 			< std::make_tuple(rhs.persistent_id, rhs.path, rhs.base);

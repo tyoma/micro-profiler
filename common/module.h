@@ -30,61 +30,29 @@
 
 namespace micro_profiler
 {
-	struct mapped_module_ex;
-	typedef std::pair<unsigned int /*instance_id*/, mapped_module_ex> mapped_module_identified;
-
-	struct mapping_less
+	struct module
 	{
-		bool operator ()(const mapped_module_identified &lhs, const mapped_module_identified &rhs) const;
-		bool operator ()(const mapped_module_identified &lhs, long_address_t rhs) const;
-		bool operator ()(long_address_t lhs, const mapped_module_identified &rhs) const;
-	};
-
-	struct mapped_module
-	{
-		std::string path;
-		byte *base;
-		std::vector<byte_range> addresses;
-	};
-
-	struct mapped_module_ex
-	{
-		static mapped_module_identified from(unsigned int instance_id_, unsigned int persistent_id_,
-			const mapped_module &mm);
-
-		unsigned int persistent_id; // Persistent one-based ID of the image this mapping is for.
-		std::string path;
-		long_address_t base;
-		std::uint32_t hash;
-	};
-
-	typedef std::function<void (const mapped_module &module)> module_callback_t;
-
-	std::shared_ptr<void> load_library(const std::string &path);
-	std::string get_current_executable();
-	mapped_module get_module_info(const void *address);
-	void enumerate_process_modules(const module_callback_t &callback);
-
-
-
-	inline bool mapping_less::operator ()(const mapped_module_identified &lhs, const mapped_module_identified &rhs) const
-	{	return lhs.second.base < rhs.second.base;	}
-
-	inline bool mapping_less::operator ()(const mapped_module_identified &lhs, long_address_t rhs) const
-	{	return lhs.second.base < rhs;	}
-
-	inline bool mapping_less::operator ()(long_address_t lhs, const mapped_module_identified &rhs) const
-	{	return lhs < rhs.second.base;	}
-
-	inline mapped_module_identified mapped_module_ex::from(unsigned int instance_id_,
-		unsigned int persistent_id_, const mapped_module &mm)
-	{
-		mapped_module_ex mmi = {
-			persistent_id_,
-			mm.path,
-			reinterpret_cast<size_t>(mm.base),
+		struct mapping
+		{
+			std::string path;
+			byte *base;
+			std::vector<byte_range> addresses;
 		};
 
-		return mapped_module_identified(instance_id_, mmi);
-	}
+		struct mapping_ex
+		{
+			unsigned int persistent_id; // Persistent one-based ID of the image this mapping is for.
+			std::string path;
+			long_address_t base;
+			std::uint32_t hash;
+		};
+
+		typedef std::function<void (const mapping &m)> mapping_callback_t;
+		typedef std::pair<unsigned int /*instance_id*/, mapping_ex> mapping_instance;
+
+		static std::shared_ptr<void> load_library(const std::string &path);
+		static std::string executable();
+		static mapping locate(const void *address);
+		static void enumerate_mapped(const mapping_callback_t &callback);
+	};
 }

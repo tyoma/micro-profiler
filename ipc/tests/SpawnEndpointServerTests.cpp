@@ -37,7 +37,7 @@ namespace micro_profiler
 
 				init( Init )
 				{
-					server_image = ~get_module_info(&g_dummy).path & "guinea_ipc_spawn_server.exe";
+					server_image = ~module::locate(&g_dummy).path & "guinea_ipc_spawn_server.exe";
 					otherside = make_shared<mocks::server>();
 					for (uint16_t port = 6200; port != 6250; ++port)
 					{

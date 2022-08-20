@@ -50,7 +50,7 @@ namespace micro_profiler
 		typedef sdb::table<thread> threads;
 
 
-		typedef record<mapped_module_ex> module_mapping;
+		typedef record<module::mapping_ex> module_mapping;
 		typedef sdb::table<module_mapping> module_mappings;
 
 

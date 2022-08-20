@@ -295,7 +295,7 @@ namespace micro_profiler
 			//	strmd::serializer<vector_adapter, packer> ser(buffer);
 			//	strmd::deserializer<vector_adapter, packer> dser(buffer);
 			//	shared_ptr<symbol_resolver> r(new symbol_resolver(modules, mappings));
-			//	mapped_module_identified basic = { };
+			//	module::mapping_instance basic = { };
 			//	symbol_info symbols[] = {
 			//		{ "a", 0x010, 3, 11, 121 },
 			//		{ "b", 0x101, 5, 1, 1 },

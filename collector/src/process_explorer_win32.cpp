@@ -33,7 +33,7 @@ namespace micro_profiler
 	{
 		typedef HRESULT (WINAPI *GetThreadDescription_t)(HANDLE hThread, PWSTR *ppszThreadDescription);
 
-		const auto c_kernel32 = load_library("kernel32");
+		const auto c_kernel32 = module::load_library("kernel32");
 		const auto _GetThreadDescription = reinterpret_cast<GetThreadDescription_t>(::GetProcAddress(
 				static_cast<HMODULE>(c_kernel32.get()), "GetThreadDescription"));
 

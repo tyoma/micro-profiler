@@ -49,8 +49,8 @@ namespace micro_profiler
 		const string c_bitness_directory = "x64";
 #endif
 		const string c_dbghelps[] = {
-			~get_module_info(&c_bitness_directory).path & "windows7+" & c_bitness_directory & "dbghelp.dll",
-			~get_module_info(&c_bitness_directory).path & "windowsxp+" & c_bitness_directory & "dbghelp.dll",
+			~module::locate(&c_bitness_directory).path & "windows7+" & c_bitness_directory & "dbghelp.dll",
+			~module::locate(&c_bitness_directory).path & "windowsxp+" & c_bitness_directory & "dbghelp.dll",
 			"dbghelp.dll",
 		};
 
@@ -103,7 +103,7 @@ namespace micro_profiler
 			for (auto i = begin(c_dbghelps); !_module && i != end(c_dbghelps); ++i)
 			{
 				::SetEnvironmentVariableW(L"PATH", (wstring(path_env) + L";" + unicode(~*i)).c_str());
-				_module = load_library(*i);
+				_module = module::load_library(*i);
 			}
 			::SetEnvironmentVariableW(L"PATH", path_env);
 

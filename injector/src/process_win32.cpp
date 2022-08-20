@@ -52,13 +52,12 @@ namespace micro_profiler
 
 		void remote_execute(injection_function_t *injection, const_byte_range payload)
 		{
-			const mapped_module m = get_module_info(&foreign_worker);
-			const shared_ptr<void> fpath = foreign_allocate(m.path.size() + 1);
-			const size_t injection_offset = (byte *)injection - m.base;
-			const size_t payload_size = payload.length();
-			const shared_ptr<byte> fpayload = foreign_allocate(sizeof(injection_offset) + sizeof(payload_size)
-				+ payload.length());
-			const auto hkernel = load_library("kernel32");
+			const auto m = module::locate(&foreign_worker);
+			const auto fpath = foreign_allocate(m.path.size() + 1);
+			const auto injection_offset = (byte *)injection - m.base;
+			const auto payload_size = payload.length();
+			const auto fpayload = foreign_allocate(sizeof(injection_offset) + sizeof(payload_size) + payload.length());
+			const auto hkernel = module::load_library("kernel32");
 
 			::WriteProcessMemory(_hprocess.get(), fpath.get(), m.path.c_str(), m.path.size() + 1, NULL);
 			foreign_execute((PTHREAD_START_ROUTINE)::GetProcAddress(static_cast<HMODULE>(hkernel.get()), "LoadLibraryA"),
@@ -105,7 +104,7 @@ namespace micro_profiler
 
 		static void __stdcall foreign_worker(void *data_)
 		{
-			const auto m = get_module_info(&foreign_worker);
+			const auto m = module::locate(&foreign_worker);
 			const auto injection_offset = static_cast<const size_t *>(data_);
 			const auto size = injection_offset + 1;
 			const auto data = reinterpret_cast<const byte *>(size + 1);

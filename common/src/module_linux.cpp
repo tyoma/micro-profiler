@@ -29,7 +29,7 @@ using namespace std;
 
 namespace micro_profiler
 {
-	shared_ptr<void> load_library(const string &path)
+	shared_ptr<void> module::load_library(const string &path)
 	{
 		return shared_ptr<void>(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
 			if (h)
@@ -37,7 +37,7 @@ namespace micro_profiler
 		});
 	}
 
-	string get_current_executable()
+	string module::executable()
 	{
 		char path[1000];
 		int result = ::readlink("/proc/self/exe", path, sizeof(path) - 1);
@@ -45,14 +45,14 @@ namespace micro_profiler
 		return path[result >= 0 ? result : 0] = 0, path;
 	}
 
-	mapped_module get_module_info(const void *address)
+	module::mapping module::locate(const void *address)
 	{
 		Dl_info di = { };
 
 		::dladdr(address, &di);
 
-		mapped_module info = {
-			di.dli_fname && *di.dli_fname ? di.dli_fname : get_current_executable(),
+		mapping info = {
+			di.dli_fname && *di.dli_fname ? di.dli_fname : executable(),
 			static_cast<byte *>(di.dli_fbase),
 			std::vector<byte_range>()
 		};
@@ -60,16 +60,16 @@ namespace micro_profiler
 		return info;
 	}
 
-	void enumerate_process_modules(const module_callback_t &callback)
+	void module::enumerate_mapped(const mapping_callback_t &callback)
 	{
 		struct local
 		{
 			static int on_phdr(dl_phdr_info *phdr, size_t, void *cb)
 			{
 				int n = phdr->dlpi_phnum;
-				const module_callback_t &callback = *static_cast<const module_callback_t *>(cb);
-				mapped_module m = {
-					phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : get_current_executable(),
+				const mapping_callback_t &callback = *static_cast<const mapping_callback_t *>(cb);
+				mapping m = {
+					phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : executable(),
 					reinterpret_cast<byte *>(phdr->dlpi_addr),
 					std::vector<byte_range>()
 				};
@@ -83,6 +83,6 @@ namespace micro_profiler
 			}
 		};
 
-		::dl_iterate_phdr(&local::on_phdr, const_cast<module_callback_t *>(&callback));
+		::dl_iterate_phdr(&local::on_phdr, const_cast<mapping_callback_t *>(&callback));
 	}
 }

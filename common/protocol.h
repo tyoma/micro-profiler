@@ -61,7 +61,7 @@ namespace micro_profiler
 	};
 
 	// response_modules_loaded
-	typedef std::vector<mapped_module_identified> loaded_modules;
+	typedef std::vector<module::mapping_instance> loaded_modules;
 
 	// response_modules_unloaded
 	typedef std::vector<unsigned int> unloaded_modules;

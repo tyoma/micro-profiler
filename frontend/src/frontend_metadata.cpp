@@ -128,7 +128,7 @@ namespace micro_profiler
 		});
 	}
 
-	string frontend::construct_cache_path(const mapped_module_ex &mapping) const
+	string frontend::construct_cache_path(const module::mapping_ex &mapping) const
 	{
 		auto cache_path = _cache_directory & *mapping.path;
 

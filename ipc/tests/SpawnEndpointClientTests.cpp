@@ -35,7 +35,7 @@ namespace micro_profiler
 
 				init( Init )
 				{
-					image_directory = ~get_module_info(&g_dummy).path;
+					image_directory = ~module::locate(&g_dummy).path;
 				}
 
 

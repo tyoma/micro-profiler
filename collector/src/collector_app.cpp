@@ -130,7 +130,7 @@ namespace micro_profiler
 
 		session.message(init, [this] (ipc::serializer &ser) {
 			initialization_data idata = {
-				get_current_executable(),
+				module::executable(),
 				ticks_per_second(),
 				_injected,
 			};

@@ -113,7 +113,7 @@ namespace micro_profiler
 
 	log::writer_t collector_app_instance::create_writer()
 	{
-		const auto logname = (string)"micro-profiler." + *get_current_executable() + ".log";
+		const auto logname = (string)"micro-profiler." + *module::executable() + ".log";
 
 		mkdir(constants::data_directory().c_str(), 0777);
 		return log::create_writer(constants::data_directory() & logname);
@@ -141,7 +141,7 @@ namespace micro_profiler
 		}, c_auto_connect_delay);
 		platform_specific_init();
 		LOG(PREAMBLE "initialized...")
-			% A(get_current_executable()) % A(getpid()) % A(get_module_info(&g_collector_ptr).path);
+			% A(module::executable()) % A(getpid()) % A(module::locate(&g_collector_ptr).path);
 	}
 
 	collector_app_instance::~collector_app_instance()

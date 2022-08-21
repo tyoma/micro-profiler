@@ -9,13 +9,17 @@ using namespace std;
 
 namespace ut
 {
-	template <typename T>
-	size_t size_(const T &container)
-	{	return distance(begin(container), end(container));	}
-
 	template <typename T1, typename T2>
 	inline void content_equal(const T1 &expected, const T2 &actual, const LocationInfo &location)
-	{	is_true(size_(expected) == size_(actual) && equal(begin(expected), end(expected), begin(actual)), location);	}
+	{
+		auto e = std::begin(expected);
+		auto a = std::begin(actual);
+
+		for (; e != std::end(expected) && a != std::end(actual); ++e, ++a)
+			are_equal(*e, *a, location);
+		are_equal(e, std::end(expected), location);
+		are_equal(a, std::end(actual), location);
+	}
 }
 
 namespace sdb
@@ -66,10 +70,10 @@ namespace sdb
 				list<local_type> data2(begin(data2_), end(data2_));
 
 				// INIT / ACT
-				auto idx11 = move(make_ordered_index(data1, [] (const local_type &record) -> int {	return record.a;	}));
-				auto idx12 = move(make_ordered_index(data1, [] (const local_type &record) {	return record.c;	}));
-				auto idx21 = move(make_ordered_index(data2, [] (const local_type &record) -> double {	return record.b;	}));
-				auto idx22 = move(make_ordered_index(data2, [] (const local_type &record) {	return make_tuple(record.a, record.b);	}));
+				auto idx11 = make_ordered_index(data1, [] (const local_type &record) -> int {	return record.a;	});
+				auto idx12 = make_ordered_index(data1, [] (const local_type &record) {	return record.c;	});
+				auto idx21 = make_ordered_index(data2, [] (const local_type &record) -> double {	return record.b;	});
+				auto idx22 = make_ordered_index(data2, [] (const local_type &record) {	return make_tuple(record.a, record.b);	});
 
 				// ACT / ASSERT
 				assert_content_equal(plural

@@ -3,6 +3,7 @@
 #include <common/formatting.h>
 #include <common/module.h>
 #include <common/path.h>
+#include <test-helpers/constants.h>
 #include <ut/assert.h>
 
 #ifdef _WIN32
@@ -28,14 +29,9 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			int dummy;
-		}
-
 		temporary_directory::temporary_directory()
 		{
-			const auto base_path = ~module::locate(&dummy).path;
+			const auto base_path = ~c_this_module;
 
 			for (unsigned index = 1; index < 1000; ++index)
 			{
@@ -43,7 +39,7 @@ namespace micro_profiler
 
 				itoa<10>(temp, index, 3);
 				temp = base_path & temp;
-				if (!::mkdir(temp.c_str(), 777))
+				if (!::mkdir(temp.c_str(), 0700))
 				{
 					_temp_path = temp;
 					return;

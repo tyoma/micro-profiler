@@ -70,7 +70,7 @@ add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:mt.th
 
 target_link_libraries(${micro-profiler} collector.lib patcher ipc common logger scheduler)
 if(WIN32)
-	target_link_libraries(${micro-profiler} injector.lib)
+	target_link_libraries(${micro-profiler} injector)
 endif()
 
 if(MSVC)

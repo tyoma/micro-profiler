@@ -75,10 +75,10 @@
     <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)patcher\src\patcher.lib.vcxproj">
+    <ProjectReference Include="$(SolutionDir)patcher\src\patcher.vcxproj">
       <Project>{84891947-5bfb-45f2-b495-20b93aab1b44}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\injector\src\injector.lib.vcxproj">
+    <ProjectReference Include="..\..\injector\src\injector.vcxproj">
       <Project>{b0596b9d-8303-4fd1-8a0a-5db7882f6f89}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\logger\src\logger.vcxproj">

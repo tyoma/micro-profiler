@@ -53,7 +53,7 @@
     <ProjectReference Include="..\..\scheduler\src\scheduler.vcxproj">
       <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\src\explorer.lib.vcxproj">
+    <ProjectReference Include="..\src\explorer.vcxproj">
       <Project>{7f768e1b-51fb-46e9-88c6-43e9f136710a}</Project>
     </ProjectReference>
   </ItemGroup>

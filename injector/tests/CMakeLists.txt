@@ -15,5 +15,5 @@ add_custom_command(OUTPUT copy-guineas.x
 )
 
 add_library(injector.tests SHARED ${INJECTOR_TEST_SOURCES} copy-guineas.x)
-target_link_libraries(injector.tests injector.lib ipc logger common mt test-helpers)
+target_link_libraries(injector.tests injector ipc logger common mt test-helpers)
 add_dependencies(injector.tests guinea_runner)

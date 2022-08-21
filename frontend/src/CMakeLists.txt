@@ -36,4 +36,4 @@ if(WIN32)
 	)
 endif()
 
-add_library(frontend.lib STATIC ${FRONTEND_LIB_SOURCES})
+add_library(frontend STATIC ${FRONTEND_LIB_SOURCES})

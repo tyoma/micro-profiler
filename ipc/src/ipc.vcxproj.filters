@@ -49,6 +49,9 @@
     <ClCompile Include="client_endpoint_spawn_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="client_endpoint_spawn_unix.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">

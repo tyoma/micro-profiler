@@ -18,8 +18,6 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#pragma once
-
 #include <ipc/spawn/endpoint.h>
 
 using namespace std;
@@ -45,7 +43,7 @@ namespace micro_profiler
 					unsigned int n;
 					vector<byte> buffer;
 
-					while (1 == fread(&n, sizeof n, 1, inbound_stream.get()))
+					while (fread(&n, sizeof n, 1, inbound_stream.get()))
 					{
 						buffer.resize(n);
 						fread(buffer.data(), 1, n, inbound_stream.get());

@@ -32,4 +32,4 @@ if (MSVC)
 endif()
 
 target_link_libraries(symbol_container_2_instrumented micro-profiler)
-target_link_libraries(guinea_runner ipc test-helpers common logger utee)
+target_link_libraries(guinea_runner ipc ipc.spawn test-helpers common logger scheduler)

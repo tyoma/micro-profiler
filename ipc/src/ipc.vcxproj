@@ -47,6 +47,9 @@
     <ClCompile Include="client_endpoint_com.cpp" />
     <ClCompile Include="client_endpoint_sockets.cpp" />
     <ClCompile Include="client_endpoint_spawn.cpp" />
+    <ClCompile Include="client_endpoint_spawn_unix.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="client_endpoint_spawn_win32.cpp" />
     <ClCompile Include="client_session.cpp" />
     <ClCompile Include="com_init.cpp" />

@@ -12,6 +12,8 @@ set(IPC_TESTS_SOURCES
 	ServerSessionTests.cpp
 	SocketsEndpointClientTests.cpp
 	SocketsEndpointServerTests.cpp
+	SpawnEndpointClientTests.cpp
+	SpawnEndpointServerTests.cpp
 )
 
 if (WIN32)
@@ -19,8 +21,6 @@ if (WIN32)
 		COMEndpointClientTests.cpp
 		COMEndpointServerTests.cpp
 		helpers_com.cpp
-		SpawnEndpointClientTests.cpp
-		SpawnEndpointServerTests.cpp
 	)
 endif()
 

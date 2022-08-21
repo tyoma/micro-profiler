@@ -4,7 +4,6 @@ include(test)
 
 set(MICROPROFILER_TEST_SOURCES
 	CollectorIntegrationTests.cpp
-	mock_frontend.cpp
 )
 
 add_library(micro-profiler.tests SHARED ${MICROPROFILER_TEST_SOURCES})

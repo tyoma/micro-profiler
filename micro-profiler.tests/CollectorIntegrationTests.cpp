@@ -1,18 +1,15 @@
 #include <micro-profiler.tests/guineapigs/guinea_runner.h>
 
-#include "mock_frontend.h"
-
-#include <collector/serialization.h>
 #include <common/constants.h>
-#include <ipc/endpoint.h>
+#include <common/file_id.h>
+#include <common/protocol.h>
+#include <common/serialization.h>
+#include <ipc/client_session.h>
 #include <ipc/misc.h>
-#include <mt/atomic.h>
+#include <ipc/endpoint_spawn.h>
 #include <mt/event.h>
-#include <stdlib.h>
-#include <strmd/serializer.h>
 #include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
-#include <test-helpers/process.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -22,102 +19,123 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		string format_endpoint_id()
-		{
-			static mt::atomic<int> port(6110);
-
-			return ipc::sockets_endpoint_id(ipc::localhost, static_cast<unsigned short>(port.fetch_add(1)));
-		}
-
-		struct guinea_session : controllee_session
-		{
-			guinea_session(ipc::channel &outbound)
-				: controllee_session(outbound)
-			{	}
-
-			void load_module(const string &module_)
-			{
-				vector_adapter b;
-				strmd::serializer<vector_adapter> s(b);
-
-				s(tests::load_module);
-				s(module_);
-				send(mkrange<byte>(b.buffer));
-			}
-
-			void unload_module(const string &module_)
-			{
-				vector_adapter b;
-				strmd::serializer<vector_adapter> s(b);
-
-				s(tests::unload_module);
-				s(module_);
-				send(mkrange<byte>(b.buffer));
-			}
-
-			void execute_function(const string &module_, const string &fn)
-			{
-				vector_adapter b;
-				strmd::serializer<vector_adapter> s(b);
-
-				s(tests::execute_function);
-				s(module_);
-				s(fn);
-				send(mkrange<byte>(b.buffer));
-			}
-		};
-
 		begin_test_suite( CollectorIntegrationTests )
 
-			struct frontend_factory : mocks::frontend_state, ipc::server
+			struct server : public ipc::server
 			{
-				frontend_factory()
-					: ready(false, false)
+			public:
+				server(function<ipc::channel_ptr_t (ipc::channel &outbound)> initialize_client)
+					: _initialize_client(initialize_client)
 				{	}
 
-				virtual ipc::channel_ptr_t create_session(ipc::channel &outbound_)
-				{
-					outbound = &outbound_;
-					ready.set();
-					return create();
-				}
+				virtual ipc::channel_ptr_t create_session(ipc::channel &outbound) override
+				{	return _initialize_client(outbound);	}
 
-				template <typename FormatterT>
-				void request(const FormatterT &formatter)
-				{
-					vector_adapter message_buffer;
-					strmd::serializer<vector_adapter, packer> ser(message_buffer);
-
-					formatter(ser);
-					ready.wait();
-					outbound->message(const_byte_range(&message_buffer.buffer[0], message_buffer.buffer.size()));
-				}
-
-				mt::event ready;
-				ipc::channel *outbound;
+			private:
+				function<ipc::channel_ptr_t (ipc::channel &outbound)> _initialize_client;
 			};
 
-			shared_ptr<frontend_factory> frontend_state;
-			shared_ptr< runner_controller<guinea_session> > controller;
-			shared_ptr<void> hserver, hrunner;
+			struct client_session : ipc::client_session
+			{
+				client_session(channel &outbound, const function<void (ipc::client_session &)> &disconnected)
+					: ipc::client_session(outbound), _disconnected(disconnected)
+				{	}
+
+				virtual void disconnect() throw() override
+				{	_disconnected(*this);	}
+
+			private:
+				function<void (ipc::client_session &)> _disconnected;
+			};
+
+
+			function<void (ipc::client_session &client_)> disconnected;
+			function<void (shared_ptr<ipc::client_session> client_)> initialize_client;
+			function<void (ipc::client_session &client_)> exiting_;
+			shared_ptr<void> hserver;
+			list< shared_ptr<void> > subs;
+			mt::event connection_ready;
 
 			init( PrepareFrontend )
 			{
-				string frontend_id(format_endpoint_id()), runner_id(format_endpoint_id());
+				disconnected = [] (ipc::client_session &) {
+					fprintf(stderr, "server disconnected...");
+				};
+				exiting_ = [] (ipc::client_session &client_) {	client_.disconnect_session();	};
 
-				setenv(constants::frontend_id_ev, frontend_id.c_str(), 1);
+				auto server_session = make_shared<server>([this] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+					auto client = make_shared<CollectorIntegrationTests::client_session>(outbound, disconnected);
+					auto &r = *client;
+					auto t = exiting_;
 
-				frontend_state.reset(new frontend_factory);
-				hserver = ipc::run_server(frontend_id, frontend_state);
-				
-				controller.reset(new runner_controller<guinea_session>);
-				hrunner= ipc::run_server(runner_id, controller);
-#ifdef _WIN32
-				system(("start guinea_runner \"" + runner_id + "\"").c_str());
-#else
-				system(("./guinea_runner \"" + runner_id + "\" &").c_str());
-#endif
-				assert_is_true(controller->wait_connection());
+					client->subscribe(*subs.insert(subs.end(), shared_ptr<void>()), exiting, [&r, t] (ipc::deserializer &) {
+						t(r);
+					});
+					initialize_client(client);
+					return client;
+				});
+
+				for (unsigned short port = 6110; port < 6200; port++)
+					try
+					{
+						auto frontend_id = ipc::sockets_endpoint_id(ipc::localhost, port);
+
+						hserver = ipc::run_server(frontend_id, server_session);
+						setenv(constants::frontend_id_ev, frontend_id.c_str(), 1);
+						break;
+					}
+					catch (...)
+					{	}
+				assert_not_null(hserver);
+			}
+
+
+			shared_ptr<ipc::client_session> controller;
+			shared_ptr<void> req;
+
+			init( RunAndControlGuinea )
+			{
+				controller = make_shared<ipc::client_session>([] (ipc::channel &outbound) {
+					return ipc::spawn::connect_client(c_guinea_runner, vector<string>(), outbound);
+				});
+			}
+
+
+			test( ConnectionIsMadeOnRunningAProfilee )
+			{
+				// INIT
+				shared_ptr<ipc::client_session> client;
+
+				initialize_client = [&] (shared_ptr<ipc::client_session> c) {
+					client = c;
+					connection_ready.set();
+				};
+
+				// ACT
+				controller->request(req, load_module, c_symbol_container_2_instrumented, 0, [] (ipc::deserializer &) {});
+
+				// ACT / ASSERT (is satisfied)
+				connection_ready.wait();
+			}
+
+
+			test( ConnectionIsKeptForTheLifetimeOfTheProfilee )
+			{
+				// INIT
+				initialize_client = [&] (shared_ptr<ipc::client_session>) {	connection_ready.set();	};
+				exiting_ = [&] (ipc::client_session &c) {
+					c.disconnect_session();
+					connection_ready.set();
+				};
+
+				controller->request(req, load_module, c_symbol_container_2_instrumented, 0, [] (ipc::deserializer &) {});
+				connection_ready.wait();
+
+				// ACT
+				controller.reset();
+
+				// ACT / ASSERT (is satisfied)
+				connection_ready.wait();
 			}
 
 
@@ -125,91 +143,89 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event ready;
+				ipc::client_session *client;
+				loaded_modules l;
 
-				frontend_state->modules_loaded = bind(&mt::event::set, &ready);
+				initialize_client = [&] (shared_ptr<ipc::client_session> c) {
+					client = c.get();
+					connection_ready.set();
+				};
 
 				// ACT
-				controller->sessions[0]->load_module(c_symbol_container_2_instrumented);
-				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_update), ser(0u);
-				});
+				controller->request(req, load_module, c_symbol_container_2_instrumented, 1, [&] (ipc::deserializer &) {	ready.set();	});
+				ready.wait();
+				connection_ready.wait();
+				client->request(req, request_update, 0, response_modules_loaded, [&] (ipc::deserializer &dser) {	dser(l), ready.set();	});
+
+				// ACT / ASSERT
+				ready.wait();
 
 				// ASSERT
+				assert_is_true(std::any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
+					return file_id(m.second.path) == file_id(c_symbol_container_2_instrumented);
+				}));
+
+				// ACT
+				controller->request(req, load_module, c_symbol_container_1, 1, [&] (ipc::deserializer &) {	ready.set();	});
 				ready.wait();
+				client->request(req, request_update, 0, response_modules_loaded, [&] (ipc::deserializer &dser) {	dser(l), ready.set();	});
+
+				// ACT / ASSERT
+				ready.wait();
+
+				// ASSERT
+				assert_is_false(std::any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
+					return file_id(m.second.path) == file_id(c_symbol_container_2_instrumented);
+				}));
+				assert_is_true(std::any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
+					return file_id(m.second.path) == file_id(c_symbol_container_1);
+				}));
 			}
 
 
 			test( ModuleUnloadedIsPostOnProfileeUnload )
 			{
 				// INIT
-				mt::event ready, ready2;
-
-				frontend_state->modules_loaded = bind(&mt::event::set, &ready);
-				frontend_state->modules_unloaded = bind(&mt::event::set, &ready2);
-				controller->sessions[0]->load_module(c_symbol_container_2_instrumented);
-				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_update), ser(0u);
-				});
-
-				ready.wait();
-
-				// ACT
-				controller->sessions[0]->unload_module(c_symbol_container_2_instrumented);
-				frontend_state->request([&] (strmd::serializer<vector_adapter, packer> &ser) {
-					ser(request_update), ser(0u);
-				});
-
-				// ASSERT
-				ready2.wait();
-			}
-
-
-			// TODO: restore after CMakeLists.txt refactoring
-			ignored_test( StatisticsIsReceivedFromProfillee )
-			{
-				// INIT
-				typedef void (f21_t)(int * volatile begin, int * volatile end);
-				typedef int (f22_t)(char *buffer, size_t count, const char *format, ...);
-				typedef void (f2F_t)(void (*&f)(int * volatile begin, int * volatile end));
-
 				mt::event ready;
-				unique_ptr<image> guineapig;
-				shared_ptr< vector<mocks::thread_statistics_map> >
-					statistics(new vector<mocks::thread_statistics_map>);
-				char buffer[100];
-				int data[10];
+				ipc::client_session *client;
+				map<id_t, module::mapping_ex> l;
+				vector<id_t> u;
 
-				frontend_state->updated = [&, statistics] (unsigned, const mocks::thread_statistics_map &u) {
-					statistics->push_back(u);
-					ready.set();
+				initialize_client = [&] (shared_ptr<ipc::client_session> c) {
+					client = c.get();
+					connection_ready.set();
 				};
-				
-				guineapig.reset(new image(c_symbol_container_2_instrumented));
 
-				f22_t *f22 = guineapig->get_symbol<f22_t>("guinea_snprintf");
-				f2F_t *f2F = guineapig->get_symbol<f2F_t>("bubble_sort_expose");
-				f21_t *f21;
+				controller->request(req, load_module, c_symbol_container_2_instrumented, 1, [&] (ipc::deserializer &) {	ready.set();	});
+				ready.wait();
+				controller->request(req, load_module, c_symbol_container_1, 1, [&] (ipc::deserializer &) {	ready.set();	});
+				ready.wait();
+				controller->request(req, load_module, c_symbol_container_2, 1, [&] (ipc::deserializer &) {	ready.set();	});
+				ready.wait();
+				connection_ready.wait();
+				client->request(req, request_update, 0, response_modules_loaded, [&] (ipc::deserializer &dser) {	dser(l), ready.set();	});
+				ready.wait();
 
 				// ACT
-				f22(buffer, sizeof(buffer), "testtest %d %d", 10, 11);
+				controller->request(req, unload_module, c_symbol_container_1, 1, [&] (ipc::deserializer &) {	ready.set();	});
+				ready.wait();
+				client->request(req, request_update, 0, response_modules_unloaded, [&] (ipc::deserializer &dser) {	dser(u), ready.set();	});
 				ready.wait();
 
 				// ASSERT
-				assert_equal(1u, statistics->size()); // single update
-				assert_equal(1u, (*statistics)[0].size()); // single thread
-				assert_equal(1u, (*statistics)[0].begin()->second.size()); // single function
-
-				// INIT
-				f2F(f21);
+				assert_equal(1u, u.size());
+				assert_equal(file_id(c_symbol_container_1), file_id(l[u[0]].path));
 
 				// ACT
-				f21(data, data + 10);
+				controller->request(req, unload_module, c_symbol_container_2, 1, [&] (ipc::deserializer &) {	ready.set();	});
+				ready.wait();
+				client->request(req, request_update, 0, response_modules_unloaded, [&] (ipc::deserializer &dser) {	dser(u), ready.set();	});
 				ready.wait();
 
+
 				// ASSERT
-				assert_equal(2u, statistics->size()); // two updates
-				assert_equal(1u, (*statistics)[1].size()); // single thread
-				assert_equal(1u, (*statistics)[1].begin()->second.size()); // single function
+				assert_equal(1u, u.size());
+				assert_equal(file_id(c_symbol_container_2), file_id(l[u[0]].path));
 			}
 
 		end_test_suite

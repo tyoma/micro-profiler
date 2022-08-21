@@ -39,11 +39,28 @@ namespace micro_profiler
 					// INIT
 					const auto image_directory = ~module::locate(&g_dummy).path;
 
+#ifdef _WIN32
 					// INIT / ACT / ASSERT
 					assert_throws(spawn::connect_client("zubazuba", vector<string>(), inbound),
 						spawn::server_exe_not_found);
 					assert_throws(spawn::connect_client(image_directory & normalize::exe("abc\\guinea_ipc_spawn"), vector<string>(), inbound),
 						spawn::server_exe_not_found);
+#else
+					// INIT
+					inbound.on_disconnect = [&] {	ready.set();	};
+
+					// INIT / ACT
+					auto c1 = spawn::connect_client("zubazuba", vector<string>(), inbound);
+
+					// ACT
+					ready.wait();
+
+					// INIT / ACT
+					auto c2 = spawn::connect_client(image_directory & normalize::exe("abc\\guinea_ipc_spawn"), vector<string>(), inbound);
+
+					// ACT
+					ready.wait();
+#endif
 				}
 
 

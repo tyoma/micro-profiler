@@ -155,7 +155,7 @@ namespace micro_profiler
 
 	template <typename T>
 	inline size_t pod_vector<T>::byte_size() const throw()
-	{	return reinterpret_cast<uintptr_t>(_end) - reinterpret_cast<uintptr_t>(_begin);	}
+	{	return static_cast<char *>(static_cast<void *>(_end)) - static_cast<char *>(static_cast<void *>(_begin));	}
 
 	template <typename T>
 	inline size_t pod_vector<T>::capacity() const throw()

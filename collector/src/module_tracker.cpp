@@ -78,7 +78,7 @@ namespace micro_profiler
 				module::mapping_ex m = {
 					persistent_id,
 					mm.path,
-					reinterpret_cast<long_address_t>(mm.base),
+					reinterpret_cast<uintptr_t>(mm.base),
 					mi.hash
 				};
 				const auto mmi = make_shared<module::mapping_instance>(_next_instance_id++, m);

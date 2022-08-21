@@ -23,8 +23,6 @@ namespace micro_profiler
 		{
 			namespace
 			{
-				int g_dummy;
-
 				inline void operator <<(channel &lhs, const vector<byte> &rhs)
 				{	lhs.message(const_byte_range(rhs.data(), rhs.size()));	}
 			}
@@ -36,14 +34,11 @@ namespace micro_profiler
 
 				test( AttemptToSpawnAMissingFileThrows )
 				{
-					// INIT
-					const auto image_directory = ~module::locate(&g_dummy).path;
-
 #ifdef _WIN32
 					// INIT / ACT / ASSERT
 					assert_throws(spawn::connect_client("zubazuba", vector<string>(), inbound),
 						spawn::server_exe_not_found);
-					assert_throws(spawn::connect_client(image_directory & normalize::exe("abc\\guinea_ipc_spawn"), vector<string>(), inbound),
+					assert_throws(spawn::connect_client(~c_this_module & normalize::exe("abc\\guinea_ipc_spawn"), vector<string>(), inbound),
 						spawn::server_exe_not_found);
 #else
 					// INIT
@@ -56,7 +51,7 @@ namespace micro_profiler
 					ready.wait();
 
 					// INIT / ACT
-					auto c2 = spawn::connect_client(image_directory & normalize::exe("abc\\guinea_ipc_spawn"), vector<string>(), inbound);
+					auto c2 = spawn::connect_client(~c_this_module & normalize::exe("abc\\guinea_ipc_spawn"), vector<string>(), inbound);
 
 					// ACT
 					ready.wait();

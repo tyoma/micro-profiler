@@ -23,11 +23,6 @@ namespace micro_profiler
 	{
 		namespace tests
 		{
-			namespace
-			{
-				int g_dummy;
-			}
-
 			begin_test_suite( SpawnEndpointServerTests )
 				mocks::channel inbound;
 				shared_ptr<mocks::server> otherside;

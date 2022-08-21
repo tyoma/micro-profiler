@@ -29,8 +29,8 @@ namespace micro_profiler
 	namespace ipc
 	{
 		client_session::client_session(channel &outbound)
-			: _token(1), _outbound(&outbound), _callbacks(make_shared<callbacks_t>()),
-				_message_callbacks(make_shared<message_callbacks_t>())
+			: _token(1), _callbacks(make_shared<callbacks_t>()), _message_callbacks(make_shared<message_callbacks_t>()),
+				_outbound(&outbound)
 		{	}
 
 		client_session::~client_session()

@@ -2,6 +2,7 @@
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 	<Default Extension="vsixmanifest" ContentType="text/xml" />
 	<Default Extension="dll" ContentType="application/octet-stream" />
+	<Default Extension="exe" ContentType="application/octet-stream" />
 	<Default Extension="so" ContentType="application/octet-stream" />
 	<Default Extension="lib" ContentType="application/octet-stream" />
 	<Default Extension="ico" ContentType="application/octet-stream" />

@@ -7,9 +7,6 @@
     <ClCompile Include="frontend_manager.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="process_list.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="untested\file.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>

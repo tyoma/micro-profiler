@@ -20,35 +20,35 @@
 
 #pragma once
 
-#include <injector/process.h>
-#include <vector>
+#include "constructors.h"
+#include "model_context.h"
+#include "table_model_impl.h"
+
+#include <explorer/process.h>
 #include <wpl/models.h>
 
 namespace micro_profiler
 {
-	class process_list : public wpl::richtext_table_model
+	template <>
+	struct key_traits<process_info>
 	{
-	public:
-		typedef std::function<void (const process::enumerate_callback_t &callback)> process_enumerator_t;
+		typedef id_t key_type;
 
-	public:
-		void update(const process_enumerator_t &enumerator);
-
-		std::shared_ptr<process> get_process(index_type row) const;
-		void set_order(index_type column, bool ascending);
-
-		virtual index_type get_count() const throw() override;
-		virtual void get_text(index_type row, index_type column, agge::richtext_t &text) const override;
-
-	private:
-		typedef std::vector< std::shared_ptr<process> > process_container_t;
-
-	private:
-		template <typename PredicateT>
-		void init_sorter(const PredicateT &p);
-
-	private:
-		std::vector< std::shared_ptr<process> > _processes;
-		std::function<void (process_container_t &processes)> _sorter;
+		static key_type get_key(const process_info &item)
+		{	return item.pid;	}
 	};
+
+	template <typename U, typename ColumnsT>
+	inline std::shared_ptr< table_model_impl<wpl::richtext_table_model, U, process_model_context, process_info> > process_list(
+		std::shared_ptr<U> underlying, const ColumnsT &columns)
+	{
+		typedef table_model_impl<wpl::richtext_table_model, U, process_model_context, process_info> model_type;
+		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection> composite_t;
+
+		const auto m = std::make_shared<model_type>(underlying, initialize<process_model_context>());
+		const auto c = std::make_shared<composite_t>(m, underlying->invalidate += [m] {	m->fetch();	});
+
+		m->add_columns(columns);
+		return std::shared_ptr<model_type>(c, std::get<0>(*c).get());
+	}
 }

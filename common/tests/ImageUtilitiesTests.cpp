@@ -27,7 +27,7 @@ namespace micro_profiler
 		{
 			struct less_module
 			{
-				bool operator ()(const mapped_module &lhs, const mapped_module &rhs) const
+				bool operator ()(const module::mapping &lhs, const module::mapping &rhs) const
 				{
 					return lhs.path < rhs.path ? true : lhs.path > rhs.path ? false : lhs.base < rhs.base;
 				}
@@ -42,7 +42,7 @@ namespace micro_profiler
 			}
 
 			template <typename ContainerT>
-			void filter_modules(ContainerT &modules, const mapped_module &m)
+			void filter_modules(ContainerT &modules, const module::mapping &m)
 			{
 				if (file_id(m.path) == file_id(c_symbol_container_1)
 					|| file_id(m.path) == file_id(c_symbol_container_2)
@@ -65,9 +65,9 @@ namespace micro_profiler
 				};
 
 				// ACT
-				mapped_module info1 = get_module_info(reinterpret_cast<const void *>(images[0].base()));
-				mapped_module info2 = get_module_info(reinterpret_cast<const void *>(images[1].base()));
-				mapped_module info3 = get_module_info(reinterpret_cast<const void *>(images[2].base()));
+				auto info1 = module::locate(reinterpret_cast<const void *>(images[0].base()));
+				auto info2 = module::locate(reinterpret_cast<const void *>(images[1].base()));
+				auto info3 = module::locate(reinterpret_cast<const void *>(images[2].base()));
 
 				// ASSERT
 				assert_equal(file_id(c_symbol_container_1), file_id(info1.path));
@@ -89,9 +89,9 @@ namespace micro_profiler
 				};
 
 				// ACT
-				mapped_module info1 = get_module_info(images[0].get_symbol_address("get_function_addresses_1"));
-				mapped_module info2 = get_module_info(images[1].get_symbol_address("get_function_addresses_2"));
-				mapped_module info3 = get_module_info(images[2].get_symbol_address("get_function_addresses_3"));
+				auto info1 = module::locate(images[0].get_symbol_address("get_function_addresses_1"));
+				auto info2 = module::locate(images[1].get_symbol_address("get_function_addresses_2"));
+				auto info3 = module::locate(images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
 				assert_equal(file_id(c_symbol_container_1), file_id(info1.path));
@@ -105,11 +105,11 @@ namespace micro_profiler
 			test( EnumeratingModulesListsLoadedModules )
 			{
 				// INIT
-				vector<mapped_module> modules;
+				vector<module::mapping> modules;
 
 				// ACT
 				image img1(c_symbol_container_1);
-				enumerate_process_modules(bind(&filter_modules< vector<mapped_module> >, ref(modules), _1));
+				module::enumerate_mapped(bind(&filter_modules< vector<module::mapping> >, ref(modules), _1));
 
 				// ASSERT
 				assert_equal(1u, modules.size());
@@ -123,7 +123,7 @@ namespace micro_profiler
 				// ACT
 				image img2(c_symbol_container_2);
 				image img3(c_symbol_container_3_nosymbols);
-				enumerate_process_modules(bind(&filter_modules< vector<mapped_module> >, ref(modules), _1));
+				module::enumerate_mapped(bind(&filter_modules< vector<module::mapping> >, ref(modules), _1));
 
 				// ASSERT
 				assert_equal(3u, modules.size());
@@ -143,7 +143,7 @@ namespace micro_profiler
 			test( EnumeratingModulesDropsUnloadedModules )
 			{
 				// INIT
-				vector<mapped_module> modules;
+				vector<module::mapping> modules;
 
 				image img1(c_symbol_container_1);
 				unique_ptr<image> img2(new image(c_symbol_container_2));
@@ -153,7 +153,7 @@ namespace micro_profiler
 
 				// ACT
 				img2.reset();
-				enumerate_process_modules(bind(&filter_modules< vector<mapped_module> >, ref(modules), _1));
+				module::enumerate_mapped(bind(&filter_modules< vector<module::mapping> >, ref(modules), _1));
 
 				// ASSERT
 				assert_equal(2u, modules.size());
@@ -168,16 +168,16 @@ namespace micro_profiler
 				mt::thread t1([&] {
 					while (!exit)
 					{
-						auto m1 = load_library(c_symbol_container_1);
-						auto m2 = load_library(c_symbol_container_2);
-						auto m3 = load_library(c_symbol_container_3_nosymbols);
+						auto m1 = module::load(c_symbol_container_1);
+						auto m2 = module::load(c_symbol_container_2);
+						auto m3 = module::load(c_symbol_container_3_nosymbols);
 					}
 				});
 				mt::thread t2([&] {
 					while (!exit)
 					{
 						auto &error_ = error;
-						enumerate_process_modules([&] (const mapped_module &module) {
+						module::enumerate_mapped([&] (const module::mapping &module) {
 							error_ |= !!access(module.path.c_str(), 0);
 						});
 					}

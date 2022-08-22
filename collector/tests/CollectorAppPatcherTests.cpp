@@ -37,7 +37,7 @@ namespace micro_profiler
 
 		begin_test_suite( CollectorAppPatcherTests )
 			mocks::allocator allocator_;
-			active_server_app::frontend_factory_t factory;
+			active_server_app::client_factory_t factory;
 			shared_ptr<ipc::client_session> client;
 			mocks::tracer collector;
 			mocks::thread_monitor tmonitor;
@@ -63,13 +63,15 @@ namespace micro_profiler
 			test( PatchActivationIsMadeOnRequest )
 			{
 				// INIT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
 				vector<void *> bases_log;
 				vector< vector<unsigned> > rva_log;
 				mt::event ready;
+
+				app.connect(factory, false);
 
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
@@ -114,7 +116,7 @@ namespace micro_profiler
 			test( PatchActivationFailuresAreReturned )
 			{
 				// INIT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				pair<unsigned, patch_apply> aresults1[] = {
@@ -132,6 +134,8 @@ namespace micro_profiler
 				};
 				vector<patch_manager::apply_results> log;
 				mt::event ready;
+
+				app.connect(factory, false);
 
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
@@ -178,12 +182,14 @@ namespace micro_profiler
 			test( PatchRevertIsMadeOnRequest )
 			{
 				// INIT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
 				vector< vector<unsigned> > rva_log;
 				mt::event ready;
+
+				app.connect(factory, false);
 
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
@@ -226,7 +232,7 @@ namespace micro_profiler
 			test( PatchRevertFailuresAreReturned )
 			{
 				// INIT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				pair<unsigned, patch_result::errors> rresults1[] = {
@@ -244,6 +250,8 @@ namespace micro_profiler
 				};
 				vector<patch_manager::revert_results> log;
 				mt::event ready;
+
+				app.connect(factory, false);
 
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});

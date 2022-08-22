@@ -27,7 +27,7 @@
 
 namespace strmd
 {
-	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 6	};	};
+	template <> struct version<micro_profiler::profiling_session> {	enum {	value = 7	};	};
 }
 
 namespace micro_profiler
@@ -47,7 +47,7 @@ namespace micro_profiler
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, profiling_session &data, unsigned int ver)
 	{
-		sdb::scontext::indexed_by<keyer::external_id> as_map;
+		sdb::scontext::indexed_by<keyer::external_id, void> as_map;
 
 		archive(data.process_info);
 
@@ -56,7 +56,10 @@ namespace micro_profiler
 		else if (ver >= 3)
 			archive(data.mappings, as_map);
 
-		archive(data.modules);
+		if (ver >= 7)
+			archive(data.modules);
+		else
+			archive(data.modules, as_map);
 
 		if (ver >= 5)
 			archive(data.statistics);

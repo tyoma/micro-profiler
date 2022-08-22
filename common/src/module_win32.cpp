@@ -60,10 +60,19 @@ namespace micro_profiler
 		}
 	}
 
-	shared_ptr<void> load_library(const string &path)
-	{	return shared_ptr<void>(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);	}
 
-	string get_current_executable()
+
+	void *module::dynamic::find_function(const char *name) const
+	{	return GetProcAddress(static_cast<HMODULE>(_handle.get()), name);	}
+
+
+	shared_ptr<module::dynamic> module::load(const string &path)
+	{
+		shared_ptr<void> handle(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);
+		return handle ? shared_ptr<dynamic>(new dynamic(handle)) : nullptr;
+	}
+
+	string module::executable()
 	{
 		string path;
 
@@ -71,9 +80,9 @@ namespace micro_profiler
 		return path;
 	}
 
-	mapped_module get_module_info(const void *address)
+	module::mapping module::locate(const void *address)
 	{
-		mapped_module info = {};
+		mapping info = {};
 		module_lock h(address);
 
 		if (h)
@@ -84,9 +93,9 @@ namespace micro_profiler
 		return info;
 	}
 
-	void enumerate_process_modules(const module_callback_t &callback)
+	void module::enumerate_mapped(const mapping_callback_t &callback)
 	{
-		mapped_module module;
+		mapping module;
 		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0), &::CloseHandle);
 		MODULEENTRY32 entry = { sizeof(MODULEENTRY32), };
 

@@ -26,6 +26,7 @@
 #include <common/memory.h>
 #include <common/noncopyable.h>
 #include <logger/multithreaded_logger.h>
+#include <logger/writer.h>
 #include <patcher/image_patch_manager.h>
 
 namespace micro_profiler
@@ -33,14 +34,19 @@ namespace micro_profiler
 	class collector_app_instance : noncopyable
 	{
 	public:
-		collector_app_instance(const active_server_app::frontend_factory_t &frontend_factory,
+		collector_app_instance(const active_server_app::client_factory_t &auto_frontend_factory,
 			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr);
 		~collector_app_instance();
 
 		void terminate() throw();
+		void block_auto_connect();
+		void connect(const active_server_app::client_factory_t &frontend_factory);
+
+		static ipc::channel_ptr_t probe_create_channel(ipc::channel &inbound);
 
 	private:
 		void platform_specific_init();
+		static log::writer_t create_writer();
 
 	private:
 		log::multithreaded_logger _logger;
@@ -50,5 +56,8 @@ namespace micro_profiler
 		calls_collector _collector;
 		image_patch_manager _patch_manager;
 		std::unique_ptr<collector_app> _app;
+		bool _auto_connect;
 	};
 }
+
+extern micro_profiler::collector_app_instance g_instance;

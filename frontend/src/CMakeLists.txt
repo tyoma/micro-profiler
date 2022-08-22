@@ -9,7 +9,6 @@ set(FRONTEND_LIB_SOURCES
 	frontend_patcher.cpp
 	headers_model.cpp
 	image_patch_model.cpp
-	process_list.cpp
 	profiling_preferences.cpp
 	representation.cpp
 	symbol_resolver.cpp
@@ -37,4 +36,4 @@ if(WIN32)
 	)
 endif()
 
-add_library(frontend.lib STATIC ${FRONTEND_LIB_SOURCES})
+add_library(frontend STATIC ${FRONTEND_LIB_SOURCES})

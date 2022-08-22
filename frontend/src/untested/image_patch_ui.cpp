@@ -1,5 +1,6 @@
 #include <frontend/image_patch_ui.h>
 
+#include <frontend/columns_layout.h>
 #include <frontend/headers_model.h>
 #include <frontend/image_patch_model.h>
 #include <frontend/selection_model.h>
@@ -18,7 +19,7 @@ namespace micro_profiler
 		const auto dummy_get = [] (agge::richtext_t &, const statistics_model_context &, size_t, const call_statistics &) {};
 		const auto dummy_compare = [] (const statistics_model_context &, const call_statistics &, const call_statistics &) {	return false;	};
 
-		const headers_model::column c_columns_symbols[] = {
+		const column_definition<call_statistics, statistics_model_context> c_columns_symbols[] = {
 			{	"Rva", "RVA" + secondary, 28, agge::align_far, dummy_get, dummy_compare, true,	},
 			{	"Function", "Function\n" + secondary + "qualified name", 384, agge::align_near, dummy_get, dummy_compare, true,	},
 			{	"Status", "Profiling\n" + secondary + "status", 64, agge::align_near, dummy_get, dummy_compare, false,	},

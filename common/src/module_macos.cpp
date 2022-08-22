@@ -28,15 +28,21 @@ using namespace std;
 
 namespace micro_profiler
 {
-	shared_ptr<void> load_library(const string &path)
+	void *module::dynamic::find_function(const char *name) const
+	{	return ::dlsym(_handle.get(), name);	}
+
+
+	shared_ptr<module::dynamic> module::load(const string &path)
 	{
-		return shared_ptr<void>(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
+		shared_ptr<void> handle(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
 			if (h)
 				::dlclose(h);
 		});
+
+		return handle ? shared_ptr<module::dynamic>(new module::dynamic(handle)) : nullptr;
 	}
 
-	string get_current_executable()
+	string module::executable()
 	{
 		char dummy;
 		uint32_t l = 0;
@@ -50,25 +56,25 @@ namespace micro_profiler
 		return &buffer[0];
 	}
 
-	mapped_module get_module_info(const void *address)
+	module::mapping module::locate(const void *address)
 	{
 		Dl_info di = { };
 
 		::dladdr(address, &di);
 
-		mapped_module info = {
-			di.dli_fname && *di.dli_fname ? di.dli_fname : get_current_executable(),
+		mapping info = {
+			di.dli_fname && *di.dli_fname ? di.dli_fname : executable(),
 			static_cast<byte *>(di.dli_fbase),
 		};
 
 		return info;
 	}
 
-	void enumerate_process_modules(const module_callback_t &callback)
+	void module::enumerate_mapped(const mapping_callback_t &callback)
 	{
 		for (uint32_t n = ::_dyld_image_count(); n--; )
 		{
-			mapped_module m = {
+			mapping m = {
 				::_dyld_get_image_name(n),
 				reinterpret_cast<byte *>(::_dyld_get_image_vmaddr_slide(n)),
 			};

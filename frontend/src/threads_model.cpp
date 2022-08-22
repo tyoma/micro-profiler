@@ -59,7 +59,7 @@ namespace micro_profiler
 		if (!index--)
 			return false;
 		else if (!index--)
-			return thread_id = cumulative, true;
+			return thread_id = static_cast<id_t>(cumulative), true;
 		else if (index < _view->size())
 			return thread_id = (*_view)[index].id, true;
 		else

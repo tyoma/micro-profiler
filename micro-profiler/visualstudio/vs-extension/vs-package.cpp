@@ -147,13 +147,14 @@ namespace micro_profiler
 		void profiler_package::initialize(wpl::vs::factory &factory)
 		{
 			CComPtr<profiler_package> self = this;
+			auto processes = make_shared<process_explorer>(mt::milliseconds(50), *_ui_queue);
 
 			obtain_service<_DTE>([self] (CComPtr<_DTE> p) {
 				LOG(PREAMBLE "DTE obtained...") % A(p);
 				self->_dte = p;
 			});
 			setup_factory(factory);
-			register_path(false);
+			register_path(*processes, false);
 			_frontend_manager.reset(new frontend_manager([this] (ipc::channel &outbound) {
 				return new frontend(outbound, c_cache_directory, *_worker_queue, *_ui_queue);
 			}, [this] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
@@ -168,7 +169,7 @@ namespace micro_profiler
 				&constants::integrated_frontend_id));
 			setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()).c_str(),
 				1);
-			init_menu();
+			init_menu(processes);
 		}
 
 		void profiler_package::terminate() throw()

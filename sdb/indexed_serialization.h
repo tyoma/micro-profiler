@@ -33,8 +33,14 @@ namespace sdb
 {
 	namespace scontext
 	{
-		template <typename K>
+		template <typename K, typename InnerT>
 		struct indexed_by
+		{
+			InnerT inner;
+		};
+
+		template <typename K>
+		struct indexed_by<K, void>
 		{
 		};
 	}
@@ -62,15 +68,15 @@ namespace sdb
 		{	}
 	};
 
-	template <typename S, typename P, int v, typename T, typename C, typename K>
-	inline void serialize(strmd::deserializer<S, P, v> &archive, table<T, C> &data, scontext::indexed_by<K> &context)
+	template <typename S, typename P, int v, typename T, typename C, typename K, typename I>
+	inline void serialize(strmd::deserializer<S, P, v> &archive, table<T, C> &data, scontext::indexed_by<K, I> &context)
 	{
 		archive(unique_index(data, K()), context);
 		data.invalidate();
 	}
 
-	template <typename ArchiveT, typename T, typename C, typename K>
-	inline void serialize(ArchiveT &/*archive*/, table<T, C> &/*data*/, scontext::indexed_by<K> &/*context*/)
+	template <typename ArchiveT, typename T, typename C, typename K, typename I>
+	inline void serialize(ArchiveT &/*archive*/, table<T, C> &/*data*/, scontext::indexed_by<K, I> &/*context*/)
 	{	throw 0;	}
 }
 

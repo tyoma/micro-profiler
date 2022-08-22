@@ -34,26 +34,9 @@ namespace micro_profiler
 {
 	using namespace ipc;
 
-	namespace
-	{
-		class queue_wrapper : public scheduler::queue
-		{
-		public:
-			queue_wrapper(scheduler::task_queue &q)
-				: _queue(q)
-			{	}
-
-			virtual void schedule(function<void ()> &&task, mt::milliseconds defer_by) override
-			{	_queue.schedule(move(task), defer_by);	}
-
-		private:
-			scheduler::task_queue &_queue;
-		};
-	}
-
-	active_server_app::active_server_app(events &events_, const frontend_factory_t &factory)
+	active_server_app::active_server_app(events &events_)
 		: _events(events_), _session(nullptr), _exit_requested(false), _exit_confirmed(false),
-			_queue([] {	return mt::milliseconds(clock());	}), _frontend_thread([this, factory] {	worker(factory);	})
+			_queue([] {	return mt::milliseconds(micro_profiler::clock());	}), _thread([this] {	worker();	})
 	{
 		LOG(PREAMBLE "constructed...") % A(this);
 	}
@@ -66,43 +49,51 @@ namespace micro_profiler
 			(_session && _events.finalize_session(*_session) ? _exit_requested : _exit_confirmed) = true;
 			LOG(PREAMBLE "processing stop request...") % A(this) % A(_exit_confirmed);
 		});
-		_frontend_thread.join();
+		_thread.join();
 		LOG(PREAMBLE "destroyed...") % A(this);
 	}
 
-	void active_server_app::schedule(function<void ()> &&task, mt::milliseconds defer_by)
-	{	_queue.schedule(move(task), defer_by);	}
-
-	void active_server_app::worker(const frontend_factory_t &factory)
+	void active_server_app::connect(const client_factory_t &factory)
 	{
-		queue_wrapper qw(_queue);
-		unique_ptr<marshalled_active_session> s;
-		const auto frontend_disconnected = [&] {
+		const auto disconnected = [this] {
 			auto exit_confirmed = false;
 
 			if (_exit_requested)
 				exit_confirmed = _exit_confirmed = true;
 			_session = nullptr;
-			s.reset();
+			_active_session.reset();
 
 			LOG(PREAMBLE "remote session disconnected...") % A(exit_confirmed);
 		};
-
-		s.reset(new marshalled_active_session(factory, qw, [&] (channel &outbound) -> channel_ptr_t {
+		const auto server_session_factory = [this, disconnected] (channel &outbound) -> channel_ptr_t {
 			const auto session = make_shared<server_session>(outbound);
 
 			_events.initialize_session(*session);
-			session->set_disconnect_handler(frontend_disconnected);
+			session->set_disconnect_handler(disconnected);
 			_session = session.get();
 			return session;
-		}));
+		};
 
+		LOG(PREAMBLE "connection scheduled...");
+		schedule([this, factory, server_session_factory] {
+			_active_session.reset(new marshalled_active_session(factory, *this, server_session_factory));
+			LOG(PREAMBLE "connection created!");
+		});
+	}
+
+	void active_server_app::schedule(function<void ()> &&task, mt::milliseconds defer_by)
+	{	_queue.schedule(move(task), defer_by);	}
+
+	void active_server_app::worker()
+	{
 		LOG(PREAMBLE "worker started!");
 		do
 		{
 			_queue.wait();
 			_queue.execute_ready(mt::milliseconds(100));
 		} while (!_exit_confirmed);
+		LOG(PREAMBLE "destroying the active session...");
+		_active_session.reset();
 		LOG(PREAMBLE "worker thread exiting...");
 	}
 }

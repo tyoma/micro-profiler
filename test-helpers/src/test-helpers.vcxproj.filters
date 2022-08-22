@@ -13,9 +13,6 @@
     <ClCompile Include="helpers_win32.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="process_win32.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="thread_unix.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -35,7 +32,6 @@
   <ItemGroup>
     <ClInclude Include="..\com.h" />
     <ClInclude Include="..\helpers.h" />
-    <ClInclude Include="..\process.h" />
     <ClInclude Include="..\thread.h" />
     <ClInclude Include="..\constants.h" />
     <ClInclude Include="..\comparisons.h" />

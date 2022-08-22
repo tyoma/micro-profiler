@@ -115,7 +115,7 @@ namespace micro_profiler
 			return;
 
 		auto modules_callback = [this] (ipc::deserializer &d) {
-			sdb::scontext::indexed_by<keyer::external_id> as_map;
+			sdb::scontext::indexed_by<keyer::external_id, void> as_map;
 
 			d(_db->mappings, as_map);
 		};
@@ -152,7 +152,7 @@ namespace micro_profiler
 		}
 
 		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (ipc::deserializer &d) {
-			sdb::scontext::indexed_by<keyer::external_id> as_map;
+			sdb::scontext::indexed_by<keyer::external_id, void> as_map;
 
 			d(_db->threads, as_map);
 			_requests.erase(req);
@@ -164,9 +164,15 @@ namespace micro_profiler
 		request(_telemetry_request, request_telemetry, 0, response_telemetry, [this] (ipc::deserializer &d) {
 			auto self = this;
 			auto &h = _db->telemetry_history;
+			const auto *e_previous = !h.empty() ? &h.back() : nullptr;
+			auto &e = *h.insert(h.end(), telemetry());
 
-			h.push_back(telemetry());
-			d(h.back());
+			d(e);
+			if (e_previous)
+			{
+				e.total_analysis_time = (1 * e.total_analysis_time + 9 * e_previous->total_analysis_time) / 10;
+				e.total_analyzed = (1 * e.total_analyzed + 9 * e_previous->total_analyzed) / 10;
+			}
 			if (h.size() > c_telemetry_history_length)
 				h.pop_front();
 			h.invalidate();

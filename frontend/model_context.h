@@ -37,4 +37,8 @@ namespace micro_profiler
 		std::shared_ptr<symbol_resolver> resolver;
 		bool canonical;
 	};
+
+	struct process_model_context
+	{
+	};
 }

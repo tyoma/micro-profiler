@@ -40,6 +40,7 @@
 #include <frontend/statistic_models.h>
 #include <frontend/threads_model.h>
 #include <logger/log.h>
+#include <scheduler/ui_queue.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
 #include <wpl/form.h>
@@ -60,10 +61,12 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const wstring c_profilerdir_macro = L"$(" + unicode(constants::profilerdir_ev) + L")";
+			const string c_profilerdir_macro_a = string("$(") + constants::profilerdir_ev + ")";
+			const wstring c_profilerdir_macro = unicode(c_profilerdir_macro_a);
 			const wstring c_initializer_cpp_filename = L"micro-profiler.initializer.cpp";
-			const wstring c_profiler_library_filename = L"micro-profiler_$(PlatformName).lib";
-			const wstring c_profiler_library = c_profilerdir_macro & c_profiler_library_filename;
+			const string c_profiler_library_filename_a = "micro-profiler_$(PlatformName).lib";
+			const wstring c_profiler_library_filename = unicode(c_profiler_library_filename_a);
+			const wstring c_profiler_library = unicode(c_profilerdir_macro_a & c_profiler_library_filename_a);
 			const wstring c_profiler_library_quoted = L"\"" + c_profiler_library + L"\"";
 			const wstring c_GH_option = L"/GH";
 			const wstring c_Gh_option = L"/Gh";
@@ -90,7 +93,7 @@ namespace micro_profiler
 				vcmodel::file_ptr file;
 
 				project.enum_files([&] (vcmodel::file_ptr f) {
-					if (!file && wcsicmp(*f->unexpanded_relative_path(), filename.c_str()) == 0)
+					if (!file && wcsicmp(unicode(*unicode(f->unexpanded_relative_path())).c_str(), filename.c_str()) == 0)
 						file = f;
 				});
 				return file;
@@ -98,7 +101,7 @@ namespace micro_profiler
 
 			bool has_instrumentation(vcmodel::compiler_tool &compiler)
 			{
-				wstring options = compiler.additional_options();
+				auto options = compiler.additional_options();
 
 				return wstring::npos != options.find(c_GH_option) && wstring::npos != options.find(c_Gh_option);
 			}
@@ -106,7 +109,7 @@ namespace micro_profiler
 			template <typename LinkerT>
 			bool has_library(LinkerT &linker)
 			{
-				wstring deps = linker.additional_dependencies();
+				auto deps = linker.additional_dependencies();
 
 				return wstring::npos != deps.find(c_profiler_library_filename);
 			}
@@ -119,9 +122,9 @@ namespace micro_profiler
 
 				void visit(vcmodel::compiler_tool &compiler) const
 				{
-					bool changed = false;
-					const wstring options_were = compiler.additional_options();
-					wstring options = options_were;
+					auto changed = false;
+					const auto options_were = compiler.additional_options();
+					auto options = options_were;
 
 					if (_enable)
 					{
@@ -169,9 +172,9 @@ namespace micro_profiler
 				template <typename LinkerT>
 				void apply(LinkerT &linker, bool is_static) const
 				{
-					bool changed = false;
-					const wstring deps_were = linker.additional_dependencies();
-					wstring deps = deps_were;
+					auto changed = false;
+					const auto deps_were = linker.additional_dependencies();
+					auto deps = deps_were;
 
 					if (_enable)
 					{
@@ -237,7 +240,7 @@ namespace micro_profiler
 			}
 		}
 
-		void profiler_package::init_menu()
+		void profiler_package::init_menu(shared_ptr<tables::processes> processes)
 		{
 			add_command(cmdidToggleProfiling, [this] (unsigned) {
 				const auto selected_items = get_selected_items();
@@ -322,7 +325,7 @@ namespace micro_profiler
 					strmd::deserializer<read_file_stream, packer, 4> dser_v4(*s);
 					strmd::deserializer<read_file_stream, packer> dser(*s);
 					auto ui_context = make_shared<profiling_session>();
-					auto &rmodules = *modules(ui_context);
+					auto &rmodules = sdb::unique_index<keyer::external_id>(ui_context->modules);
 
 					if (!stricmp(ext.c_str(), ".mpstat"))
 						dser(*ui_context);
@@ -333,11 +336,9 @@ namespace micro_profiler
 					else
 						dser(*ui_context);
 
-					rmodules.request_presence = [rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
-						const auto i = rmodules.find(id);
-
-						if (i != rmodules.end())
-							cb(i->second);
+					ui_context->modules.request_presence = [&rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
+						if (auto m = rmodules.find(id))
+							cb(*m);
 					};
 					_frontend_manager->load_session(ui_context);
 				}
@@ -370,10 +371,10 @@ namespace micro_profiler
 			});
 
 
-			add_command(cmdidProfileProcess, [this] (unsigned) {
+			add_command(cmdidProfileProcess, [this, processes] (unsigned) {
 				const auto &f = get_factory();
-				const auto attach = make_shared<attach_ui>(f, f.context.queue_,
-						ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()));
+				const auto attach = make_shared<attach_ui>(f, processes,
+					ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()));
 
 				ui_helpers::show_dialog(_running_objects, f, attach, 600, 400, "MicroProfiler - Select a Process to Profile",
 					[attach] (vector<wpl::slot_connection> &connections, function<void()> onclose) {

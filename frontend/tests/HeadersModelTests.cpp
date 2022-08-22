@@ -22,10 +22,11 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			const auto dummy_get = [] (agge::richtext_t &, const statistics_model_context &, size_t, const call_statistics &) {};
-			const auto dummy_compare = [] (const statistics_model_context &, const call_statistics &, const call_statistics &) {	return false;	};
+			const auto dummy_get = [] (agge::richtext_t &/*text*/, ...) {};
+			const auto dummy_compare = [] (...) {	return false;	};
 
 			typedef vector< pair<headers_model::index_type, bool> > log_t;
+			typedef column_definition<int, int> column_t;
 
 			void append_log(log_t *log, headers_model::index_type sort_column, bool sort_ascending)
 			{	log->push_back(make_pair(sort_column, sort_ascending));	}
@@ -114,7 +115,7 @@ namespace micro_profiler
 			test( ColumnsModelIsInitiallyOrderedAcordinglyToConstructionParam )
 			{
 				// INIT
-				headers_model::column columns[] = {
+				column_t columns[] = {
 					{	"id1", T(""),	},
 					{	"id2", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 					{	"id3", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
@@ -147,7 +148,7 @@ namespace micro_profiler
 			test( FirstOrderingIsDoneAccordinglyToDefaults )
 			{
 				// INIT
-				headers_model::column columns[] = {
+				column_t columns[] = {
 					{	"id1", T(""),	},
 					{	"id2", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 					{	"id3", T(""), 0, agge::align_near, dummy_get, dummy_compare, true,	},
@@ -196,7 +197,7 @@ namespace micro_profiler
 			test( SubsequentOrderingReversesTheColumnsState )
 			{
 				// INIT
-				headers_model::column columns[] = {
+				column_t columns[] = {
 					{	"id1", T(""),	},
 					{	"id2", T(""), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 					{	"id3", T(""), 0, agge::align_near, dummy_get, dummy_compare, true,	},
@@ -237,13 +238,13 @@ namespace micro_profiler
 			test( GettingColumnsCount )
 			{
 				// INIT
-				headers_model::column columns1[] = {
+				column_t columns1[] = {
 					{	"id1", T("first"),	},
 					{	"id2", T("second"), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 					{	"id3", T("third"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 					{	"id4", T("fourth"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
-				headers_model::column columns2[] = {
+				column_t columns2[] = {
 					{	"id1", T("a first column"),	},
 					{	"id2", T("a second column"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
@@ -259,12 +260,12 @@ namespace micro_profiler
 			test( GetColumnItem )
 			{
 				// INIT
-				headers_model::column columns1[] = {
+				column_t columns1[] = {
 					{	"id1", "first" + style::weight(regular), 0, agge::align_near,	},
 					{	"id2", "second" + style::weight(semi_bold) + "appendix", 0, agge::align_far, dummy_get, dummy_compare, false,	},
 					{	"id3", "third" + style::weight(regular), 0, agge::align_center, dummy_get, dummy_compare, true,	},
 				};
-				headers_model::column columns2[] = {
+				column_t columns2[] = {
 					{	"id1", "a first " + style::family("verdana") + "column",	},
 					{	"id2", "a second column" + style::weight(regular), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
@@ -345,7 +346,7 @@ namespace micro_profiler
 			test( ModelUpdateDoesChangeColumnsWidth )
 			{
 				// INIT
-				headers_model::column columns[] = {
+				column_t columns[] = {
 					{	"id1", T("first"),	},
 					{	"id2", T("second"), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 					{	"id3", T("third"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
@@ -374,7 +375,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<headers_model::index_type> invalidations;
-				headers_model::column columns[] = {
+				column_t columns[] = {
 					{	"id1", T("first"),	},
 					{	"id2", T("second"), 0, agge::align_near, dummy_get, dummy_compare, false,	},
 					{	"id3", T("third"), 0, agge::align_near, dummy_get, dummy_compare, true,	},
@@ -404,13 +405,13 @@ namespace micro_profiler
 			test( UnchangedModelIsStoredAsProvidedAtConstruction )
 			{
 				// INIT
-				headers_model::column columns1[] = {
+				column_t columns1[] = {
 					{	"id1", T("Index"), 1,	},
 					{	"id2", T("Function"), 2, agge::align_near, dummy_get, dummy_compare, false,	},
 					{	"id3", T("Exclusive Time"), 3, agge::align_near, dummy_get, dummy_compare, true,	},
 					{	"fourth", T("Inclusive Time"), 4, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
-				headers_model::column columns2[] = {
+				column_t columns2[] = {
 					{	"id1", T("a first column"), 191,	},
 					{	"id2", T("a second column"), 171, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
@@ -489,11 +490,11 @@ namespace micro_profiler
 			test( ModelStateIsUpdatedOnLoad )
 			{
 				// INIT
-				headers_model::column columns1[] = {
+				column_t columns1[] = {
 					{	"id1", T(""), 1,	},
 					{	"id2", T(""), 2, agge::align_near, dummy_get, dummy_compare, true,	},
 				};
-				headers_model::column columns2[] = {
+				column_t columns2[] = {
 					{	"col1", T(""),	},
 					{	"col2", T(""), 0, agge::align_near, dummy_get, dummy_compare, true,	},
 					{	"col3", T(""), 0, agge::align_near, dummy_get, dummy_compare, true,	},
@@ -544,7 +545,7 @@ namespace micro_profiler
 			test( MissingColumnsAreNotUpdatedAndInvalidOrderColumnIsFixedOnModelStateLoad )
 			{
 				// INIT
-				headers_model::column columns[] = {
+				column_t columns[] = {
 					{	"col1", T(""), 13,	},
 					{	"col2", T(""), 17, agge::align_near, dummy_get, dummy_compare, true,	},
 					{	"col3", T(""), 31, agge::align_near, dummy_get, dummy_compare, true,	},

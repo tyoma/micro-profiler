@@ -53,7 +53,7 @@ namespace sdb
 			{	archive(data.b), archive(data.c);	}
 
 			template <typename ArchiveT>
-			void serialize(ArchiveT &archive, local_type &data, scontext::indexed_by<keyer_a> &, unsigned int /*ver*/)
+			void serialize(ArchiveT &archive, local_type &data, scontext::indexed_by<keyer_a, void> &, unsigned int /*ver*/)
 			{	archive(data.b), archive(data.c);	}
 
 			template <typename ArchiveT>
@@ -61,7 +61,7 @@ namespace sdb
 			{	archive(data.a), archive(data.b);	}
 
 			template <typename ArchiveT>
-			void serialize(ArchiveT &archive, local_type &data, scontext::indexed_by<keyer_c> &, unsigned int /*ver*/)
+			void serialize(ArchiveT &archive, local_type &data, scontext::indexed_by<keyer_c, void> &, unsigned int /*ver*/)
 			{	archive(data.a), archive(data.b);	}
 		}
 	}
@@ -99,7 +99,7 @@ namespace sdb
 					+ make_pair(9121, local_type::create("DoLor", 12, 0)), skip_c_context);
 
 				// ACT
-				scontext::indexed_by<keyer_c> ctx1;
+				scontext::indexed_by<keyer_c, void> ctx1;
 				dser(t1, ctx1);
 
 				// ASSERT
@@ -133,7 +133,7 @@ namespace sdb
 					+ make_pair((string)"bar-dolor", local_type::create("", 222, 1)), skip_a_context);
 
 				// ACT
-				scontext::indexed_by<keyer_a> ctx2;
+				scontext::indexed_by<keyer_a, void> ctx2;
 				dser(t2, ctx2);
 
 				// ASSERT
@@ -148,7 +148,7 @@ namespace sdb
 			{
 				// INIT
 				table<local_type> t;
-				scontext::indexed_by<keyer_c> ctx;
+				scontext::indexed_by<keyer_c, void> ctx;
 				vector< vector<local_type> > log;
 				auto c = t.invalidate += [&] {	log.push_back(vector<local_type>(t.begin(), t.end()));	};
 

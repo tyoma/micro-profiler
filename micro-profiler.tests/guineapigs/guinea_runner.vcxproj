@@ -46,14 +46,20 @@ copy /Y "$(TargetPath)" "$(TargetDir)$(TargetName)3$(TargetExt)"</Command>
     <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
       <Project>{69508827-452f-479e-a28f-af300c5c1633}</Project>
     </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)ipc\src\ipc.spawn.vcxproj">
+      <Project>{416ee095-ea66-4fa4-be02-0ce790766b25}</Project>
+    </ProjectReference>
     <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)logger\src\logger.vcxproj">
+      <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
     </ProjectReference>
     <ProjectReference Include="$(SolutionDir)mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\logger\src\logger.vcxproj">
-      <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
+    <ProjectReference Include="$(SolutionDir)scheduler\src\scheduler.vcxproj">
+      <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

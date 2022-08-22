@@ -6,7 +6,12 @@ option(MP_BUILD_VSPACKAGE "Build Visual Studio Package." ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props)
 
+include(architecture)
 include(unipath)
+
+set(injector "micro-profiler_injector_${archid}")
+set(micro-profiler "micro-profiler_${archid}")
+set(sandbox "micro-profiler_sandbox_${archid}")
 
 enable_testing()
 
@@ -123,6 +128,7 @@ add_subdirectory(math/src)
 add_subdirectory(mt/src)
 add_subdirectory(patcher/src)
 add_subdirectory(playground)
+add_subdirectory(sandbox/src)
 add_subdirectory(scheduler/src)
 
 add_subdirectory(collector/tests)
@@ -134,6 +140,7 @@ add_subdirectory(math/tests)
 add_subdirectory(micro-profiler.tests/guineapigs)
 add_subdirectory(micro-profiler.tests)
 add_subdirectory(mt/tests)
+add_subdirectory(patcher/benchmark)
 add_subdirectory(patcher/tests)
 add_subdirectory(reqm/tests)
 add_subdirectory(sdb/tests)
@@ -147,6 +154,7 @@ if (WIN32 OR APPLE)
 	add_subdirectory(standalone)
 
 	if (WIN32)
+		add_subdirectory(explorer/src)
 		add_subdirectory(injector/src)
 		
 		if (MP_BUILD_VSPACKAGE)
@@ -154,6 +162,7 @@ if (WIN32 OR APPLE)
 			add_subdirectory(micro-profiler)
 		endif()
 
+		add_subdirectory(explorer/tests)
 		add_subdirectory(injector/tests)
 	endif ()
 endif ()

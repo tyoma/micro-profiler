@@ -17,8 +17,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			int dummy;
-
 			size_t get_file_length(const string &path)
 			{
 				auto raw = fopen(path.c_str(), "rb");

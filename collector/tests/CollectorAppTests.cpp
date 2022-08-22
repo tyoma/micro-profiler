@@ -40,7 +40,7 @@ namespace micro_profiler
 
 		begin_test_suite( CollectorAppTests )
 			mocks::allocator allocator_;
-			active_server_app::frontend_factory_t factory;
+			active_server_app::client_factory_t factory;
 			shared_ptr<ipc::client_session> client;
 			function<void (ipc::client_session &client_)> initialize_client;
 			mocks::tracer collector;
@@ -69,7 +69,6 @@ namespace micro_profiler
 			{
 				subscriptions.clear();
 				client.reset();
-				unsetenv(constants::profiler_injected_ev);
 			}
 
 
@@ -89,12 +88,13 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				app.connect(factory, false);
 				initialized.wait();
 
 				// ASERT
 				assert_is_false(!!id.injected);
-				assert_equal(get_current_executable(), id.executable);
+				assert_equal(module::executable(), id.executable);
 				assert_approx_equal(ticks_per_second(), id.ticks_per_second, 0.05);
 			}
 
@@ -114,10 +114,9 @@ namespace micro_profiler
 					c.subscribe(subscription, init, on_init);
 				};
 
-				setenv(constants::profiler_injected_ev, "1", 1);
-
 				// ACT
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				app.connect(factory, true);
 				initialized.wait();
 
 				// ASERT
@@ -130,7 +129,9 @@ namespace micro_profiler
 				// INIT
 				mt::event stopping;
 				shared_ptr<void> subs;
-				unique_ptr<collector_app> app(new collector_app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
+
+				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto &stopping_ = stopping;
 					auto client_ = make_shared<ipc::client_session>(outbound);
 
@@ -140,7 +141,7 @@ namespace micro_profiler
 					});
 					client_ready.set();
 					return client_;
-				}, collector, c_overhead, tmonitor, pmanager));
+				}, false);
 
 				client_ready.wait();
 
@@ -161,8 +162,9 @@ namespace micro_profiler
 				shared_ptr<void> req;
 				module_tracker tracker;
 
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
+				app.connect(factory, false);
 				client_ready.wait();
 
 				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &) {
@@ -205,14 +207,15 @@ namespace micro_profiler
 				// INIT
 				mt::event ready;
 				shared_ptr<void> req;
-				unordered_map<unsigned, mapped_module_ex> l;
+				unordered_map<unsigned, module::mapping_ex> l;
 				unloaded_modules u;
 				unique_ptr<image> image0(new image(c_symbol_container_1));
 				unique_ptr<image> image1(new image(c_symbol_container_2));
 				unique_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
 
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
+				app.connect(factory, false);
 				client_ready.wait();
 
 				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
@@ -268,7 +271,9 @@ namespace micro_profiler
 					flushed = true;
 				};
 
-				unique_ptr<collector_app> app(new collector_app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
+
+				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
 					auto &flushed_ = flushed;
 					auto &flushed_at_exit_ = flushed_at_exit;
@@ -278,7 +283,7 @@ namespace micro_profiler
 						client_->disconnect_session();
 					});
 					return client_;
-				}, collector, c_overhead, tmonitor, pmanager));
+				}, false);
 
 				// ACT
 				app.reset();
@@ -313,7 +318,10 @@ namespace micro_profiler
 					trace.clear();
 				};
 
-				unique_ptr<collector_app> app(new collector_app([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
+				mt::thread t([&] {	app.reset();	});
+
+				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
 					auto &ready_ = ready;
 
@@ -322,8 +330,7 @@ namespace micro_profiler
 						ready_.set();
 					});
 					return client_;
-				}, collector, c_overhead, tmonitor, pmanager));
-				mt::thread t([&] {	app.reset();	});
+				}, false);
 
 				// ACT
 				ready.wait();
@@ -354,7 +361,9 @@ namespace micro_profiler
 						done.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
+
+				app.connect(factory, false);
 
 				// ACT / ASSERT (must exit)
 				done.wait();
@@ -389,8 +398,9 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
+				app.connect(factory, false);
 				client_ready.wait();
 
 				// ACT
@@ -451,13 +461,15 @@ namespace micro_profiler
 
 				collector.on_read_collected = [&] (calls_collector_i::acceptor &) {	ready.set();	};
 
-				collector_app app([&] (ipc::channel &c) -> ipc::channel_ptr_t {
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
+
+				app.connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
 
 					pclient = client_.get();
 					client_ready.set();
 					return client_;
-				}, collector, c_overhead, tmonitor, pmanager);
+				}, false);
 
 				client_ready.wait();
 				pclient->disconnect_session();
@@ -496,10 +508,12 @@ namespace micro_profiler
 						a.accept_calls(11710u, trace, 2), ready[1].set();
 				};
 
-				unique_ptr<collector_app> app1(new collector_app(factory, *tracer1, o1, tmonitor, pmanager));
+				unique_ptr<collector_app> app1(new collector_app(*tracer1, o1, tmonitor, pmanager));
+				app1->connect(factory, false);
 				client_ready.wait();
 				auto client1 = client;
-				unique_ptr<collector_app> app2(new collector_app(factory, *tracer2, o2, tmonitor, pmanager));
+				unique_ptr<collector_app> app2(new collector_app(*tracer2, o2, tmonitor, pmanager));
+				app2->connect(factory, false);
 				client_ready.wait();
 				auto client2 = client;
 
@@ -539,11 +553,12 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<void> req;
 				mt::event ready;
-				unordered_map<unsigned, mapped_module_ex> l;
+				unordered_map<unsigned, module::mapping_ex> l;
 				module_info_metadata md;
 
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
+				app.connect(factory, false);
 				client_ready.wait();
 
 				image image0(c_symbol_container_1);
@@ -555,7 +570,7 @@ namespace micro_profiler
 				});
 				ready.wait();
 
-				const mapped_module_identified mmi[] = {
+				const module::mapping_instance mmi[] = {
 					*find_module(l, image0.absolute_path()),
 					*find_module(l, image1.absolute_path()),
 				};
@@ -575,7 +590,7 @@ namespace micro_profiler
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
-				assert_equal((string)c_symbol_container_2, md.path);
+				assert_equal((file_id)c_symbol_container_2, (file_id)md.path);
 
 				// ACT
 				client->request(req, request_module_metadata, mmi[0].second.persistent_id, response_module_metadata,
@@ -592,7 +607,7 @@ namespace micro_profiler
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
-				assert_equal((string)c_symbol_container_1, md.path);
+				assert_equal((file_id)c_symbol_container_1, (file_id)md.path);
 			}
 
 
@@ -613,8 +628,9 @@ namespace micro_profiler
 				tmonitor.add_info(2 /*thread_id*/, ti[1]);
 				tmonitor.add_info(19 /*thread_id*/, ti[2]);
 
-				collector_app app(factory, collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, pmanager);
 
+				app.connect(factory, false);
 				client_ready.wait();
 
 				// ACT

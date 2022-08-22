@@ -7,6 +7,7 @@ set(COMMON_SOURCES
 	file_stream.cpp
 	formatting.cpp
 	memory.cpp
+	path.cpp
 	pool_allocator.cpp
 	stream.cpp
 	string.cpp

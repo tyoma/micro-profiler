@@ -293,7 +293,7 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				vector< vector<mapped_module_identified> > log;
+				vector< vector<module::mapping_instance> > log;
 				auto disconnections = 0;
 
 				emulator->set_disconnect_handler([&] {	disconnections++;	});
@@ -346,7 +346,7 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				vector< vector<mapped_module_identified> > log;
+				vector< vector<module::mapping_instance> > log;
 				auto disconnections = 0;
 
 				emulator->set_disconnect_handler([&] {	disconnections++;	});
@@ -387,7 +387,7 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				vector< vector<mapped_module_identified> > log;
+				vector< vector<module::mapping_instance> > log;
 				auto disconnections = 0;
 
 				emulator->set_disconnect_handler([&] {	disconnections++;	});

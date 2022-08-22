@@ -97,8 +97,8 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 			&get_datetime));
 		log::g_logger = g_logger.get();
 
-		const string self = get_module_info(&c_logname).path;
-		const string exe = get_current_executable();
+		const string self = module::locate(&c_logname).path;
+		const string exe = module::executable();
 		const file_version vs = get_file_version(exe);
 
 		LOG(PREAMBLE "loaded...")

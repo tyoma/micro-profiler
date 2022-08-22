@@ -44,7 +44,7 @@
     <ProjectReference Include="..\..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\patcher\src\patcher.lib.vcxproj">
+    <ProjectReference Include="..\..\patcher\src\patcher.vcxproj">
       <Project>{84891947-5bfb-45f2-b495-20b93aab1b44}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\scheduler\src\scheduler.vcxproj">

@@ -75,6 +75,8 @@
     <ClCompile Include="ServerSessionTests.cpp" />
     <ClCompile Include="SocketsEndpointClientTests.cpp" />
     <ClCompile Include="SocketsEndpointServerTests.cpp" />
+    <ClCompile Include="SpawnEndpointClientTests.cpp" />
+    <ClCompile Include="SpawnEndpointServerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers.h" />

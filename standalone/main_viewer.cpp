@@ -54,10 +54,8 @@ namespace micro_profiler
 
 			dser(*session);
 			rmodules.request_presence = [&rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
-				const auto i = rmodules.find(id);
-
-				if (i != rmodules.end())
-					cb(i->second);
+				if (auto m = sdb::unique_index<keyer::external_id>(rmodules).find(id))
+					cb(*m);
 			};
 			return session;
 		}

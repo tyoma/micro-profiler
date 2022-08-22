@@ -1,3 +1,4 @@
 EXPORTS
 	_penter
 	_pexit
+	ipc_spawn_server

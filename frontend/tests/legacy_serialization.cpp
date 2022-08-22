@@ -27,7 +27,7 @@ namespace micro_profiler
 		{	serialize(a, d.contained, 4);	}
 
 		typedef unversion<function_statistics> fs;
-		typedef unversion<mapped_module_ex> mm;
+		typedef unversion<module::mapping_ex> mm;
 		typedef unversion<symbol_info> si;
 		typedef unversion<thread_info> ti;
 
@@ -95,10 +95,20 @@ namespace micro_profiler
 		void serialize(ArchiveT &a, file_v5_components &d, unsigned /*ver*/)
 		{
 			a(d.process_info);
-			a(vector< pair<unsigned, mapped_module_ex> >(d.mappings.begin(), d.mappings.end()));
+			a(vector< pair<unsigned, module::mapping_ex> >(d.mappings.begin(), d.mappings.end()));
 			a(vector< pair<unsigned, module_info_metadata> >(d.modules.begin(), d.modules.end()));
 			a(d.statistics);
 			a(vector< pair<unsigned, thread_info> >(d.threads.begin(), d.threads.end()));
+		}
+
+		template <typename ArchiveT>
+		void serialize(ArchiveT &a, file_v6_components &d, unsigned /*ver*/)
+		{
+			a(d.process_info);
+			a(d.mappings);
+			a(vector< pair<unsigned, module_info_metadata> >(d.modules.begin(), d.modules.end()));
+			a(d.statistics);
+			a(d.threads);
 		}
 
 		void serialize_legacy(vector_adapter &buffer, const file_v3_components &components)
@@ -116,6 +126,13 @@ namespace micro_profiler
 		}
 
 		void serialize_legacy(vector_adapter &buffer, const file_v5_components &components)
+		{
+			strmd::serializer<vector_adapter, strmd::varint> ser(buffer);
+
+			ser(components);
+		}
+
+		void serialize_legacy(vector_adapter &buffer, const file_v6_components &components)
 		{
 			strmd::serializer<vector_adapter, strmd::varint> ser(buffer);
 

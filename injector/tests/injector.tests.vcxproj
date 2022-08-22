@@ -28,6 +28,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.tests.props" />
+    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
   </ImportGroup>
   <PropertyGroup>
     <LinkIncremental>false</LinkIncremental>
@@ -39,7 +40,7 @@
     <ProjectReference Include="..\..\mt\src\mt.vcxproj">
       <Project>{3d321437-3220-4baf-aa87-a5d6297bbe82}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\src\injector.lib.vcxproj">
+    <ProjectReference Include="..\src\injector.vcxproj">
       <Project>{B0596B9D-8303-4FD1-8A0A-5DB7882F6F89}</Project>
     </ProjectReference>
     <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">

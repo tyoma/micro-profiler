@@ -42,7 +42,7 @@ namespace micro_profiler
 		module_tracker();
 
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-		std::shared_ptr<mapped_module_identified> lock_mapping(unsigned int persistent_id);
+		std::shared_ptr<module::mapping_instance> lock_mapping(unsigned int persistent_id);
 		metadata_ptr get_metadata(unsigned int persistent_id) const;
 
 	private:
@@ -54,7 +54,7 @@ namespace micro_profiler
 
 			const std::string path;
 			const std::uint32_t hash;
-			std::shared_ptr<mapped_module_identified> mapping;
+			std::shared_ptr<module::mapping_instance> mapping;
 		};
 
 		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;

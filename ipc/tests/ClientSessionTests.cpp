@@ -50,6 +50,7 @@ namespace micro_profiler
 				shared_ptr<mocks::channel> outbound;
 				shared_ptr<void> req[10];
 
+
 				test( SessionIsCreatedOnConstruction )
 				{
 					// INIT / ACT
@@ -554,6 +555,45 @@ namespace micro_profiler
 					// ACT / ASSERT (no throw)
 					send_message(s, 14);
 					send_message(s, 154);
+				}
+
+
+				class message_on_destruction : public channel
+				{
+				public:
+					message_on_destruction(ClientSessionTests &self, channel &inbound_)
+						: _self(self), _inbound(inbound_)
+					{	}
+
+					~message_on_destruction()
+					{
+						for (auto i = begin(_self.req); i != end(_self.req); ++i)
+							i->reset();
+						send_standard(_inbound, 19, 1);
+						send_message(_inbound, 13);
+						send_standard(_inbound, 19, 1);
+					}
+
+					virtual void disconnect() throw() override {	}
+					virtual void message(const_byte_range /*payload*/) override {	}
+
+				private:
+					ClientSessionTests &_self;
+					channel &_inbound;
+				};
+
+				test( MessagesGotAtChannelDestructionAreRouted )
+				{
+					// INIT
+					auto s = make_shared<client_session>([&] (channel &inbound)	{
+						return make_shared<message_on_destruction>(*this, inbound);
+					});
+
+					s->subscribe(req[0], 13, [&] (deserializer &) {	});
+					s->request(req[1], 100, 99, 19, [&] (deserializer &) {	});
+
+					// ACT / ASSERT
+					s.reset();
 				}
 
 			end_test_suite

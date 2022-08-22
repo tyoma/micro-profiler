@@ -77,7 +77,7 @@ namespace micro_profiler
 
 		void request_telemetry_chunk();
 
-		std::string construct_cache_path(const mapped_module_ex &mapping) const;
+		std::string construct_cache_path(const module::mapping_ex &mapping) const;
 		requests_t::iterator new_request_handle();
 
 	private:

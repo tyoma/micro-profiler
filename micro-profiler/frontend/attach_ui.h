@@ -21,37 +21,26 @@
 #pragma once
 
 #include <common/noncopyable.h>
+#include <explorer/process.h>
 #include <string>
 #include <wpl/layout.h>
-#include <wpl/queue.h>
 
 namespace wpl
 {
-	struct control_context;
 	class factory;
-	struct listview;
 }
 
 namespace micro_profiler
 {
-	class process_list;
-
 	class attach_ui : public wpl::stack, noncopyable
 	{
 	public:
-		attach_ui(const wpl::factory &factory, const wpl::queue &queue, const std::string &frontend_id);
-		~attach_ui();
+		attach_ui(const wpl::factory &factory, std::shared_ptr<tables::processes> processes,
+			const std::string &frontend_id);
 
 		wpl::signal<void()> close;
 
 	private:
-		void update();
-
-	private:
-		const std::shared_ptr<wpl::listview> _processes_lv;
-		const std::shared_ptr<process_list> _model;
 		std::vector<wpl::slot_connection> _connections;
-		const wpl::queue _queue;
-		const std::shared_ptr<bool> _alive;
 	};
 }

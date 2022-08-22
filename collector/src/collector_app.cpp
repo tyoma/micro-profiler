@@ -38,14 +38,23 @@ using namespace std;
 
 namespace micro_profiler
 {
-	collector_app::collector_app(const active_server_app::frontend_factory_t &factory, calls_collector_i &collector,
-			const overhead &overhead_, thread_monitor &thread_monitor_, patch_manager &patch_manager_)
+	collector_app::collector_app(calls_collector_i &collector, const overhead &overhead_,
+			thread_monitor &thread_monitor_, patch_manager &patch_manager_)
 		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(thread_monitor_),
-			_patch_manager(patch_manager_), _server(*this, factory)
+			_patch_manager(patch_manager_), _server(*this)
 	{	}
 
 	collector_app::~collector_app()
 	{	_collector.flush();	}
+
+	void collector_app::connect(const active_server_app::client_factory_t &factory, bool injected)
+	{
+		_injected = injected;
+		_server.connect(factory);
+	}
+
+	scheduler::queue &collector_app::get_queue()
+	{	return _server;	}
 
 	void collector_app::initialize_session(ipc::server_session &session)
 	{
@@ -129,11 +138,11 @@ namespace micro_profiler
 		});
 
 
-		session.message(init, [] (ipc::serializer &ser) {
+		session.message(init, [this] (ipc::serializer &ser) {
 			initialization_data idata = {
-				get_current_executable(),
+				module::executable(),
 				ticks_per_second(),
-				!!getenv(constants::profiler_injected_ev),
+				_injected,
 			};
 
 			ser(idata);

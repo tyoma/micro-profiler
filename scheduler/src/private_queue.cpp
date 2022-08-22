@@ -105,7 +105,7 @@ namespace scheduler
 	void private_worker_queue::deliver(function<void ()> &&progress)
 	{
 		auto cb = _control_block;
-		function<void ()> wrapped_progress([this, progress, cb] {
+		function<void ()> wrapped_progress([progress, cb] {
 			if (cb->alive)
 				progress();
 		});

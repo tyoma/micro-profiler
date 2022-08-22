@@ -6,21 +6,16 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		class lazy_load_path
-		{
-		public:
-			explicit lazy_load_path(const std::string &name);
-
-			operator std::string() const;
-
-		private:
-			std::string _name;
-		};
-
 		extern const std::string c_this_module;
-		extern const lazy_load_path c_symbol_container_1;
-		extern const lazy_load_path c_symbol_container_2;
-		extern const lazy_load_path c_symbol_container_2_instrumented;
-		extern const lazy_load_path c_symbol_container_3_nosymbols;
+		extern const std::string c_symbol_container_1;
+		extern const std::string c_symbol_container_2;
+		extern const std::string c_symbol_container_2_instrumented;
+		extern const std::string c_symbol_container_3_nosymbols;
+
+		extern const std::string c_guinea_ipc_spawn;
+		extern const std::string c_guinea_ipc_spawn_server;
+		extern const std::string c_guinea_runner;
+		extern const std::string c_guinea_runner2;
+		extern const std::string c_guinea_runner3;
 	}
 }

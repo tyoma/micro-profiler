@@ -232,13 +232,13 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(rep.main);
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 101, 2009, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 1, 102, 1002, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 1, 103, 1003, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 1, 104, 2013, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 2, 105, 1005, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 5, 106, 1006, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 5, 103, 1007, 0, 0, 0, 0), *rep.main);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2009, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 102, 1002, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 103, 1003, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 104, 2013, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 2, 105, 1005, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 5, 106, 1006, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 5, 103, 1007, 0, 0, 0, 0), *rep.main);
 				assert_not_null(rep.selection_main);
 				assert_not_null(rep.selection_callers);
 				assert_not_equal(rep.selection_main, rep.selection_callers);
@@ -276,15 +276,15 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 101, 2013, 0, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2013, 0, 0, 0, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 1u);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 0, 2009, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 101, 2013, 0, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2009, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2013, 0, 0, 0, 0), *rep.callers);
 			}
 
 
@@ -302,19 +302,19 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 102, 1002, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 103, 1003, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 104, 2013, 0, 0, 0, 0), *rep.callees);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 1002, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 104, 2013, 0, 0, 0, 0), *rep.callees);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 5u);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 102, 1002, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 103, 2010, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 104, 2013, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 106, 1006, 0, 0, 0, 0), *rep.callees);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 1002, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 2010, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 104, 2013, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 106, 1006, 0, 0, 0, 0), *rep.callees);
 			}
 
 
@@ -329,7 +329,7 @@ namespace micro_profiler
 				add_records(*rep.selection_main, plural + 3u);
 
 				// ACT
-				add_records(*rep.selection_callers, plural + get_id(105, threads_model::cumulative));
+				add_records(*rep.selection_callers, plural + get_id(105, (unsigned)threads_model::cumulative));
 				rep.activate_callers();
 
 				// ASSERT
@@ -340,7 +340,7 @@ namespace micro_profiler
 				add_records(*rep.selection_main, plural + 6u);
 
 				// ACT
-				add_records(*rep.selection_callers, plural + get_id(102, threads_model::cumulative) + get_id(105, threads_model::cumulative));
+				add_records(*rep.selection_callers, plural + get_id(102, (unsigned)threads_model::cumulative) + get_id(105, (unsigned)threads_model::cumulative));
 				rep.activate_callers();
 
 				// ASSERT
@@ -360,7 +360,7 @@ namespace micro_profiler
 				add_records(*rep.selection_main, plural + 1u);
 
 				// ACT
-				add_records(*rep.selection_callees, plural + get_id(102, threads_model::cumulative));
+				add_records(*rep.selection_callees, plural + get_id(102, (unsigned)threads_model::cumulative));
 				rep.activate_callees();
 
 				// ASSERT
@@ -650,9 +650,9 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(rep.main);
 				assert_equivalent(plural
-					+ make_call_statistics(1, threads_model::cumulative, 0, 101, 3022, 0, 40, 0, 0)
-					+ make_call_statistics(2, threads_model::cumulative, 0, 102, 5030, 0, 63, 0, 0)
-					+ make_call_statistics(3, threads_model::cumulative, 0, 103, 1003, 0, 17, 0, 0), *rep.main);
+					+ make_call_statistics(1, (unsigned)threads_model::cumulative, 0, 101, 3022, 0, 40, 0, 0)
+					+ make_call_statistics(2, (unsigned)threads_model::cumulative, 0, 102, 5030, 0, 63, 0, 0)
+					+ make_call_statistics(3, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 17, 0, 0), *rep.main);
 				assert_not_null(rep.selection_main);
 				assert_not_null(rep.selection_callers);
 				assert_not_equal(rep.selection_main, rep.selection_callers);
@@ -685,18 +685,18 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 103, 1005, 0, 0, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 0, 2017, 0, 40, 0, 0), *rep.callers);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1005, 0, 0, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2017, 0, 40, 0, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 2u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 0, 2017, 0, 40, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 103, 2009, 0, 19, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 101, 2009, 0, 44, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 102, 2017, 0, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2017, 0, 40, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 2009, 0, 19, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2009, 0, 44, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 2017, 0, 0, 0, 0), *rep.callers);
 			}
 
 
@@ -714,16 +714,16 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 102, 2009, 0, 44, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 103, 1003, 0, 17, 0, 0), *rep.callees);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 2009, 0, 44, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 17, 0, 0), *rep.callees);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 2u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, threads_model::cumulative, 0, 102, 4026, 0, 44, 0, 0)
-					+ make_call_statistics(0, threads_model::cumulative, 0, 103, 1003, 0, 17, 0, 0), *rep.callees);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 4026, 0, 44, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 17, 0, 0), *rep.callees);
 			}
 		end_test_suite
 

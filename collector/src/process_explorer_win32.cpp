@@ -31,12 +31,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		typedef HRESULT (WINAPI *GetThreadDescription_t)(HANDLE hThread, PWSTR *ppszThreadDescription);
-
-		const auto c_kernel32 = load_library("kernel32");
-		const auto _GetThreadDescription = reinterpret_cast<GetThreadDescription_t>(::GetProcAddress(
-				static_cast<HMODULE>(c_kernel32.get()), "GetThreadDescription"));
-
 		shared_ptr<void> get_current_thread()
 		{
 			HANDLE handle = NULL;
@@ -77,13 +71,17 @@ namespace micro_profiler
 
 	function<void (thread_info &info)> this_thread::open_info()
 	{
+		typedef HRESULT (WINAPI *GetThreadDescription_t)(HANDLE hThread, PWSTR *ppszThreadDescription);
+
 		FILETIME thread_start, dummy;
 		const auto handle = get_current_thread();
 		const auto native_id = ::GetCurrentThreadId();
 		const auto start_time = milliseconds((::GetThreadTimes(handle.get(), &thread_start, &dummy, &dummy, &dummy),
 			thread_start)) - get_process_start_time();
+		const auto kernel32 = module::load("kernel32");
+		const GetThreadDescription_t _GetThreadDescription = kernel32 / "GetThreadDescription";
 
-		return [handle, native_id, start_time] (thread_info &info) {
+		return [handle, native_id, start_time, kernel32, _GetThreadDescription] (thread_info &info) {
 			FILETIME dummy, user;
 			PWSTR description;
 

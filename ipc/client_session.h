@@ -69,16 +69,15 @@ namespace micro_profiler
 
 		private:
 			template <typename RequestT, typename CallbackConstructorT>
-			void request_internal(int id, const RequestT &payload,
-				const CallbackConstructorT &callback_ctor);
+			void request_internal(int id, const RequestT &payload, const CallbackConstructorT &callback_ctor);
 
 		private:
 			pod_vector<byte> _buffer;
 			token_t _token;
-			channel_ptr_t _outbound_active;
-			channel *_outbound;
 			std::shared_ptr<callbacks_t> _callbacks;
 			std::shared_ptr<message_callbacks_t> _message_callbacks;
+			channel_ptr_t _outbound_active;
+			channel *_outbound;
 		};
 
 

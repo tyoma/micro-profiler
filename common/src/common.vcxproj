@@ -71,6 +71,7 @@
     <ClCompile Include="configuration_registry.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
+    <ClCompile Include="path.cpp" />
     <ClCompile Include="pool_allocator.cpp" />
     <ClCompile Include="stream.cpp" />
     <ClCompile Include="image_info_unix.cpp">

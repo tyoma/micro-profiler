@@ -151,16 +151,9 @@ namespace micro_profiler
 			archive(static_cast<T &>(data));
 		}
 
-		template <typename ArchiveT, typename T>
-		inline void serialize(ArchiveT &archive, record<T> &data, sdb::scontext::indexed_by<keyer::external_id> &, int ver)
+		template <typename ArchiveT, typename T, typename I>
+		inline void serialize(ArchiveT &archive, record<T> &data, sdb::scontext::indexed_by<keyer::external_id, I> &, int ver)
 		{	serialize(archive, static_cast<T &>(data), ver);	}
-
-		template <typename ArchiveT>
-		inline void serialize(ArchiveT &archive, modules &data)
-		{
-			archive(static_cast<modules::base_t &>(data));
-			data.invalidate();
-		}
 
 		template <typename ArchiveT, typename ContextT>
 		inline void serialize(ArchiveT &archive, statistics &data, ContextT &/*context*/)

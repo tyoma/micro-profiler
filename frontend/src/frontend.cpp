@@ -115,7 +115,7 @@ namespace micro_profiler
 			return;
 
 		auto modules_callback = [this] (ipc::deserializer &d) {
-			sdb::scontext::indexed_by<keyer::external_id> as_map;
+			sdb::scontext::indexed_by<keyer::external_id, void> as_map;
 
 			d(_db->mappings, as_map);
 		};
@@ -152,7 +152,7 @@ namespace micro_profiler
 		}
 
 		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (ipc::deserializer &d) {
-			sdb::scontext::indexed_by<keyer::external_id> as_map;
+			sdb::scontext::indexed_by<keyer::external_id, void> as_map;
 
 			d(_db->threads, as_map);
 			_requests.erase(req);

@@ -42,7 +42,7 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( ActiveServerAppTests )
-			active_server_app::frontend_factory_t factory;
+			active_server_app::client_factory_t factory;
 			shared_ptr<ipc::client_session> client;
 			function<void (ipc::client_session &client_)> initialize_client;
 			mt::event client_ready;
@@ -68,7 +68,7 @@ namespace micro_profiler
 			test( FrontendIsConstructedInASeparateThreadOnStart )
 			{
 				// INIT
-				mt::thread::id tid = mt::this_thread::get_id();
+				auto tid = mt::this_thread::get_id();
 				mt::event ready;
 
 				initialize_client = [&] (ipc::client_session &) {
@@ -77,7 +77,9 @@ namespace micro_profiler
 				};
 
 				// INIT / ACT
-				active_server_app app(app_events, factory);
+				active_server_app app(app_events);
+
+				app.connect(factory);
 
 				// ACT / ASSERT (must not hang)
 				ready.wait();
@@ -98,7 +100,9 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+				unique_ptr<active_server_app> app(new active_server_app(app_events));
+
+				app->connect(factory);
 
 				ready.wait();
 
@@ -115,10 +119,9 @@ namespace micro_profiler
 				// INIT
 				auto destroyed_ok = false;
 				mt::event ready;
+				unique_ptr<active_server_app> app(new active_server_app(app_events));
 
-				unique_ptr<active_server_app> app(new active_server_app(app_events,
-					[&] (ipc::channel &c) -> ipc::channel_ptr_t {
-
+				app->connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					auto &destroyed_ok_ = destroyed_ok;
 					auto thread_id = mt::this_thread::get_id();
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c),
@@ -129,7 +132,7 @@ namespace micro_profiler
 
 					ready.set();
 					return client_;
-				}));
+				});
 
 				ready.wait();
 
@@ -156,8 +159,11 @@ namespace micro_profiler
 				};
 
 				// ACT
-				active_server_app app1(app_events, factory);
-				active_server_app app2(app_events, factory);
+				active_server_app app1(app_events);
+				active_server_app app2(app_events);
+
+				app1.connect(factory);
+				app2.connect(factory);
 
 				go.wait();
 
@@ -189,7 +195,9 @@ namespace micro_profiler
 				// ACT
 				app_events.initializing = [] (ipc::server_session &session) {	send(session, 181923, 314159);	};
 				
-				active_server_app app1(app_events, factory);
+				active_server_app app1(app_events);
+
+				app1.connect(factory);
 
 				received.wait();
 
@@ -201,7 +209,9 @@ namespace micro_profiler
 				// ACT
 				app_events.initializing = [] (ipc::server_session &session) {	send(session, 181923, 27);	};
 				
-				active_server_app app2(app_events, factory);
+				active_server_app app2(app_events);
+
+				app2.connect(factory);
 
 				received.wait();
 
@@ -223,7 +233,9 @@ namespace micro_profiler
 					return false;
 				};
 
-				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+				unique_ptr<active_server_app> app(new active_server_app(app_events));
+
+				app->connect(factory);
 
 				client_ready.wait();
 
@@ -251,7 +263,9 @@ namespace micro_profiler
 					return false;
 				};
 
-				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+				unique_ptr<active_server_app> app(new active_server_app(app_events));
+
+				app->connect(factory);
 
 				client_ready.wait();
 
@@ -279,7 +293,9 @@ namespace micro_profiler
 					return true; // require session disconnection to stop
 				};
 
-				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+				unique_ptr<active_server_app> app(new active_server_app(app_events));
+
+				app->connect(factory);
 
 				client_ready.wait();
 
@@ -319,14 +335,15 @@ namespace micro_profiler
 					client_destroyed.set();
 				};
 
-				unique_ptr<active_server_app> app(new active_server_app(app_events,
-					[&] (ipc::channel &c) -> ipc::channel_ptr_t {
+				unique_ptr<active_server_app> app(new active_server_app(app_events));
+
+				app->connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
 
 					pclient = client_.get();
 					client_ready.set();
 					return client_;
-				}));
+				});
 
 				client_ready.wait();
 
@@ -358,7 +375,9 @@ namespace micro_profiler
 					});
 				};
 
-				active_server_app app(app_events, factory);
+				active_server_app app(app_events);
+
+				app.connect(factory);
 
 				client_ready.wait();
 
@@ -394,7 +413,9 @@ namespace micro_profiler
 					p_.reset();
 				};
 
-				active_server_app app(app_events, factory);
+				active_server_app app(app_events);
+
+				app.connect(factory);
 
 				client_ready.wait();
 
@@ -427,7 +448,9 @@ namespace micro_profiler
 					return false;
 				};
 
-				unique_ptr<active_server_app> app(new active_server_app(app_events, factory));
+				unique_ptr<active_server_app> app(new active_server_app(app_events));
+
+				app->connect(factory);
 
 				client_ready.wait();
 

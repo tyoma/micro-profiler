@@ -1,19 +1,5 @@
 cmake_minimum_required(VERSION 3.4)
 
-if(NOT ANDROID_ABI OR ANDROID_ABI MATCHES "x86.*")
-	if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-		if(WIN32)
-			set(micro-profiler "micro-profiler_Win32")
-		else()
-			set(micro-profiler "micro-profiler_x86")
-		endif()
-	else()
-		set(micro-profiler "micro-profiler_x64")
-	endif()
-elseif(ANDROID_ABI MATCHES "arm.*")
-	set(micro-profiler "micro-profiler_arm")
-endif()
-
 set(MP_OUTDIR $<TARGET_FILE_DIR:${micro-profiler}>)
 
 if(MSVC)
@@ -73,6 +59,7 @@ elseif(WIN32)
 	set(COLLECTOR_SOURCES ${COLLECTOR_SOURCES}
 		collector.rc
 		hooks.asm
+		injector.cpp
 		main_win32.cpp
 		collector.manifest
 	)
@@ -82,6 +69,9 @@ add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
 add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
 
 target_link_libraries(${micro-profiler} collector.lib patcher ipc common logger scheduler)
+if(WIN32)
+	target_link_libraries(${micro-profiler} injector)
+endif()
 
 if(MSVC)
 	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " /Ob0 /GH /Gh /GL- ")

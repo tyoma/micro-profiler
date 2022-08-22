@@ -17,13 +17,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-#ifdef __APPLE__
-			const char c_library_ext[] = ".dylib";
-#else
-			const char c_library_ext[] = ".so";
-#endif
-
-
 			void *find_any_mapped_for(const string &name)
 			{
 				if (shared_ptr<FILE> f = shared_ptr<FILE>(fopen("/proc/self/maps", "r"), &fclose))
@@ -56,34 +49,18 @@ namespace micro_profiler
 				assert_not_null(p);
 				return p;
 			}
-
-			void release_module(void *h)
-			{
-				if (h)
-					::dlclose(h);
-			}
-
-			string make_dlpath(const string &from)
-			{
-				if (from.find('/') == string::npos)
-					return "./" & from;
-				return from;
-			}
 		}
+
 
 
 		image::image(string path)
 		{
-			if (path.find(c_library_ext) == string::npos)
-				path = path + c_library_ext;
-			reset(::dlopen(make_dlpath(path).c_str(), RTLD_NOW), &release_module);
+			reset(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
+				if (h)
+					::dlclose(h);
+			});
 			if (!get())
-			{
-				path = "lib" + path;
-				reset(::dlopen(make_dlpath(path).c_str(), RTLD_NOW), &release_module);
-				if (!get())
-					throw runtime_error(("Cannot load module '" + path + "' specified!").c_str());
-			}
+				throw runtime_error(("Cannot load module '" + path + "' specified!").c_str());
 
 			void *addr = find_any_mapped_for(*path);
 			Dl_info di = { };

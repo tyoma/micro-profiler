@@ -24,41 +24,15 @@
 
 namespace micro_profiler
 {
-	template <typename T>
-	inline std::basic_string<T> operator &(const std::basic_string<T> &lhs, const std::basic_string<T> &rhs)
+	struct normalize
 	{
-		if (lhs.empty())
-			return rhs;
-		if (lhs.back() == T('\\') || lhs.back() == T('/'))
-			return lhs + rhs;
-		return lhs + T('/') + rhs;
-	}
+		static std::string exe(const std::string &path);
+		static std::string lib(const std::string &path);
+	};
 
-	template <typename T>
-	inline std::basic_string<T> operator &(const std::basic_string<T> &lhs, const T *rhs)
-	{	return lhs & std::basic_string<T>(rhs);	}
 
-	template <typename T>
-	inline std::basic_string<T> operator &(const T *lhs, const std::basic_string<T> &rhs)
-	{	return std::basic_string<T>(lhs) & rhs;	}
 
-	template <typename T>
-	inline std::basic_string<T> operator ~(const std::basic_string<T> &value)
-	{
-		const T separators[] = { '\\', '/', '\0' };
-		const auto pos = value.find_last_of(separators);
-
-		if (pos != std::basic_string<T>::npos)
-			return value.substr(0, pos);
-		return std::string();
-	}
-
-	template <typename T>
-	inline const T *operator *(const std::basic_string<T> &value)
-	{
-		const T separators[] = { '\\', '/', '\0' };
-		const auto pos = value.find_last_of(separators);
-
-		return value.c_str() + (pos != std::basic_string<T>::npos ? pos + 1 : 0u);
-	}
+	std::string operator &(const std::string &lhs, const std::string &rhs); // path combine
+	std::string operator ~(const std::string &value); // directory
+	const char *operator *(const std::string &value); // filename
 }

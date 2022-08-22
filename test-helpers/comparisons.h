@@ -37,7 +37,7 @@ namespace micro_profiler
 	inline bool operator ==(const call_graph_node<AddressT> &lhs, const call_graph_node<AddressT> &rhs)
 	{	return !(lhs < rhs) && !(rhs < lhs);	}
 
-	inline bool operator ==(const mapped_module_ex &lhs, const mapped_module_ex &rhs)
+	inline bool operator ==(const module::mapping_ex &lhs, const module::mapping_ex &rhs)
 	{	return lhs.persistent_id == rhs.persistent_id && lhs.path == rhs.path && lhs.base == rhs.base;	}
 
 	inline bool operator ==(const symbol_info &lhs, const symbol_info &rhs)

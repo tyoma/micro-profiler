@@ -52,13 +52,13 @@ namespace micro_profiler
 		typedef sdb::table<thread> threads;
 
 
-		typedef record<mapped_module_ex> module_mapping;
+		typedef record<module::mapping_ex> module_mapping;
 		typedef sdb::table<module_mapping> module_mappings;
 
 
-		struct modules : containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata>
+		typedef record<module_info_metadata> module;
+		struct modules : sdb::table<module>
 		{
-			typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info_metadata> base_t;
 			typedef std::shared_ptr<void> handle_t;
 
 			typedef std::function<void (const module_info_metadata &metadata)> metadata_ready_cb;

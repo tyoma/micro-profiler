@@ -67,7 +67,7 @@ namespace micro_profiler
 			_resolver(make_shared<symbol_resolver>(modules(session), mappings(session))),
 			_initialized(false),
 			_hierarchical(true),
-			_thread_id(threads_model::all),
+			_thread_id(static_cast<id_t>(threads_model::all)),
 			_filter_selector(factory_.create_control<combobox>("combobox")),
 			_main_piechart(factory_.create_control<piechart>("piechart")),
 			_callees_piechart(factory_.create_control<piechart>("piechart")),

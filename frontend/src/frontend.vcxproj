@@ -48,7 +48,6 @@
     <ClCompile Include="frontend_patcher.cpp" />
     <ClCompile Include="headers_model.cpp" />
     <ClCompile Include="image_patch_model.cpp" />
-    <ClCompile Include="process_list.cpp" />
     <ClCompile Include="profiling_preferences.cpp" />
     <ClCompile Include="representation.cpp" />
     <ClCompile Include="symbol_resolver.cpp" />

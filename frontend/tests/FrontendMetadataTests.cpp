@@ -1,6 +1,7 @@
 #include <frontend/frontend.h>
 
 #include "helpers.h"
+#include "helpers_database.h"
 #include "mock_channel.h"
 
 #include <common/file_stream.h>
@@ -258,10 +259,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, modules(context)->size());
 
-				const auto i1000 = modules(context)->find(1000);
-				assert_not_equal(modules(context)->end(), i1000);
-				assert_equal(1u, i1000->second.symbols.size());
-				assert_equal(1u, i1000->second.source_files.size());
+				const auto i1000 = modules_by_id(*context).find(1000);
+				assert_not_null(i1000);
+				assert_equal(1u, i1000->symbols.size());
+				assert_equal(1u, i1000->source_files.size());
 
 				// ACT
 				modules(context)->request_presence(req[1], 17, [] (module_info_metadata) {});
@@ -271,15 +272,15 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(3u, modules(context)->size());
 
-				const auto i17 = modules(context)->find(17);
-				assert_not_equal(modules(context)->end(), i17);
-				assert_equal(1u, i17->second.symbols.size());
-				assert_equal(2u, i17->second.source_files.size());
+				const auto i17 = modules_by_id(*context).find(17);
+				assert_not_null(i17);
+				assert_equal(1u, i17->symbols.size());
+				assert_equal(2u, i17->source_files.size());
 
-				const auto i99 = modules(context)->find(99);
-				assert_not_equal(modules(context)->end(), i99);
-				assert_equal(2u, i99->second.symbols.size());
-				assert_equal(1u, i99->second.source_files.size());
+				const auto i99 = modules_by_id(*context).find(99);
+				assert_not_null(i99);
+				assert_equal(2u, i99->symbols.size());
+				assert_equal(1u, i99->source_files.size());
 			}
 
 
@@ -314,7 +315,7 @@ namespace micro_profiler
 				assert_equal(0u, apartment.tasks.size());
 				assert_equal(1u, log.size());
 				assert_equal(create_metadata_info(symbols17, files17), *log.back());
-				assert_equal(&(*modules(context))[17], log.back());
+				assert_equal(&modules_by_id(*context)[17], log.back());
 
 				// INIT
 				write(dir.track_file("some_long_name.so-10100201.symcache"), create_metadata_info(symbols99, files99));
@@ -328,7 +329,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(4u, log.size());
-				assert_equal(&(*modules(context))[17], log[1]);
+				assert_equal(&modules_by_id(*context)[17], log[1]);
 				assert_equal(create_metadata_info(symbols99, files99), *log[2]);
 				assert_equal(create_metadata_info(symbols1000, files1000), *log[3]);
 			}

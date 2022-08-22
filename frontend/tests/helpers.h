@@ -220,29 +220,39 @@ namespace micro_profiler
 			return t;
 		}
 
-		inline mapped_module_ex make_mapping(unsigned persistence_id, long_address_t base, const char *path = "",
+		inline module::mapping_ex make_mapping(unsigned persistence_id, long_address_t base, const char *path = "",
 			unsigned hash_ = 0)
 		{
-			mapped_module_ex m = {	persistence_id, path, base, hash_	};
+			module::mapping_ex m = {	persistence_id, path, base, hash_	};
 			return m;
 		}
 
-		inline mapped_module_identified make_mapping_pair(unsigned instance_id, unsigned persistence_id,
+		inline module::mapping_instance make_mapping_pair(unsigned instance_id, unsigned persistence_id,
 			long_address_t base, const char *path = "", unsigned hash_ = 0)
 		{	return std::make_pair(instance_id, make_mapping(persistence_id, base, path, hash_));	}
 
-		inline tables::module_mapping make_mapping(unsigned instance_id, const mapped_module_ex &m_)
+		inline tables::module_mapping make_mapping(unsigned instance_id, const module::mapping_ex &m_)
 		{
 			tables::module_mapping m;
 
 			m.id = instance_id;
-			static_cast<mapped_module_ex &>(m) = m_;
+			static_cast<module::mapping_ex &>(m) = m_;
 			return m;
 		}
 
 		inline tables::module_mapping make_mapping(unsigned instance_id, unsigned persistence_id, long_address_t base,
 			const char *path = "", unsigned hash_ = 0)
 		{	return make_mapping(instance_id, make_mapping(persistence_id, base, path, hash_));	}
+
+		inline tables::module make_module(unsigned id, const module_info_metadata &module_)
+		{
+			tables::module m;
+
+			m.id = id;
+			static_cast<module_info_metadata &>(m) = module_;
+			return m;
+		}
+
 
 		template <typename T>
 		inline T get_value(const wpl::list_model<T> &m, size_t index)

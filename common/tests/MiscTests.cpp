@@ -615,5 +615,59 @@ namespace micro_profiler
 				assert_equal(somepath2.c_str() + 5, *somepath2);
 			}
 		end_test_suite
+
+
+		begin_test_suite( PathNormalizationTests )
+			test( ExecutableNameIsAppendedWithExeExt )
+			{
+				// INIT / ACT / ASSERT
+#if defined(_WIN32)
+				assert_equal("ls.exe", normalize::exe("ls"));
+				assert_equal("ls.ex.exe", normalize::exe("ls.ex"));
+				assert_equal("ls.exe.test.exe", normalize::exe("ls.exe.test"));
+				assert_equal("test/ls.exe", normalize::exe("test/ls"));
+				assert_equal("test/test\\ls.eX.exe", normalize::exe("test/test\\ls.eX"));
+				assert_equal("test\\test\\ls.eX.exe", normalize::exe("test\\test\\ls.eX"));
+				assert_equal("subpath\\ls.ex.exe", normalize::exe("subpath\\ls.ex"));
+#else
+				assert_equal("ls", normalize::exe("ls"));
+				assert_equal("ls.ex", normalize::exe("ls.ex"));
+				assert_equal("ls.exe.test", normalize::exe("ls.exe.test"));
+				assert_equal("test/ls", normalize::exe("test/ls"));
+				assert_equal("test/test/ls.eX", normalize::exe("test/test/ls.eX"));
+				assert_equal("subpath/ls.ex", normalize::exe("subpath/ls.ex"));
+#endif
+			}
+
+
+			test( DynamicLibraryNameIsAppendedWithExeExt )
+			{
+				// INIT / ACT / ASSERT
+#if defined(_WIN32)
+				assert_equal("ls.dll", normalize::lib("ls"));
+				assert_equal("ls.ex.dll", normalize::lib("ls.ex"));
+				assert_equal("ls.exe.test.dll", normalize::lib("ls.exe.test"));
+				assert_equal("test/ls.dll", normalize::lib("test/ls"));
+				assert_equal("test/test\\ls.eX.dll", normalize::lib("test/test\\ls.eX"));
+				assert_equal("test\\test\\ls.eX.dll", normalize::lib("test\\test\\ls.eX"));
+				assert_equal("subpath\\ls.ex.dll", normalize::lib("subpath\\ls.ex"));
+#elif defined(__APPLE__)
+				assert_equal("libls.dylib", normalize::lib("ls"));
+				assert_equal("libls.ex.dylib", normalize::lib("ls.ex"));
+				assert_equal("libls.exe.test.dylib", normalize::lib("ls.exe.test"));
+				assert_equal("test/libls.dylib", normalize::lib("test/ls"));
+				assert_equal("test/test/libls.eX.dylib", normalize::lib("test\\test/ls.eX"));
+				assert_equal("subpath/libls.ex.dylib", normalize::lib("subpath/ls.ex"));
+#else
+				assert_equal("libls.so", normalize::lib("ls"));
+				assert_equal("libls.ex.so", normalize::lib("ls.ex"));
+				assert_equal("libls.exe.test.so", normalize::lib("ls.exe.test"));
+				assert_equal("test/libls.so", normalize::lib("test/ls"));
+				assert_equal("test\\test/libls.eX.so", normalize::lib("test\\test/ls.eX"));
+				assert_equal("subpath/libls.ex.so", normalize::lib("subpath/ls.ex"));
+#endif
+			}
+		end_test_suite
+
 	}
 }

@@ -32,6 +32,7 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(SolutionDir)build.props\config.props" />
     <Import Project="$(SolutionDir)build.props\polyq.include.props" />
+    <Import Project="$(SolutionDir)build.props\strmd.include.props" />
   </ImportGroup>
   <PropertyGroup>
     <TargetName>micro-profiler_$(PlatformName)</TargetName>
@@ -60,6 +61,7 @@
       <AdditionalOptions>/GH /Gh %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="detour.cpp" />
+    <ClCompile Include="injector.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_unix.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -73,8 +75,11 @@
     <ProjectReference Include="$(SolutionDir)ipc\src\ipc.vcxproj">
       <Project>{2ecfc1ae-8829-4a91-9b6e-2befc569acf7}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)patcher\src\patcher.lib.vcxproj">
+    <ProjectReference Include="$(SolutionDir)patcher\src\patcher.vcxproj">
       <Project>{84891947-5bfb-45f2-b495-20b93aab1b44}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\injector\src\injector.vcxproj">
+      <Project>{b0596b9d-8303-4fd1-8a0a-5db7882f6f89}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\logger\src\logger.vcxproj">
       <Project>{f1eb4266-766c-4087-95f4-387a955b12aa}</Project>
@@ -103,6 +108,9 @@
     <ClInclude Include="..\calibration.h" />
     <ClInclude Include="detour.h" />
     <ClInclude Include="main.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="collector.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

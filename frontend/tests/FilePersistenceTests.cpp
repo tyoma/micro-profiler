@@ -30,12 +30,6 @@ namespace micro_profiler
 			< make_pair(rhs.name, make_pair(rhs.rva, make_pair(rhs.size, make_pair(rhs.file_id, rhs.line))));
 	}
 
-	inline bool operator <(const mapped_module_ex &lhs, const mapped_module_ex &rhs)
-	{
-		return make_pair(lhs.persistent_id, make_pair(lhs.path, lhs.base))
-			< make_pair(rhs.persistent_id, make_pair(rhs.path, rhs.base));
-	}
-
 	inline bool operator <(const module_info_metadata &lhs, const module_info_metadata &rhs)
 	{	return make_pair(lhs.path, lhs.symbols) < make_pair(rhs.path, rhs.symbols);	}
 
@@ -74,6 +68,19 @@ namespace micro_profiler
 					r.commit();
 				}
 			}
+
+			template <typename ContainerT>
+			void append(sdb::table<tables::module> &modules, const ContainerT &items)
+			{
+				for (auto i = begin(items); i != end(items); ++i)
+				{
+					auto r = modules.create();
+
+					(*r).id = i->first;
+					static_cast<module_info_metadata &>(*r) = i->second;
+					r.commit();
+				}
+			}
 		}
 
 		begin_test_suite( FilePersistenceTests )
@@ -84,7 +91,7 @@ namespace micro_profiler
 			strmd::deserializer<vector_adapter, packer, 4> dser4;
 
 			module_info_metadata modules[3];
-			mapped_module_ex mappings[3];
+			module::mapping_ex mappings[3];
 			vector< pair<legacy_function_key, call_graph_types<legacy_function_key>::node> > statistics[4];
 			vector< pair<call_graph_types<long_address_t>::key, call_graph_types<long_address_t>::node> > ustatistics[2];
 			vector<tables::thread> threads[2];
@@ -105,7 +112,7 @@ namespace micro_profiler
 				symbol_info symbols3[] = {
 					{	"stable_sort", 0xFFF, 97,	},
 				};
-				mapped_module_ex mappings_[] = {
+				module::mapping_ex mappings_[] = {
 					{	10u, "c:\\windows\\kernel32.exe", 0x100000 },
 					{	4u, "/usr/bin/TEST", 0xF00010 },
 					{	2u, "c:\\Program File\\test\\test.exe", 0x9000000 },
@@ -170,13 +177,11 @@ namespace micro_profiler
 			{
 				// INIT
 				profiling_session ctx;
-				auto modules1 = plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]);
-
 				ctx.process_info.executable = "kjsdhgkjsdwwp.exe";
 				ctx.process_info.ticks_per_second = 0xF00000000ull;
 				append(ctx.statistics, statistics[0]);
 				add_records(ctx.mappings, plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]));
-				static_cast<tables::modules::base_t &>(ctx.modules) = tables::modules::base_t(modules1.begin(), modules1.end());
+				append(ctx.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
 				add_records(ctx.threads, threads[0]);
 
 				// ACT
@@ -197,13 +202,12 @@ namespace micro_profiler
 				
 				// INIT
 				profiling_session ctx2;
-				auto modules2 = plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]);
 
 				ctx2.process_info.executable = "/usr/bin/grep";
 				ctx2.process_info.ticks_per_second = 0x1000ull;
 				append(ctx2.statistics, statistics[1]);
 				add_records(ctx2.mappings, plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]));
-				static_cast<tables::modules::base_t &>(ctx2.modules) = tables::modules::base_t(modules2.begin(), modules2.end());
+				append(ctx2.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
 				add_records(ctx2.threads, threads[1]);
 
 				// ACT
@@ -233,7 +237,7 @@ namespace micro_profiler
 				components1.process_info.ticks_per_second = 0xF00000000ull;
 				append(components1.statistics, statistics[0]);
 				assign_basic(components1.mappings, plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]));
-				assign_basic(components1.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
+				assign_basic(components1.modules, plural + make_module(10u, modules[0]) + make_module(4u, modules[1]));
 				assign_basic(components1.threads, plural
 					+ make_thread_info(1u, 111, "#1")
 					+ make_thread_info(3u, 112, "#2")
@@ -251,7 +255,7 @@ namespace micro_profiler
 					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0, 0)
 					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
-				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)ctx1.modules);
+				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equivalent(plural + make_thread_info(1u, 111, "#1") + make_thread_info(3u, 112, "#2") + make_thread_info(4u, 113, "#3"), ctx1.threads);
 
 				// INIT
@@ -262,7 +266,7 @@ namespace micro_profiler
 				components2.process_info.ticks_per_second = 0x1000ull;
 				append(components2.statistics, statistics[1]);
 				assign_basic(components2.mappings, plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]));
-				assign_basic(components2.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
+				assign_basic(components2.modules, plural + make_module(4u, modules[1]) + make_module(2u, modules[2]));
 				assign_basic(components2.threads, plural
 					+ make_thread_info(1u, 1211, "thread A")
 					+ make_thread_info(17u, 1212, "thread ABC"));
@@ -281,7 +285,7 @@ namespace micro_profiler
 					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0, 0)
 					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
-				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)ctx2.modules);
+				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equivalent(plural + make_thread_info(1u, 1211, "thread A") + make_thread_info(17u, 1212, "thread ABC"), ctx2.threads);
 			}
 
@@ -311,7 +315,7 @@ namespace micro_profiler
 					+ make_call_statistics(0, 0, 0, 0xF00115, 127, 0, 0, 0, 0)
 					+ make_call_statistics(0, 0, 0, 0xF00133, 12000, 0, 250, 0, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
-				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)ctx1.modules);
+				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equal(ctx1.threads.end(), ctx1.threads.begin());
 
 				// INIT
@@ -337,7 +341,7 @@ namespace micro_profiler
 					+ make_call_statistics(0, 0, 0, 0xF00133, 127, 0, 8, 0, 0)
 					+ make_call_statistics(0, 0, 0, 0x9000FFF, 12000, 0, 250, 0, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
-				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)ctx2.modules);
+				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equal(ctx2.threads.end(), ctx2.threads.begin());
 			}
 
@@ -371,7 +375,7 @@ namespace micro_profiler
 					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0, 0)
 					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
-				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)ctx1.modules);
+				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equivalent(plural + make_thread_info(1u, 111, "#1") + make_thread_info(3u, 112, "#2") + make_thread_info(4u, 113, "#3"), ctx1.threads);
 
 				// INIT
@@ -401,7 +405,7 @@ namespace micro_profiler
 					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0, 0)
 					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
-				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)ctx2.modules);
+				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equivalent(plural + make_thread_info(1u, 1211, "thread A") + make_thread_info(17u, 1212, "thread ABC"), ctx2.threads);
 			}
 
@@ -434,7 +438,7 @@ namespace micro_profiler
 					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0, 0)
 					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
-				assert_equivalent(plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]), (containers::unordered_map<unsigned int, module_info_metadata> &)ctx1.modules);
+				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equivalent(plural + make_thread_info(1u, 111, "#1") + make_thread_info(3u, 112, "#2") + make_thread_info(4u, 113, "#3"), ctx1.threads);
 
 				// INIT
@@ -464,7 +468,70 @@ namespace micro_profiler
 					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0, 0)
 					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
-				assert_equivalent(plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]), (containers::unordered_map<unsigned int, module_info_metadata> &)ctx2.modules);
+				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
+				assert_equivalent(plural + make_thread_info(1u, 1211, "thread A") + make_thread_info(17u, 1212, "thread ABC"), ctx2.threads);
+			}
+
+
+			test( FileV6ContentIsFullyDeserialized )
+			{
+				// INIT
+				file_v6_components components1;
+				profiling_session ctx1;
+
+				components1.process_info.executable = "kjsdhgkjsdwwp.exe";
+				components1.process_info.ticks_per_second = 0xF00000000ull;
+				append(components1.statistics, statistics[0]);
+				assign_basic(components1.mappings, plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]));
+				assign_basic(components1.modules, plural + make_pair(10u, modules[0]) + make_pair(4u, modules[1]));
+				assign_basic(components1.threads, plural
+					+ make_thread_info(1u, 111, "#1")
+					+ make_thread_info(3u, 112, "#2")
+					+ make_thread_info(4u, 113, "#3"));
+				serialize_legacy(_buffer, components1);
+
+				// ACT
+				dser(ctx1);
+
+				// ASSERT
+				assert_equal(components1.process_info, ctx1.process_info);
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 0x100005, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0, 0, 0)
+					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0, 0), ctx1.statistics);
+				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
+				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
+				assert_equivalent(plural + make_thread_info(1u, 111, "#1") + make_thread_info(3u, 112, "#2") + make_thread_info(4u, 113, "#3"), ctx1.threads);
+
+				// INIT
+				file_v6_components components2;
+				profiling_session ctx2;
+
+				components2.process_info.executable = "/usr/bin/grep";
+				components2.process_info.ticks_per_second = 0x1000ull;
+				append(components2.statistics, statistics[1]);
+				assign_basic(components2.mappings, plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]));
+				assign_basic(components2.modules, plural + make_pair(4u, modules[1]) + make_pair(2u, modules[2]));
+				assign_basic(components2.threads, plural
+					+ make_thread_info(1u, 1211, "thread A")
+					+ make_thread_info(17u, 1212, "thread ABC"));
+				serialize_legacy(_buffer, components2);
+
+				// ACT
+				dser(ctx2);
+
+				// ASSERT
+				assert_equal(components2.process_info, ctx2.process_info);
+				assert_equivalent(plural
+					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 0, 1000, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 0, 9, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 0, 10, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 0, 8, 0, 0)
+					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0, 0)
+					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0, 0), ctx2.statistics);
+				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
+				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equivalent(plural + make_thread_info(1u, 1211, "thread A") + make_thread_info(17u, 1212, "thread ABC"), ctx2.threads);
 			}
 

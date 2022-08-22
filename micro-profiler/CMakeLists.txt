@@ -40,7 +40,6 @@ add_custom_command(OUTPUT micro-profiler.pkgdef
 
 set(MICROPROFILER_SOURCES
 	frontend/attach_ui.cpp
-	frontend/inject_profiler.cpp
 	module/main.cpp
 	module/micro-profiler.def
 	resources/micro-profiler_ui.rc
@@ -73,7 +72,7 @@ add_library(micro-profiler_frontend SHARED ${MICROPROFILER_SOURCES})
 add_library(micro-profiler.ui SHARED ${MICROPROFILER_UI_SOURCES})
 add_library(micro-profiler.ui.vs10 SHARED ${MICROPROFILER_UI_VS10_SOURCES})
 
-target_link_libraries(micro-profiler_frontend frontend.lib ipc injector logger scheduler common wpl.vs wpl version)
+target_link_libraries(micro-profiler_frontend frontend ipc logger scheduler common wpl.vs wpl explorer version)
 
 set_target_properties(micro-profiler.ui micro-profiler.ui.vs10 PROPERTIES LINK_OPTIONS /NOENTRY RUNTIME_OUTPUT_DIRECTORY ${MP_OUTDIR}/1033)
 foreach(CFG ${CMAKE_CONFIGURATION_TYPES})

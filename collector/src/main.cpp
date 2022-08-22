@@ -50,18 +50,19 @@
 
 using namespace std;
 
+const size_t c_trace_limit = 5000000;
+const mt::milliseconds c_auto_connect_delay(50);
 #ifdef _MSC_VER
 	extern "C"
 #endif
 	micro_profiler::calls_collector *g_collector_ptr = nullptr;
+micro_profiler::collector_app_instance g_instance(&micro_profiler::collector_app_instance::probe_create_channel,
+	mt::get_thread_callbacks(), c_trace_limit, g_collector_ptr);
 
 namespace micro_profiler
 {
 	namespace
 	{
-		const size_t c_trace_limit = 5000000;
-
-
 		struct null_channel : ipc::channel
 		{
 			null_channel(ipc::channel &inbound)
@@ -76,58 +77,54 @@ namespace micro_profiler
 
 			ipc::channel &_inbound;
 		};
-
-
-
-		ipc::channel_ptr_t probe_create_channel(ipc::channel &inbound)
-		{
-			const string c_candidate_endpoints[] = {
-				ipc::sockets_endpoint_id(ipc::localhost, 6100),
-				ipc::com_endpoint_id(constants::integrated_frontend_id),
-				ipc::com_endpoint_id(constants::standalone_frontend_id),
-			};
-
-			vector<string> candidate_endpoints(c_candidate_endpoints, c_candidate_endpoints
-				+ sizeof(c_candidate_endpoints) / sizeof(c_candidate_endpoints[0]));
-
-			if (const char *env_id = getenv(constants::frontend_id_ev))
-				candidate_endpoints.insert(candidate_endpoints.begin(), env_id);
-
-			for (vector<string>::const_iterator i = candidate_endpoints.begin(); i != candidate_endpoints.end(); ++i)
-			{
-				try
-				{
-					LOG(PREAMBLE "connecting...") % A(*i);
-					const auto channel = ipc::connect_client(i->c_str(), inbound);
-					LOG(PREAMBLE "connected...") % A(channel.get());
-					return channel;
-				}
-				catch (const exception &e)
-				{
-					LOG(PREAMBLE "failed.") % A(e.what());
-				}
-			}
-			LOG(PREAMBLE "using null channel.");
-			return ipc::channel_ptr_t(new null_channel(inbound));
-		}
-
-		log::writer_t create_writer()
-		{
-			const auto logname = (string)"micro-profiler." + *get_current_executable() + ".log";
-
-			mkdir(constants::data_directory().c_str(), 0777);
-			return log::create_writer(constants::data_directory() & logname);
-		}
 	}
 
-	collector_app_instance g_instance(&probe_create_channel, mt::get_thread_callbacks(), c_trace_limit, g_collector_ptr);
+	ipc::channel_ptr_t collector_app_instance::probe_create_channel(ipc::channel &inbound)
+	{
+		const string c_candidate_endpoints[] = {
+			ipc::sockets_endpoint_id(ipc::localhost, 6100),
+			ipc::com_endpoint_id(constants::integrated_frontend_id),
+			ipc::com_endpoint_id(constants::standalone_frontend_id),
+		};
 
-	collector_app_instance::collector_app_instance(const active_server_app::frontend_factory_t &frontend_factory,
+		vector<string> candidate_endpoints(c_candidate_endpoints, c_candidate_endpoints
+			+ sizeof(c_candidate_endpoints) / sizeof(c_candidate_endpoints[0]));
+
+		if (auto env_id = getenv(constants::frontend_id_ev))
+			candidate_endpoints.insert(candidate_endpoints.begin(), env_id);
+
+		for (auto i = candidate_endpoints.begin(); i != candidate_endpoints.end(); ++i)
+		{
+			try
+			{
+				LOG(PREAMBLE "connecting...") % A(*i);
+				const auto channel = ipc::connect_client(i->c_str(), inbound);
+				LOG(PREAMBLE "connected...") % A(channel.get());
+				return channel;
+			}
+			catch (const exception &e)
+			{
+				LOG(PREAMBLE "failed.") % A(e.what());
+			}
+		}
+		LOG(PREAMBLE "using null channel.");
+		return make_shared<null_channel>(inbound);
+	}
+
+	log::writer_t collector_app_instance::create_writer()
+	{
+		const auto logname = (string)"micro-profiler." + *module::executable() + ".log";
+
+		mkdir(constants::data_directory().c_str(), 0777);
+		return log::create_writer(constants::data_directory() & logname);
+	}
+
+	collector_app_instance::collector_app_instance(const active_server_app::client_factory_t &auto_frontend_factory,
 			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr)
 		: _logger(create_writer(), (log::g_logger = &_logger, &get_datetime)),
 			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
 			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks),
-			_patch_manager(_collector, _eallocator)
+			_patch_manager(_collector, _eallocator), _auto_connect(true)
 	{
 		collector_ptr = &_collector;
 
@@ -137,10 +134,14 @@ namespace micro_profiler
 		const auto total_ns = static_cast<int>((oh.inner + oh.outer) * period);
 
 		LOG(PREAMBLE "overhead calibrated...") % A(inner_ns) % A(total_ns);
-		_app.reset(new collector_app(frontend_factory, _collector, oh, *_thread_monitor, _patch_manager));
+		_app.reset(new collector_app(_collector, oh, *_thread_monitor, _patch_manager));
+		_app->get_queue().schedule([this, auto_frontend_factory] {
+			if (_auto_connect)
+				_app->connect(auto_frontend_factory, false);
+		}, c_auto_connect_delay);
 		platform_specific_init();
 		LOG(PREAMBLE "initialized...")
-			% A(get_current_executable()) % A(getpid()) % A(get_module_info(&g_collector_ptr).path);
+			% A(module::executable()) % A(getpid()) % A(module::locate(&g_collector_ptr).path);
 	}
 
 	collector_app_instance::~collector_app_instance()
@@ -151,6 +152,17 @@ namespace micro_profiler
 
 	void collector_app_instance::terminate() throw()
 	{	_app.reset();	}
+
+	void collector_app_instance::block_auto_connect()
+	{	_app->get_queue().schedule([this] {	_auto_connect = false;	});	}
+
+	void collector_app_instance::connect(const active_server_app::client_factory_t &frontend_factory)
+	{
+		_app->get_queue().schedule([this, frontend_factory] {
+			_auto_connect = false;
+			_app->connect(frontend_factory, true);
+		});
+	}
 }
 
 #if defined(__clang__) || defined(__GNUC__)

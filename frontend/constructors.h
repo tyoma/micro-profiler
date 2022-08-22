@@ -56,6 +56,13 @@ namespace micro_profiler
 		return std::shared_ptr<T>(p, &p->second);
 	}
 
+	template <typename T>
+	inline T initialize()
+	{
+		T value = {	};
+		return value;
+	}
+
 	template <typename T, typename F1>
 	inline T initialize(const F1 &field1)
 	{

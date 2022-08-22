@@ -1,6 +1,7 @@
 #include <frontend/image_patch_model.h>
 
 #include "helpers.h"
+#include "helpers_metadata.h"
 #include "primitive_helpers.h"
 
 #include <frontend/keyer.h>
@@ -30,13 +31,11 @@ namespace micro_profiler
 			void emulate_response(unsigned persistent_id, const vector<symbol_info> &symbols_)
 			{
 				auto i = requests.find(persistent_id);
-					
+
 				assert_not_equal(requests.end(), i);
 
-				auto &m = (*modules)[persistent_id];
-				auto &symbols = m.symbols;
+				auto &m = add_metadata(*modules, persistent_id, symbols_);
 
-				symbols.insert(symbols.end(), symbols_.begin(), symbols_.end());
 				i->second(m);
 			}
 
@@ -91,7 +90,7 @@ namespace micro_profiler
 					{	"free", 0x00000001, 115,	},
 				};
 
-				(*modules)[140].symbols = mkvector(data1);
+				add_metadata(*modules, 140, data1);
 
 				// INIT / ACT
 				image_patch_model model1(patches, modules, mappings);
@@ -114,7 +113,7 @@ namespace micro_profiler
 					{	"string::find", 0x00000031, 15,	},
 				};
 
-				(*modules)[11].symbols = mkvector(data2);
+				add_metadata(*modules, 11, data2);
 
 				// INIT / ACT
 				image_patch_model model2(patches, modules, mappings);
@@ -245,8 +244,8 @@ namespace micro_profiler
 					{	"string::find", 0x00000031, 15,	},
 				};
 
-				(*modules)[140].symbols = mkvector(data1);
-				(*modules)[11].symbols = mkvector(data2);
+				add_metadata(*modules, 140, data1);
+				add_metadata(*modules, 11, data2);
 
 				image_patch_model model(patches, modules, mappings);
 				vector< vector< vector<string> > > log;
@@ -316,9 +315,9 @@ namespace micro_profiler
 					{	"f4",	},
 				};
 
-				(*modules)[11].symbols = mkvector(data1);
-				(*modules)[13].symbols = mkvector(data2);
-				(*modules)[17].symbols = mkvector(data3);
+				add_metadata(*modules, 11, data1);
+				add_metadata(*modules, 13, data2);
+				add_metadata(*modules, 17, data3);
 				add_records(*mappings, plural
 					+ make_mapping(0u, 11u, 0u, "/usr/bin/module.so")
 					+ make_mapping(1u, 17u, 0u, "/bin/Profiler"));
@@ -380,8 +379,8 @@ namespace micro_profiler
 					{	"string::Find", 0x00000031, 17,	},
 				};
 
-				(*modules)[1].symbols = mkvector(data1);
-				(*modules)[2].symbols = mkvector(data2);
+				add_metadata(*modules, 1, data1);
+				add_metadata(*modules, 2, data2);
 
 				image_patch_model model(patches, modules, mappings);
 				vector< vector< vector<string> > > log;
@@ -477,7 +476,7 @@ namespace micro_profiler
 					{	"string::Find", 0x00000031, 17,	},
 				};
 
-				(*modules)[1].symbols = mkvector(data);
+				add_metadata(*modules, 1, data);
 				add_records(*patches, plural
 					+ make_patch(1, 0x901A9010, 1, false, true, false)
 					+ make_patch(1, 0x901A9011, 2, false, false, false)
@@ -524,10 +523,10 @@ namespace micro_profiler
 					{	"f5",	},
 				};
 
-				(*modules)[11].symbols = mkvector(data1);
-				(*modules)[13].symbols = mkvector(data2);
-				(*modules)[17].symbols = mkvector(data3);
-				(*modules)[19].symbols = mkvector(data4);
+				add_metadata(*modules, 11, data1);
+				add_metadata(*modules, 13, data2);
+				add_metadata(*modules, 17, data3);
+				add_metadata(*modules, 19, data4);
 				add_records(*mappings, plural
 					+ make_mapping(0u, 11u, 0u, "/usr/bin/module.so")
 					+ make_mapping(1u, 17u, 0u, "d:\\bin\\Profiler")
@@ -651,8 +650,8 @@ namespace micro_profiler
 					{	"string::Find", 0x00000031, 17,	},
 				};
 
-				(*modules)[1].symbols = mkvector(data1);
-				(*modules)[3].symbols = mkvector(data2);
+				add_metadata(*modules, 1, data1);
+				add_metadata(*modules, 3, data2);
 
 				image_patch_model model(patches, modules, mappings);
 				auto sel = model.create_selection();
@@ -713,8 +712,8 @@ namespace micro_profiler
 					{	"string::Find", 0x00000031, 17,	},
 				};
 
-				(*modules)[1].symbols = mkvector(data1);
-				(*modules)[3].symbols = mkvector(data2);
+				add_metadata(*modules, 1, data1);
+				add_metadata(*modules, 3, data2);
 				add_records(*mappings, plural + make_mapping(0u, 1u, 0u) + make_mapping(1u, 3u, 0u));
 
 				image_patch_model model(patches, modules, mappings);

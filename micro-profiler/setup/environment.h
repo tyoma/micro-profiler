@@ -20,8 +20,10 @@
 
 #pragma once
 
+#include <explorer/process.h>
+
 namespace micro_profiler
 {
-	void register_path(bool global);
-	void unregister_path(bool global);
+	void register_path(const tables::processes &processes, bool global);
+	void unregister_path(const tables::processes &processes, bool global);
 }

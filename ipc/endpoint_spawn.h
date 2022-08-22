@@ -20,11 +20,25 @@
 
 #pragma once
 
-#include <string>
+#include "endpoint.h"
+
+#include <vector>
 
 namespace micro_profiler
 {
-	struct process;
+	namespace ipc
+	{
+		namespace spawn
+		{
+			struct server_exe_not_found : connection_refused
+			{
+				server_exe_not_found(const char *message);
+			};
 
-	void inject_profiler(process &process_, const std::string &frontend_id);
+			channel_ptr_t connect_client(const std::string &spawned_path, const std::vector<std::string> &arguments,
+				channel &inbound);
+			
+			channel_ptr_t create_session(const std::vector<std::string> &arguments, channel &outbound);
+		}
+	}
 }

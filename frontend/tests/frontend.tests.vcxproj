@@ -50,7 +50,7 @@
     <ProjectReference Include="..\..\scheduler\src\scheduler.vcxproj">
       <Project>{d319214f-4c16-406a-9ad5-70d1b4f4aa4e}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\src\frontend.lib.vcxproj">
+    <ProjectReference Include="..\src\frontend.vcxproj">
       <Project>{15AD9007-29B9-462F-B7BE-A433B6E83EC9}</Project>
     </ProjectReference>
     <ProjectReference Include="$(SolutionDir)common\src\common.vcxproj">
@@ -94,7 +94,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="comparisons.h" />
+    <ClInclude Include="helpers_database.h" />
     <ClInclude Include="helpers.h" />
+    <ClInclude Include="helpers_metadata.h" />
     <ClInclude Include="legacy_serialization.h" />
     <ClInclude Include="mocks.h" />
     <ClInclude Include="mock_channel.h" />

@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 
 include(test)
 
+add_compile_options(
+	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
+)
+
 set(SAVANT_DB_TESTS_SOURCES
 	AggregationTests.cpp
 	ImmutableIndexTests.cpp

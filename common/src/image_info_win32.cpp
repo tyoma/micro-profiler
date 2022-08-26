@@ -52,6 +52,15 @@ namespace micro_profiler
 			"dbghelp.dll",
 		};
 
+		struct inhibit_load_failures : noncopyable
+		{
+			inhibit_load_failures();
+			~inhibit_load_failures();
+
+		private:
+			UINT _previousMode;
+		};
+
 		class dbghelp : noncopyable
 		{
 		public:
@@ -93,8 +102,17 @@ namespace micro_profiler
 
 
 
+		inhibit_load_failures::inhibit_load_failures()
+			: _previousMode(::SetErrorMode(SEM_FAILCRITICALERRORS))
+		{	}
+
+		inhibit_load_failures::~inhibit_load_failures()
+		{	::SetErrorMode(_previousMode);	}
+
+
 		dbghelp::dbghelp()
 		{
+			inhibit_load_failures scoped_inhibit;
 			auto path_env = _wgetenv(L"PATH");
 
 			path_env = path_env ? path_env : L"";

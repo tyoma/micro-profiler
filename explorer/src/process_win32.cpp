@@ -21,6 +21,7 @@
 #include <explorer/process.h>
 
 #include <common/string.h>
+#include <common/win32/time.h>
 #include <sdb/integrated_index.h>
 #include <windows.h>
 #include <tlhelp32.h>
@@ -29,16 +30,6 @@ using namespace std;
 
 namespace micro_profiler
 {
-	namespace
-	{
-		mt::milliseconds from_filetime(FILETIME value)
-		{
-			return mt::milliseconds(
-				((static_cast<uint64_t>(value.dwHighDateTime) << 32) + value.dwLowDateTime) / 10000
-			);
-		}
-	}
-
 	namespace keyer
 	{
 		struct pid
@@ -63,7 +54,8 @@ namespace micro_profiler
 		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
 		PROCESSENTRY32W entry = { sizeof(PROCESSENTRY32W), };
 		const auto now = _clock();
-		auto time_diff = static_cast<float>((now - _last_update).count());
+		const auto time_diff = (now - _last_update).count();
+		const auto itime_diff = time_diff ? 1.0f / time_diff : 0.0f;
 
 		_cycle++;
 		_last_update = now;
@@ -99,10 +91,9 @@ namespace micro_profiler
 
 				::GetProcessTimes(p.handle.get(), &creation_, &exit_, &kernel_, &user_);
 
-				const auto user = from_filetime(user_);
+				const auto user = to_milliseconds(user_);
 
-				if (time_diff > 0.0f)
-					p.cpu_usage = static_cast<float>((user - p.cpu_time).count()) / time_diff;
+				p.cpu_usage = (user - p.cpu_time).count() * itime_diff;
 				p.cpu_time = user;
 			}
 			p.cycle = _cycle;
@@ -110,7 +101,7 @@ namespace micro_profiler
 		}
 		for (auto i = begin(); i != end(); ++i)
 		{
-			if (i->cycle != _cycle)
+			if (i->cycle != _cycle && i->handle)
 			{
 				auto rec = modify(i);
 				auto &p = *rec;

@@ -2,6 +2,7 @@
 
 #include <test-helpers/helpers.h>
 
+#include <cstdint>
 #include <windows.h>
 
 using namespace std;
@@ -12,15 +13,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			mt::milliseconds milliseconds(FILETIME t)
-			{
-				long long v = t.dwHighDateTime;
-
-				v <<= 32;
-				v += t.dwLowDateTime;
-				v /= 10000; // FILETIME is expressed in 100-ns intervals
-				return mt::milliseconds(v);
-			}
+			mt::milliseconds to_milliseconds(const FILETIME &ftime)
+			{	return mt::milliseconds(((static_cast<uint64_t>(ftime.dwHighDateTime) << 32) + ftime.dwLowDateTime) / 10000);	}
 		}
 
 		unsigned int this_thread::get_native_id()
@@ -31,18 +25,23 @@ namespace micro_profiler
 			FILETIME dummy, user = {}, kernel = {};
 
 			::GetThreadTimes(::GetCurrentThread(), &dummy, &dummy, &kernel, &user);
-			return milliseconds(user);
+			return to_milliseconds(user);
 		}
 
 		bool this_thread::set_description(const wchar_t *description)
+		try
 		{
 			typedef HRESULT (WINAPI *SetThreadDescription_t)(HANDLE hthread, PCWSTR description);
 
 			image kernel32("kernel32.dll");
-			SetThreadDescription_t pSetThreadDescription
+			auto pSetThreadDescription
 				= reinterpret_cast<SetThreadDescription_t>(kernel32.get_symbol_address("SetThreadDescription"));
 
-			return pSetThreadDescription ? pSetThreadDescription(::GetCurrentThread(), description), true : false;
+			return S_OK == pSetThreadDescription(::GetCurrentThread(), description);
+		}
+		catch (...)
+		{
+			return false;
 		}
 	}
 }

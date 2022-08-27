@@ -20,8 +20,11 @@
 
 #include <common/time.h>
 
+#include <cstdint>
 #include <time.h>
 #include <windows.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
@@ -67,4 +70,7 @@ namespace micro_profiler
 
 		return dt;
 	}
+
+	mt::milliseconds to_milliseconds(const FILETIME &ftime)
+	{	return mt::milliseconds(((static_cast<uint64_t>(ftime.dwHighDateTime) << 32) + ftime.dwLowDateTime) / 10000);	}
 }

@@ -53,7 +53,7 @@ namespace micro_profiler
 			const auto kernel = module::load("kernel32");
 
 			::WriteProcessMemory(_hprocess.get(), fpath.get(), m.path.c_str(), m.path.size() + 1, NULL);
-			foreign_execute(kernel / "LoadLibraryA", fpath.get());
+			foreign_execute_sync(kernel / "LoadLibraryA", fpath.get());
 
 			auto fbase = static_cast<byte *>(find_loaded_module(m.path));
 
@@ -63,10 +63,10 @@ namespace micro_profiler
 				&payload_size, sizeof(payload_size), NULL);
 			::WriteProcessMemory(_hprocess.get(), fpayload.get() + sizeof(injection_offset) + sizeof(payload_size),
 				payload.begin(), payload.length(), NULL);
-			foreign_execute((PTHREAD_START_ROUTINE)(fbase + ((byte *)&foreign_worker - m.base)), fpayload.get());
+			foreign_execute_sync((PTHREAD_START_ROUTINE)(fbase + ((byte *)&foreign_worker - m.base)), fpayload.get());
 
 			// TODO: untested
-			foreign_execute(kernel / "FreeLibrary", fbase);
+			foreign_execute_sync(kernel / "FreeLibrary", fbase);
 		}
 
 	private:
@@ -76,15 +76,12 @@ namespace micro_profiler
 		};
 
 	private:
-		void *foreign_execute(PTHREAD_START_ROUTINE thread_routine, void *data)
+		void foreign_execute_sync(PTHREAD_START_ROUTINE thread_routine, void *data)
 		{
 			shared_ptr<void> hthread(::CreateRemoteThread(_hprocess.get(), NULL, 0, thread_routine, data, 0, NULL),
 				&::CloseHandle);
-			DWORD exit_code;
 
 			::WaitForSingleObject(hthread.get(), INFINITE);
-			return ::GetExitCodeThread(hthread.get(), &exit_code),
-				reinterpret_cast<void *>(static_cast<size_t>(exit_code));
 		}
 
 		shared_ptr<byte> foreign_allocate(size_t size)

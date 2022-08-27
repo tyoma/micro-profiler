@@ -22,6 +22,7 @@
 
 #include <common/module.h>
 #include <common/string.h>
+#include <common/win32/time.h>
 #include <memory>
 #include <windows.h>
 
@@ -31,6 +32,10 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const auto c_kernel32 = module::load("kernel32");
+		const HRESULT (WINAPI *c_GetThreadDescription)(HANDLE hThread, PWSTR *ppszThreadDescription)
+			= c_kernel32 / "GetThreadDescription";
+
 		shared_ptr<void> get_current_thread()
 		{
 			HANDLE handle = NULL;
@@ -40,21 +45,12 @@ namespace micro_profiler
 			return shared_ptr<void>(handle, &CloseHandle);
 		}
 
-		mt::milliseconds milliseconds(FILETIME t)
-		{
-			long long v = t.dwHighDateTime;
-
-			v <<= 32;
-			v += t.dwLowDateTime;
-			return mt::milliseconds(v / 10000); // FILETIME is expressed in 100-ns intervals
-		}
-
 		mt::milliseconds get_process_start_time()
 		{
 			FILETIME start_time, dummy;
 
 			::GetProcessTimes(::GetCurrentProcess(), &start_time, &dummy, &dummy, &dummy);
-			return milliseconds(start_time);
+			return to_milliseconds(start_time);
 		}
 	}
 
@@ -63,7 +59,7 @@ namespace micro_profiler
 		FILETIME t = {};
 
 		::GetSystemTimeAsFileTime(&t);
-		return milliseconds(t) - get_process_start_time();
+		return to_milliseconds(t) - get_process_start_time();
 	}
 
 	unsigned long long this_thread::get_native_id()
@@ -71,26 +67,22 @@ namespace micro_profiler
 
 	function<void (thread_info &info)> this_thread::open_info()
 	{
-		typedef HRESULT (WINAPI *GetThreadDescription_t)(HANDLE hThread, PWSTR *ppszThreadDescription);
-
 		FILETIME thread_start, dummy;
 		const auto handle = get_current_thread();
 		const auto native_id = ::GetCurrentThreadId();
-		const auto start_time = milliseconds((::GetThreadTimes(handle.get(), &thread_start, &dummy, &dummy, &dummy),
+		const auto start_time = to_milliseconds((::GetThreadTimes(handle.get(), &thread_start, &dummy, &dummy, &dummy),
 			thread_start)) - get_process_start_time();
-		const auto kernel32 = module::load("kernel32");
-		const GetThreadDescription_t _GetThreadDescription = kernel32 / "GetThreadDescription";
 
-		return [handle, native_id, start_time, kernel32, _GetThreadDescription] (thread_info &info) {
+		return [handle, native_id, start_time] (thread_info &info) {
 			FILETIME dummy, user;
 			PWSTR description;
 
 			info.native_id = native_id;
-			if (_GetThreadDescription && SUCCEEDED(_GetThreadDescription(handle.get(), &description)))
+			if (c_GetThreadDescription && SUCCEEDED(c_GetThreadDescription(handle.get(), &description)))
 				info.description = unicode(description), ::LocalFree(description);
 			::GetThreadTimes(handle.get(), &dummy, &dummy, &dummy, &user);
 			info.start_time = start_time;
-			info.cpu_time = milliseconds(user);
+			info.cpu_time = to_milliseconds(user);
 		};
 	}
 }

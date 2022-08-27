@@ -132,6 +132,7 @@ namespace micro_profiler
 			close();
 		};
 
+		model->set_order(0, true);
 		_connections.push_back(cmodel->sort_order_changed += [model] (headers_model::index_type column, bool ascending) {
 			model->set_order(column, ascending);
 		});

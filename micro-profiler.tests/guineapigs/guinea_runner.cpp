@@ -1,5 +1,6 @@
 #include "guinea_runner.h"
 
+#include <common/time.h>
 #include <ipc/endpoint_spawn.h>
 #include <ipc/server_session.h>
 #include <map>
@@ -34,6 +35,14 @@ namespace micro_profiler
 		});
 		session->add_handler(get_process_id, [images] (ipc::server_session::response &resp, int) {
 			resp(1, static_cast<unsigned>(getpid()));
+		});
+		session->add_handler(run_load, [] (ipc::server_session::response &resp, int cpu_time_ms) {
+			auto t0 = clock();
+
+			while (clock() - t0 < cpu_time_ms)
+				for (volatile int n = 10000; n; n--)
+				{	}
+			resp(1);
 		});
 		return session;
 	}

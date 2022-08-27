@@ -29,6 +29,16 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		mt::milliseconds from_filetime(FILETIME value)
+		{
+			return mt::milliseconds(
+				((static_cast<uint64_t>(value.dwHighDateTime) << 32) + value.dwLowDateTime) / 10000
+			);
+		}
+	}
+
 	namespace keyer
 	{
 		struct pid
@@ -42,8 +52,9 @@ namespace micro_profiler
 	}
 
 
-	process_explorer::process_explorer(mt::milliseconds update_interval, scheduler::queue &apartment_queue)
-		: _apartment(apartment_queue), _update_interval(update_interval), _cycle(0)
+	process_explorer::process_explorer(mt::milliseconds update_interval, scheduler::queue &apartment_queue,
+			const function<mt::milliseconds ()> &clock)
+		: _apartment(apartment_queue), _clock(clock), _update_interval(update_interval), _cycle(0)
 	{	update();	}
 
 	void process_explorer::update()
@@ -51,8 +62,11 @@ namespace micro_profiler
 		auto &idx = sdb::unique_index(*this, keyer::pid());
 		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
 		PROCESSENTRY32W entry = { sizeof(PROCESSENTRY32W), };
+		const auto now = _clock();
+		auto time_diff = static_cast<float>((now - _last_update).count());
 
 		_cycle++;
+		_last_update = now;
 		for (auto lister = &::Process32FirstW;
 			lister(snapshot.get(), &entry);
 			lister = &::Process32NextW, entry.szExeFile[0] = 0)
@@ -71,7 +85,6 @@ namespace micro_profiler
 					// TODO: untested
 					if (::IsWow64Process(handle, &wow64))
 						p.architecture = wow64 ? process_info::x86 : process_info::x64;
-
 					p.handle.reset(handle, &::CloseHandle);
 				}
 				else
@@ -79,6 +92,18 @@ namespace micro_profiler
 					rec.remove();
 					continue;
 				}
+			}
+			if (p.handle)
+			{
+				FILETIME creation_, exit_, kernel_, user_;
+
+				::GetProcessTimes(p.handle.get(), &creation_, &exit_, &kernel_, &user_);
+
+				const auto user = from_filetime(user_);
+
+				if (time_diff > 0.0f)
+					p.cpu_usage = static_cast<float>((user - p.cpu_time).count()) / time_diff;
+				p.cpu_time = user;
 			}
 			p.cycle = _cycle;
 			rec.commit();
@@ -88,8 +113,10 @@ namespace micro_profiler
 			if (i->cycle != _cycle)
 			{
 				auto rec = modify(i);
+				auto &p = *rec;
 
-				(*rec).handle.reset();
+				p.handle.reset();
+				p.cpu_usage = 0.0f;
 				rec.commit();
 			}
 		}

@@ -11,6 +11,7 @@ namespace micro_profiler
 			unload_module,
 			execute_function,
 			get_process_id,
+			run_load,
 		};
 
 		template <typename ArchiveT>

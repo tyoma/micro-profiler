@@ -188,6 +188,13 @@ namespace micro_profiler
 			return micro_profiler::compare(lhs.parent_pid, rhs.parent_pid);
 		};
 
+		auto by_process_cpu_time = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {
+			return micro_profiler::compare(lhs.cpu_time, rhs.cpu_time);
+		};
+
+		auto by_process_cpu_usage = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {
+			return micro_profiler::compare(lhs.cpu_usage, rhs.cpu_usage);
+		};
 
 		auto process_name = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
 			text << (micro_profiler::operator*)(item.path);
@@ -199,6 +206,17 @@ namespace micro_profiler
 
 		auto process_ppid = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
 			micro_profiler::itoa<10>(text, item.parent_pid);
+		};
+
+		auto process_cpu_time = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
+			micro_profiler::format_interval(text, 0.001 * item.cpu_time.count());
+		};
+
+		auto process_cpu_usage = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
+			char buffer[100];
+			const int l = std::sprintf(buffer, "%0.1f", 100.0f * item.cpu_usage);
+
+			text.append(buffer, buffer + l);
 		};
 	}
 
@@ -244,5 +262,7 @@ namespace micro_profiler
 		{	"ProcessExe", "Process\n" + secondary + "executable", 384, agge::align_near, process_name, by_process_name, true,	},
 		{	"ProcessID", "PID" + secondary, 50, agge::align_far, process_pid, by_process_pid, true,	},
 		{	"ParentProcessID", "PID\n" + secondary + "parent", 50, agge::align_far, process_ppid, by_process_ppid, true,	},
+		{	"CPUTime", "CPU\n" + secondary + "time (user)", 50, agge::align_far, process_cpu_time, by_process_cpu_time, false,	},
+		{	"CPUUsage", "CPU (%)\n" + secondary + "usage (user)", 50, agge::align_far, process_cpu_usage, by_process_cpu_usage, false,	},
 	};
 }

@@ -67,7 +67,7 @@ namespace micro_profiler
 				auto child4 = run_guinea(c_guinea_runner3);
 
 				// INIT / ACT
-				process_explorer e1(mt::milliseconds(17), queue);
+				process_explorer e1(mt::milliseconds(17), queue, [] {	return mt::milliseconds(0);	});
 				auto &i1 = sdb::multi_index(e1, pid());
 
 				// ACT / ASSERT
@@ -83,7 +83,7 @@ namespace micro_profiler
 				auto child6 = run_guinea(c_guinea_runner2);
 
 				// INIT / ACT
-				process_explorer e2(mt::milliseconds(11), queue);
+				process_explorer e2(mt::milliseconds(11), queue, [] {	return mt::milliseconds(0);	});
 				auto &i2 = sdb::multi_index(e2, pid());
 
 				// ACT / ASSERT
@@ -102,7 +102,7 @@ namespace micro_profiler
 				child3.first.reset();
 
 				// INIT / ACT
-				process_explorer e3(mt::milliseconds(171), queue);
+				process_explorer e3(mt::milliseconds(171), queue, [] {	return mt::milliseconds(0);	});
 				auto &i3 = sdb::multi_index(e3, pid());
 
 				// ACT / ASSERT
@@ -120,7 +120,7 @@ namespace micro_profiler
 			test( NewProcessesAreReportedAsNewRecords )
 			{
 				// INIT
-				process_explorer e(mt::milliseconds(1), queue);
+				process_explorer e(mt::milliseconds(1), queue, [] {	return mt::milliseconds(0);	});
 				auto invalidations = 0;
 				auto conn = e.invalidate += [&] {	invalidations++;	};
 				auto &idx = sdb::multi_index(e, pid());
@@ -168,7 +168,7 @@ namespace micro_profiler
 				auto child2 = run_guinea(c_guinea_runner2);
 
 				// INIT / ACT
-				process_explorer e(mt::milliseconds(1), queue);
+				process_explorer e(mt::milliseconds(1), queue, [] {	return mt::milliseconds(0);	});
 				auto &idx = sdb::unique_index<pid>(e);
 
 				// ACT / ASSERT
@@ -204,6 +204,97 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_null(p1->handle);
+			}
+
+
+			test( ProcessTimesAreProvidedInProcessTable )
+			{
+				// INIT
+				mt::event ready[2];
+				shared_ptr<void> req[2];
+				auto child1 = run_guinea(c_guinea_runner);
+				auto child2 = run_guinea(c_guinea_runner);
+				process_explorer e(mt::milliseconds(1), queue, [] {	return mt::milliseconds(0);	});
+				auto &idx = sdb::unique_index<pid>(e);
+				auto p1 = idx.find(child1.second);
+				auto p2 = idx.find(child2.second);
+				auto t01 = p1->cpu_time;
+				auto t02 = p2->cpu_time;
+
+				// ACT
+				child1.first->request(req[0], run_load, 13, 1, [&] (ipc::deserializer &) {	ready[0].set();	});
+				child2.first->request(req[1], run_load, 120, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				ready[1].wait();
+				ready[0].wait();
+				queue.run_one();
+
+				// ACT / ASSERT
+				assert_is_true(mt::milliseconds(10) <= p1->cpu_time - t01 && p1->cpu_time - t01 <= mt::milliseconds(20));
+				assert_is_true(mt::milliseconds(100) <= p2->cpu_time - t02 &&  p2->cpu_time - t02 <= mt::milliseconds(140));
+
+				// INIT
+				t01 = p1->cpu_time;
+				t02 = p2->cpu_time;
+
+				// ACT
+				child2.first->request(req[1], run_load, 250, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				ready[1].wait();
+				queue.run_one();
+
+				// ACT / ASSERT
+				assert_equal(t01, p1->cpu_time);
+				assert_is_true(mt::milliseconds(230) <= p2->cpu_time - t02 &&  p2->cpu_time - t02 <= mt::milliseconds(270));
+			}
+
+
+			test( ProcessUsagesAreProvidedInProcessTable )
+			{
+				// INIT
+				mt::event ready[2];
+				shared_ptr<void> req[2];
+				auto child1 = run_guinea(c_guinea_runner);
+				auto child2 = run_guinea(c_guinea_runner);
+				mt::milliseconds now(0);
+				process_explorer e(mt::milliseconds(1), queue, [&] {	return now;	});
+				auto &idx = sdb::unique_index<pid>(e);
+				auto p1 = idx.find(child1.second);
+				auto p2 = idx.find(child2.second);
+				auto t01 = p1->cpu_time;
+				auto t02 = p2->cpu_time;
+
+				// ACT
+				child1.first->request(req[0], run_load, 13, 1, [&] (ipc::deserializer &) {	ready[0].set();	});
+				child2.first->request(req[1], run_load, 120, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				ready[1].wait();
+				ready[0].wait();
+				now = mt::milliseconds(700);
+				queue.run_one();
+
+				// ACT / ASSERT
+				assert_is_true(0.01429f <= p1->cpu_usage && p1->cpu_usage <= 0.0286);
+				assert_is_true(0.1429f <= p2->cpu_usage && p2->cpu_usage <= 0.2);
+
+				// INIT
+				t01 = p1->cpu_time;
+				t02 = p2->cpu_time;
+
+				// ACT
+				child2.first->request(req[1], run_load, 250, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				ready[1].wait();
+				now = mt::milliseconds(731);
+				queue.run_one();
+
+				// ACT / ASSERT
+				assert_equal(0.0f, p1->cpu_usage);
+				assert_is_true(7.419f <= p2->cpu_usage &&  p2->cpu_usage <= 8.71);
+
+				// ACT
+				child2.first.reset();
+				now = mt::milliseconds(750);
+				queue.run_one();
+
+				// ACT / ASSERT
+				assert_equal(0.0f, p2->cpu_usage);
 			}
 		end_test_suite
 	}

@@ -147,7 +147,7 @@ namespace micro_profiler
 		void profiler_package::initialize(wpl::vs::factory &factory)
 		{
 			CComPtr<profiler_package> self = this;
-			auto processes = make_shared<process_explorer>(mt::milliseconds(50), *_ui_queue);
+			auto processes = make_shared<process_explorer>(mt::milliseconds(200), *_ui_queue, _clock);
 
 			obtain_service<_DTE>([self] (CComPtr<_DTE> p) {
 				LOG(PREAMBLE "DTE obtained...") % A(p);

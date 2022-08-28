@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.13)
 
 project(micro-profiler)
 
@@ -167,9 +167,9 @@ if (WIN32 OR APPLE)
 	endif ()
 endif ()
 
-set(MP_TEST_SUITES collector common frontend ipc logger math micro-profiler mt patcher reqm scheduler views)
+set(MP_TEST_SUITES frontend ipc logger math micro-profiler mt patcher reqm savant_db scheduler views)
 if (WIN32)
-	set(MP_TEST_SUITES ${MP_TEST_SUITES} injector)
+	set(MP_TEST_SUITES ${MP_TEST_SUITES} explorer injector)
 endif()
 
 foreach(t ${MP_TEST_SUITES})

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.13)
 
 include_directories(../collector)
 link_directories($<TARGET_FILE_DIR:playground>)

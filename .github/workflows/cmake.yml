@@ -30,6 +30,6 @@ jobs:
     - name: Build
       run: cmake --build ${{github.workspace}}/_build --config ${{env.BUILD_TYPE}}
 
-#    - name: Test
-#      working-directory: ${{github.workspace}}/_build
-#      run: ctest -C ${{env.BUILD_TYPE}} -VV
+    - name: Test
+      working-directory: ${{github.workspace}}/_build
+      run: ctest -C ${{env.BUILD_TYPE}} -VV

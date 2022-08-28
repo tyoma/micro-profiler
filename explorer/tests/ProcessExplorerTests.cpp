@@ -193,18 +193,14 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(p2->handle);
 
-				// ACT
-				queue.run_one();
+				// ACT / ASSERT (must exit)
+				while (idx.find(child2.second)->handle)
+					queue.run_one();
 
-				// ACT / ASSERT
-				assert_null(p2->handle);
-
-				// INIT
+				// ACT / ASSERT (must exit)
 				child1.first.reset();
-				queue.run_one();
-
-				// ACT / ASSERT
-				assert_null(p1->handle);
+				while (idx.find(child1.second)->handle)
+					queue.run_one();
 			}
 
 
@@ -223,15 +219,15 @@ namespace micro_profiler
 				auto t02 = p2->cpu_time;
 
 				// ACT
-				child1.first->request(req[0], run_load, 13, 1, [&] (ipc::deserializer &) {	ready[0].set();	});
-				child2.first->request(req[1], run_load, 120, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				child1.first->request(req[0], run_load, 130, 1, [&] (ipc::deserializer &) {	ready[0].set();	});
+				child2.first->request(req[1], run_load, 480, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
 				ready[1].wait();
 				ready[0].wait();
 				queue.run_one();
 
 				// ACT / ASSERT
-				assert_is_true(mt::milliseconds(10) <= p1->cpu_time - t01 && p1->cpu_time - t01 <= mt::milliseconds(20));
-				assert_is_true(mt::milliseconds(100) <= p2->cpu_time - t02 &&  p2->cpu_time - t02 <= mt::milliseconds(140));
+				assert_is_true(mt::milliseconds(100) <= p1->cpu_time - t01 && p1->cpu_time - t01 <= mt::milliseconds(170));
+				assert_is_true(mt::milliseconds(400) <= p2->cpu_time - t02 &&  p2->cpu_time - t02 <= mt::milliseconds(560));
 
 				// INIT
 				t01 = p1->cpu_time;
@@ -264,16 +260,16 @@ namespace micro_profiler
 				auto t02 = p2->cpu_time;
 
 				// ACT
-				child1.first->request(req[0], run_load, 13, 1, [&] (ipc::deserializer &) {	ready[0].set();	});
-				child2.first->request(req[1], run_load, 120, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				child1.first->request(req[0], run_load, 130, 1, [&] (ipc::deserializer &) {	ready[0].set();	});
+				child2.first->request(req[1], run_load, 360, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
 				ready[1].wait();
 				ready[0].wait();
 				now = mt::milliseconds(700);
 				queue.run_one();
 
 				// ACT / ASSERT
-				assert_is_true(0.01429f <= p1->cpu_usage && p1->cpu_usage <= 0.0286);
-				assert_is_true(0.1429f <= p2->cpu_usage && p2->cpu_usage <= 0.2);
+				assert_is_true(0.1429f <= p1->cpu_usage && p1->cpu_usage <= 0.286);
+				assert_is_true(0.4287f <= p2->cpu_usage && p2->cpu_usage <= 0.6);
 
 				// INIT
 				t01 = p1->cpu_time;

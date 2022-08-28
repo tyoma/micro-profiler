@@ -176,6 +176,7 @@ namespace micro_profiler
 				assert_not_null(p1);
 				assert_equal("guinea_runner.exe", (string)*p1->path);
 				assert_equal((unsigned)getpid(), p1->parent_pid);
+				assert_equal(sizeof(void*) == 8 ? process_info::x64 : process_info::x86, p1->architecture);
 				assert_not_null(p1->handle);
 
 				auto p2 = idx.find(child2.second);

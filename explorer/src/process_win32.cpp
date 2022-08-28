@@ -50,34 +50,34 @@ namespace micro_profiler
 
 	void process_explorer::update()
 	{
+		static SYSTEM_INFO sysinfo = {};
+		static const auto os_is_64 = (::GetNativeSystemInfo(&sysinfo), sysinfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64);
+
 		auto &idx = sdb::unique_index(*this, keyer::pid());
 		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
-		PROCESSENTRY32W entry = { sizeof(PROCESSENTRY32W), };
+		PROCESSENTRY32W entry = {	sizeof(PROCESSENTRY32W),	};
 		const auto now = _clock();
 		const auto time_diff = (now - _last_update).count();
 		const auto itime_diff = time_diff ? 1.0f / time_diff : 0.0f;
 
 		_cycle++;
 		_last_update = now;
-		for (auto lister = &::Process32FirstW;
-			lister(snapshot.get(), &entry);
-			lister = &::Process32NextW, entry.szExeFile[0] = 0)
+		for (auto lister = &::Process32FirstW; lister(snapshot.get(), &entry); lister = &::Process32NextW)
 		{
 			auto rec = idx[entry.th32ProcessID];
 			auto &p = *rec;
 
-			p.parent_pid = entry.th32ParentProcessID;
-			p.path = unicode(entry.szExeFile);
 			if (!p.handle)
 			{
 				if (auto handle = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, entry.th32ProcessID))
 				{
 					BOOL wow64 = FALSE;
 
-					// TODO: untested
-					if (::IsWow64Process(handle, &wow64))
-						p.architecture = wow64 ? process_info::x86 : process_info::x64;
+					p.architecture = os_is_64 && ::IsWow64Process(handle, &wow64) && !wow64
+						? process_info::x64 : process_info::x86;
 					p.handle.reset(handle, &::CloseHandle);
+					p.parent_pid = entry.th32ParentProcessID;
+					unicode(p.path, entry.szExeFile);
 				}
 				else
 				{

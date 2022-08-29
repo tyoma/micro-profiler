@@ -24,9 +24,9 @@
 #include <common/module.h>
 #include <common/path.h>
 #include <common/string.h>
+#include <common/win32/module.h>
 #include <stdexcept>
 #include <windows.h>
-#include <psapi.h>
 
 using namespace std;
 using namespace std::placeholders;
@@ -46,23 +46,24 @@ namespace micro_profiler
 		void remote_execute(injection_function_t *injection, const_byte_range payload)
 		{
 			const auto m = module::locate(&foreign_worker);
-			const auto fpath = foreign_allocate(m.path.size() + 1);
-			const auto injection_offset = (byte *)injection - m.base;
+			const auto wpath = unicode(m.path);
+			const auto fpath = foreign_allocate(sizeof(wchar_t) * (wpath.size() + 1));
+			const auto injection_offset = reinterpret_cast<byte *>(injection) - m.base;
 			const auto payload_size = payload.length();
 			const auto fpayload = foreign_allocate(sizeof(injection_offset) + sizeof(payload_size) + payload.length());
+			auto write_position = static_cast<byte *>(fpayload.get());
 			const auto kernel = module::load("kernel32");
 
-			::WriteProcessMemory(_hprocess.get(), fpath.get(), m.path.c_str(), m.path.size() + 1, NULL);
-			foreign_execute_sync(kernel / "LoadLibraryA", fpath.get());
+			::WriteProcessMemory(_hprocess.get(), fpath.get(), wpath.c_str(), sizeof(wchar_t) * (wpath.size() + 1), NULL);
+			foreign_execute_sync(kernel / "LoadLibraryW", fpath.get());
 
-			auto fbase = static_cast<byte *>(find_loaded_module(m.path));
+			auto fbase = find_loaded_module(m.path);
 
-			::WriteProcessMemory(_hprocess.get(), fpayload.get(), &injection_offset, sizeof(injection_offset),
-				NULL);
-			::WriteProcessMemory(_hprocess.get(), fpayload.get() + sizeof(injection_offset),
-				&payload_size, sizeof(payload_size), NULL);
-			::WriteProcessMemory(_hprocess.get(), fpayload.get() + sizeof(injection_offset) + sizeof(payload_size),
-				payload.begin(), payload.length(), NULL);
+			::WriteProcessMemory(_hprocess.get(), write_position, &injection_offset, sizeof(injection_offset), NULL);
+			write_position += sizeof(injection_offset);
+			::WriteProcessMemory(_hprocess.get(), write_position, &payload_size, sizeof(payload_size), NULL);
+			write_position += sizeof(payload_size);
+			::WriteProcessMemory(_hprocess.get(), write_position, payload.begin(), payload.length(), NULL);
 			foreign_execute_sync((PTHREAD_START_ROUTINE)(fbase + ((byte *)&foreign_worker - m.base)), fpayload.get());
 
 			// TODO: untested
@@ -101,31 +102,22 @@ namespace micro_profiler
 			(*injection)(const_byte_range(data, *size));
 		};
 
-		void *find_loaded_module(const string &path)
+		byte *find_loaded_module(const string &path)
 		{
 			file_id fid(path);
-			DWORD needed;
-			vector<HMODULE> buffer;
+			byte *base = nullptr;
 
-			if (!::EnumProcessModules(_hprocess.get(), 0, 0, &needed))
-				throw runtime_error("Cannot enumerate modules in the target process!");
-			buffer.resize(needed / sizeof(HMODULE));
-			::EnumProcessModules(_hprocess.get(), buffer.data(), needed, &needed);
-			for (auto i = buffer.begin(); i != buffer.end(); ++i)
-			{
-				wchar_t path_buffer[MAX_PATH + 1] = { 0 };
-
-				::GetModuleFileNameExW(_hprocess.get(), *i, path_buffer, sizeof(path_buffer) / sizeof(wchar_t));
-				if (file_id(unicode(path_buffer)) == fid)
-					return *i;
-			}
-			return 0;
+			modules_enumerate_mapped(_hprocess.get(), [&] (const module::mapping &mapping) {
+				base = file_id(mapping.path) == fid ? mapping.base : base;
+			});
+			return base;
 		}
 
 	private:
 		unsigned _pid;
 		shared_ptr<void> _hprocess;
 	};
+
 
 	process::process(unsigned int pid)
 		: _impl(new impl(pid))

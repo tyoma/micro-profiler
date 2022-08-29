@@ -38,9 +38,6 @@
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
-    <Lib>
-      <AdditionalDependencies>psapi.lib</AdditionalDependencies>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="process_win32.cpp" />

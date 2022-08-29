@@ -137,5 +137,8 @@
     <ClInclude Include="..\win32\time.h">
       <Filter>win32</Filter>
     </ClInclude>
+    <ClInclude Include="..\win32\module.h">
+      <Filter>win32</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -19,6 +19,7 @@
 //	THE SOFTWARE.
 
 #include <common/module.h>
+#include <common/win32/module.h>
 
 #include <common/noncopyable.h>
 #include <common/string.h>
@@ -94,14 +95,15 @@ namespace micro_profiler
 	}
 
 	void module::enumerate_mapped(const mapping_callback_t &callback)
-	{
-		mapping module;
-		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 0), &::CloseHandle);
-		MODULEENTRY32 entry = { sizeof(MODULEENTRY32), };
+	{	modules_enumerate_mapped(::GetCurrentProcess(), callback);	}
 
-		for (auto lister = &::Module32First;
-			lister(snapshot.get(), &entry);
-			lister = &::Module32Next, module.addresses.clear())
+	void modules_enumerate_mapped(HANDLE hprocess, const module::mapping_callback_t &callback)
+	{
+		module::mapping module;
+		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ::GetProcessId(hprocess)), &::CloseHandle);
+		MODULEENTRY32 entry = {	sizeof(MODULEENTRY32),	};
+
+		for (auto lister = &::Module32First; lister(snapshot.get(), &entry); lister = &::Module32Next)
 		{
 			module_lock h(entry.modBaseAddr);
 
@@ -111,6 +113,7 @@ namespace micro_profiler
 			module.base = entry.modBaseAddr;
 			module.addresses.push_back(byte_range(entry.modBaseAddr, entry.modBaseSize));
 			callback(module);
+			module.addresses.clear();
 		}
 	}
 }

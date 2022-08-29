@@ -66,8 +66,7 @@ elseif(WIN32)
 endif()
 
 add_custom_target(dbghelp_redist
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../redist/dbghelp/windows7+ ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/windows7+
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../redist/dbghelp/windowsxp+ ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/windowsxp+
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../redist/dbghelp ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 	COMMENT "Copying dbghelp.dll redistributables...")
 
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})

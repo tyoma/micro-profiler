@@ -74,11 +74,11 @@ set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 	-std=c++11 -fexceptions -fno-rtti
 	-Wno-delete-non-virtual-dtor
 )
-set(MSVC_COMPILER_OPTIONS /wd4503 /wd4996 /wd4510 /wd4610 /wd4512 /wd4312 /wd4481 /wd4355)
-set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} /MP /W4 /GR- /GS- /Gy-)
-set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} /MTd)
-set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} /MT /GL)
-set(MSVC_COMPILER_OPTIONS_RELEASE_MAX /Ox /Ob2 /Oi /Ot /Oy)
+set(MSVC_COMPILER_OPTIONS -wd4503;-wd4996;-wd4510;-wd4610;-wd4512;-wd4312;-wd4481;-wd4355)
+set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} -MP;-W4;-GR-;-GS-;-Gy)
+set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} -MTd)
+set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} -MT;-GL)
+set(MSVC_COMPILER_OPTIONS_RELEASE_MAX -Ox;-Ob2;-Oi;-Ot;-Oy)
 
 add_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU>:$<$<COMPILE_LANGUAGE:C>:${GCC_CLANG_COMPILER_OPTIONS_C}>>"
@@ -91,20 +91,18 @@ add_compile_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>:/arch:SSE2>>"
 )
 
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13.5)
-	add_link_options(
-		"$<$<CXX_COMPILER_ID:GNU>:-Wl,--no-undefined>"
-		"$<$<CXX_COMPILER_ID:Clang>:-Wl,-undefined,error>"
-		"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--strip-debug>>"
-		"$<$<CXX_COMPILER_ID:Clang>:$<$<OR:$<PLATFORM_ID:Apple>,$<PLATFORM_ID:Android>>:$<$<CONFIG:Release>:-Wl,-strip-debug>>>"
-		"$<$<CXX_COMPILER_ID:GNU>:-Wl,--gc-sections>"
-	)
-endif ()
+add_link_options(
+	"$<$<CXX_COMPILER_ID:GNU>:-Wl,--no-undefined;-Wl,--gc-sections>"
+	"$<$<CXX_COMPILER_ID:GNU>:$<$<CONFIG:Release>:-Wl,--strip-debug>>"
+	"$<$<CXX_COMPILER_ID:Clang>:-Wl,-undefined,error>"
+	"$<$<CXX_COMPILER_ID:Clang>:$<$<OR:$<PLATFORM_ID:Apple>,$<PLATFORM_ID:Android>>:$<$<CONFIG:Release>:-strip-debug>>>"
+	"$<$<CXX_COMPILER_ID:MSVC>:-INCREMENTAL:NO;-SAFESEH:NO>"
+	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<VERSION_LESS:${MSVC_VERSION},1910>>:-DEBUG>" # Less than Visual Studio 2017 (15.*)
+	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<VERSION_GREATER_EQUAL:${MSVC_VERSION},1910>>:-DEBUG:FULL>" # Visual Studio 2017 (15.*) and up
+	"$<$<CXX_COMPILER_ID:MSVC>:$<$<NOT:$<CONFIG:Debug>>:-LTCG;-OPT:REF>>"
+)
 
 if (MSVC)
-	add_link_options(/INCREMENTAL:NO /SAFESEH:NO)
-	add_link_options($<$<NOT:$<CONFIG:Debug>>:/LTCG>)
-	add_link_options($<$<NOT:$<CONFIG:Debug>>:/OPT:REF>)
 	set(CMAKE_STATIC_LINKER_FLAGS_RELEASE ${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /LTCG)
 	set(CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO ${CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO} /LTCG)
 endif ()

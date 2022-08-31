@@ -25,6 +25,7 @@ set(COLLECTOR_LIB_SOURCES
 
 if (WIN32)
 	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
+		calls_collector_msvc.asm
 		process_explorer_win32.cpp
 	)
 elseif (APPLE)
@@ -53,9 +54,6 @@ if(UNIX)
 		main_unix.cpp
 	)
 elseif(WIN32)
-	set(COLLECTOR_LIB_SOURCES ${COLLECTOR_LIB_SOURCES}
-		calls_collector_msvc.asm
-	)
 	set(COLLECTOR_SOURCES ${COLLECTOR_SOURCES}
 		collector.rc
 		hooks.asm
@@ -67,28 +65,29 @@ endif()
 
 add_custom_target(dbghelp_redist
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../redist/dbghelp ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-	COMMENT "Copying dbghelp.dll redistributables...")
+	COMMENT "Copying dbghelp.dll redistributables..."
+)
 
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
 add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
 add_dependencies(${micro-profiler} dbghelp_redist)
 
-target_link_libraries(${micro-profiler} collector.lib patcher ipc common logger scheduler)
-if(WIN32)
-	target_link_libraries(${micro-profiler} injector)
-endif()
+target_link_libraries(${micro-profiler} collector.lib patcher ipc common logger scheduler $<$<PLATFORM_ID:Windows>:injector>)
+target_link_options(${micro-profiler} PRIVATE "-DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def;-IMPLIB:${MP_OUTDIR}/${micro-profiler}.lib")
+
+set_source_files_properties(${CALIBRATION_SOURCES} PROPERTIES
+	COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:-Ob0;-GH;-Gh;-GL->"
+	COMPILE_OPTIONS "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-inline;-finstrument-functions>"
+)
+
+set_source_files_properties(calls_collector.cpp calls_collector_thread.cpp PROPERTIES
+	COMPILE_OPTIONS "$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>>:-arch:SSE>"
+)
 
 if(MSVC)
-	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " /Ob0 /GH /Gh /GL- ")
-	set_property(TARGET ${micro-profiler} APPEND PROPERTY LINK_OPTIONS /DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def /IMPLIB:${MP_OUTDIR}/${micro-profiler}.lib)
-	
 	add_library(micro-profiler SHARED IMPORTED GLOBAL)
 	add_dependencies(micro-profiler ${micro-profiler})
-	set_property(SOURCE calls_collector.cpp calls_collector_thread.cpp APPEND PROPERTY COMPILE_OPTIONS $<$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>:/arch:SSE>)
-	set_property(TARGET micro-profiler PROPERTY IMPORTED_IMPLIB ${micro-profiler}.lib)
+	set_target_properties(micro-profiler PROPERTIES IMPORTED_IMPLIB ${micro-profiler}.lib)
 else()
-	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " -fno-inline -finstrument-functions ")
-#	set_property(TARGET ${micro-profiler} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-znodelete -Wl,-zinterpose ")
-
 	add_library(micro-profiler ALIAS ${micro-profiler})
 endif()

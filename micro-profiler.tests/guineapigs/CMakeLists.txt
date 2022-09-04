@@ -24,6 +24,7 @@ target_compile_options(symbol_container_2_instrumented PUBLIC $<$<CXX_COMPILER_I
 target_link_libraries(symbol_container_2_instrumented micro-profiler)
 
 add_library(symbol_container_3_nosymbols SHARED symbol_container_3.cpp)
+target_link_options(symbol_container_3_nosymbols PRIVATE $<$<CXX_COMPILER_ID:MSVC>:-DEBUG:NONE>)
 
 add_executable(guinea_runner guinea_runner.cpp)
 target_link_libraries(guinea_runner ipc ipc.spawn test-helpers common logger scheduler)

@@ -72,7 +72,7 @@ set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 	-Wno-delete-non-virtual-dtor
 )
 set(MSVC_COMPILER_OPTIONS -wd4503;-wd4996;-wd4510;-wd4610;-wd4512;-wd4312;-wd4481;-wd4355)
-set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} -MP;-W4;-GR-;-GS-;-Gy)
+set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} -MP;-W4;-GR-;-GS-;-Gy;-Zi)
 set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} -MTd)
 set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} -MT;-GL)
 set(MSVC_COMPILER_OPTIONS_RELEASE_MAX -Ox;-Ob2;-Oi;-Ot;-Oy)
@@ -167,7 +167,7 @@ if (WIN32 OR APPLE)
 endif()
 
 # Declare tests/benchmarks
-set(MP_TEST_SUITES frontend ipc logger math micro-profiler mt patcher reqm savant_db scheduler views)
+set(MP_TEST_SUITES collector common frontend ipc logger math micro-profiler mt patcher reqm savant_db scheduler views)
 if (WIN32)
 	set(MP_TEST_SUITES ${MP_TEST_SUITES} explorer injector)
 endif()

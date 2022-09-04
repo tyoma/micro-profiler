@@ -5,3 +5,4 @@ set(EXPLORER_SOURCES
 )
 
 add_library(explorer STATIC ${EXPLORER_SOURCES})
+target_link_libraries(explorer wpl)

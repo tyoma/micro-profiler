@@ -1,4 +1,4 @@
-MicroProfiler [![Build Status](https://travis-ci.org/tyoma/micro-profiler.svg?branch=master)](https://travis-ci.com/tyoma/micro-profiler/)
+MicroProfiler [![Build/Test](https://github.com/tyoma/micro-profiler/actions/workflows/cmake.yml/badge.svg)](https://github.com/tyoma/micro-profiler/blob/master/build-status-overview.md)
 ====
 
 # Want to locate the bottlenecks of your app right when it suffers them?

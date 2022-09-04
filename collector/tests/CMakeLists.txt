@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(test)
-
 set(COLLECTOR_TESTS_SOURCES
 	ActiveServerAppTests.cpp
 	AnalyzerTests.cpp

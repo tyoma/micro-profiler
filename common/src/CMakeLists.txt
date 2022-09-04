@@ -56,7 +56,7 @@ elseif (APPLE)
 endif()
 
 add_library(common STATIC ${COMMON_SOURCES})
-
+target_link_libraries(common strmd)
 if (UNIX)
 	target_link_libraries(common dl)
 endif()

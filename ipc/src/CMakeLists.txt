@@ -29,10 +29,6 @@ elseif(UNIX)
 endif()
 
 add_library(ipc STATIC ${IPC_SOURCES})
+target_link_libraries(ipc mt strmd $<$<PLATFORM_ID:Windows>:ws2_32>)
+
 add_library(ipc.spawn STATIC server_endpoint_spawn.cpp)
-
-target_link_libraries(ipc mt)
-
-if (WIN32)
-	target_link_libraries(ipc ws2_32)
-endif()

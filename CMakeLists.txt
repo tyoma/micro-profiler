@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(micro-profiler)
 
-option(MP_BUILD_VSPACKAGE "Build Visual Studio Package." ON)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props ${PROJECT_SOURCE_DIR}/libraries/wpl.vs/make/build.props)
 
 include(architecture)
 include(unipath)
@@ -18,18 +16,17 @@ enable_testing()
 
 # Setup include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
-include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/agge)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/polyq)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/strmd)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/wpl)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/libraries/wpl.vs)
 include_directories($<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_LIST_DIR}/compat/win32>)
 
 
 # Add definitions: global, platform-based, compiler-based
-set(AGGE_NO_TESTS 1)
-set(UTEE_NO_TESTS 1)
-set(WPL_NO_TESTS 1)
+set(AGGE_NO_TESTS ON)
+set(POLYQ_NO_TESTS ON)
+set(STRMD_NO_TESTS ON)
+set(UTEE_NO_TESTS ON)
+set(UTFIA_NO_TESTS ON)
+set(WPL_NO_TESTS ON)
+set(WPL_VS_NO_TESTS ON)
 
 if (UNIX)
 	set(MP_MT_GENERIC 1)
@@ -113,9 +110,16 @@ endif ()
 
 
 # Add subdirectories
-add_subdirectory(libraries/agge)
 add_subdirectory(libraries/freetype2)
 add_subdirectory(libraries/utee)
+
+add_subdirectory(libraries/polyq)
+add_subdirectory(libraries/strmd)
+add_subdirectory(libraries/utfia)
+
+add_subdirectory(libraries/agge)
+
+add_subdirectory(libraries/wpl)
 
 add_subdirectory(collector/src)
 add_subdirectory(common/src)
@@ -147,24 +151,22 @@ add_subdirectory(test-helpers/src)
 add_subdirectory(views/tests)
 
 if (WIN32 OR APPLE)
-	add_subdirectory(libraries/wpl)
-
 	add_subdirectory(standalone)
 
 	if (WIN32)
+		add_subdirectory(libraries/wpl.vs)
+		
 		add_subdirectory(explorer/src)
 		add_subdirectory(injector/src)
 		
-		if (MP_BUILD_VSPACKAGE)
-			add_subdirectory(libraries/wpl.vs)
-			add_subdirectory(micro-profiler)
-		endif()
+		add_subdirectory(micro-profiler)
 
 		add_subdirectory(explorer/tests)
 		add_subdirectory(injector/tests)
-	endif ()
-endif ()
+	endif()
+endif()
 
+# Declare tests/benchmarks
 set(MP_TEST_SUITES frontend ipc logger math micro-profiler mt patcher reqm savant_db scheduler views)
 if (WIN32)
 	set(MP_TEST_SUITES ${MP_TEST_SUITES} explorer injector)
@@ -172,5 +174,6 @@ endif()
 
 foreach(t ${MP_TEST_SUITES})
 	set(x "${t}.tests")
-	add_test(NAME ${x} COMMAND $<TARGET_FILE:utee-runner> $<TARGET_FILE:${x}> WORKING_DIRECTORY $<TARGET_FILE_DIR:${x}>)
+	add_utee_test(${x})
 endforeach()
+add_test(NAME patcher.benchmark COMMAND $<TARGET_FILE:patcher.benchmark>)

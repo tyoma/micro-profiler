@@ -37,3 +37,4 @@ if(WIN32)
 endif()
 
 add_library(frontend STATIC ${FRONTEND_LIB_SOURCES})
+target_link_libraries(frontend wpl agge.text strmd)

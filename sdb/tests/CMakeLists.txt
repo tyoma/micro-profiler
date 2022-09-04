@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(test)
-
-add_compile_options(
-	"$<$<CXX_COMPILER_ID:MSVC>:/bigobj>"
-)
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/bigobj>")
 
 set(SAVANT_DB_TESTS_SOURCES
 	AggregationTests.cpp
@@ -18,5 +14,4 @@ set(SAVANT_DB_TESTS_SOURCES
 )
 
 add_library(savant_db.tests SHARED ${SAVANT_DB_TESTS_SOURCES})
-
-target_link_libraries(savant_db.tests test-helpers)
+target_link_libraries(savant_db.tests test-helpers wpl)

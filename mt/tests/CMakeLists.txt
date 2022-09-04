@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(test)
-
 set(MT_TEST_SOURCES
 	ThreadCallbacksTests.cpp
 )
@@ -13,5 +11,4 @@ if(WIN32)
 endif()
 
 add_library(mt.tests SHARED ${MT_TEST_SOURCES})
-
 target_link_libraries(mt.tests mt $<TARGET_OBJECTS:mt.thread_callbacks> test-helpers)

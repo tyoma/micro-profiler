@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(test)
-
 set(IPC_TESTS_SOURCES
 	ClientSessionTests.cpp
 	EndpointSelectorTests.cpp
@@ -25,9 +23,10 @@ if (WIN32)
 endif()
 
 add_library(ipc.tests SHARED ${IPC_TESTS_SOURCES})
-add_executable(guinea_ipc_spawn guinea_ipc_spawn.cpp)
-add_executable(guinea_ipc_spawn_server guinea_ipc_spawn_server.cpp)
-
 target_link_libraries(ipc.tests ipc logger common test-helpers scheduler)
+
+add_executable(guinea_ipc_spawn guinea_ipc_spawn.cpp)
 target_link_libraries(guinea_ipc_spawn mt)
+
+add_executable(guinea_ipc_spawn_server guinea_ipc_spawn_server.cpp)
 target_link_libraries(guinea_ipc_spawn_server ipc.spawn ipc logger common)

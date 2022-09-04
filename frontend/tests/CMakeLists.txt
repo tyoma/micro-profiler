@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(test)
-
 set(FRONTEND_TESTS_SOURCES
 	AsyncFileTests.cpp
 	ColumnsDefinitionTests.cpp
@@ -37,5 +35,4 @@ set(FRONTEND_TESTS_SOURCES
 )
 
 add_library(frontend.tests SHARED ${FRONTEND_TESTS_SOURCES})
-
-target_link_libraries(frontend.tests frontend test-helpers ipc logger common scheduler mt agge.text)
+target_link_libraries(frontend.tests frontend test-helpers ipc logger common scheduler mt polyq)

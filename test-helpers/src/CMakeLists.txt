@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(test)
-
 set(TEST_HELPERS_SOURCES
 	file_helpers.cpp
 	helpers.cpp
@@ -23,5 +21,4 @@ elseif(UNIX)
 endif()
 
 add_library(test-helpers STATIC ${TEST_HELPERS_SOURCES})
-
-target_link_libraries(test-helpers common)
+target_link_libraries(test-helpers common utee)

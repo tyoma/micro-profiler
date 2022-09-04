@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.13)
 
 set(MP_OUTDIR $<TARGET_FILE_DIR:explorer.tests>)
 
-include(test)
-
 set(EXPLORER_TEST_SOURCES
 	ProcessExplorerTests.cpp
 )

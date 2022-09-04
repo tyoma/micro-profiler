@@ -32,7 +32,7 @@ namespace micro_profiler
 		class any_key
 		{
 		public:
-			enum {	storage_size = 48	};
+			enum {	storage_size = 64	};
 
 		public:
 			template <typename T, typename H>

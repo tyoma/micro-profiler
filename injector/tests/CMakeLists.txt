@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.13)
 
 set(MP_OUTDIR $<TARGET_FILE_DIR:injector.tests>)
 
-include(test)
-
 set(INJECTOR_TEST_SOURCES
 	ProcessDiscoverTests.cpp
 )

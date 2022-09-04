@@ -1,15 +1,15 @@
 [submodule "libraries/wpl"]
 	path = libraries/wpl
 	url = ../wpl.git
-	branch = master
+	branch = origin/master
 [submodule "libraries/agge"]
 	path = libraries/agge
 	url = ../agge.git
-	branch = master
+	branch = origin/master
 [submodule "libraries/utee"]
 	path = libraries/utee
 	url = ../utee.git
-	branch = master
+	branch = origin/master
 [submodule "libraries/strmd"]
 	path = libraries/strmd
 	url = ../strmd.git
@@ -17,12 +17,16 @@
 [submodule "libraries/polyq"]
 	path = libraries/polyq
 	url = ../polyq.git
-	branch = master
+	branch = origin/master
 [submodule "libraries/wpl.vs"]
 	path = libraries/wpl.vs
 	url = ../wpl.vs.git
-	branch = master
+	branch = origin/master
 [submodule "libraries/freetype2"]
 	path = libraries/freetype2
 	url = ../freetype2.git
-	branch = master
+	branch = origin/master
+[submodule "libraries/utfia"]
+	path = libraries/utfia
+	url = ../utfia.git
+	branch = origin/master

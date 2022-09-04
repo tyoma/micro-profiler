@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(test)
-
 set(SCHEDULER_TEST_SOURCES
 	PrivateQueueTests.cpp
 	ThreadQueueTests.cpp
@@ -30,5 +28,4 @@ elseif (ANDROID)
 endif()
 
 add_library(scheduler.tests SHARED ${SCHEDULER_TEST_SOURCES})
-
 target_link_libraries(scheduler.tests scheduler test-helpers common logger mt $<TARGET_OBJECTS:mt.thread_callbacks>)

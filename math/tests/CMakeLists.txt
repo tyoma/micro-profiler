@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(test)
-
 set(MATH_TEST_SOURCES
 	DeSerializationTests.cpp
 	DisplayScaleTests.cpp
@@ -17,5 +15,4 @@ set(MATH_TEST_SOURCES
 )
 
 add_library(math.tests SHARED ${MATH_TEST_SOURCES})
-
 target_link_libraries(math.tests math test-helpers common)

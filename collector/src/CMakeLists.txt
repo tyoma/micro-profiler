@@ -69,6 +69,8 @@ add_custom_target(dbghelp_redist
 )
 
 add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
+target_link_libraries(collector.lib polyq strmd)
+
 add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
 add_dependencies(${micro-profiler} dbghelp_redist)
 

@@ -4,13 +4,10 @@ include_directories(../../collector)
 link_directories($<TARGET_FILE_DIR:guinea_runner>)
 
 add_compile_options(
-	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-O0;-fno-inline;-fpatchable-function-entry=14,12>"
-	"$<$<CXX_COMPILER_ID:MSVC>:-Od;-Ob0;-Gy;-hotpatch>"
+	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-O0;-fno-inline;-fpatchable-function-entry=14,12>"
+	"$<$<CXX_COMPILER_ID:MSVC>:-Od;-Ob0>"
+	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>>:-hotpatch>"
 )
-
-if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:-hotpatch>")
-endif()
 
 add_library(symbol_container_1 SHARED symbol_container_1.cpp unload_tracker.cpp)
 add_library(symbol_container_2 SHARED symbol_container_2.cpp symbol_container_2_internal.cpp unload_tracker.cpp)

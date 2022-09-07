@@ -17,5 +17,9 @@
     <ProjectReference Include="$(SolutionDir)test-helpers\src\test-helpers.vcxproj">
       <Project>{3b56b4a3-f4f6-44ec-a7f5-e9045a3c3394}</Project>
     </ProjectReference>
+    <ProjectReference Include="$(SolutionDir)libraries\utee\make\utee-runner.vcxproj">
+      <Project>{ad0ba725-9f6f-474e-adb0-1f506b1cd394}</Project>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemGroup>
 </Project>

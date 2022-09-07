@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <stdio.h>
+#include <utfia/iterator.h>
 #include <vector>
 
 using namespace std;
@@ -84,64 +85,14 @@ namespace micro_profiler
 
 	wstring unicode(const string &utf8)
 	{
-		// taken from here: https://stackoverflow.com/a/7154226/1166346
-		vector<unsigned> unicode;
-		size_t i = 0;
-
-		while (i < utf8.size())
-		{
-			unsigned long uni;
-			size_t todo;
-			unsigned char ch = utf8[i++];
-
-			if (ch <= 0x7F)
-			{
-				uni = ch;
-				todo = 0;
-			}
-			else if (ch <= 0xBF)
-			{
-				throw invalid_argument("not a UTF-8 string");
-			}
-			else if (ch <= 0xDF)
-			{
-				uni = ch&0x1F;
-				todo = 1;
-			}
-			else if (ch <= 0xEF)
-			{
-				uni = ch&0x0F;
-				todo = 2;
-			}
-			else if (ch <= 0xF7)
-			{
-				uni = ch&0x07;
-				todo = 3;
-			}
-			else
-			{
-				throw invalid_argument("not a UTF-8 string");
-			}
-			for (size_t j = 0; j < todo; ++j)
-			{
-				if (i == utf8.size())
-					throw invalid_argument("not a UTF-8 string");
-				unsigned char ch2 = utf8[i++];
-				if (ch2 < 0x80 || ch2 > 0xBF)
-					throw invalid_argument("not a UTF-8 string");
-				uni <<= 6;
-				uni += ch2 & 0x3F;
-			}
-			if (uni >= 0xD800 && uni <= 0xDFFF)
-				throw invalid_argument("not a UTF-8 string");
-			if (uni > 0x10FFFF)
-				throw invalid_argument("not a UTF-8 string");
-			unicode.push_back(uni);
-		}
+		auto i = utf8.begin();
+		const auto end = utf8.end();
 		wstring utf16;
-		for (size_t j = 0; j < unicode.size(); ++j)
+
+		while (i != end)
 		{
-			unsigned long uni = unicode[j];
+			auto uni = utfia::utf8::next(i, end);
+
 			if (uni <= 0xFFFF)
 			{
 				utf16 += (wchar_t)uni;

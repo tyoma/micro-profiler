@@ -56,7 +56,4 @@ elseif (APPLE)
 endif()
 
 add_library(common STATIC ${COMMON_SOURCES})
-target_link_libraries(common strmd)
-if (UNIX)
-	target_link_libraries(common dl)
-endif()
+target_link_libraries(common PUBLIC strmd PUBLIC $<$<NOT:$<PLATFORM_ID:Windows>>:dl> PRIVATE utfia)

@@ -24,6 +24,7 @@
 
 #include <common/formatting.h>
 #include <common/path.h>
+#include <cwctype>
 #include <explorer/process.h>
 #include <frontend/constructors.h>
 #include <frontend/database.h>
@@ -32,6 +33,8 @@
 #include <frontend/primitives.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
+#include <utfia/iterator.h>
+#include <utfia/string.h>
 
 using namespace agge;
 
@@ -39,6 +42,12 @@ namespace micro_profiler
 {
 	const auto secondary = style::height_scale(0.85);
 	const auto indent_spaces = "    ";
+
+	struct char_compare
+	{
+		int operator ()(utfia::utf8::codepoint lhs, utfia::utf8::codepoint rhs) const
+		{	return micro_profiler::compare(std::towupper(lhs), std::towupper(rhs));	}
+	};
 
 	namespace
 	{
@@ -177,7 +186,8 @@ namespace micro_profiler
 
 
 		auto by_process_name = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {
-			return strcmp((micro_profiler::operator*)(lhs.path), (micro_profiler::operator*)(rhs.path));
+			return utfia::compare<utfia::utf8>((micro_profiler::operator*)(lhs.path), (micro_profiler::operator*)(rhs.path),
+				micro_profiler::char_compare());
 		};
 
 		auto by_process_pid = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {

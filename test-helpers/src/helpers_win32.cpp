@@ -13,7 +13,7 @@ namespace micro_profiler
 			: shared_ptr<void>(::LoadLibraryA(path.c_str()), &::FreeLibrary)
 		{
 			if (!get())
-				throw runtime_error("Cannot load module specified!");
+				throw runtime_error("Cannot load module specified: " + path + "!");
 
 			char fullpath[MAX_PATH + 1] = { };
 
@@ -38,11 +38,7 @@ namespace micro_profiler
 		}
 
 		unsigned image::get_symbol_rva(const char *name) const
-		{
-			if (void *symbol = ::GetProcAddress(static_cast<HMODULE>(get()), name))
-				return static_cast<unsigned>(static_cast<byte *>(symbol) - base_ptr());
-			throw runtime_error("Symbol specified was not found!");
-		}
+		{	return static_cast<unsigned>(static_cast<byte *>(get_symbol_address(name)) - base_ptr());	}
 
 		shared_ptr<void> occupy_memory(void *start, unsigned int length)
 		{

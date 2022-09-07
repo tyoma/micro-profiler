@@ -17,13 +17,17 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			shared_ptr<FILE> fopen(const string &path)
+			{
+				shared_ptr<FILE> f(::fopen(path.c_str(), "rb"), [] (FILE *p) {	if (p) ::fclose(p);	});
+
+				assert_not_null(f);
+				return f;
+			}
+
 			size_t get_file_length(const string &path)
 			{
-				auto raw = fopen(path.c_str(), "rb");
-
-				assert_not_null(raw);
-
-				shared_ptr<FILE> f(raw, &fclose);
+				const auto f = fopen(path);
 
 				fseek(f.get(), 0, SEEK_END);
 				return ftell(f.get());
@@ -36,7 +40,7 @@ namespace micro_profiler
 				// INIT
 				byte b1[100], b2[113];
 				vector<byte> read1, read2;
-				shared_ptr<FILE> f(fopen(string(c_symbol_container_1).c_str(), "rb"), &fclose);
+				auto f = fopen(c_symbol_container_1);
 
 				// INIT / ACT
 				read_file_stream s1(c_symbol_container_1);

@@ -41,6 +41,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4355;4481;4503;4510;4512;4610;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DisableLanguageExtensions Condition="'$(PlatformToolsetVersion)'!='110' And '$(PlatformToolsetVersion)'!='120'">true</DisableLanguageExtensions>
+      <AdditionalOptions Condition="'$(Platform)'=='Win32'">/hotpatch %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -48,6 +49,7 @@
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <TargetMachine Condition="'$(Platform)'=='x64'">MachineX64</TargetMachine>
       <TargetMachine Condition="'$(Platform)'=='Win32'">MachineX86</TargetMachine>
+      <AdditionalOptions>/functionpadmin:24 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Lib>
       <TargetMachine Condition="'$(Platform)'=='x64'">MachineX64</TargetMachine>

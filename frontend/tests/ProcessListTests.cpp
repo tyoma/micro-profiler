@@ -126,7 +126,10 @@ namespace micro_profiler
 				add_records(*processes, plural
 					+ make_process(12, "Lorem")
 					+ make_process(12111, "Amet")
-					+ make_process(1211, "Quand"));
+					+ make_process(1211, "Quand")
+					+ make_process(1212, "Quandu")
+					+ make_process(13, "quandw")
+					+ make_process(14, "Quanda"));
 				processes->invalidate();
 
 				// ACT
@@ -134,16 +137,22 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal("Lorem", get_text(*l, 0, 0));
-				assert_equal("Quand", get_text(*l, 1, 0));
-				assert_equal("Amet", get_text(*l, 2, 0));
+				assert_equal("quandw", get_text(*l, 1, 0));
+				assert_equal("Quanda", get_text(*l, 2, 0));
+				assert_equal("Quand", get_text(*l, 3, 0));
+				assert_equal("Quandu", get_text(*l, 4, 0));
+				assert_equal("Amet", get_text(*l, 5, 0));
 
 				// ACT
 				l->set_order(1, false);
 
 				// ASSERT
 				assert_equal("Amet", get_text(*l, 0, 0));
-				assert_equal("Quand", get_text(*l, 1, 0));
-				assert_equal("Lorem", get_text(*l, 2, 0));
+				assert_equal("Quandu", get_text(*l, 1, 0));
+				assert_equal("Quand", get_text(*l, 2, 0));
+				assert_equal("Quanda", get_text(*l, 3, 0));
+				assert_equal("quandw", get_text(*l, 4, 0));
+				assert_equal("Lorem", get_text(*l, 5, 0));
 
 				// ACT
 				l->set_order(0, true);
@@ -152,14 +161,20 @@ namespace micro_profiler
 				assert_equal("12111", get_text(*l, 0, 1));
 				assert_equal("12", get_text(*l, 1, 1));
 				assert_equal("1211", get_text(*l, 2, 1));
+				assert_equal("14", get_text(*l, 3, 1));
+				assert_equal("1212", get_text(*l, 4, 1));
+				assert_equal("13", get_text(*l, 5, 1));
 
 				// ACT
 				l->set_order(0, false);
 
 				// ASSERT
-				assert_equal("1211", get_text(*l, 0, 1));
-				assert_equal("12", get_text(*l, 1, 1));
-				assert_equal("12111", get_text(*l, 2, 1));
+				assert_equal("13", get_text(*l, 0, 1));
+				assert_equal("1212", get_text(*l, 1, 1));
+				assert_equal("14", get_text(*l, 2, 1));
+				assert_equal("1211", get_text(*l, 3, 1));
+				assert_equal("12", get_text(*l, 4, 1));
+				assert_equal("12111", get_text(*l, 5, 1));
 			}
 
 

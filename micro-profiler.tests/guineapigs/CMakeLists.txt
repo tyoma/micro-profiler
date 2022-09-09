@@ -4,7 +4,7 @@ include_directories(../../collector)
 link_directories($<TARGET_FILE_DIR:guinea_runner>)
 
 add_compile_options(
-	"$<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-O0;-fno-inline;-fpatchable-function-entry=14,12>"
+	"$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-O0;-fno-inline;-fpatchable-function-entry=14,12>"
 	"$<$<CXX_COMPILER_ID:MSVC>:-Od;-Ob0>"
 	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>>:-hotpatch>"
 )
@@ -16,7 +16,7 @@ if (MSVC)
 endif()
 
 add_library(symbol_container_2_instrumented SHARED symbol_container_2.cpp symbol_container_2_internal.cpp)
-target_compile_options(symbol_container_2_instrumented PUBLIC $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-finstrument-functions>)
+target_compile_options(symbol_container_2_instrumented PUBLIC $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-finstrument-functions>)
 target_compile_options(symbol_container_2_instrumented PUBLIC $<$<CXX_COMPILER_ID:MSVC>:-GH;-Gh>)
 target_link_libraries(symbol_container_2_instrumented micro-profiler)
 

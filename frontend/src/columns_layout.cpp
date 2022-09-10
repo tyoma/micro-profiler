@@ -40,6 +40,7 @@ using namespace agge;
 
 namespace micro_profiler
 {
+	const auto en_dash = "\xE2\x80\x93";
 	const auto secondary = style::height_scale(0.85);
 	const auto indent_spaces = "    ";
 
@@ -219,14 +220,24 @@ namespace micro_profiler
 		};
 
 		auto process_cpu_time = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
-			micro_profiler::format_interval(text, 0.001 * item.cpu_time.count());
+			if (item.handle)
+				micro_profiler::format_interval(text, 0.001 * item.cpu_time.count());
+			else
+				text << micro_profiler::en_dash;
 		};
 
 		auto process_cpu_usage = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
-			char buffer[100];
-			const int l = std::sprintf(buffer, "%0.1f", 100.0f * item.cpu_usage);
+			if (item.handle)
+			{
+				char buffer[100];
+				const int l = std::sprintf(buffer, "%0.1f", 100.0f * item.cpu_usage);
 
-			text.append(buffer, buffer + l);
+				text.append(buffer, buffer + l);
+			}
+			else
+			{
+				text << micro_profiler::en_dash;
+			}
 		};
 	}
 

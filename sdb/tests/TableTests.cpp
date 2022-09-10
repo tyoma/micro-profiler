@@ -130,7 +130,9 @@ namespace sdb
 				auto r2 = t2.create();
 
 				// ASSERT
+				assert_is_true(r1.is_new());
 				assert_equal(100, (*r1).id);
+				assert_is_true(r2.is_new());
 				assert_equal(1231, (*r2).id);
 			}
 
@@ -323,6 +325,10 @@ namespace sdb
 				auto mr1 = t.modify(i);
 				++i, ++i;
 				auto mr3 = t.modify(i);
+
+				// ASSERT
+				assert_is_false(mr1.is_new());
+				assert_is_false(mr3.is_new());
 
 				// ACT
 				(*mr3).value = "zubzub";

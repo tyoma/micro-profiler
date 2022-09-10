@@ -59,14 +59,24 @@ extern "C" void ipc_spawn_server(micro_profiler::ipc::channel_ptr_t &session_, c
 	const auto session = make_shared<server_session>(outbound);
 
 	session->add_handler(request_injection, [] (server_session::response &response, const injection_info &injection) {
-		auto p = make_shared<process>(injection.pid);
-		pod_vector<byte> buffer;
-		buffer_writer< pod_vector<byte> > w(buffer);
-		strmd::serializer<buffer_writer< pod_vector<byte> >, strmd::varint> s(w);
+		injection_response_data rdata = {};
 
-		s(injection);
-		p->remote_execute(&inject_profiler_worker, const_byte_range(buffer.data(), buffer.size()));
-		response(response_injected);
+		try
+		{
+			auto p = make_shared<process>(injection.pid);
+			pod_vector<byte> buffer;
+			buffer_writer< pod_vector<byte> > w(buffer);
+			strmd::serializer<buffer_writer< pod_vector<byte> >, strmd::varint> s(w);
+
+			s(injection);
+			p->remote_execute(&inject_profiler_worker, const_byte_range(buffer.data(), buffer.size()));
+			rdata.ok = 1;
+		}
+		catch (exception &e)
+		{
+			rdata.error_message = e.what();
+		}
+		response(response_injected, rdata);
 	});
 	session_ = session;
 }

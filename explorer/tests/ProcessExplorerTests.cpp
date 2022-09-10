@@ -29,6 +29,10 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			template <typename T>
+			bool is_empty_range(const pair<T, T> &range_)
+			{	return range_.first == range_.second;	}
+
 			pair<shared_ptr<ipc::client_session>, unsigned /*pid*/> run_guinea(string path)
 			{
 				mt::event ready;
@@ -186,21 +190,6 @@ namespace micro_profiler
 				assert_not_null(p2->handle);
 
 				assert_not_equal(p2->handle, p1->handle);
-
-				// INIT
-				child2.first.reset();
-
-				// ACT / ASSERT
-				assert_not_null(p2->handle);
-
-				// ACT / ASSERT (must exit)
-				while (idx.find(child2.second)->handle)
-					queue.run_one();
-
-				// ACT / ASSERT (must exit)
-				child1.first.reset();
-				while (idx.find(child1.second)->handle)
-					queue.run_one();
 			}
 
 
@@ -244,6 +233,22 @@ namespace micro_profiler
 			}
 
 
+			test( ProcessTimesAreZeroedForInaccessibleProcesses )
+			{
+				// INIT / ACT
+				process_explorer e(mt::milliseconds(1), queue, [] {	return mt::milliseconds(0);	});
+				const process_info *p = nullptr;
+
+				for (auto i = e.begin(); !p && i != e.end(); ++i)
+					p = &*i;
+
+				// ASSERT
+				assert_not_null(p);
+				assert_equal(mt::milliseconds(0), p->cpu_time);
+				assert_equal(0.0f, p->cpu_usage);
+			}
+
+
 			test( ProcessUsagesAreProvidedInProcessTable )
 			{
 				// INIT
@@ -284,14 +289,46 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_equal(0.0f, p1->cpu_usage);
 				assert_is_true(7.419f <= p2->cpu_usage &&  p2->cpu_usage <= 8.71);
+			}
+
+
+			test( FinishedProcessesAreRemovedFromTable )
+			{
+				// INIT
+				auto child1 = run_guinea(c_guinea_runner);
+				auto child2 = run_guinea(c_guinea_runner);
+				auto child3 = run_guinea(c_guinea_runner2);
+				auto child4 = run_guinea(c_guinea_runner3);
+
+				process_explorer e(mt::milliseconds(1), queue, [] {	return mt::milliseconds(0);	});
+				auto invalidations = 0;
+				auto conn = e.invalidate += [&] {	invalidations++;	};
+				auto &idx = sdb::multi_index(e, pid());
 
 				// ACT
 				child2.first.reset();
-				now = mt::milliseconds(750);
+
+				// ASSERT
+				assert_is_false(is_empty_range(idx.equal_range(child2.second)));
+
+				// ACT
 				queue.run_one();
 
-				// ACT / ASSERT
-				assert_equal(0.0f, p2->cpu_usage);
+				// ASSERT
+				assert_is_false(is_empty_range(idx.equal_range(child1.second)));
+				assert_is_true(is_empty_range(idx.equal_range(child2.second)));
+				assert_is_false(is_empty_range(idx.equal_range(child3.second)));
+				assert_is_false(is_empty_range(idx.equal_range(child4.second)));
+
+				// ACT
+				child1.first.reset();
+				queue.run_one();
+
+				// ASSERT
+				assert_is_true(is_empty_range(idx.equal_range(child1.second)));
+				assert_is_true(is_empty_range(idx.equal_range(child2.second)));
+				assert_is_false(is_empty_range(idx.equal_range(child3.second)));
+				assert_is_false(is_empty_range(idx.equal_range(child4.second)));
 			}
 		end_test_suite
 	}

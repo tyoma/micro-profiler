@@ -181,6 +181,9 @@ namespace sdb
 		operator typename table<T, C>::const_iterator() const
 		{	return typename table<T, C>::const_iterator(_record);	}
 
+		bool is_new() const
+		{	return _new;	}
+
 	private:
 		transacted_record(table &table_, base_iterator_type record, bool new_)
 			: _table(table_), _record(record), _new(new_)

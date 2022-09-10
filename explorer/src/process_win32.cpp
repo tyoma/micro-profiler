@@ -30,6 +30,21 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		struct processes_snapshot
+		{
+			processes_snapshot()
+				: hsnapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0))
+			{	}
+
+			~processes_snapshot()
+			{	::CloseHandle(hsnapshot);	}
+
+			const HANDLE hsnapshot;
+		};
+	}
+
 	namespace keyer
 	{
 		struct pid
@@ -54,7 +69,7 @@ namespace micro_profiler
 		static const auto os_is_64 = (::GetNativeSystemInfo(&sysinfo), sysinfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64);
 
 		auto &idx = sdb::unique_index(*this, keyer::pid());
-		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0), &::CloseHandle);
+		processes_snapshot snapshot;
 		PROCESSENTRY32W entry = {	sizeof(PROCESSENTRY32W),	};
 		const auto now = _clock();
 		const auto time_diff = (now - _last_update).count();
@@ -62,13 +77,17 @@ namespace micro_profiler
 
 		_cycle++;
 		_last_update = now;
-		for (auto lister = &::Process32FirstW; lister(snapshot.get(), &entry); lister = &::Process32NextW)
+		for (auto lister = &::Process32FirstW; lister(snapshot.hsnapshot, &entry); lister = &::Process32NextW)
 		{
 			auto rec = idx[entry.th32ProcessID];
 			auto &p = *rec;
 
-			if (!p.handle)
+			if (rec.is_new())
 			{
+				p.architecture = process_info::x86;
+				p.cpu_time = mt::milliseconds(0);
+				p.parent_pid = entry.th32ParentProcessID;
+				unicode(p.path, entry.szExeFile);
 				if (auto handle = ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, entry.th32ProcessID))
 				{
 					BOOL wow64 = FALSE;
@@ -76,13 +95,6 @@ namespace micro_profiler
 					p.architecture = os_is_64 && ::IsWow64Process(handle, &wow64) && !wow64
 						? process_info::x64 : process_info::x86;
 					p.handle.reset(handle, &::CloseHandle);
-					p.parent_pid = entry.th32ParentProcessID;
-					unicode(p.path, entry.szExeFile);
-				}
-				else
-				{
-					rec.remove();
-					continue;
 				}
 			}
 			if (p.handle)
@@ -99,17 +111,13 @@ namespace micro_profiler
 			p.cycle = _cycle;
 			rec.commit();
 		}
-		for (auto i = begin(); i != end(); ++i)
+		for (auto i = begin(); i != end(); )
 		{
-			if (i->cycle != _cycle && i->handle)
-			{
-				auto rec = modify(i);
-				auto &p = *rec;
+			auto j = i;
 
-				p.handle.reset();
-				p.cpu_usage = 0.0f;
-				rec.commit();
-			}
+			++i;
+			if (j->cycle != _cycle)
+				modify(j).remove();
 		}
 		invalidate();
 		_apartment.schedule([this] {	update();	}, _update_interval);

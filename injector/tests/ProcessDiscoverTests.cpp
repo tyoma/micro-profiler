@@ -1,5 +1,7 @@
 #include <injector/process.h>
 
+#include "helpers.h"
+
 #include <ipc/client_session.h>
 #include <ipc/endpoint_spawn.h>
 #include <ipc/misc.h>

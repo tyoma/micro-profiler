@@ -66,6 +66,8 @@ namespace micro_profiler
 
 			void attach(process_info process)
 			{
+				if (!process.handle)
+					return;
 				if (const auto injector = process.architecture == process_info::x86 ? _injector_32 : _injector_64)
 				{
 					const auto profiler_module = process.architecture == process_info::x86
@@ -79,8 +81,11 @@ namespace micro_profiler
 					auto &req = *_requests.insert(_requests.end(), shared_ptr<void>());
 
 					LOG(PREAMBLE "requesting injection...") % A(this) % A(process.pid);
-					injector->request(req, request_injection, info, response_injected, [this, process] (ipc::deserializer &) {
-						LOG(PREAMBLE "injection complete") % A(this) % A(process.pid);
+					injector->request(req, request_injection, info, response_injected, [this, process] (ipc::deserializer &dser) {
+						injection_response_data rdata;
+
+						dser(rdata);
+						LOG(PREAMBLE "injection complete") % A(this) % A(process.pid) % A(rdata.ok) % A(rdata.error_message);
 					});
 				}
 			}

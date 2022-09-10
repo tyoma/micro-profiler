@@ -36,17 +36,37 @@ namespace micro_profiler
 		unsigned int pid;
 	};
 
+	struct injection_response_data
+	{
+		unsigned int ok;
+		std::string error_message;
+	};
+
 
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, injection_info &info)
+	inline void serialize(ArchiveT &archive, injection_info &data, unsigned int /*ver*/)
 	{
-		archive(info.collector_path);
-		archive(info.frontend_endpoint_id);
-		archive(info.pid);
+		archive(data.collector_path);
+		archive(data.frontend_endpoint_id);
+		archive(data.pid);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, injection_response_data &data, unsigned int /*ver*/)
+	{
+		archive(data.ok);
+		archive(data.error_message);
 	}
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, injector_messages_id &data)
 	{	archive(reinterpret_cast<int &>(data));	}
+}
+
+namespace strmd
+{
+	template <typename KeyT> struct version;
+	template <> struct version< micro_profiler::injection_info > {	enum {	value = 1	};	};
+	template <> struct version< micro_profiler::injection_response_data > {	enum {	value = 1	};	};
 }

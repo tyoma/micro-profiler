@@ -46,7 +46,16 @@ namespace micro_profiler
 
 	namespace tables
 	{
-		typedef sdb::table<process_info> processes;
+		struct process_constructor
+		{
+			process_info operator ()() const
+			{
+				process_info value = {};
+				return value;
+			}
+		};
+
+		typedef sdb::table<process_info, process_constructor> processes;
 	}
 
 	class process_explorer : public tables::processes

@@ -17,5 +17,6 @@ namespace micro_profiler
 		extern const std::string c_guinea_runner;
 		extern const std::string c_guinea_runner2;
 		extern const std::string c_guinea_runner3;
+		extern const std::string c_guinea_runner_min;
 	}
 }

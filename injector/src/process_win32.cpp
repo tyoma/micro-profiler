@@ -57,7 +57,10 @@ namespace micro_profiler
 			::WriteProcessMemory(_hprocess.get(), fpath.get(), wpath.c_str(), sizeof(wchar_t) * (wpath.size() + 1), NULL);
 			foreign_execute_sync(kernel / "LoadLibraryW", fpath.get());
 
-			auto fbase = find_loaded_module(m.path);
+			const auto fbase = find_loaded_module(m.path);
+
+			if (!fbase)
+				throw runtime_error("Loading library into a remote process failed!");
 
 			::WriteProcessMemory(_hprocess.get(), write_position, &injection_offset, sizeof(injection_offset), NULL);
 			write_position += sizeof(injection_offset);
@@ -82,6 +85,8 @@ namespace micro_profiler
 			shared_ptr<void> hthread(::CreateRemoteThread(_hprocess.get(), NULL, 0, thread_routine, data, 0, NULL),
 				&::CloseHandle);
 
+			if (!hthread)
+				throw runtime_error("Remote thread injection failed!"); // TODO: untested
 			::WaitForSingleObject(hthread.get(), INFINITE);
 		}
 

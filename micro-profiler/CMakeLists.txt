@@ -15,7 +15,7 @@ add_custom_command(OUTPUT ${MP_INTDIR}/commands.cto
 )
 
 add_custom_command(OUTPUT ${MP_INTDIR}/commands.vs10.cto
-	COMMAND "${VSSDKBIN}/vsct.exe" "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct" "${MP_INTDIR}/commands.cto" -I"${VSSDKINCLUDE}"
+	COMMAND "${VSSDKBIN}/vsct.exe" "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct" "${MP_INTDIR}/commands.vs10.cto" -I"${VSSDKINCLUDE}"
 	DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/visualstudio/vs-extension/commands.vsct"
 	COMMENT "Compiling vsct..."
 )

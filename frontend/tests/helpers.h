@@ -43,7 +43,6 @@ namespace micro_profiler
 				inclusive = 5,
 				exclusive_avg = 6,
 				inclusive_avg = 7,
-				max_time = 8,
 			};
 		};
 
@@ -69,7 +68,6 @@ namespace micro_profiler
 				inclusive = 5,
 				exclusive_avg = 6,
 				inclusive_avg = 7,
-				max_time = 8,
 			};
 		};
 

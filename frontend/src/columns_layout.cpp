@@ -85,10 +85,6 @@ namespace micro_profiler
 			return micro_profiler::compare(lhs.inclusive_time, lhs.times_called, rhs.inclusive_time, rhs.times_called);
 		};
 
-		auto by_max_call_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
-			return micro_profiler::compare(lhs.max_call_time, rhs.max_call_time);
-		};
-
 
 		auto row_ = [] (agge::richtext_t &text, const statistics_model_context &, size_t row, const call_statistics &) {
 			micro_profiler::itoa<10>(text, row + 1u);
@@ -139,10 +135,6 @@ namespace micro_profiler
 
 		auto inclusive_time_avg = [] (const statistics_model_context &context, const call_statistics &value) {
 			return value.times_called ? context.tick_interval * value.inclusive_time / value.times_called : 0.0;
-		};
-
-		auto max_call_time = [] (const statistics_model_context &context, const call_statistics &value) {
-			return context.tick_interval * value.max_call_time;
 		};
 
 		template <typename U>
@@ -251,7 +243,6 @@ namespace micro_profiler
 		{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, agge::align_far, format_interval2(inclusive_time), by_inclusive_time, false, inclusive_time,	},
 		{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, agge::align_far, format_interval2(exclusive_time_avg), by_avg_exclusive_call_time, false, exclusive_time_avg,	},
 		{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, agge::align_far, format_interval2(inclusive_time_avg), by_avg_inclusive_call_time, false, inclusive_time_avg,	},
-		{	"MaxCallTime", "Inclusive\n" + secondary + "maximum/call", 121, agge::align_far, format_interval2(max_call_time), by_max_call_time, false, max_call_time,	},
 	};
 
 	const column_definition<call_statistics, statistics_model_context> c_caller_statistics_columns[] = {
@@ -263,7 +254,6 @@ namespace micro_profiler
 		c_statistics_columns[5],
 		c_statistics_columns[6],
 		c_statistics_columns[7],
-		c_statistics_columns[8],
 	};
 
 	const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[] = {
@@ -275,7 +265,6 @@ namespace micro_profiler
 		c_statistics_columns[5],
 		c_statistics_columns[6],
 		c_statistics_columns[7],
-		c_statistics_columns[8],
 	};
 
 

@@ -22,7 +22,7 @@ namespace micro_profiler
 				// INIT
 				vector_adapter buffer;
 				strmd::serializer<vector_adapter, packer> s(buffer);
-				function_statistics s1(17, 123123123, 32123, 2213), s2(1117, 1231123, 3213, 112213);
+				function_statistics s1(17, 123123123, 32123), s2(1117, 1231123, 3213);
 				function_statistics ds1, ds2;
 
 				// ACT (serialization)

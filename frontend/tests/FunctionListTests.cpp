@@ -26,7 +26,7 @@ namespace micro_profiler
 		{
 			const main_columns::items name_times_inc_exc_iavg_eavg_reent_minc[] = {
 				main_columns::name, main_columns::times_called, main_columns::inclusive, main_columns::exclusive,
-				main_columns::inclusive_avg, main_columns::exclusive_avg, main_columns::max_time
+				main_columns::inclusive_avg, main_columns::exclusive_avg,
 			};
 
 			const main_columns::items name_times[] = {	main_columns::name, main_columns::times_called,	};
@@ -168,7 +168,7 @@ namespace micro_profiler
 			test( FunctionListTimeFormatter )
 			{
 				// INIT
-				unsigned columns[] = {	main_columns::name, main_columns::inclusive, main_columns::exclusive, main_columns::inclusive_avg, main_columns::exclusive_avg, main_columns::max_time,	};
+				unsigned columns[] = {	main_columns::name, main_columns::inclusive, main_columns::exclusive, main_columns::inclusive_avg, main_columns::exclusive_avg,	};
 
 				add_records(*statistics, plural
 					// ~ ns
@@ -206,25 +206,25 @@ namespace micro_profiler
 				auto text = get_text(*fl, columns);
 
 				// ASSERT
-				string reference[][6] = {
-					{	"0000045E", "3.1ns", "2.9ns", "3.1ns", "2.9ns", "2.9ns",	},
-					{	"000008B5", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "3.67\xCE\xBCs",	},
-					{	"00000C2E", "3.35ms", "3.23ms", "3.35ms", "3.23ms", "3.23ms",	},
-					{	"000015AE", "6.55s", "2.35s", "6.55s", "2.35s", "2.35s",	},
-					{	"000011C6", "6545s", "2347s", "6545s", "2347s", "2347s",	},
-					{	"00001A05", "6.55e+06s", "2.35e+06s", "6.55e+06s", "2.35e+06s", "2.35e+06s",	},
+				string reference[][5] = {
+					{	"0000045E", "3.1ns", "2.9ns", "3.1ns", "2.9ns",	},
+					{	"000008B5", "4.53\xCE\xBCs", "3.67\xCE\xBCs", "4.53\xCE\xBCs", "3.67\xCE\xBCs",	},
+					{	"00000C2E", "3.35ms", "3.23ms", "3.35ms", "3.23ms",	},
+					{	"000015AE", "6.55s", "2.35s", "6.55s", "2.35s",	},
+					{	"000011C6", "6545s", "2347s", "6545s", "2347s",	},
+					{	"00001A05", "6.55e+06s", "2.35e+06s", "6.55e+06s", "2.35e+06s",	},
 
 					// boundary cases
-					{	"000007C6", "999ns", "999ns", "999ns", "999ns", "999ns",	},
-					{	"000007D0", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs",	},
-					{	"00000BAE", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs",	},
-					{	"00000BB8", "1ms", "1ms", "1ms", "1ms", "1ms",	},
-					{	"00000F96", "999ms", "999ms", "999ms", "999ms", "999ms",	},
-					{	"00000FA0", "1s", "1s", "1s", "1s", "1s",	},
-					{	"0000137E", "999s", "999s", "999s", "999s", "999s",	},
-					{	"00001388", "999.6s", "999.6s", "999.6s", "999.6s", "999.6s",	},
-					{	"00001766", "9999s", "9999s", "9999s", "9999s", "9999s",	},
-					{	"00001770", "1e+04s", "1e+04s", "1e+04s", "1e+04s", "1e+04s",	},
+					{	"000007C6", "999ns", "999ns", "999ns", "999ns",	},
+					{	"000007D0", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs", "1\xCE\xBCs",	},
+					{	"00000BAE", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs", "999\xCE\xBCs",	},
+					{	"00000BB8", "1ms", "1ms", "1ms", "1ms",	},
+					{	"00000F96", "999ms", "999ms", "999ms", "999ms",	},
+					{	"00000FA0", "1s", "1s", "1s", "1s",	},
+					{	"0000137E", "999s", "999s", "999s", "999s",	},
+					{	"00001388", "999.6s", "999.6s", "999.6s", "999.6s",	},
+					{	"00001766", "9999s", "9999s", "9999s", "9999s",	},
+					{	"00001770", "1e+04s", "1e+04s", "1e+04s", "1e+04s",	},
 				};
 
 				assert_equivalent(mkvector(reference), text);
@@ -321,11 +321,11 @@ namespace micro_profiler
 				assert_equal(1u, ih.counts.size());
 				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
-				string reference1[][7] = {
-					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "5s",	},
-					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "3s",	},
-					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s", "4s",	},
-					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "6s",	},
+				string reference1[][6] = {
+					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s",	},
+					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s",	},
+					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s",	},
+					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms",	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference1, *fl);
@@ -342,11 +342,11 @@ namespace micro_profiler
 				assert_equal(2u, ih.counts.size());
 				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
-				string reference2[][7] = {
-					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "6s"	},
-					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s", "4s"	},
-					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "3s"	},
-					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "5s"	},
+				string reference2[][6] = {
+					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms",	},
+					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s",	},
+					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s",	},
+					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s",	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference2, *fl);
@@ -363,11 +363,11 @@ namespace micro_profiler
 				assert_equal(3u, ih.counts.size());
 				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
-				string reference3[][7] = {
-					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "3s"	},
-					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s", "4s"	},
-					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "5s"	},
-					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "6s"	},
+				string reference3[][6] = {
+					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s",	},
+					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s",	},
+					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s",	},
+					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms",	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference3, *fl);
@@ -384,11 +384,11 @@ namespace micro_profiler
 				assert_equal(4u, ih.counts.size());
 				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
 
-				string reference4[][7] = {
-					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms", "6s"	},
-					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s", "5s"	},
-					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s", "4s"	},
-					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s", "3s"	},
+				string reference4[][6] = {
+					{	"00000BB8", "15233", "6.55e+04s", "1.35e+04s", "4.3s", "884ms",	},
+					{	"00000BAE", "2", "3.35e+07s", "3.23e+07s", "1.67e+07s", "1.62e+07s",	},
+					{	"000007D0", "35", "453s", "366s", "12.9s", "10.5s",	},
+					{	"000007C6", "15", "31s", "29s", "2.07s", "1.93s",	},
 				};
 
 				assert_table_equal(name_times_inc_exc_iavg_eavg_reent_minc, reference4, *fl);
@@ -565,48 +565,6 @@ namespace micro_profiler
 				assert_equal(1u, t1.index());
 				assert_equal(0u, t2.index());
 				assert_equal(2u, t3.index());
-
-				// ACT (max call time, ascending)
-				fl->set_order(main_columns::max_time, true);
-				
-				// ASSERT
-				assert_equal(13u, ih.counts.size());
-				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
-
-				string reference15[][2] = {
-					{	"000007C6", "15",	},
-					{	"000007D0", "35",	},
-					{	"00000BAE", "2",	},
-					{	"00000BB8", "15233",	},
-				};
-
-				assert_table_equal(name_times, reference15, *fl);
-
-				assert_equal(0u, t0.index());
-				assert_equal(1u, t1.index());
-				assert_equal(2u, t2.index());
-				assert_equal(3u, t3.index());
-
-				// ACT (max call time, descending)
-				fl->set_order(main_columns::max_time, false);
-				
-				// ASSERT
-				assert_equal(14u, ih.counts.size());
-				assert_equal(4u, ih.counts.back()); //check what's coming as event arg
-
-				string reference16[][2] = {
-					{	"00000BB8", "15233",	},
-					{	"00000BAE", "2",	},
-					{	"000007D0", "35",	},
-					{	"000007C6", "15",	},
-				};
-
-				assert_table_equal(name_times, reference16, *fl);
-
-				assert_equal(3u, t0.index());
-				assert_equal(2u, t1.index());
-				assert_equal(1u, t2.index());
-				assert_equal(0u, t3.index());
 			}
 
 
@@ -729,8 +687,7 @@ namespace micro_profiler
 					"\"Exclusive\r\ntotal\"" "\t"
 					"\"Inclusive\r\ntotal\"" "\t"
 					"\"Exclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\nmaximum/call\"" "\r\n", result);
+					"\"Inclusive\r\naverage/call\"" "\r\n", result);
 
 				// INIT
 				add_records(*statistics, plural
@@ -752,11 +709,10 @@ namespace micro_profiler
 					"\"Exclusive\r\ntotal\"" "\t"
 					"\"Inclusive\r\ntotal\"" "\t"
 					"\"Exclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\nmaximum/call\"" "\r\n"
-					"1\t00000BAE\t1711\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t4\r\n"
-					"2\t000007C6\t1711\t15\t29\t31\t1.93333\t2.06667\t2\r\n"
-					"3\t000007D0\t1711\t35\t366\t453\t10.4571\t12.9429\t3\r\n"), result);
+					"\"Inclusive\r\naverage/call\"" "\r\n"
+					"1\t00000BAE\t1711\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\r\n"
+					"2\t000007C6\t1711\t15\t29\t31\t1.93333\t2.06667\r\n"
+					"3\t000007D0\t1711\t35\t366\t453\t10.4571\t12.9429\r\n"), result);
 
 				// INIT
 				add_records(*threads, plural
@@ -775,11 +731,10 @@ namespace micro_profiler
 					"\"Exclusive\r\ntotal\"" "\t"
 					"\"Inclusive\r\ntotal\"" "\t"
 					"\"Exclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\nmaximum/call\"" "\r\n"
-					"1\t000007C6\t1713\t15\t29\t31\t1.93333\t2.06667\t2\r\n"
-					"2\t000007D0\t1713\t35\t366\t453\t10.4571\t12.9429\t3\r\n"
-					"3\t00000BAE\t1713\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t4\r\n"), result);
+					"\"Inclusive\r\naverage/call\"" "\r\n"
+					"1\t000007C6\t1713\t15\t29\t31\t1.93333\t2.06667\r\n"
+					"2\t000007D0\t1713\t35\t366\t453\t10.4571\t12.9429\r\n"
+					"3\t00000BAE\t1713\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\r\n"), result);
 			}
 
 

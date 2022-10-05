@@ -15,8 +15,7 @@ namespace micro_profiler
 			{
 				return lhs.id == rhs.id && lhs.thread_id == rhs.thread_id && lhs.parent_id == rhs.parent_id
 					&& lhs.address == rhs.address && lhs.times_called == rhs.times_called
-					&& lhs.inclusive_time == rhs.inclusive_time && lhs.exclusive_time == rhs.exclusive_time
-					&& lhs.max_call_time == rhs.max_call_time;
+					&& lhs.inclusive_time == rhs.inclusive_time && lhs.exclusive_time == rhs.exclusive_time;
 			}
 		};
 	}

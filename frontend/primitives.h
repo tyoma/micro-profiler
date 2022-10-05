@@ -102,11 +102,7 @@ namespace micro_profiler
 		lhs.times_called += rhs.times_called;
 		lhs.exclusive_time += rhs.exclusive_time;
 		if (!rhs.reentrance(lookup))
-		{
 			lhs.inclusive_time += rhs.inclusive_time;
-			if (rhs.max_call_time > lhs.max_call_time)
-				lhs.max_call_time = rhs.max_call_time;
-		}
 	}
 }
 

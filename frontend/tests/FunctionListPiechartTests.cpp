@@ -214,16 +214,6 @@ namespace micro_profiler
 				assert_approx_equal(0.00024, get_value(*m1, 1), c_tolerance);
 				assert_approx_equal(0.00012, get_value(*m2, 0), c_tolerance);
 				assert_approx_equal(0.00015, get_value(*m2, 1), c_tolerance);
-
-				// ACT
-				fl1->set_order(main_columns::max_time, false);
-				fl2->set_order(main_columns::max_time, true);
-
-				// ASSERT
-				assert_approx_equal(0.256, get_value(*m1, 0), c_tolerance);
-				assert_approx_equal(0.028, get_value(*m1, 1), c_tolerance);
-				assert_approx_equal(0.014, get_value(*m2, 0), c_tolerance);
-				assert_approx_equal(0.128, get_value(*m2, 1), c_tolerance);
 			}
 
 
@@ -291,10 +281,9 @@ namespace micro_profiler
 				fl->set_order(main_columns::inclusive, false);
 				fl->set_order(main_columns::exclusive_avg, false);
 				fl->set_order(main_columns::inclusive_avg, false);
-				fl->set_order(main_columns::max_time, false);
 
 				// ASSERT
-				assert_equal(14, invalidated_count);
+				assert_equal(12, invalidated_count);
 			}
 		end_test_suite
 	}

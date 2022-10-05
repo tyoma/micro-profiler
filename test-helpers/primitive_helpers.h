@@ -9,10 +9,9 @@ namespace micro_profiler
 		template <typename AddressT>
 		inline std::pair<AddressT, typename call_graph_types<AddressT>::node> make_statistics(AddressT address,
 			count_t times_called, unsigned int /*max_reentrance*/, timestamp_t inclusive_time, timestamp_t exclusive_time,
-			timestamp_t max_call_time)
+			timestamp_t /*max_call_time*/)
 		{
-			return std::make_pair(address, function_statistics(times_called, inclusive_time, exclusive_time,
-				max_call_time));
+			return std::make_pair(address, function_statistics(times_called, inclusive_time, exclusive_time));
 		}
 
 		template <typename AddressT>

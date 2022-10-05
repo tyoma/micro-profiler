@@ -34,9 +34,9 @@ namespace micro_profiler
 				strmd::serializer<vector_adapter, packer> s(buffer);
 				statistic_types::node s1;
 
-				static_cast<function_statistics &>(s1) = function_statistics(17, 123123123, 32123, 2213);
-				s1.callees[7741] = function_statistics(1117, 1231123, 3213, 112213);
-				s1.callees[141] = function_statistics(17, 11293123, 132123, 12213);
+				static_cast<function_statistics &>(s1) = function_statistics(17, 123123123, 32123);
+				s1.callees[7741] = function_statistics(1117, 1231123, 3213);
+				s1.callees[141] = function_statistics(17, 11293123, 132123);
 
 				// ACT
 				s(s1);
@@ -52,8 +52,8 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics reference[] = {
-					make_pair(7741, function_statistics(1117, 1231123, 3213, 112213)),
-					make_pair(141, function_statistics(17, 11293123, 132123, 12213)),
+					make_pair(7741, function_statistics(1117, 1231123, 3213)),
+					make_pair(141, function_statistics(17, 11293123, 132123)),
 				};
 
 				assert_equal(s1, ds1);

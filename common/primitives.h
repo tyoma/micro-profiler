@@ -22,17 +22,18 @@
 
 #include "types.h"
 
+#include <math/histogram.h>
+
 namespace micro_profiler
 {
 	struct function_statistics
 	{
 		explicit function_statistics(count_t times_called = 0, timestamp_t inclusive_time = 0,
-			timestamp_t exclusive_time = 0, timestamp_t max_call_time = 0);
+			timestamp_t exclusive_time = 0);
 
 		count_t times_called;
 		timestamp_t inclusive_time;
 		timestamp_t exclusive_time;
-		timestamp_t max_call_time;
 	};
 
 
@@ -40,9 +41,8 @@ namespace micro_profiler
 
 	// function_statistics - inline definitions
 	inline function_statistics::function_statistics(count_t times_called_, timestamp_t inclusive_time_,
-			timestamp_t exclusive_time_, timestamp_t max_call_time_)
-		: times_called(times_called_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_),
-			max_call_time(max_call_time_)
+			timestamp_t exclusive_time_)
+		: times_called(times_called_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_)
 	{	}
 
 
@@ -52,8 +52,6 @@ namespace micro_profiler
 		++lhs.times_called;
 		lhs.inclusive_time += rhs_inclusive_time;
 		lhs.exclusive_time += rhs_exclusive_time;
-		if (rhs_inclusive_time > lhs.max_call_time)
-			lhs.max_call_time = rhs_inclusive_time;
 	}
 
 	inline void add(function_statistics &lhs, const function_statistics &rhs)
@@ -61,7 +59,5 @@ namespace micro_profiler
 		lhs.times_called += rhs.times_called;
 		lhs.inclusive_time += rhs.inclusive_time;
 		lhs.exclusive_time += rhs.exclusive_time;
-		if (rhs.max_call_time > lhs.max_call_time)
-			lhs.max_call_time = rhs.max_call_time;
 	}
 }

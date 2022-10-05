@@ -12,8 +12,7 @@ namespace micro_profiler
 	{
 		return lhs.times_called < rhs.times_called ? true : lhs.times_called > rhs.times_called ? false :
 			lhs.inclusive_time < rhs.inclusive_time ? true : lhs.inclusive_time > rhs.inclusive_time ? false :
-			lhs.exclusive_time < rhs.exclusive_time ? true : lhs.exclusive_time > rhs.exclusive_time ? false :
-			lhs.max_call_time < rhs.max_call_time;
+			lhs.exclusive_time < rhs.exclusive_time;
 	}
 
 	template <typename AddressT>

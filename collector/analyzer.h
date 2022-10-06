@@ -46,7 +46,7 @@ namespace micro_profiler
 
 	private:
 		statistics_t _statistics;
-		shadow_stack<statistic_types::key> _stack;
+		shadow_stack<statistic_types> _stack;
 	};
 
 	class analyzer : public calls_collector_i::acceptor, noncopyable

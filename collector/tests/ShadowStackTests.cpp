@@ -21,7 +21,7 @@ namespace micro_profiler
 			test( UpdatingWithEmptyTraceProvidesNoStatUpdates )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				vector<call_record> trace;
 				statistic_types::nodes_map statistics;
 
@@ -36,7 +36,7 @@ namespace micro_profiler
 			test( UpdatingWithSimpleEnterExitAtOnceStoresDuration )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace1[] = {
 					{	123450000, (void *)0x01234567	},
@@ -69,7 +69,7 @@ namespace micro_profiler
 			test( UpdatingWithSimpleEnterExitAtSeparateTimesStoresDuration )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace1[] = {	{	123450000, (void *)0x01234567	},	};
 				call_record trace2[] = {	{	123450013, (void *)0	},	};
@@ -115,7 +115,7 @@ namespace micro_profiler
 			test( UpdatingWithEnterExitSequenceStoresStatsOnlyAtExitsMakesEmptyEntriesOnEnters )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss1(overhead(0, 0)), ss2(overhead(0, 0));
+				shadow_stack<statistic_types> ss1(overhead(0, 0)), ss2(overhead(0, 0));
 				statistic_types::nodes_map statistics1, statistics2;
 				call_record trace1[] = {
 					{	123450000, (void *)0x01234567	},
@@ -150,7 +150,7 @@ namespace micro_profiler
 			test( UpdatingWithEnterExitSequenceStoresStatsForAllExits )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	123450000, (void *)0x01234567	},
@@ -173,7 +173,7 @@ namespace micro_profiler
 			test( TraceStatisticsIsAddedToExistingEntries )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	123450000, (void *)0x01234567	},
@@ -203,7 +203,7 @@ namespace micro_profiler
 			test( EvaluateExclusiveTimeForASingleChildCall )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace1[] ={
 					{	123440000, (void *)0x00000010	},
@@ -239,7 +239,7 @@ namespace micro_profiler
 			test( EvaluateExclusiveTimeForSeveralChildCalls )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	123440000, (void *)0x00000010	},
@@ -269,7 +269,7 @@ namespace micro_profiler
 			test( ApplyProfilerLatencyCorrection )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss1(overhead(1, 1)), ss2(overhead(2, 5));
+				shadow_stack<statistic_types> ss1(overhead(1, 1)), ss2(overhead(2, 5));
 				statistic_types::nodes_map statistics1, statistics2;
 				call_record trace[] = {
 					{	123440000, (void *)0x00000010	},
@@ -306,7 +306,7 @@ namespace micro_profiler
 			test( DirectChildrenStatisticsIsAddedToParentNoRecursion )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0)), ss_delayed(overhead(1, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0)), ss_delayed(overhead(1, 0));
 				statistic_types::nodes_map statistics, statistics_delayed;
 				call_record trace[] = {
 					{	1, (void *)1	},
@@ -365,7 +365,7 @@ namespace micro_profiler
 			test( DirectChildrenStatisticsIsAddedToParentNoRecursionWithNesting )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	1, (void *)1	},
@@ -400,7 +400,7 @@ namespace micro_profiler
 			test( PopulateChildrenStatisticsForSpecificParents )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss(overhead(0, 0));
+				shadow_stack<statistic_types> ss(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace[] = {
 					{	1, (void *)0x1	},
@@ -451,7 +451,7 @@ namespace micro_profiler
 			test( RepeatedCollectionWithNonEmptyStoredStackRestoresStacksEntries )
 			{
 				// INIT
-				shadow_stack<statistic_types::key> ss1(overhead(0, 0)), ss2(overhead(0, 0));
+				shadow_stack<statistic_types> ss1(overhead(0, 0)), ss2(overhead(0, 0));
 				statistic_types::nodes_map statistics;
 				call_record trace1[] = {
 					{	1, (void *)1	},

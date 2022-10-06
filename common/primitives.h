@@ -27,18 +27,17 @@
 
 namespace micro_profiler
 {
+	typedef math::variant_scale<timestamp_t> scale_t;
+	typedef math::histogram<scale_t, count_t> histogram_t;
+
 	struct function_statistics
 	{
-		typedef math::histogram<math::variant_scale<timestamp_t>, count_t> histogram;
-
 		explicit function_statistics(count_t times_called = 0, timestamp_t inclusive_time = 0,
 			timestamp_t exclusive_time = 0);
 
 		count_t times_called;
-		timestamp_t inclusive_time;
-		timestamp_t exclusive_time;
-		histogram inclusive;
-		histogram exclusive;
+		timestamp_t inclusive_time, exclusive_time;
+		histogram_t inclusive, exclusive;
 	};
 
 

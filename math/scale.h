@@ -27,6 +27,7 @@ namespace math
 {
 	typedef unsigned int index_t;
 
+#pragma pack(push, 1)
 	template <typename T>
 	class linear_scale
 	{
@@ -78,7 +79,7 @@ namespace math
 
 		value_type _near, _far;
 	};
-
+#pragma pack(pop)
 
 
 	template <typename T>

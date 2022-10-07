@@ -82,5 +82,7 @@ namespace micro_profiler
 		++lhs.times_called;
 		lhs.inclusive_time += rhs_inclusive_time;
 		lhs.exclusive_time += rhs_exclusive_time;
+		lhs.inclusive.add(rhs_inclusive_time);
+		lhs.exclusive.add(rhs_exclusive_time);
 	}
 }

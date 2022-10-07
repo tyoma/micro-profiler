@@ -68,6 +68,7 @@
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="ModuleTrackerTests.cpp" />
     <ClCompile Include="mocks.cpp" />
+    <ClCompile Include="PrimitivesTests.cpp" />
     <ClCompile Include="SerializationTests.cpp" />
     <ClCompile Include="ShadowStackTests.cpp" />
     <ClCompile Include="ThreadAnalyzerTests.cpp" />

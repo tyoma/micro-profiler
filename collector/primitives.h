@@ -74,4 +74,13 @@ namespace micro_profiler
 		static_cast<function_statistics &>(*this) = rhs;
 		callees = rhs.callees;
 	}
+
+
+	// function_statistics - inline helpers
+	inline void add(function_statistics &lhs, timestamp_t rhs_inclusive_time, timestamp_t rhs_exclusive_time)
+	{
+		++lhs.times_called;
+		lhs.inclusive_time += rhs_inclusive_time;
+		lhs.exclusive_time += rhs_exclusive_time;
+	}
 }

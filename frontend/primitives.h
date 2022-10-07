@@ -96,6 +96,13 @@ namespace micro_profiler
 	}
 
 
+	inline void add(function_statistics &lhs, const function_statistics &rhs)
+	{
+		lhs.times_called += rhs.times_called;
+		lhs.inclusive_time += rhs.inclusive_time;
+		lhs.exclusive_time += rhs.exclusive_time;
+	}
+
 	template <typename LookupT>
 	inline void add(call_statistics &lhs, const call_statistics &rhs, const LookupT &lookup)
 	{

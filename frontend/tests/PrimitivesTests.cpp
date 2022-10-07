@@ -11,6 +11,29 @@ namespace micro_profiler
 	namespace tests
 	{
 		begin_test_suite( PrimitivesTests )
+			test( AppendingStatisticsSumsTimesCalledExclusiveAndInclusiveTimes )
+			{
+				// INIT
+				function_statistics s1(3, 4, 4), s2(7, 7, 8);
+
+				// ACT
+				add(s1, s2);
+
+				// ASSERT
+				assert_equal(10u, s1.times_called);
+				assert_equal(11, s1.inclusive_time);
+				assert_equal(12, s1.exclusive_time);
+
+				// ACT
+				add(s2, s1);
+
+				// ASSERT
+				assert_equal(17u, s2.times_called);
+				assert_equal(18, s2.inclusive_time);
+				assert_equal(20, s2.exclusive_time);
+			}
+
+
 			test( AddingNonReentrantCallAddsAllTimes )
 			{
 				// INIT

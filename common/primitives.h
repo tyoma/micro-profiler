@@ -48,20 +48,4 @@ namespace micro_profiler
 			timestamp_t exclusive_time_)
 		: times_called(times_called_), inclusive_time(inclusive_time_), exclusive_time(exclusive_time_)
 	{	}
-
-
-	// function_statistics - inline helpers
-	inline void add(function_statistics &lhs, timestamp_t rhs_inclusive_time, timestamp_t rhs_exclusive_time)
-	{
-		++lhs.times_called;
-		lhs.inclusive_time += rhs_inclusive_time;
-		lhs.exclusive_time += rhs_exclusive_time;
-	}
-
-	inline void add(function_statistics &lhs, const function_statistics &rhs)
-	{
-		lhs.times_called += rhs.times_called;
-		lhs.inclusive_time += rhs.inclusive_time;
-		lhs.exclusive_time += rhs.exclusive_time;
-	}
 }

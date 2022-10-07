@@ -26,6 +26,30 @@ namespace micro_profiler
 			typedef pair<unsigned, statistic_types::node> addressed_statistics;
 		}
 
+
+
+		begin_test_suite( PrimitivesTests )
+			test( AddSingleCallAtZeroLevel )
+			{
+				// INIT
+				function_statistics s1(1, 3, 4), s2(5, 7, 8);
+
+				// ACT
+				add(s1, 9, 10);
+				add(s2, 11, 12);
+
+				// ASSERT
+				assert_equal(2u, s1.times_called);
+				assert_equal(12, s1.inclusive_time);
+				assert_equal(14, s1.exclusive_time);
+
+				assert_equal(6u, s2.times_called);
+				assert_equal(18, s2.inclusive_time);
+				assert_equal(20, s2.exclusive_time);
+			}
+		end_test_suite
+
+
 		begin_test_suite( SerializationTests )
 			test( DetailedStatisticsIsSerializedAsExpected )
 			{

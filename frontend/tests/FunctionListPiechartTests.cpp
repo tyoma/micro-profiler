@@ -76,10 +76,10 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = create_functions_list(plural
-					+ make_call_statistics(1, 1, 0, 5, 123, 0, 0, 0)
-					+ make_call_statistics(2, 1, 0, 17, 127, 0, 0, 0)
-					+ make_call_statistics(3, 1, 0, 13, 12, 0, 0, 0)
-					+ make_call_statistics(4, 1, 0, 123, 12000, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 5, 123, 0, 0)
+					+ make_call_statistics(2, 1, 0, 17, 127, 0, 0)
+					+ make_call_statistics(3, 1, 0, 13, 12, 0, 0)
+					+ make_call_statistics(4, 1, 0, 123, 12000, 0, 0));
 				auto m = fl->get_column_series();
 
 				// ACT
@@ -111,10 +111,10 @@ namespace micro_profiler
 
 				auto &by_node = sdb::unique_index<keyer::callnode>(*statistics);
 				auto fl = create_functions_list(plural
-					+ make_call_statistics(1, 1, 0, 5, 123, 0, 0, 0)
-					+ make_call_statistics(2, 1, 0, 17, 127, 0, 0, 0)
-					+ make_call_statistics(3, 1, 0, 13, 12, 0, 0, 0)
-					+ make_call_statistics(4, 1, 0, 123, 12000, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 5, 123, 0, 0)
+					+ make_call_statistics(2, 1, 0, 17, 127, 0, 0)
+					+ make_call_statistics(3, 1, 0, 13, 12, 0, 0)
+					+ make_call_statistics(4, 1, 0, 123, 12000, 0, 0));
 				auto m = fl->get_column_series();
 
 				fl->set_order(main_columns::times_called, false);
@@ -143,14 +143,14 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl1 = create_functions_list(plural
-					+ make_call_statistics(1, 1, 0, 5, 0, 0, 0, 13)
-					+ make_call_statistics(2, 1, 0, 17, 0, 0, 0, 127)
-					+ make_call_statistics(3, 1, 0, 13, 0, 0, 0, 12), 500);
+					+ make_call_statistics(1, 1, 0, 5, 0, 0, 13)
+					+ make_call_statistics(2, 1, 0, 17, 0, 0, 127)
+					+ make_call_statistics(3, 1, 0, 13, 0, 0, 12), 500);
 				auto fl2 = create_functions_list_detached(plural
-					+ make_call_statistics(1, 1, 0, 5, 0, 0, 0, 13)
-					+ make_call_statistics(2, 1, 0, 17, 0, 0, 0, 127)
-					+ make_call_statistics(3, 1, 0, 13, 0, 0, 0, 12)
-					+ make_call_statistics(4, 1, 0, 123, 0, 0, 0, 12000), 100);
+					+ make_call_statistics(1, 1, 0, 5, 0, 0, 13)
+					+ make_call_statistics(2, 1, 0, 17, 0, 0, 127)
+					+ make_call_statistics(3, 1, 0, 13, 0, 0, 12)
+					+ make_call_statistics(4, 1, 0, 123, 0, 0, 12000), 100);
 
 				auto m1 = fl1->get_column_series();
 				auto m2 = fl2->get_column_series();
@@ -176,13 +176,13 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl1 = create_functions_list_detached(plural
-					+ make_call_statistics(1, 1, 0, 5, 100, 0, 15, 16)
-					+ make_call_statistics(2, 1, 0, 17, 1000, 0, 120, 130), 500);
+					+ make_call_statistics(1, 1, 0, 5, 100, 15, 16)
+					+ make_call_statistics(2, 1, 0, 17, 1000, 120, 130), 500);
 				auto m1 = fl1->get_column_series();
 
 				auto fl2 = create_functions_list_detached(plural
-					+ make_call_statistics(1, 1, 0, 5, 100, 0, 15, 16)
-					+ make_call_statistics(2, 1, 0, 17, 1000, 0, 120, 130), 1000);
+					+ make_call_statistics(1, 1, 0, 5, 100, 15, 16)
+					+ make_call_statistics(2, 1, 0, 17, 1000, 120, 130), 1000);
 				auto m2 = fl2->get_column_series();
 
 				// ACT
@@ -221,8 +221,8 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = create_functions_list_detached(plural
-					+ make_call_statistics(1, 1, 0, 5, 100, 0, 15, 16)
-					+ make_call_statistics(2, 1, 0, 17, 1000, 0, 120, 130), 500);
+					+ make_call_statistics(1, 1, 0, 5, 100, 15, 16)
+					+ make_call_statistics(2, 1, 0, 17, 1000, 120, 130), 500);
 				auto m = fl->get_column_series();
 
 				// ACT / ASSERT
@@ -239,8 +239,8 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = create_functions_list_detached(plural
-					+ make_call_statistics(1, 1, 0, 5, 0, 0, 15, 16)
-					+ make_call_statistics(2, 1, 0, 17, 0, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 5, 0, 15, 16)
+					+ make_call_statistics(2, 1, 0, 17, 0, 0, 0));
 				auto m = fl->get_column_series();
 
 				// ACT
@@ -263,8 +263,8 @@ namespace micro_profiler
 			{
 				// INIT
 				auto fl = create_functions_list_detached(plural
-					+ make_call_statistics(1, 1, 0, 5, 100, 0, 15, 16)
-					+ make_call_statistics(2, 1, 0, 17, 1000, 0, 120, 130), 500);
+					+ make_call_statistics(1, 1, 0, 5, 100, 15, 16)
+					+ make_call_statistics(2, 1, 0, 17, 1000, 120, 130), 500);
 				auto m = fl->get_column_series();
 				auto invalidated_count = 0;
 				wpl::slot_connection conn = m->invalidate += bind(&increment, &invalidated_count);

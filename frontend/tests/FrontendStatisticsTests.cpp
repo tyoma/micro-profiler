@@ -89,12 +89,12 @@ namespace micro_profiler
 				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
-							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901)
-							+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91))
+							+ make_statistics(0x00100093u, 11001u, 11913, 901)
+							+ make_statistics(0x0FA00091u, 1100001u, 1913, 91))
 						+ make_pair(2u, plural
-							+ make_statistics(0x01100093u, 71u, 0, 199999, 901)
-							+ make_statistics(0x01103093u, 92u, 0, 139999, 981)
-							+ make_statistics(0x01A00091u, 31u, 0, 197999, 91)));
+							+ make_statistics(0x01100093u, 71u, 199999, 901)
+							+ make_statistics(0x01103093u, 92u, 139999, 981)
+							+ make_statistics(0x01A00091u, 31u, 197999, 91)));
 				});
 
 				// ACT
@@ -102,11 +102,11 @@ namespace micro_profiler
 
 				// ASSERT
 				call_statistics reference1[] = {
-					make_call_statistics(1, 1, 0, 0x00100093u, 11001u, 1, 11913, 901),
-					make_call_statistics(2, 1, 0, 0x0FA00091u, 1100001u, 3, 1913, 91),
-					make_call_statistics(3, 2, 0, 0x01100093u, 71u, 0, 199999, 901),
-					make_call_statistics(4, 2, 0, 0x01103093u, 92u, 0, 139999, 981),
-					make_call_statistics(5, 2, 0, 0x01A00091u, 31u, 0, 197999, 91),
+					make_call_statistics(1, 1, 0, 0x00100093u, 11001u, 11913, 901),
+					make_call_statistics(2, 1, 0, 0x0FA00091u, 1100001u, 1913, 91),
+					make_call_statistics(3, 2, 0, 0x01100093u, 71u, 199999, 901),
+					make_call_statistics(4, 2, 0, 0x01103093u, 92u, 139999, 981),
+					make_call_statistics(5, 2, 0, 0x01A00091u, 31u, 197999, 91),
 				};
 
 				assert_equal_pred(reference1, session->statistics, eq());
@@ -115,11 +115,11 @@ namespace micro_profiler
 				emulator->add_handler(request_update, [] (ipc::server_session::response &resp) {
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
-							+ make_statistics(0x0FA00091u, 1001u, 2, 1000, 91))
+							+ make_statistics(0x0FA00091u, 1001u, 1000, 91))
 						+ make_pair(2u, plural
-							+ make_statistics(0x01A00091u, 31u, 7, 100, 91))
+							+ make_statistics(0x01A00091u, 31u, 100, 91))
 						+ make_pair(31u, plural
-							+ make_statistics(0x91A00091u, 731u, 0, 17999, 91)));
+							+ make_statistics(0x91A00091u, 731u, 17999, 91)));
 				});
 
 				// ACT
@@ -127,12 +127,12 @@ namespace micro_profiler
 
 				// ASSERT
 				call_statistics reference2[] = {
-					make_call_statistics(1, 1, 0, 0x00100093u, 11001u, 1, 11913, 901),
-					make_call_statistics(2, 1, 0, 0x0FA00091u, 1101002u, 3, 2913, 182),
-					make_call_statistics(3, 2, 0, 0x01100093u, 71u, 0, 199999, 901),
-					make_call_statistics(4, 2, 0, 0x01103093u, 92u, 0, 139999, 981),
-					make_call_statistics(5, 2, 0, 0x01A00091u, 62u, 7, 198099, 182),
-					make_call_statistics(6, 31, 0, 0x91A00091u, 731u, 0, 17999, 91),
+					make_call_statistics(1, 1, 0, 0x00100093u, 11001u, 11913, 901),
+					make_call_statistics(2, 1, 0, 0x0FA00091u, 1101002u, 2913, 182),
+					make_call_statistics(3, 2, 0, 0x01100093u, 71u, 199999, 901),
+					make_call_statistics(4, 2, 0, 0x01103093u, 92u, 139999, 981),
+					make_call_statistics(5, 2, 0, 0x01A00091u, 62u, 198099, 182),
+					make_call_statistics(6, 31, 0, 0x91A00091u, 731u, 17999, 91),
 				};
 				assert_equal_pred(reference2, session->statistics, eq());
 			}
@@ -149,7 +149,7 @@ namespace micro_profiler
 					resp.defer([] (ipc::server_session::response &resp) {
 						resp(response_statistics_update, plural
 								+ make_pair(1u, plural
-									+ make_statistics(0x00100093u, 11001u, 1, 11913, 901)));
+									+ make_statistics(0x00100093u, 11001u, 11913, 901)));
 					});
 				});
 
@@ -222,12 +222,12 @@ namespace micro_profiler
 						+ make_mapping_pair(2, 13, 0x01100000u));
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
-							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901)
-							+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91))
+							+ make_statistics(0x00100093u, 11001u, 11913, 901)
+							+ make_statistics(0x0FA00091u, 1100001u, 1913, 91))
 						+ make_pair(2u, plural
-							+ make_statistics(0x01100093u, 71u, 0, 199999, 901)
-							+ make_statistics(0x01103093u, 92u, 0, 139999, 981)
-							+ make_statistics(0x01A00091u, 31u, 0, 197999, 91)));
+							+ make_statistics(0x01100093u, 71u, 199999, 901)
+							+ make_statistics(0x01103093u, 92u, 139999, 981)
+							+ make_statistics(0x01A00091u, 31u, 197999, 91)));
 				});
 
 				// ACT
@@ -306,12 +306,12 @@ namespace micro_profiler
 						+ make_mapping_pair(2, 13, 0x01100000u));
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
-							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901)
-							+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91))
+							+ make_statistics(0x00100093u, 11001u, 11913, 901)
+							+ make_statistics(0x0FA00091u, 1100001u, 1913, 91))
 						+ make_pair(2u, plural
-							+ make_statistics(0x01100093u, 71u, 0, 199999, 901)
-							+ make_statistics(0x01103093u, 92u, 0, 139999, 981)
-							+ make_statistics(0x01A00091u, 31u, 0, 197999, 91)));
+							+ make_statistics(0x01100093u, 71u, 199999, 901)
+							+ make_statistics(0x01103093u, 92u, 139999, 981)
+							+ make_statistics(0x01A00091u, 31u, 197999, 91)));
 				});
 
 				emulator->add_handler(request_module_metadata, [] (ipc::server_session::response &resp, unsigned) {
@@ -359,12 +359,12 @@ namespace micro_profiler
 						+ make_mapping_pair(2, 13, 0x01100000u));
 					resp(response_statistics_update, plural
 						+ make_pair(1u, plural
-							+ make_statistics(0x00100093u, 11001u, 1, 11913, 901)
-							+ make_statistics(0x0FA00091u, 1100001u, 3, 1913, 91))
+							+ make_statistics(0x00100093u, 11001u, 11913, 901)
+							+ make_statistics(0x0FA00091u, 1100001u, 1913, 91))
 						+ make_pair(2u, plural
-							+ make_statistics(0x01100093u, 71u, 0, 199999, 901)
-							+ make_statistics(0x01103093u, 92u, 0, 139999, 981)
-							+ make_statistics(0x01A00091u, 31u, 0, 197999, 91)));
+							+ make_statistics(0x01100093u, 71u, 199999, 901)
+							+ make_statistics(0x01103093u, 92u, 139999, 981)
+							+ make_statistics(0x01A00091u, 31u, 197999, 91)));
 				});
 
 				emulator->add_handler(request_module_metadata, [] (ipc::server_session::response &resp, unsigned) {

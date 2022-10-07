@@ -51,11 +51,11 @@ namespace micro_profiler
 
 				// ACT
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 0, 0, 123, 0, 0, 0, 0)
-					+ make_call_statistics(2, 0, 1, 501, 0, 0, 0, 0)
-					+ make_call_statistics(3, 0, 1, 502, 0, 0, 0, 0)
-					+ make_call_statistics(4, 0, 0, 124, 0, 0, 0, 0)
-					+ make_call_statistics(5, 0, 4, 503, 0, 0, 0, 0));
+					+ make_call_statistics(1, 0, 0, 123, 0, 0, 0)
+					+ make_call_statistics(2, 0, 1, 501, 0, 0, 0)
+					+ make_call_statistics(3, 0, 1, 502, 0, 0, 0)
+					+ make_call_statistics(4, 0, 0, 124, 0, 0, 0)
+					+ make_call_statistics(5, 0, 4, 503, 0, 0, 0));
 				add_records(*sel, plural + 2u);
 
 				// ASSERT
@@ -77,14 +77,14 @@ namespace micro_profiler
 				const auto addresses = derived_statistics::addresses(sel, hierarchy);
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 0, 0, 123, 0, 0, 0, 0)
-					+ make_call_statistics(2, 0, 1, 501, 0, 0, 0, 0)
-					+ make_call_statistics(3, 0, 1, 501, 0, 0, 0, 0)
-					+ make_call_statistics(4, 0, 1, 123, 0, 0, 0, 0)
-					+ make_call_statistics(5, 0, 1, 502, 0, 0, 0, 0)
-					+ make_call_statistics(6, 0, 0, 503, 0, 0, 0, 0)
-					+ make_call_statistics(7, 0, 0, 124, 0, 0, 0, 0)
-					+ make_call_statistics(8, 0, 4, 503, 0, 0, 0, 0));
+					+ make_call_statistics(1, 0, 0, 123, 0, 0, 0)
+					+ make_call_statistics(2, 0, 1, 501, 0, 0, 0)
+					+ make_call_statistics(3, 0, 1, 501, 0, 0, 0)
+					+ make_call_statistics(4, 0, 1, 123, 0, 0, 0)
+					+ make_call_statistics(5, 0, 1, 502, 0, 0, 0)
+					+ make_call_statistics(6, 0, 0, 503, 0, 0, 0)
+					+ make_call_statistics(7, 0, 0, 124, 0, 0, 0)
+					+ make_call_statistics(8, 0, 4, 503, 0, 0, 0));
 
 				// ACT
 				add_records(*sel, plural + 2u + 3u);
@@ -165,11 +165,11 @@ namespace micro_profiler
 				auto selector = make_shared<address_table>();
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 1, 0, 123, 0, 0, 0, 0)
-					+ make_call_statistics(2, 1, 1, 501, 0, 0, 0, 0)
-					+ make_call_statistics(3, 1, 1, 502, 0, 0, 0, 0)
-					+ make_call_statistics(4, 1, 0, 124, 0, 0, 0, 0)
-					+ make_call_statistics(5, 1, 4, 501, 0, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 123, 0, 0, 0)
+					+ make_call_statistics(2, 1, 1, 501, 0, 0, 0)
+					+ make_call_statistics(3, 1, 1, 502, 0, 0, 0)
+					+ make_call_statistics(4, 1, 0, 124, 0, 0, 0)
+					+ make_call_statistics(5, 1, 4, 501, 0, 0, 0));
 
 				// INIT / ACT
 				auto callers = derived_statistics::callers(selector, hierarchy);
@@ -186,13 +186,13 @@ namespace micro_profiler
 				auto selector = make_shared<address_table>();
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 1, 0, 123, 101, 0, 0, 0)
-					+ make_call_statistics(2, 1, 1, 501, 102, 0, 0, 0)
-					+ make_call_statistics(3, 1, 1, 502, 103, 0, 0, 0)
-					+ make_call_statistics(4, 1, 0, 124, 104, 0, 0, 0)
-					+ make_call_statistics(5, 1, 4, 123, 105, 0, 0, 0)
-					+ make_call_statistics(6, 1, 4, 501, 106, 0, 0, 0)
-					+ make_call_statistics(7, 1, 6, 503, 107, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 123, 101, 0, 0)
+					+ make_call_statistics(2, 1, 1, 501, 102, 0, 0)
+					+ make_call_statistics(3, 1, 1, 502, 103, 0, 0)
+					+ make_call_statistics(4, 1, 0, 124, 104, 0, 0)
+					+ make_call_statistics(5, 1, 4, 123, 105, 0, 0)
+					+ make_call_statistics(6, 1, 4, 501, 106, 0, 0)
+					+ make_call_statistics(7, 1, 6, 503, 107, 0, 0));
 				add_records(*selector, plural + 501);
 
 				// INIT / ACT
@@ -200,17 +200,17 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 123, 102, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 124, 106, 0, 0, 0), *callers);
+					+ make_call_statistics(0, 1, 0, 123, 102, 0, 0)
+					+ make_call_statistics(0, 1, 0, 124, 106, 0, 0), *callers);
 
 				// ACT
 				add_records(*selector, plural + 503);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 123, 102, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 124, 106, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 501, 107, 0, 0, 0), *callers);
+					+ make_call_statistics(0, 1, 0, 123, 102, 0, 0)
+					+ make_call_statistics(0, 1, 0, 124, 106, 0, 0)
+					+ make_call_statistics(0, 1, 0, 501, 107, 0, 0), *callers);
 			}
 
 
@@ -222,30 +222,30 @@ namespace micro_profiler
 				auto callers = derived_statistics::callers(selector, hierarchy);
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 1, 0, 123, 101, 0, 0, 0)
-					+ make_call_statistics(2, 1, 1, 501, 112, 0, 0, 0)
-					+ make_call_statistics(3, 1, 1, 502, 173, 0, 0, 0)
-					+ make_call_statistics(4, 1, 0, 124, 104, 0, 0, 0)
-					+ make_call_statistics(5, 1, 4, 123, 105, 0, 0, 0)
-					+ make_call_statistics(6, 1, 4, 501, 106, 0, 0, 0)
-					+ make_call_statistics(7, 1, 6, 503, 107, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 123, 101, 0, 0)
+					+ make_call_statistics(2, 1, 1, 501, 112, 0, 0)
+					+ make_call_statistics(3, 1, 1, 502, 173, 0, 0)
+					+ make_call_statistics(4, 1, 0, 124, 104, 0, 0)
+					+ make_call_statistics(5, 1, 4, 123, 105, 0, 0)
+					+ make_call_statistics(6, 1, 4, 501, 106, 0, 0)
+					+ make_call_statistics(7, 1, 6, 503, 107, 0, 0));
 
 				// ACT
 				add_records(*selector, plural + 501 + 502);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 123, 285, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 124, 106, 0, 0, 0), *callers);
+					+ make_call_statistics(0, 1, 0, 123, 285, 0, 0)
+					+ make_call_statistics(0, 1, 0, 124, 106, 0, 0), *callers);
 
 				// ACT
 				add_records(*selector, plural + 123);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0,   0, 101, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 123, 285, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 124, 211, 0, 0, 0), *callers);
+					+ make_call_statistics(0, 1, 0,   0, 101, 0, 0)
+					+ make_call_statistics(0, 1, 0, 123, 285, 0, 0)
+					+ make_call_statistics(0, 1, 0, 124, 211, 0, 0), *callers);
 			}
 
 
@@ -257,26 +257,26 @@ namespace micro_profiler
 				auto callers = derived_statistics::callers(selector, hierarchy);
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 7, 0, 123, 101, 0, 0, 0)
-					+ make_call_statistics(2, 7, 1, 501, 112, 0, 0, 0)
-					+ make_call_statistics(3, 7, 2, 503, 113, 0, 0, 0)
-					+ make_call_statistics(4, 7, 3, 501, 119, 0, 0, 0)
-					+ make_call_statistics(5, 7, 2, 505, 114, 0, 0, 0)
-					+ make_call_statistics(6, 7, 1, 502, 173, 0, 0, 0)
-					+ make_call_statistics(7, 3, 0, 123, 105, 0, 0, 0)
-					+ make_call_statistics(8, 3, 7, 501, 106, 0, 0, 0)
-					+ make_call_statistics(9, 3, 8, 503, 107, 0, 0, 0));
+					+ make_call_statistics(1, 7, 0, 123, 101, 0, 0)
+					+ make_call_statistics(2, 7, 1, 501, 112, 0, 0)
+					+ make_call_statistics(3, 7, 2, 503, 113, 0, 0)
+					+ make_call_statistics(4, 7, 3, 501, 119, 0, 0)
+					+ make_call_statistics(5, 7, 2, 505, 114, 0, 0)
+					+ make_call_statistics(6, 7, 1, 502, 173, 0, 0)
+					+ make_call_statistics(7, 3, 0, 123, 105, 0, 0)
+					+ make_call_statistics(8, 3, 7, 501, 106, 0, 0)
+					+ make_call_statistics(9, 3, 8, 503, 107, 0, 0));
 
 				// ACT
 				add_records(*selector, plural + 501 + 503);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 7, 0, 123, 112, 0, 0, 0) 
-					+ make_call_statistics(0, 7, 0, 503, 119, 0, 0, 0)
-					+ make_call_statistics(0, 3, 0, 123, 106, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 501, 113, 0, 0, 0)
-					+ make_call_statistics(0, 3, 0, 501, 107, 0, 0, 0), *callers);
+					+ make_call_statistics(0, 7, 0, 123, 112, 0, 0) 
+					+ make_call_statistics(0, 7, 0, 503, 119, 0, 0)
+					+ make_call_statistics(0, 3, 0, 123, 106, 0, 0)
+					+ make_call_statistics(0, 7, 0, 501, 113, 0, 0)
+					+ make_call_statistics(0, 3, 0, 501, 107, 0, 0), *callers);
 			}
 
 
@@ -288,38 +288,38 @@ namespace micro_profiler
 				auto callers = derived_statistics::callers(selector, hierarchy);
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 9, 0, 123, 101, 0, 11, 13)
-					+ make_call_statistics(2, 9, 1, 501, 112, 0, 17, 19)
-					+ make_call_statistics(3, 9, 2, 501, 173, 0, 23, 29)
+					+ make_call_statistics(1, 9, 0, 123, 101, 11, 13)
+					+ make_call_statistics(2, 9, 1, 501, 112, 17, 19)
+					+ make_call_statistics(3, 9, 2, 501, 173, 23, 29)
 
-					+ make_call_statistics(4, 9, 0, 501, 104, 0, 31, 37)
-					+ make_call_statistics(5, 9, 4, 123, 105, 0, 41, 43)
-					+ make_call_statistics(6, 9, 5, 501, 106, 0, 47, 53)
-					+ make_call_statistics(7, 9, 6, 123, 107, 0, 59, 67)
+					+ make_call_statistics(4, 9, 0, 501, 104, 31, 37)
+					+ make_call_statistics(5, 9, 4, 123, 105, 41, 43)
+					+ make_call_statistics(6, 9, 5, 501, 106, 47, 53)
+					+ make_call_statistics(7, 9, 6, 123, 107, 59, 67)
 
-					+ make_call_statistics(8, 7, 0, 123, 207, 0, 71, 77)
-					+ make_call_statistics(9, 7, 8, 123, 907, 0, 17, 97)
-					+ make_call_statistics(10, 7, 9, 123, 003, 0, 1, 9));
+					+ make_call_statistics(8, 7, 0, 123, 207, 71, 77)
+					+ make_call_statistics(9, 7, 8, 123, 907, 17, 97)
+					+ make_call_statistics(10, 7, 9, 123, 003, 1, 9));
 
 				// ACT
 				add_records(*selector, plural + 501);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 9, 0, 123, 218, 0, 17, 72)
-					+ make_call_statistics(0, 9, 0, 501, 173, 0, 0, 29)
-					+ make_call_statistics(0, 9, 0, 0, 104, 0, 31, 37), *callers);
+					+ make_call_statistics(0, 9, 0, 123, 218, 17, 72)
+					+ make_call_statistics(0, 9, 0, 501, 173, 0, 29)
+					+ make_call_statistics(0, 9, 0, 0, 104, 31, 37), *callers);
 
 				// ACT
 				add_records(*selector, plural + 123);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 9, 0, 123, 218, 0, 17, 72)
-					+ make_call_statistics(0, 9, 0, 501, 385, 0, 41, 139)
-					+ make_call_statistics(0, 9, 0, 0, 205, 0, 42, 50)
-					+ make_call_statistics(0, 7, 0, 0, 207, 0, 71, 77)
-					+ make_call_statistics(0, 7, 0, 123, 910, 0, 0, 106)
+					+ make_call_statistics(0, 9, 0, 123, 218, 17, 72)
+					+ make_call_statistics(0, 9, 0, 501, 385, 41, 139)
+					+ make_call_statistics(0, 9, 0, 0, 205, 42, 50)
+					+ make_call_statistics(0, 7, 0, 0, 207, 71, 77)
+					+ make_call_statistics(0, 7, 0, 123, 910, 0, 106)
 					, *callers);
 			}
 		end_test_suite
@@ -360,11 +360,11 @@ namespace micro_profiler
 				auto selector = make_shared<address_table>();
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 1, 0, 123, 0, 0, 0, 0)
-					+ make_call_statistics(2, 1, 1, 501, 0, 0, 0, 0)
-					+ make_call_statistics(3, 1, 1, 502, 0, 0, 0, 0)
-					+ make_call_statistics(4, 1, 0, 124, 0, 0, 0, 0)
-					+ make_call_statistics(5, 1, 4, 501, 0, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 123, 0, 0, 0)
+					+ make_call_statistics(2, 1, 1, 501, 0, 0, 0)
+					+ make_call_statistics(3, 1, 1, 502, 0, 0, 0)
+					+ make_call_statistics(4, 1, 0, 124, 0, 0, 0)
+					+ make_call_statistics(5, 1, 4, 501, 0, 0, 0));
 
 				// INIT / ACT
 				auto callees = derived_statistics::callees(selector, hierarchy);
@@ -381,13 +381,13 @@ namespace micro_profiler
 				auto selector = make_shared<address_table>();
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 1, 0, 123, 101, 0, 0, 0)
-					+ make_call_statistics(2, 1, 1, 501, 102, 0, 0, 0)
-					+ make_call_statistics(3, 1, 1, 502, 103, 0, 0, 0)
-					+ make_call_statistics(4, 1, 0, 124, 104, 0, 0, 0)
-					+ make_call_statistics(5, 1, 4, 123, 105, 0, 0, 0)
-					+ make_call_statistics(6, 1, 4, 501, 106, 0, 0, 0)
-					+ make_call_statistics(7, 1, 6, 503, 107, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 123, 101, 0, 0)
+					+ make_call_statistics(2, 1, 1, 501, 102, 0, 0)
+					+ make_call_statistics(3, 1, 1, 502, 103, 0, 0)
+					+ make_call_statistics(4, 1, 0, 124, 104, 0, 0)
+					+ make_call_statistics(5, 1, 4, 123, 105, 0, 0)
+					+ make_call_statistics(6, 1, 4, 501, 106, 0, 0)
+					+ make_call_statistics(7, 1, 6, 503, 107, 0, 0));
 				add_records(*selector, plural + 123);
 
 				// INIT / ACT
@@ -395,17 +395,17 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 501, 102, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 502, 103, 0, 0, 0), *callees);
+					+ make_call_statistics(0, 1, 0, 501, 102, 0, 0)
+					+ make_call_statistics(0, 1, 0, 502, 103, 0, 0), *callees);
 
 				// ACT
 				add_records(*selector, plural + 501);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 501, 102, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 502, 103, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 503, 107, 0, 0, 0), *callees);
+					+ make_call_statistics(0, 1, 0, 501, 102, 0, 0)
+					+ make_call_statistics(0, 1, 0, 502, 103, 0, 0)
+					+ make_call_statistics(0, 1, 0, 503, 107, 0, 0), *callees);
 			}
 
 
@@ -417,22 +417,22 @@ namespace micro_profiler
 				auto callees = derived_statistics::callees(selector, hierarchy);
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 9, 0, 123, 101, 0, 0, 0)
-					+ make_call_statistics(2, 9, 1, 501, 112, 0, 0, 0)
-					+ make_call_statistics(3, 9, 1, 502, 173, 0, 0, 0)
-					+ make_call_statistics(4, 9, 0, 124, 104, 0, 0, 0)
-					+ make_call_statistics(5, 9, 4, 123, 105, 0, 0, 0)
-					+ make_call_statistics(6, 9, 4, 501, 106, 0, 0, 0)
-					+ make_call_statistics(7, 9, 6, 503, 107, 0, 0, 0));
+					+ make_call_statistics(1, 9, 0, 123, 101, 0, 0)
+					+ make_call_statistics(2, 9, 1, 501, 112, 0, 0)
+					+ make_call_statistics(3, 9, 1, 502, 173, 0, 0)
+					+ make_call_statistics(4, 9, 0, 124, 104, 0, 0)
+					+ make_call_statistics(5, 9, 4, 123, 105, 0, 0)
+					+ make_call_statistics(6, 9, 4, 501, 106, 0, 0)
+					+ make_call_statistics(7, 9, 6, 503, 107, 0, 0));
 
 				// ACT
 				add_records(*selector, plural + 123 + 124);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 9, 0, 501, 218, 0, 0, 0)
-					+ make_call_statistics(0, 9, 0, 502, 173, 0, 0, 0)
-					+ make_call_statistics(0, 9, 0, 123, 105, 0, 0, 0), *callees);
+					+ make_call_statistics(0, 9, 0, 501, 218, 0, 0)
+					+ make_call_statistics(0, 9, 0, 502, 173, 0, 0)
+					+ make_call_statistics(0, 9, 0, 123, 105, 0, 0), *callees);
 			}
 
 
@@ -444,35 +444,35 @@ namespace micro_profiler
 				auto callees = derived_statistics::callees(selector, hierarchy);
 
 				add_records(*hierarchy, plural
-					+ make_call_statistics(1, 9, 0, 123, 101, 0, 11, 13)
-					+ make_call_statistics(2, 9, 1, 501, 112, 0, 17, 19)
-					+ make_call_statistics(3, 9, 2, 501, 173, 0, 23, 29)
+					+ make_call_statistics(1, 9, 0, 123, 101, 11, 13)
+					+ make_call_statistics(2, 9, 1, 501, 112, 17, 19)
+					+ make_call_statistics(3, 9, 2, 501, 173, 23, 29)
 
-					+ make_call_statistics(4, 9, 0, 501, 104, 0, 31, 37)
-					+ make_call_statistics(5, 9, 4, 123, 105, 0, 41, 43)
-					+ make_call_statistics(6, 9, 5, 501, 106, 0, 47, 53)
-					+ make_call_statistics(7, 9, 6, 123, 107, 0, 59, 67)
+					+ make_call_statistics(4, 9, 0, 501, 104, 31, 37)
+					+ make_call_statistics(5, 9, 4, 123, 105, 41, 43)
+					+ make_call_statistics(6, 9, 5, 501, 106, 47, 53)
+					+ make_call_statistics(7, 9, 6, 123, 107, 59, 67)
 
-					+ make_call_statistics(8, 7, 0, 123, 207, 0, 71, 77)
-					+ make_call_statistics(9, 7, 8, 123, 907, 0, 17, 97)
-					+ make_call_statistics(10, 7, 9, 123, 003, 0, 1, 9));
+					+ make_call_statistics(8, 7, 0, 123, 207, 71, 77)
+					+ make_call_statistics(9, 7, 8, 123, 907, 17, 97)
+					+ make_call_statistics(10, 7, 9, 123, 003, 1, 9));
 
 				// ACT
 				add_records(*selector, plural + 501);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 9, 0, 123, 212, 0, 41, 110)
-					+ make_call_statistics(0, 9, 0, 501, 173, 0, 0, 29), *callees);
+					+ make_call_statistics(0, 9, 0, 123, 212, 41, 110)
+					+ make_call_statistics(0, 9, 0, 501, 173, 0, 29), *callees);
 
 				// ACT
 				add_records(*selector, plural + 123);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 9, 0, 123, 212, 0, 41, 110)
-					+ make_call_statistics(0, 9, 0, 501, 391, 0, 17, 101)
-					+ make_call_statistics(0, 7, 0, 123, 910, 0, 0, 106), *callees);
+					+ make_call_statistics(0, 9, 0, 123, 212, 41, 110)
+					+ make_call_statistics(0, 9, 0, 501, 391, 17, 101)
+					+ make_call_statistics(0, 7, 0, 123, 910, 0, 106), *callees);
 			}
 
 		end_test_suite

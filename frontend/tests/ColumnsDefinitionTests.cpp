@@ -39,11 +39,11 @@ namespace micro_profiler
 			{
 				// INIT
 				call_statistics data[] = {
-					make_call_statistics(0, 0, 0, 0, 10, 0, 0, 0),
-					make_call_statistics(0, 0, 0, 0, 11, 0, 0, 0),
-					make_call_statistics(0, 0, 0, 0, 10000000000, 0, 0, 0),
-					make_call_statistics(0, 0, 0, 0, 10000000001, 0, 0, 0),
-					make_call_statistics(0, 0, 0, 0, 0xF000000000000000, 0, 0, 0),
+					make_call_statistics(0, 0, 0, 0, 10, 0, 0),
+					make_call_statistics(0, 0, 0, 0, 11, 0, 0),
+					make_call_statistics(0, 0, 0, 0, 10000000000, 0, 0),
+					make_call_statistics(0, 0, 0, 0, 10000000001, 0, 0),
+					make_call_statistics(0, 0, 0, 0, 0xF000000000000000, 0, 0),
 				};
 
 				// ACT / ASSERT
@@ -55,12 +55,12 @@ namespace micro_profiler
 			{
 				// INIT
 				call_statistics data[] = {
-					make_call_statistics(0, 0, 0, 0, 0, 0, -0x7F00000000000000, 0),
-					make_call_statistics(0, 0, 0, 0, 0, 0, -10, 0),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 11, 0),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 10000000000, 0),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 10000000001, 0),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 0x7F00000000000000, 0),
+					make_call_statistics(0, 0, 0, 0, 0, -0x7F00000000000000, 0),
+					make_call_statistics(0, 0, 0, 0, 0, -10, 0),
+					make_call_statistics(0, 0, 0, 0, 0, 11, 0),
+					make_call_statistics(0, 0, 0, 0, 0, 10000000000, 0),
+					make_call_statistics(0, 0, 0, 0, 0, 10000000001, 0),
+					make_call_statistics(0, 0, 0, 0, 0, 0x7F00000000000000, 0),
 				};
 
 				// ACT / ASSERT
@@ -72,12 +72,12 @@ namespace micro_profiler
 			{
 				// INIT
 				call_statistics data[] = {
-					make_call_statistics(0, 0, 0, 0, 0, 0, 0, -0x7F00000000000000),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 0, -10),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 0, 11),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 0, 10000000000),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 0, 10000000001),
-					make_call_statistics(0, 0, 0, 0, 0, 0, 0, 0x7F00000000000000),
+					make_call_statistics(0, 0, 0, 0, 0, 0, -0x7F00000000000000),
+					make_call_statistics(0, 0, 0, 0, 0, 0, -10),
+					make_call_statistics(0, 0, 0, 0, 0, 0, 11),
+					make_call_statistics(0, 0, 0, 0, 0, 0, 10000000000),
+					make_call_statistics(0, 0, 0, 0, 0, 0, 10000000001),
+					make_call_statistics(0, 0, 0, 0, 0, 0, 0x7F00000000000000),
 				};
 
 				// ACT / ASSERT

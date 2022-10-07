@@ -88,8 +88,8 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics reference[] = {
-					make_statistics(1234u, 1, 0, 11, 9, plural
-						+ make_statistics(2234u, 1, 0, 2, 2)),
+					make_statistics(1234u, 1, 11, 9, plural
+						+ make_statistics(2234u, 1, 2, 2)),
 				};
 
 				assert_equal(1u, ss.size());
@@ -129,11 +129,11 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics reference1[] = {
-					make_statistics(1234u, 1, 0, 11, 11),
-					make_statistics(2234u, 1, 0, 10, 10),
+					make_statistics(1234u, 1, 11, 11),
+					make_statistics(2234u, 1, 10, 10),
 				};
 				addressed_statistics reference2[] = {
-					make_statistics(1234u, 1, 0, 11, 11),
+					make_statistics(1234u, 1, 11, 11),
 				};
 
 				assert_equal(2u, ss.size());

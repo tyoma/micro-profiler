@@ -21,15 +21,15 @@ namespace micro_profiler
 				auto source = make_shared<calls_statistics_table>();
 
 				add_records(*source, plural
-					+ make_call_statistics(1, 1, 0, 101, 1001, 0, 0, 0)
-					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(3, 1, 1, 103, 1003, 0, 0, 0)
-					+ make_call_statistics(4, 1, 1, 104, 1004, 0, 0, 0)
-					+ make_call_statistics(5, 1, 2, 105, 1005, 0, 0, 0)
-					+ make_call_statistics(6, 1, 5, 106, 1006, 0, 0, 0)
-					+ make_call_statistics(7, 1, 5, 103, 1007, 0, 0, 0)
-					+ make_call_statistics(8, 2, 0, 101, 1008, 0, 0, 0)
-					+ make_call_statistics(9, 2, 8, 104, 1009, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 101, 1001, 0, 0)
+					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 0)
+					+ make_call_statistics(3, 1, 1, 103, 1003, 0, 0)
+					+ make_call_statistics(4, 1, 1, 104, 1004, 0, 0)
+					+ make_call_statistics(5, 1, 2, 105, 1005, 0, 0)
+					+ make_call_statistics(6, 1, 5, 106, 1006, 0, 0)
+					+ make_call_statistics(7, 1, 5, 103, 1007, 0, 0)
+					+ make_call_statistics(8, 2, 0, 101, 1008, 0, 0)
+					+ make_call_statistics(9, 2, 8, 104, 1009, 0, 0));
 				return source;
 			}
 
@@ -38,15 +38,15 @@ namespace micro_profiler
 				auto source = make_shared<calls_statistics_table>();
 
 				add_records(*source, plural
-					+ make_call_statistics(71, 1, 00, 101, 1011, 0, 11, 0)
-					+ make_call_statistics(72, 1, 71, 102, 1002, 0, 13, 0)
-					+ make_call_statistics(73, 1, 71, 103, 1003, 0, 17, 0)
-					+ make_call_statistics(74, 1, 73, 102, 1004, 0, 19, 0)
-					+ make_call_statistics(75, 1, 73, 101, 1005, 0, 23, 0)
-					+ make_call_statistics(76, 5, 00, 101, 1006, 0, 29, 0)
-					+ make_call_statistics(77, 5, 76, 102, 1007, 0, 31, 0)
-					+ make_call_statistics(78, 5, 77, 102, 1008, 0, 37, 0)
-					+ make_call_statistics(79, 5, 78, 102, 1009, 0, 41, 0));
+					+ make_call_statistics(71, 1, 00, 101, 1011, 11, 0)
+					+ make_call_statistics(72, 1, 71, 102, 1002, 13, 0)
+					+ make_call_statistics(73, 1, 71, 103, 1003, 17, 0)
+					+ make_call_statistics(74, 1, 73, 102, 1004, 19, 0)
+					+ make_call_statistics(75, 1, 73, 101, 1005, 23, 0)
+					+ make_call_statistics(76, 5, 00, 101, 1006, 29, 0)
+					+ make_call_statistics(77, 5, 76, 102, 1007, 31, 0)
+					+ make_call_statistics(78, 5, 77, 102, 1008, 37, 0)
+					+ make_call_statistics(79, 5, 78, 102, 1009, 41, 0));
 				return source;
 			}
 
@@ -55,20 +55,20 @@ namespace micro_profiler
 				auto source = make_shared<calls_statistics_table>();
 
 				add_records(*source, plural
-					+ make_call_statistics(1, 1, 0, 101, 1001, 0, 0, 0)
-					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(3, 1, 2, 103, 1003, 0, 0, 0)
-					+ make_call_statistics(4, 1, 2, 104, 1004, 0, 0, 0)
+					+ make_call_statistics(1, 1, 0, 101, 1001, 0, 0)
+					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 0)
+					+ make_call_statistics(3, 1, 2, 103, 1003, 0, 0)
+					+ make_call_statistics(4, 1, 2, 104, 1004, 0, 0)
 
-					+ make_call_statistics(5, 7, 0, 101, 1101, 0, 0, 0)
-					+ make_call_statistics(6, 7, 5, 102, 1102, 0, 0, 0)
-					+ make_call_statistics(7, 7, 5, 103, 1103, 0, 0, 0)
-					+ make_call_statistics(8, 7, 6, 104, 1104, 0, 0, 0)
-					+ make_call_statistics(9, 7, 7, 104, 1105, 0, 0, 0)
+					+ make_call_statistics(5, 7, 0, 101, 1101, 0, 0)
+					+ make_call_statistics(6, 7, 5, 102, 1102, 0, 0)
+					+ make_call_statistics(7, 7, 5, 103, 1103, 0, 0)
+					+ make_call_statistics(8, 7, 6, 104, 1104, 0, 0)
+					+ make_call_statistics(9, 7, 7, 104, 1105, 0, 0)
 
-					+ make_call_statistics(10, 9, 00, 101, 1301, 0, 0, 0)
-					+ make_call_statistics(11, 9, 10, 102, 1302, 0, 0, 0)
-					+ make_call_statistics(12, 9, 11, 103, 1303, 0, 0, 0));
+					+ make_call_statistics(10, 9, 00, 101, 1301, 0, 0)
+					+ make_call_statistics(11, 9, 10, 102, 1302, 0, 0)
+					+ make_call_statistics(12, 9, 11, 103, 1303, 0, 0));
 				return source;
 			}
 		}
@@ -111,17 +111,17 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 101, 2006, 0, 0, 0)
-					+ make_call_statistics(0, 2, 0, 101, 1009, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 1, 0, 101, 2006, 0, 0)
+					+ make_call_statistics(0, 2, 0, 101, 1009, 0, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 6u);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 105, 1006, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 101, 2006, 0, 0, 0)
-					+ make_call_statistics(0, 2, 0, 101, 1009, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 1, 0, 105, 1006, 0, 0)
+					+ make_call_statistics(0, 1, 0, 101, 2006, 0, 0)
+					+ make_call_statistics(0, 2, 0, 101, 1009, 0, 0), *rep.callers);
 			}
 
 
@@ -139,21 +139,21 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0, 0)
-					+ make_call_statistics(0, 2, 0, 104, 1009, 0, 0, 0), *rep.callees);
+					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 0)
+					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0)
+					+ make_call_statistics(0, 2, 0, 104, 1009, 0, 0), *rep.callees);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 5u);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 103, 2010, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0, 0)
-					+ make_call_statistics(0, 2, 0, 104, 1009, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0, 0), *rep.callees);
+					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 0)
+					+ make_call_statistics(0, 1, 0, 103, 2010, 0, 0)
+					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0)
+					+ make_call_statistics(0, 2, 0, 104, 1009, 0, 0)
+					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0), *rep.callees);
 			}
 
 
@@ -232,13 +232,13 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(rep.main);
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2009, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 103, 1003, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 104, 2013, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 2, 105, 1005, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 5, 106, 1006, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 5, 103, 1007, 0, 0, 0), *rep.main);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2009, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 102, 1002, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 103, 1003, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 1, 104, 2013, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 2, 105, 1005, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 5, 106, 1006, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 5, 103, 1007, 0, 0), *rep.main);
 				assert_not_null(rep.selection_main);
 				assert_not_null(rep.selection_callers);
 				assert_not_equal(rep.selection_main, rep.selection_callers);
@@ -276,15 +276,15 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2013, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2013, 0, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 1u);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2009, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2013, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2009, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2013, 0, 0), *rep.callers);
 			}
 
 
@@ -302,19 +302,19 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 104, 2013, 0, 0, 0), *rep.callees);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 1002, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 104, 2013, 0, 0), *rep.callees);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 5u);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 2010, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 104, 2013, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 106, 1006, 0, 0, 0), *rep.callees);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 1002, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 2010, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 104, 2013, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 106, 1006, 0, 0), *rep.callees);
 			}
 
 
@@ -385,13 +385,13 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(rep1.main);
 				assert_equivalent(plural
-					+ make_call_statistics(1, 1, 0, 101, 1001, 0, 0, 0)
-					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(3, 1, 1, 103, 1003, 0, 0, 0)
-					+ make_call_statistics(4, 1, 1, 104, 1004, 0, 0, 0)
-					+ make_call_statistics(5, 1, 2, 105, 1005, 0, 0, 0)
-					+ make_call_statistics(6, 1, 5, 106, 1006, 0, 0, 0)
-					+ make_call_statistics(7, 1, 5, 103, 1007, 0, 0, 0), *rep1.main);
+					+ make_call_statistics(1, 1, 0, 101, 1001, 0, 0)
+					+ make_call_statistics(2, 1, 1, 102, 1002, 0, 0)
+					+ make_call_statistics(3, 1, 1, 103, 1003, 0, 0)
+					+ make_call_statistics(4, 1, 1, 104, 1004, 0, 0)
+					+ make_call_statistics(5, 1, 2, 105, 1005, 0, 0)
+					+ make_call_statistics(6, 1, 5, 106, 1006, 0, 0)
+					+ make_call_statistics(7, 1, 5, 103, 1007, 0, 0), *rep1.main);
 				assert_not_null(rep1.selection_main);
 				assert_not_null(rep1.selection_callers);
 				assert_not_equal(rep1.selection_main, rep1.selection_callers);
@@ -405,8 +405,8 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(rep2.main);
 				assert_equivalent(plural
-					+ make_call_statistics(8, 2, 0, 101, 1008, 0, 0, 0)
-					+ make_call_statistics(9, 2, 8, 104, 1009, 0, 0, 0), *rep2.main);
+					+ make_call_statistics(8, 2, 0, 101, 1008, 0, 0)
+					+ make_call_statistics(9, 2, 8, 104, 1009, 0, 0), *rep2.main);
 				assert_not_null(rep2.selection_main);
 			}
 
@@ -425,8 +425,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 101, 1002, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 105, 1006, 0, 0, 0), *rep1.callers);
+					+ make_call_statistics(0, 1, 0, 101, 1002, 0, 0)
+					+ make_call_statistics(0, 1, 0, 105, 1006, 0, 0), *rep1.callers);
 
 				// ACT
 				add_records(*rep1.selection_main, plural + 6u);
@@ -439,15 +439,15 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 2, 0, 101, 1009, 0, 0, 0), *rep2.callers);
+					+ make_call_statistics(0, 2, 0, 101, 1009, 0, 0), *rep2.callers);
 
 				// INIT / ACT
 				add_records(*rep2.selection_threads, plural + 1u);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 2, 0, 101, 1009, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 101, 1004, 0, 0, 0), *rep2.callers);
+					+ make_call_statistics(0, 2, 0, 101, 1009, 0, 0)
+					+ make_call_statistics(0, 1, 0, 101, 1004, 0, 0), *rep2.callers);
 			}
 
 
@@ -465,21 +465,21 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 103, 2010, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0, 0), *rep.callees);
+					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 0)
+					+ make_call_statistics(0, 1, 0, 103, 2010, 0, 0)
+					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0)
+					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0), *rep.callees);
 
 				// INIT / ACT
 				add_records(*rep.selection_threads, plural + 2u);
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 2, 0, 104, 1009, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 103, 2010, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0, 0)
-					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0, 0), *rep.callees);
+					+ make_call_statistics(0, 2, 0, 104, 1009, 0, 0)
+					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 0)
+					+ make_call_statistics(0, 1, 0, 103, 2010, 0, 0)
+					+ make_call_statistics(0, 1, 0, 104, 1004, 0, 0)
+					+ make_call_statistics(0, 1, 0, 106, 1006, 0, 0), *rep.callees);
 			}
 
 
@@ -550,11 +550,11 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(rep.main);
 				assert_equivalent(plural
-					+ make_call_statistics(1, 1, 0, 101, 2016, 0, 11, 0)
-					+ make_call_statistics(2, 1, 0, 102, 2006, 0, 32, 0)
-					+ make_call_statistics(3, 1, 0, 103, 1003, 0, 17, 0)
-					+ make_call_statistics(4, 5, 0, 101, 1006, 0, 29, 0)
-					+ make_call_statistics(5, 5, 0, 102, 3024, 0, 31, 0), *rep.main);
+					+ make_call_statistics(1, 1, 0, 101, 2016, 11, 0)
+					+ make_call_statistics(2, 1, 0, 102, 2006, 32, 0)
+					+ make_call_statistics(3, 1, 0, 103, 1003, 17, 0)
+					+ make_call_statistics(4, 5, 0, 101, 1006, 29, 0)
+					+ make_call_statistics(5, 5, 0, 102, 3024, 31, 0), *rep.main);
 				assert_not_null(rep.selection_main);
 				assert_not_null(rep.selection_callers);
 				assert_not_equal(rep.selection_main, rep.selection_callers);
@@ -587,21 +587,21 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0, 1011, 0, 11, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1005, 0, 0, 0)
-					+ make_call_statistics(0, 5, 0, 0, 1006, 0, 29, 0), *rep.callers);
+					+ make_call_statistics(0, 1, 0, 0, 1011, 11, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1005, 0, 0)
+					+ make_call_statistics(0, 5, 0, 0, 1006, 29, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 2u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0, 1011, 0, 11, 0)
-					+ make_call_statistics(0, 1, 0, 103, 2009, 0, 19, 0)
-					+ make_call_statistics(0, 5, 0, 0, 1006, 0, 29, 0)
-					+ make_call_statistics(0, 1, 0, 101, 1002, 0, 13, 0)
-					+ make_call_statistics(0, 5, 0, 101, 1007, 0, 31, 0)
-					+ make_call_statistics(0, 5, 0, 102, 2017, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 1, 0, 0, 1011, 11, 0)
+					+ make_call_statistics(0, 1, 0, 103, 2009, 19, 0)
+					+ make_call_statistics(0, 5, 0, 0, 1006, 29, 0)
+					+ make_call_statistics(0, 1, 0, 101, 1002, 13, 0)
+					+ make_call_statistics(0, 5, 0, 101, 1007, 31, 0)
+					+ make_call_statistics(0, 5, 0, 102, 2017, 0, 0), *rep.callers);
 			}
 
 
@@ -619,18 +619,18 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 13, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 17, 0)
-					+ make_call_statistics(0, 5, 0, 102, 1007, 0, 31, 0), *rep.callees);
+					+ make_call_statistics(0, 1, 0, 102, 1002, 13, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1003, 17, 0)
+					+ make_call_statistics(0, 5, 0, 102, 1007, 31, 0), *rep.callees);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 2u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 13, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 17, 0)
-					+ make_call_statistics(0, 5, 0, 102, 3024, 0, 31, 0), *rep.callees);
+					+ make_call_statistics(0, 1, 0, 102, 1002, 13, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1003, 17, 0)
+					+ make_call_statistics(0, 5, 0, 102, 3024, 31, 0), *rep.callees);
 			}
 		end_test_suite
 
@@ -650,9 +650,9 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(rep.main);
 				assert_equivalent(plural
-					+ make_call_statistics(1, (unsigned)threads_model::cumulative, 0, 101, 3022, 0, 40, 0)
-					+ make_call_statistics(2, (unsigned)threads_model::cumulative, 0, 102, 5030, 0, 63, 0)
-					+ make_call_statistics(3, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 17, 0), *rep.main);
+					+ make_call_statistics(1, (unsigned)threads_model::cumulative, 0, 101, 3022, 40, 0)
+					+ make_call_statistics(2, (unsigned)threads_model::cumulative, 0, 102, 5030, 63, 0)
+					+ make_call_statistics(3, (unsigned)threads_model::cumulative, 0, 103, 1003, 17, 0), *rep.main);
 				assert_not_null(rep.selection_main);
 				assert_not_null(rep.selection_callers);
 				assert_not_equal(rep.selection_main, rep.selection_callers);
@@ -685,18 +685,18 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1005, 0, 0, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2017, 0, 40, 0), *rep.callers);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1005, 0, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2017, 40, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 2u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2017, 0, 40, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 2009, 0, 19, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2009, 0, 44, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 2017, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 0, 2017, 40, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 2009, 19, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 101, 2009, 44, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 2017, 0, 0), *rep.callers);
 			}
 
 
@@ -714,16 +714,16 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 2009, 0, 44, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 17, 0), *rep.callees);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 2009, 44, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 17, 0), *rep.callees);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 2u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 4026, 0, 44, 0)
-					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 0, 17, 0), *rep.callees);
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 102, 4026, 44, 0)
+					+ make_call_statistics(0, (unsigned)threads_model::cumulative, 0, 103, 1003, 17, 0), *rep.callees);
 			}
 		end_test_suite
 
@@ -743,9 +743,9 @@ namespace micro_profiler
 				// ACT / ASSERT
 				assert_not_null(rep1.main);
 				assert_equivalent(plural
-					+ make_call_statistics(1, 1, 0, 101, 2016, 0, 11, 0)
-					+ make_call_statistics(2, 1, 0, 102, 2006, 0, 32, 0)
-					+ make_call_statistics(3, 1, 0, 103, 1003, 0, 17, 0), *rep1.main);
+					+ make_call_statistics(1, 1, 0, 101, 2016, 11, 0)
+					+ make_call_statistics(2, 1, 0, 102, 2006, 32, 0)
+					+ make_call_statistics(3, 1, 0, 103, 1003, 17, 0), *rep1.main);
 				assert_not_null(rep1.selection_main);
 				assert_not_null(rep1.selection_callers);
 				assert_not_equal(rep1.selection_main, rep1.selection_callers);
@@ -758,19 +758,19 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(4, 5, 0, 101, 1006, 0, 29, 0)
-					+ make_call_statistics(5, 5, 0, 102, 3024, 0, 31, 0), *rep2.main);
+					+ make_call_statistics(4, 5, 0, 101, 1006, 29, 0)
+					+ make_call_statistics(5, 5, 0, 102, 3024, 31, 0), *rep2.main);
 
 				// INIT / ACT
 				add_records(*rep2.selection_threads, plural + 1u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(1, 1, 0, 101, 2016, 0, 11, 0)
-					+ make_call_statistics(2, 1, 0, 102, 2006, 0, 32, 0)
-					+ make_call_statistics(3, 1, 0, 103, 1003, 0, 17, 0)
-					+ make_call_statistics(4, 5, 0, 101, 1006, 0, 29, 0)
-					+ make_call_statistics(5, 5, 0, 102, 3024, 0, 31, 0), *rep2.main);
+					+ make_call_statistics(1, 1, 0, 101, 2016, 11, 0)
+					+ make_call_statistics(2, 1, 0, 102, 2006, 32, 0)
+					+ make_call_statistics(3, 1, 0, 103, 1003, 17, 0)
+					+ make_call_statistics(4, 5, 0, 101, 1006, 29, 0)
+					+ make_call_statistics(5, 5, 0, 102, 3024, 31, 0), *rep2.main);
 
 				// INIT
 				weak_ptr<calls_statistics_table> wsource = source;
@@ -802,38 +802,38 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0)
+					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_threads, plural + 1u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1004, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 1, 0, 102, 1004, 0, 0)
+					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0)
+					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_main, plural + get_id(103, 1));
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 2007, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 101, 1103, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 1, 0, 102, 2007, 0, 0)
+					+ make_call_statistics(0, 7, 0, 101, 1103, 0, 0)
+					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0)
+					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0), *rep.callers);
 
 				// ACT
 				add_records(*rep.selection_threads, plural + 9u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 2007, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 101, 1103, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0, 0)
-					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0, 0)
-					+ make_call_statistics(0, 9, 0, 102, 1303, 0, 0, 0), *rep.callers);
+					+ make_call_statistics(0, 1, 0, 102, 2007, 0, 0)
+					+ make_call_statistics(0, 7, 0, 101, 1103, 0, 0)
+					+ make_call_statistics(0, 7, 0, 102, 1104, 0, 0)
+					+ make_call_statistics(0, 7, 0, 103, 1105, 0, 0)
+					+ make_call_statistics(0, 9, 0, 102, 1303, 0, 0), *rep.callers);
 			}
 
 
@@ -851,26 +851,26 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 13, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 17, 0), *rep.callees);
+					+ make_call_statistics(0, 1, 0, 102, 1002, 13, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1003, 17, 0), *rep.callees);
 
 				// ACT
 				add_records(*rep.selection_threads, plural + 5u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 13, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 17, 0)
-					+ make_call_statistics(0, 5, 0, 102, 1007, 0, 31, 0), *rep.callees);
+					+ make_call_statistics(0, 1, 0, 102, 1002, 13, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1003, 17, 0)
+					+ make_call_statistics(0, 5, 0, 102, 1007, 31, 0), *rep.callees);
 
 				// ACT
 				add_records(*rep.selection_main, plural + 2u);
 
 				// ACT / ASSERT
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 102, 1002, 0, 13, 0)
-					+ make_call_statistics(0, 1, 0, 103, 1003, 0, 17, 0)
-					+ make_call_statistics(0, 5, 0, 102, 3024, 0, 31, 0), *rep.callees);
+					+ make_call_statistics(0, 1, 0, 102, 1002, 13, 0)
+					+ make_call_statistics(0, 1, 0, 103, 1003, 17, 0)
+					+ make_call_statistics(0, 5, 0, 102, 3024, 31, 0), *rep.callees);
 			}
 		end_test_suite
 

@@ -50,8 +50,8 @@ namespace micro_profiler
 				assert_not_null(find_by_first(a, 1177u));
 				assert_null(find_by_first(a, 1317u));
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 0, 0, 0, 0, plural
-						+ make_statistics(addr(2234), 0, 0, 0, 0)),
+					+ make_statistics(addr(1234), 0, 0, 0, plural
+						+ make_statistics(addr(2234), 0, 0, 0)),
 					*find_by_first(a, 1177u));
 				assert_is_true(a.has_data());
 
@@ -63,8 +63,8 @@ namespace micro_profiler
 				assert_not_null(find_by_first(a, 1177u));
 				assert_not_null(find_by_first(a, 1317u));
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 0, 0, 0, 0, plural
-						+ make_statistics(addr(2234), 0, 0, 0, 0)),
+					+ make_statistics(addr(1234), 0, 0, 0, plural
+						+ make_statistics(addr(2234), 0, 0, 0)),
 					*find_by_first(a, 1317u));
 				assert_is_true(a.has_data());
 			}
@@ -92,14 +92,14 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 1, 0, 4, 4)
-					+ make_statistics(addr(2234), 2, 0, 9, 7, plural
-						+ make_statistics(addr(12234), 1, 0, 2, 2)),
+					+ make_statistics(addr(1234), 1, 4, 4)
+					+ make_statistics(addr(2234), 2, 9, 7, plural
+						+ make_statistics(addr(12234), 1, 2, 2)),
 					*find_by_first(a1, 1177u));
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 1, 0, 3, 3)
-					+ make_statistics(addr(2234), 2, 0, 7, 6, plural
-						+ make_statistics(addr(12234), 1, 0, 1, 1)),
+					+ make_statistics(addr(1234), 1, 3, 3)
+					+ make_statistics(addr(2234), 2, 7, 6, plural
+						+ make_statistics(addr(12234), 1, 1, 1)),
 					*find_by_first(a2, 1177u));
 			}
 
@@ -125,12 +125,12 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 0, 0, 0, 0, plural
-						+ make_statistics(addr(2234), 0, 0, 0, 0)),
+					+ make_statistics(addr(1234), 0, 0, 0, plural
+						+ make_statistics(addr(2234), 0, 0, 0)),
 					*find_by_first(a, 1317u));
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 0, 0, 0, 0, plural
-						+ make_statistics(addr(2234), 1, 0, 5, 5)),
+					+ make_statistics(addr(1234), 0, 0, 0, plural
+						+ make_statistics(addr(2234), 1, 5, 5)),
 					*find_by_first(a, 1177u));
 
 				// INIT
@@ -144,13 +144,13 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 0, 0, 0, 0, plural
-						+ make_statistics(addr(2234), 1, 0, 5, 5)),
+					+ make_statistics(addr(1234), 0, 0, 0, plural
+						+ make_statistics(addr(2234), 1, 5, 5)),
 					*find_by_first(a, 1177u));
 
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 1, 0, 40, 25, plural
-						+ make_statistics(addr(2234), 1, 0, 15, 15)),
+					+ make_statistics(addr(1234), 1, 40, 25, plural
+						+ make_statistics(addr(2234), 1, 15, 15)),
 					*find_by_first(a, 1317u));
 			}
 
@@ -189,10 +189,10 @@ namespace micro_profiler
 				assert_not_null(find_by_first(a, 111888u));
 				assert_not_null(find_by_first(a, 111889u));
 				assert_equivalent(plural
-					+ make_statistics(addr(2234), 1, 0, 20, 20),
+					+ make_statistics(addr(2234), 1, 20, 20),
 					*find_by_first(a, 111888u));
 				assert_equivalent(plural
-					+ make_statistics(addr(2234), 1, 0, 23, 23),
+					+ make_statistics(addr(2234), 1, 23, 23),
 					*find_by_first(a, 111889u));
 			}
 

@@ -344,8 +344,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics(0x1223u, 1, 0, 1010, 710, plural
-						+ make_statistics(0x4321u, 1, 0, 300, 300)),
+					+ make_statistics(0x1223u, 1, 1010, 710, plural
+						+ make_statistics(0x4321u, 1, 300, 300)),
 					u[11]);
 			}
 
@@ -417,7 +417,7 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics reference1[] = {
-					make_statistics(0x1223u, 1, 0, 1000, 1000),
+					make_statistics(0x1223u, 1, 1000, 1000),
 				};
 
 				assert_equal(1u, updates.size());
@@ -438,7 +438,7 @@ namespace micro_profiler
 
 				// ASERT
 				addressed_statistics reference2[] = {
-					make_statistics(0x31223u, 1, 0, 4000, 4000),
+					make_statistics(0x31223u, 1, 4000, 4000),
 				};
 
 				assert_equal(2u, updates.size());
@@ -537,10 +537,10 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics reference1[] = {
-					make_statistics(0x3171717u, 1, 0, 4000 - 13, 4000 - 13),
+					make_statistics(0x3171717u, 1, 4000 - 13, 4000 - 13),
 				};
 				addressed_statistics reference2[] = {
-					make_statistics(0x3171717u, 1, 0, 4000 - 29, 4000 - 29),
+					make_statistics(0x3171717u, 1, 4000 - 29, 4000 - 29),
 				};
 
 				assert_equivalent(reference1, *find_by_first(u1, 11710u));

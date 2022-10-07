@@ -27,9 +27,9 @@ namespace micro_profiler
 				// INIT
 				auto a = access_hierarchy(context, static_cast<const call_statistics *>(nullptr));
 				call_statistics data[] = {
-					make_call_statistics(1, 0, 1321, 0, 0, 0, 0, 0),
-					make_call_statistics(1, 0, 19, 0, 0, 0, 0, 0),
-					make_call_statistics(1, 0, 1321, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 1321, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 19, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 1321, 0, 0, 0, 0),
 				};
 
 				// ACT / ASSERT
@@ -44,10 +44,10 @@ namespace micro_profiler
 				// INIT
 				auto a = access_hierarchy(context, static_cast<const call_statistics *>(nullptr));
 				call_statistics data[] = {
-					make_call_statistics(1, 0, 19, 0, 0, 0, 0, 0),
-					make_call_statistics(2, 0, 19, 0, 0, 0, 0, 0),
-					make_call_statistics(131, 0, 19, 0, 0, 0, 0, 0),
-					make_call_statistics(131, 0, 19, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 19, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 19, 0, 0, 0, 0),
+					make_call_statistics(131, 0, 19, 0, 0, 0, 0),
+					make_call_statistics(131, 0, 19, 0, 0, 0, 0),
 				};
 
 				// ACT / ASSERT
@@ -64,11 +64,11 @@ namespace micro_profiler
 			{
 				// INIT
 				call_statistics data[] = {
-					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0),
-					make_call_statistics(3, 0, 1, 0, 0, 0, 0, 0),
-					make_call_statistics(4, 0, 3, 0, 0, 0, 0, 0),
-					make_call_statistics(5, 0, 4, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 1, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 3, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 0, 0, 0, 0),
 				};
 
 				context.by_id = [&data] (id_t id) {	return 1 <= id && id <= 5 ? &data[id - 1] : nullptr;	};
@@ -95,9 +95,9 @@ namespace micro_profiler
 			{
 				// INIT
 				call_statistics data[] = {
-					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0),
-					make_call_statistics(3, 0, 1, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 1, 0, 0, 0, 0),
 				};
 
 				context.by_id = [&data] (id_t id) {	return 1 <= id && id <= 3 ? &data[id - 1] : nullptr;	};

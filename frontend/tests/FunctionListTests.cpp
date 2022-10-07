@@ -137,8 +137,8 @@ namespace micro_profiler
 					create_context(statistics, 1.0, resolver, threads, false), c_statistics_columns);
 
 				add_records(*statistics, plural
-					+ make_call_statistics(1, 1, 0, 1123, 19, 0, 0, 0)
-					+ make_call_statistics(2, 1, 0, 2234, 29, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 1123, 19, 0, 0)
+					+ make_call_statistics(2, 1, 0, 2234, 29, 0, 0));
 
 				// ACT / ASSERT
 				assert_equal(0u, fl->get_count());
@@ -151,7 +151,7 @@ namespace micro_profiler
 
 				// ACT
 				add_records(*statistics, plural
-					+ make_call_statistics(3, 1, 0, 7234, 10, 1, 1, 1));
+					+ make_call_statistics(3, 1, 0, 7234, 10, 1, 1));
 				statistics->invalidate();
 
 				// ASSERT
@@ -172,32 +172,32 @@ namespace micro_profiler
 
 				add_records(*statistics, plural
 					// ~ ns
-					+ make_call_statistics(1, 1, 0, 0x45Eu, 1, 0, 31, 29)
-					+ make_call_statistics(2, 1, 0, 0x7C6u, 1, 0, 9994, 9994)
+					+ make_call_statistics(1, 1, 0, 0x45Eu, 1, 31, 29)
+					+ make_call_statistics(2, 1, 0, 0x7C6u, 1, 9994, 9994)
 
 					// >= 1us
-					+ make_call_statistics(3, 1, 0, 0x7D0u, 1, 0, 9996, 9996)
-					+ make_call_statistics(4, 1, 0, 0x8B5u, 1, 0, 45340, 36666)
-					+ make_call_statistics(5, 1, 0, 0xBAEu, 1, 0, 9994000, 9994000)
+					+ make_call_statistics(3, 1, 0, 0x7D0u, 1, 9996, 9996)
+					+ make_call_statistics(4, 1, 0, 0x8B5u, 1, 45340, 36666)
+					+ make_call_statistics(5, 1, 0, 0xBAEu, 1, 9994000, 9994000)
 
 					// >= 1ms
-					+ make_call_statistics(6, 1, 0, 0xBB8u, 1, 0, 9996000, 9996000)
-					+ make_call_statistics(7, 1, 0, 0xC2Eu, 1, 0, 33450030, 32333333)
-					+ make_call_statistics(8, 1, 0, 0xF96u, 1, 0, 9994000000, 9994000000)
+					+ make_call_statistics(6, 1, 0, 0xBB8u, 1, 9996000, 9996000)
+					+ make_call_statistics(7, 1, 0, 0xC2Eu, 1, 33450030, 32333333)
+					+ make_call_statistics(8, 1, 0, 0xF96u, 1, 9994000000, 9994000000)
 
 					// >= 1s
-					+ make_call_statistics(9, 1, 0, 0xFA0u, 1, 0, 9996000000, 9996000000)
-					+ make_call_statistics(10, 1, 0, 0x15AEu, 1, 0, 65450031030, 23470030000)
-					+ make_call_statistics(11, 1, 0, 0x137Eu, 1, 0, 9994000000000, 9994000000000)
+					+ make_call_statistics(9, 1, 0, 0xFA0u, 1, 9996000000, 9996000000)
+					+ make_call_statistics(10, 1, 0, 0x15AEu, 1, 65450031030, 23470030000)
+					+ make_call_statistics(11, 1, 0, 0x137Eu, 1, 9994000000000, 9994000000000)
 
 					// >= 1000s
-					+ make_call_statistics(12, 1, 0, 0x1388u, 1, 0, 9996000000000, 9996000000000)
-					+ make_call_statistics(13, 1, 0, 0x11C6u, 1, 0, 65450031030567, 23470030000987)
-					+ make_call_statistics(14, 1, 0, 0x1766u, 1, 0, 99990031030567, 99990030000987)
+					+ make_call_statistics(12, 1, 0, 0x1388u, 1, 9996000000000, 9996000000000)
+					+ make_call_statistics(13, 1, 0, 0x11C6u, 1, 65450031030567, 23470030000987)
+					+ make_call_statistics(14, 1, 0, 0x1766u, 1, 99990031030567, 99990030000987)
 				
 					// >= 10000s
-					+ make_call_statistics(15, 1, 0, 0x1770u, 1, 0, 99999031030567, 99999030000987)
-					+ make_call_statistics(16, 1, 0, 0x1A05u, 1, 0, 65450031030567000, 23470030000987000));
+					+ make_call_statistics(15, 1, 0, 0x1770u, 1, 99999031030567, 99999030000987)
+					+ make_call_statistics(16, 1, 0, 0x1A05u, 1, 65450031030567000, 23470030000987000));
 
 				auto fl = make_table<richtext_table_model>(statistics,
 					create_context(statistics, 1e-10, resolver, threads, false), c_statistics_columns);
@@ -237,12 +237,12 @@ namespace micro_profiler
 				auto statistics_ = make_shared< sdb::table<call_statistics> >();
 
 				add_records(*statistics_, plural
-					+ make_call_statistics(1, 0, 5, 0x00001122, 0, 0, 0, 0)
-					+ make_call_statistics(2, 0, 3, 0x00001123, 0, 0, 0, 0)
-					+ make_call_statistics(3, 0, 0, 0x00001124, 0, 0, 0, 0)
-					+ make_call_statistics(4, 0, 3, 0x00001125, 0, 0, 0, 0)
-					+ make_call_statistics(5, 0, 0, 0x00001126, 0, 0, 0, 0)
-					+ make_call_statistics(6, 0, 2, 0x00001127, 0, 0, 0, 0));
+					+ make_call_statistics(1, 0, 5, 0x00001122, 0, 0, 0)
+					+ make_call_statistics(2, 0, 3, 0x00001123, 0, 0, 0)
+					+ make_call_statistics(3, 0, 0, 0x00001124, 0, 0, 0)
+					+ make_call_statistics(4, 0, 3, 0x00001125, 0, 0, 0)
+					+ make_call_statistics(5, 0, 0, 0x00001126, 0, 0, 0)
+					+ make_call_statistics(6, 0, 2, 0x00001127, 0, 0, 0));
 
 				auto fl = make_table<richtext_table_model>(statistics_,
 					create_context(statistics_, 1, resolver, threads, false), c_statistics_columns);
@@ -266,7 +266,7 @@ namespace micro_profiler
 				// INIT
 				auto r = statistics_->create();
 
-				*r = make_call_statistics(7, 0, 2, 0x0000F12F, 0, 0, 0, 0);
+				*r = make_call_statistics(7, 0, 2, 0x0000F12F, 0, 0, 0);
 				r.commit();
 
 				// ACT
@@ -294,10 +294,10 @@ namespace micro_profiler
 				invalidation_tracer ih;
 
 				add_records(*statistics, plural
-					+ make_call_statistics(1, 1, 0, 1990u, 15, 0, 31, 29)
-					+ make_call_statistics(2, 1, 0, 2000u, 35, 1, 453, 366)
-					+ make_call_statistics(3, 1, 0, 2990u, 2, 2, 33450030, 32333333)
-					+ make_call_statistics(4, 1, 0, 3000u, 15233, 3, 65460, 13470));
+					+ make_call_statistics(1, 1, 0, 1990u, 15, 31, 29)
+					+ make_call_statistics(2, 1, 0, 2000u, 35, 453, 366)
+					+ make_call_statistics(3, 1, 0, 2990u, 2, 33450030, 32333333)
+					+ make_call_statistics(4, 1, 0, 3000u, 15233, 65460, 13470));
 
 				auto fl = make_table<richtext_table_model>(statistics,
 					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
@@ -574,10 +574,10 @@ namespace micro_profiler
 				unsigned columns[] = {	main_columns::name, main_columns::threadid,	};
 
 				add_records(*statistics, plural
-					+ make_call_statistics(1, 3, 0, 0x1000u, 1, 0, 0, 0)
-					+ make_call_statistics(1, 2, 0, 0x1010u, 1, 0, 0, 0)
-					+ make_call_statistics(1, 7, 0, 0x1020u, 1, 0, 0, 0)
-					+ make_call_statistics(1, 9, 0, 0x1030u, 1, 0, 0, 0));
+					+ make_call_statistics(1, 3, 0, 0x1000u, 1, 0, 0)
+					+ make_call_statistics(1, 2, 0, 0x1010u, 1, 0, 0)
+					+ make_call_statistics(1, 7, 0, 0x1020u, 1, 0, 0)
+					+ make_call_statistics(1, 9, 0, 0x1030u, 1, 0, 0));
 
 				auto fl = make_table<richtext_table_model>(statistics,
 					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
@@ -626,11 +626,11 @@ namespace micro_profiler
 				invalidation_tracer ih;
 
 				add_records(*statistics, plural
-					+ make_call_statistics(1, 0, 0, 0x10000u, 1, 0, 0, 0)
-					+ make_call_statistics(2, 1, 0, 0x10000u, 2, 0, 0, 0)
-					+ make_call_statistics(3, 2, 0, 0x10000u, 3, 0, 0, 0)
-					+ make_call_statistics(4, 3, 0, 0x10000u, 4, 0, 0, 0)
-					+ make_call_statistics(5, 4, 0, 0x10000u, 5, 0, 0, 0));
+					+ make_call_statistics(1, 0, 0, 0x10000u, 1, 0, 0)
+					+ make_call_statistics(2, 1, 0, 0x10000u, 2, 0, 0)
+					+ make_call_statistics(3, 2, 0, 0x10000u, 3, 0, 0)
+					+ make_call_statistics(4, 3, 0, 0x10000u, 4, 0, 0)
+					+ make_call_statistics(5, 4, 0, 0x10000u, 5, 0, 0));
 
 				auto fl = make_table<richtext_table_model>(statistics,
 					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);
@@ -691,9 +691,9 @@ namespace micro_profiler
 
 				// INIT
 				add_records(*statistics, plural
-					+ make_call_statistics(1, 1, 0, 1990, 15, 0, 31, 29)
-					+ make_call_statistics(2, 1, 0, 2000, 35, 1, 453, 366)
-					+ make_call_statistics(3, 1, 0, 2990, 2, 2, 33450030, 32333333));
+					+ make_call_statistics(1, 1, 0, 1990, 15, 31, 29)
+					+ make_call_statistics(2, 1, 0, 2000, 35, 453, 366)
+					+ make_call_statistics(3, 1, 0, 2990, 2, 33450030, 32333333));
 				statistics->invalidate();
 
 				// ACT
@@ -742,9 +742,9 @@ namespace micro_profiler
 			{
 				// INIT
 				add_records(*statistics, plural
-					+ make_call_statistics(1, 1, 0, 0x2001, 11, 0, 0, 0)
-					+ make_call_statistics(2, 1, 0, 0x2004, 17, 0, 0, 0)
-					+ make_call_statistics(3, 1, 0, 0x2008, 18, 0, 0, 0));
+					+ make_call_statistics(1, 1, 0, 0x2001, 11, 0, 0)
+					+ make_call_statistics(2, 1, 0, 0x2004, 17, 0, 0)
+					+ make_call_statistics(3, 1, 0, 0x2008, 18, 0, 0));
 
 				auto fl = make_table<richtext_table_model>(statistics,
 					create_context(statistics, 1, resolver, threads, false), c_statistics_columns);

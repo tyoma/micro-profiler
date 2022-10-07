@@ -125,43 +125,43 @@ namespace micro_profiler
 				copy_n(mappings_, 3, mappings);
 
 				statistics[0] = plural
-					+ make_statistics(addr(0x100005), 123, 0, 1000, 0, plural
-						+ make_statistics(addr(0x1ull), 1023, 0, 1000, 0))
-					+ make_statistics(addr(0x100017, 3), 12, 0, 0, 0)
-					+ make_statistics(addr(0xF00115, 4), 127, 0, 0, 0)
-					+ make_statistics(addr(0xF00133, 3), 12000, 0, 250, 0);
+					+ make_statistics(addr(0x100005), 123, 1000, 0, plural
+						+ make_statistics(addr(0x1ull), 1023, 1000, 0))
+					+ make_statistics(addr(0x100017, 3), 12, 0, 0)
+					+ make_statistics(addr(0xF00115, 4), 127, 0, 0)
+					+ make_statistics(addr(0xF00133, 3), 12000, 250, 0);
 				statistics[1] = plural
-					+ make_statistics(addr(0xF00115), 123, 0, 1000, 0)
-					+ make_statistics(addr(0xF00023), 12, 0, 9, 0)
-					+ make_statistics(addr(0xF00180), 127, 0, 10, 0)
-					+ make_statistics(addr(0xF00133), 127, 0, 8, 0)
-					+ make_statistics(addr(0x9000FFF), 12000, 0, 250, 0)
-					+ make_statistics(addr(0x9000FFF, 17), 12000, 0, 250, 0);
+					+ make_statistics(addr(0xF00115), 123, 1000, 0)
+					+ make_statistics(addr(0xF00023), 12, 9, 0)
+					+ make_statistics(addr(0xF00180), 127, 10, 0)
+					+ make_statistics(addr(0xF00133), 127, 8, 0)
+					+ make_statistics(addr(0x9000FFF), 12000, 250, 0)
+					+ make_statistics(addr(0x9000FFF, 17), 12000, 250, 0);
 
 				statistics[2] = plural
-					+ make_statistics(addr(0x100005, 0), 123, 0, 1000, 0)
-					+ make_statistics(addr(0x100017, 0), 12, 0, 0, 0)
-					+ make_statistics(addr(0xF00115, 0), 127, 0, 0, 0)
-					+ make_statistics(addr(0xF00133, 0), 12000, 0, 250, 0);
+					+ make_statistics(addr(0x100005, 0), 123, 1000, 0)
+					+ make_statistics(addr(0x100017, 0), 12, 0, 0)
+					+ make_statistics(addr(0xF00115, 0), 127, 0, 0)
+					+ make_statistics(addr(0xF00133, 0), 12000, 250, 0);
 				statistics[3] = plural
-					+ make_statistics(addr(0xF00115, 0), 123, 0, 1000, 0)
-					+ make_statistics(addr(0xF00023, 0), 12, 0, 9, 0)
-					+ make_statistics(addr(0xF00180, 0), 127, 0, 10, 0)
-					+ make_statistics(addr(0xF00133, 0), 127, 0, 8, 0)
-					+ make_statistics(addr(0x9000FFF, 0), 12000, 0, 250, 0);
+					+ make_statistics(addr(0xF00115, 0), 123, 1000, 0)
+					+ make_statistics(addr(0xF00023, 0), 12, 9, 0)
+					+ make_statistics(addr(0xF00180, 0), 127, 10, 0)
+					+ make_statistics(addr(0xF00133, 0), 127, 8, 0)
+					+ make_statistics(addr(0x9000FFF, 0), 12000, 250, 0);
 
 				ustatistics[0] = plural
-					+ make_statistics(0x100005ull, 123, 0, 1000, 0, plural
-						+ make_statistics(0x1ull, 1023, 0, 1000, 0))
-					+ make_statistics(0x100017ull, 12, 0, 0, 0)
-					+ make_statistics(0xF00115ull, 127, 0, 0, 0)
-					+ make_statistics(0xF00133ull, 12000, 0, 250, 0);
+					+ make_statistics(0x100005ull, 123, 1000, 0, plural
+						+ make_statistics(0x1ull, 1023, 1000, 0))
+					+ make_statistics(0x100017ull, 12, 0, 0)
+					+ make_statistics(0xF00115ull, 127, 0, 0)
+					+ make_statistics(0xF00133ull, 12000, 250, 0);
 				ustatistics[1] = plural
-					+ make_statistics(0xF00115ull, 123, 0, 1000, 0)
-					+ make_statistics(0xF00023ull, 12, 0, 9, 0)
-					+ make_statistics(0xF00180ull, 127, 0, 10, 0)
-					+ make_statistics(0xF00133ull, 127, 0, 8, 0)
-					+ make_statistics(0x9000FFFull, 12000, 0, 250, 0);
+					+ make_statistics(0xF00115ull, 123, 1000, 0)
+					+ make_statistics(0xF00023ull, 12, 9, 0)
+					+ make_statistics(0xF00180ull, 127, 10, 0)
+					+ make_statistics(0xF00133ull, 127, 8, 0)
+					+ make_statistics(0x9000FFFull, 12000, 250, 0);
 
 				threads[0] = plural
 					+ make_thread_info(1, 111, "#1")
@@ -250,10 +250,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(components1.process_info, ctx1.process_info);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0x100005, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0, 0)
-					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0)
-					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0), ctx1.statistics);
+					+ make_call_statistics(0, 1, 0, 0x100005, 123, 1000, 0)
+					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0)
+					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 250, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
 				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equivalent(plural + make_thread_info(1u, 111, "#1") + make_thread_info(3u, 112, "#2") + make_thread_info(4u, 113, "#3"), ctx1.threads);
@@ -278,12 +278,12 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(components2.process_info, ctx2.process_info);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 0, 9, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 0, 10, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 0, 8, 0)
-					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0)
-					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0), ctx2.statistics);
+					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 1000, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 9, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 10, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 8, 0)
+					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 250, 0)
+					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 250, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
 				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equivalent(plural + make_thread_info(1u, 1211, "thread A") + make_thread_info(17u, 1212, "thread ABC"), ctx2.threads);
@@ -309,11 +309,11 @@ namespace micro_profiler
 				assert_equal(0xF00000000ll, ctx1.process_info.ticks_per_second);
 				assert_is_empty(ctx1.process_info.executable);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 0, 0, 0x100005, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 0, 1, 0x1, 1023, 0, 1000, 0)
-					+ make_call_statistics(0, 0, 0, 0x100017, 12, 0, 0, 0)
-					+ make_call_statistics(0, 0, 0, 0xF00115, 127, 0, 0, 0)
-					+ make_call_statistics(0, 0, 0, 0xF00133, 12000, 0, 250, 0), ctx1.statistics);
+					+ make_call_statistics(0, 0, 0, 0x100005, 123, 1000, 0)
+					+ make_call_statistics(0, 0, 1, 0x1, 1023, 1000, 0)
+					+ make_call_statistics(0, 0, 0, 0x100017, 12, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00115, 127, 0, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00133, 12000, 250, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
 				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equal(ctx1.threads.end(), ctx1.threads.begin());
@@ -335,11 +335,11 @@ namespace micro_profiler
 				assert_equal(0x1000ll, ctx2.process_info.ticks_per_second);
 				assert_is_empty(ctx2.process_info.executable);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 0, 0, 0xF00115, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 0, 0, 0xF00023, 12, 0, 9, 0)
-					+ make_call_statistics(0, 0, 0, 0xF00180, 127, 0, 10, 0)
-					+ make_call_statistics(0, 0, 0, 0xF00133, 127, 0, 8, 0)
-					+ make_call_statistics(0, 0, 0, 0x9000FFF, 12000, 0, 250, 0), ctx2.statistics);
+					+ make_call_statistics(0, 0, 0, 0xF00115, 123, 1000, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00023, 12, 9, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00180, 127, 10, 0)
+					+ make_call_statistics(0, 0, 0, 0xF00133, 127, 8, 0)
+					+ make_call_statistics(0, 0, 0, 0x9000FFF, 12000, 250, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
 				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equal(ctx2.threads.end(), ctx2.threads.begin());
@@ -369,11 +369,11 @@ namespace micro_profiler
 				assert_equal(0xF00000000ll, ctx1.process_info.ticks_per_second);
 				assert_is_empty(ctx1.process_info.executable);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0x100005, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 1, 1, 0x1, 1023, 0, 1000, 0)
-					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0, 0)
-					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0)
-					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0), ctx1.statistics);
+					+ make_call_statistics(0, 1, 0, 0x100005, 123, 1000, 0)
+					+ make_call_statistics(0, 1, 1, 0x1, 1023, 1000, 0)
+					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0)
+					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 250, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
 				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equivalent(plural + make_thread_info(1u, 111, "#1") + make_thread_info(3u, 112, "#2") + make_thread_info(4u, 113, "#3"), ctx1.threads);
@@ -398,12 +398,12 @@ namespace micro_profiler
 				assert_equal(0x1000ll, ctx2.process_info.ticks_per_second);
 				assert_is_empty(ctx2.process_info.executable);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 0, 9, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 0, 10, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 0, 8, 0)
-					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0)
-					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0), ctx2.statistics);
+					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 1000, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 9, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 10, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 8, 0)
+					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 250, 0)
+					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 250, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
 				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equivalent(plural + make_thread_info(1u, 1211, "thread A") + make_thread_info(17u, 1212, "thread ABC"), ctx2.threads);
@@ -433,10 +433,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(components1.process_info, ctx1.process_info);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0x100005, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0, 0)
-					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0)
-					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0), ctx1.statistics);
+					+ make_call_statistics(0, 1, 0, 0x100005, 123, 1000, 0)
+					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0)
+					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 250, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
 				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equivalent(plural + make_thread_info(1u, 111, "#1") + make_thread_info(3u, 112, "#2") + make_thread_info(4u, 113, "#3"), ctx1.threads);
@@ -461,12 +461,12 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(components2.process_info, ctx2.process_info);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 0, 9, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 0, 10, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 0, 8, 0)
-					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0)
-					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0), ctx2.statistics);
+					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 1000, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 9, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 10, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 8, 0)
+					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 250, 0)
+					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 250, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
 				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equivalent(plural + make_thread_info(1u, 1211, "thread A") + make_thread_info(17u, 1212, "thread ABC"), ctx2.threads);
@@ -496,10 +496,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(components1.process_info, ctx1.process_info);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0x100005, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0, 0)
-					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0, 0)
-					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 0, 250, 0), ctx1.statistics);
+					+ make_call_statistics(0, 1, 0, 0x100005, 123, 1000, 0)
+					+ make_call_statistics(0, 3, 0, 0x100017, 12, 0, 0)
+					+ make_call_statistics(0, 4, 0, 0xF00115, 127, 0, 0)
+					+ make_call_statistics(0, 3, 0, 0xF00133, 12000, 250, 0), ctx1.statistics);
 				assert_equivalent(plural + make_mapping(10u, mappings[0]) + make_mapping(11u, mappings[1]), ctx1.mappings);
 				assert_equivalent(plural + make_module(10u, modules[0]) + make_module(4u, modules[1]), ctx1.modules);
 				assert_equivalent(plural + make_thread_info(1u, 111, "#1") + make_thread_info(3u, 112, "#2") + make_thread_info(4u, 113, "#3"), ctx1.threads);
@@ -524,12 +524,12 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(components2.process_info, ctx2.process_info);
 				assert_equivalent(plural
-					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 0, 1000, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 0, 9, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 0, 10, 0)
-					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 0, 8, 0)
-					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 0, 250, 0)
-					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 0, 250, 0), ctx2.statistics);
+					+ make_call_statistics(0, 1, 0, 0xF00115, 123, 1000, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00023, 12, 9, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00180, 127, 10, 0)
+					+ make_call_statistics(0, 1, 0, 0xF00133, 127, 8, 0)
+					+ make_call_statistics(0, 1, 0, 0x9000FFF, 12000, 250, 0)
+					+ make_call_statistics(0, 17, 0, 0x9000FFF, 12000, 250, 0), ctx2.statistics);
 				assert_equivalent(plural + make_mapping(0u, mappings[1]) + make_mapping(1u, mappings[2]), ctx2.mappings);
 				assert_equivalent(plural + make_module(4u, modules[1]) + make_module(2u, modules[2]), ctx2.modules);
 				assert_equivalent(plural + make_thread_info(1u, 1211, "thread A") + make_thread_info(17u, 1212, "thread ABC"), ctx2.threads);

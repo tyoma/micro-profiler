@@ -109,12 +109,12 @@ namespace micro_profiler
 			{
 				// INIT
 				call_statistics data_[] = {
-					make_call_statistics(11, 0, 0, 29, 0, 0, 0, 0, 0),
-					make_call_statistics(23, 0, 11, 31, 0, 0, 0, 0, 0),
-					make_call_statistics(12, 0, 0, 291, 0, 0, 0, 0, 0),
-					make_call_statistics(31, 0, 11, 37, 0, 0, 0, 0, 0),
-					make_call_statistics(97, 0, 31, 41, 0, 0, 0, 0, 0),
-					make_call_statistics(99, 0, 11, 37, 0, 0, 0, 0, 0),
+					make_call_statistics(11, 0, 0, 29, 0, 0, 0, 0),
+					make_call_statistics(23, 0, 11, 31, 0, 0, 0, 0),
+					make_call_statistics(12, 0, 0, 291, 0, 0, 0, 0),
+					make_call_statistics(31, 0, 11, 37, 0, 0, 0, 0),
+					make_call_statistics(97, 0, 31, 41, 0, 0, 0, 0),
+					make_call_statistics(99, 0, 11, 37, 0, 0, 0, 0),
 				};
 				calls_statistics_table tbl;
 
@@ -185,13 +185,13 @@ namespace micro_profiler
 			{
 				// INIT
 				call_statistics data_[] = {
-					make_call_statistics(1, 0, 0, 29, 10, 0, 901, 0, 0),
-					make_call_statistics(2, 0, 0, 31, 11, 4, 911, 0, 0),
-					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0, 0),
+					make_call_statistics(1, 0, 0, 29, 10, 0, 901, 0),
+					make_call_statistics(2, 0, 0, 31, 11, 4, 911, 0),
+					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0),
 
-					make_call_statistics(4, 1, 0, 29, 03, 0, 763, 0, 0),
-					make_call_statistics(5, 1, 0, 31, 07, 3, 765, 0, 0),
-					make_call_statistics(6, 1, 0, 37, 90, 0, 769, 0, 0),
+					make_call_statistics(4, 1, 0, 29, 03, 0, 763, 0),
+					make_call_statistics(5, 1, 0, 31, 07, 3, 765, 0),
+					make_call_statistics(6, 1, 0, 37, 90, 0, 769, 0),
 				};
 				calls_statistics_table tbl;
 				auto aggregated = group_by(tbl, *this, aggregator());
@@ -202,23 +202,23 @@ namespace micro_profiler
 
 				// ASSERT
 				call_statistics reference[] = {
-					make_call_statistics(1, 0, 0, 29, 13, 0, 1664, 0, 0),
-					make_call_statistics(2, 0, 0, 31, 18, 4, 1676, 0, 0),
-					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0, 0),
-					make_call_statistics(4, 0, 0, 37, 90, 0, 769, 0, 0),
+					make_call_statistics(1, 0, 0, 29, 13, 0, 1664, 0),
+					make_call_statistics(2, 0, 0, 31, 18, 4, 1676, 0),
+					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0),
+					make_call_statistics(4, 0, 0, 37, 90, 0, 769, 0),
 				};
 
 				assert_equivalent(reference, *aggregated);
 
 				// ACT
-				add(tbl, make_call_statistics(16, 70, 0, 37, 10, 2, 100, 3, 0));
+				add(tbl, make_call_statistics(16, 70, 0, 37, 10, 2, 100, 3));
 
 				// ASSERT
 				call_statistics reference2[] = {
-					make_call_statistics(1, 0, 0, 29, 13, 0, 1664, 0, 0),
-					make_call_statistics(2, 0, 0, 31, 18, 4, 1676, 0, 0),
-					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0, 0),
-					make_call_statistics(4, 0, 0, 37, 100, 2, 869, 3, 0),
+					make_call_statistics(1, 0, 0, 29, 13, 0, 1664, 0),
+					make_call_statistics(2, 0, 0, 31, 18, 4, 1676, 0),
+					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0),
+					make_call_statistics(4, 0, 0, 37, 100, 2, 869, 3),
 				};
 
 				assert_equivalent(reference2, *aggregated);
@@ -229,17 +229,17 @@ namespace micro_profiler
 			{
 				// INIT
 				call_statistics data_[] = {
-					make_call_statistics(10, 7, 00, 29, 10, 0, 901, 0, 0),
-					make_call_statistics(20, 7, 10, 31, 11, 4, 911, 0, 0),
-					make_call_statistics(30, 7, 00, 39, 15, 0, 931, 0, 0),
+					make_call_statistics(10, 7, 00, 29, 10, 0, 901, 0),
+					make_call_statistics(20, 7, 10, 31, 11, 4, 911, 0),
+					make_call_statistics(30, 7, 00, 39, 15, 0, 931, 0),
 
-					make_call_statistics(40, 7, 10, 29, 03, 0, 763, 0, 0),
-					make_call_statistics(50, 7, 20, 31, 07, 3, 765, 0, 0),
-					make_call_statistics(60, 7, 30, 37, 90, 0, 769, 0, 0),
+					make_call_statistics(40, 7, 10, 29, 03, 0, 763, 0),
+					make_call_statistics(50, 7, 20, 31, 07, 3, 765, 0),
+					make_call_statistics(60, 7, 30, 37, 90, 0, 769, 0),
 
-					make_call_statistics(91, 1, 00, 29, 100, 0, 1000, 0, 0),
-					make_call_statistics(92, 1, 91, 31, 200, 0, 3000, 0, 0),
-					make_call_statistics(95, 1, 92, 31, 300, 0, 7000, 0, 0),
+					make_call_statistics(91, 1, 00, 29, 100, 0, 1000, 0),
+					make_call_statistics(92, 1, 91, 31, 200, 0, 3000, 0),
+					make_call_statistics(95, 1, 92, 31, 300, 0, 7000, 0),
 
 				};
 				calls_statistics_table tbl;
@@ -251,12 +251,12 @@ namespace micro_profiler
 
 				// ASSERT
 				call_statistics reference1[] = {
-					make_call_statistics(1, 0, 0, 29, 110, 0, 1901, 0, 0),
-					make_call_statistics(2, 0, 1, 31, 211, 4, 3911, 0, 0),
-					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0, 0),
-					make_call_statistics(4, 0, 1, 29, 03, 0, 763, 0, 0),
-					make_call_statistics(5, 0, 2, 31, 307, 3, 7765, 0, 0),
-					make_call_statistics(6, 0, 3, 37, 90, 0, 769, 0, 0),
+					make_call_statistics(1, 0, 0, 29, 110, 0, 1901, 0),
+					make_call_statistics(2, 0, 1, 31, 211, 4, 3911, 0),
+					make_call_statistics(3, 0, 0, 39, 15, 0, 931, 0),
+					make_call_statistics(4, 0, 1, 29, 03, 0, 763, 0),
+					make_call_statistics(5, 0, 2, 31, 307, 3, 7765, 0),
+					make_call_statistics(6, 0, 3, 37, 90, 0, 769, 0),
 				};
 
 				assert_equivalent(reference1, *aggregated);
@@ -269,13 +269,13 @@ namespace micro_profiler
 			{
 				// INIT
 				const call_statistics data[] = {
-					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(3, 0, 1, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(4, 0, 2, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(5, 0, 4, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(6, 0, 3, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(7, 0, 5, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 1, 0, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 2, 0, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 0, 0, 0, 0, 0),
+					make_call_statistics(6, 0, 3, 0, 0, 0, 0, 0),
+					make_call_statistics(7, 0, 5, 0, 0, 0, 0, 0),
 				};
 				auto lookup = [&] (id_t id) -> const call_statistics * {
 					assert_is_true(0 <= id && id < 6); // allowed range of parents
@@ -297,8 +297,8 @@ namespace micro_profiler
 			{
 				// INIT
 				const call_statistics data[] = {
-					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0),
 				};
 				auto lookup = [&] (id_t id) {	return id ? &(data[id - 1]) : nullptr;	};
 				auto lookup_fail = [] (id_t) -> const call_statistics * {
@@ -326,9 +326,9 @@ namespace micro_profiler
 			{
 				// INIT
 				const call_statistics data[] = {
-					make_call_statistics(1, 0, 10, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0, 0),
-					make_call_statistics(3, 0, 2, 0, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 10, 0, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 0, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 2, 0, 0, 0, 0, 0),
 				};
 				auto lookup = [&] (id_t id) -> const call_statistics * {
 					return 1u <= id && id < 3u ? &(data[id - 1]) : nullptr;
@@ -345,13 +345,13 @@ namespace micro_profiler
 			{
 				// INIT
 				const call_statistics data[] = {
-					make_call_statistics(1, 0, 0, 101, 0, 0, 0, 0, 0),
-					make_call_statistics(2, 0, 1, 102, 0, 0, 0, 0, 0),
-					make_call_statistics(3, 0, 1, 103, 0, 0, 0, 0, 0),
-					make_call_statistics(4, 0, 2, 104, 0, 0, 0, 0, 0),
-					make_call_statistics(5, 0, 4, 105, 0, 0, 0, 0, 0),
-					make_call_statistics(6, 0, 3, 106, 0, 0, 0, 0, 0),
-					make_call_statistics(7, 0, 5, 107, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 0, 101, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 102, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 1, 103, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 2, 104, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 105, 0, 0, 0, 0),
+					make_call_statistics(6, 0, 3, 106, 0, 0, 0, 0),
+					make_call_statistics(7, 0, 5, 107, 0, 0, 0, 0),
 				};
 				auto lookup = [&] (id_t id) {	return id ? &(data[id - 1]) : nullptr;	};
 
@@ -368,13 +368,13 @@ namespace micro_profiler
 			{
 				// INIT
 				const call_statistics data[] = {
-					make_call_statistics(1, 0, 0, 101, 0, 0, 0, 0, 0),
-					make_call_statistics(2, 0, 1, 101, 0, 0, 0, 0, 0),
-					make_call_statistics(3, 0, 2, 102, 0, 0, 0, 0, 0),
-					make_call_statistics(4, 0, 3, 102, 0, 0, 0, 0, 0),
-					make_call_statistics(5, 0, 4, 101, 0, 0, 0, 0, 0),
-					make_call_statistics(6, 0, 3, 102, 0, 0, 0, 0, 0),
-					make_call_statistics(7, 0, 6, 101, 0, 0, 0, 0, 0),
+					make_call_statistics(1, 0, 0, 101, 0, 0, 0, 0),
+					make_call_statistics(2, 0, 1, 101, 0, 0, 0, 0),
+					make_call_statistics(3, 0, 2, 102, 0, 0, 0, 0),
+					make_call_statistics(4, 0, 3, 102, 0, 0, 0, 0),
+					make_call_statistics(5, 0, 4, 101, 0, 0, 0, 0),
+					make_call_statistics(6, 0, 3, 102, 0, 0, 0, 0),
+					make_call_statistics(7, 0, 6, 101, 0, 0, 0, 0),
 				};
 				auto lookup = [&] (id_t id) {	return id ? &(data[id - 1]) : nullptr;	};
 

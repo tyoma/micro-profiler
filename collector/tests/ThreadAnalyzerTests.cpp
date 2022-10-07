@@ -46,8 +46,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 0, 0, 0, 0, 0, plural
-						+ make_statistics(addr(2234), 0, 0, 0, 0, 0)),
+					+ make_statistics(addr(1234), 0, 0, 0, 0, plural
+						+ make_statistics(addr(2234), 0, 0, 0, 0)),
 					a);
 			}
 
@@ -72,9 +72,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_statistics(addr(1234), 1, 0, 5, 5, 5)
-					+ make_statistics(addr(2234), 2, 0, 14, 11, 7, plural
-						+ make_statistics(addr(12234), 1, 0, 3, 3, 3)),
+					+ make_statistics(addr(1234), 1, 0, 5, 5)
+					+ make_statistics(addr(2234), 2, 0, 14, 11, plural
+						+ make_statistics(addr(12234), 1, 0, 3, 3)),
 					a);
 			}
 
@@ -101,11 +101,11 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics reference[] = {
-					make_statistics(addr(1), 1, 0, 3, 2, 3, plural
-						+ make_statistics(addr(11), 1, 0, 1, 1, 1)),
-					make_statistics(addr(2), 1, 0, 18, 13, 18, plural
-						+ make_statistics(addr(21), 1, 0, 1, 1, 1)
-						+ make_statistics(addr(22), 1, 0, 4, 4, 4)),
+					make_statistics(addr(1), 1, 0, 3, 2, plural
+						+ make_statistics(addr(11), 1, 0, 1, 1)),
+					make_statistics(addr(2), 1, 0, 18, 13, plural
+						+ make_statistics(addr(21), 1, 0, 1, 1)
+						+ make_statistics(addr(22), 1, 0, 4, 4)),
 				};
 
 				assert_equivalent(reference, a);
@@ -132,9 +132,9 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics reference[] = {
-					make_statistics(addr(1234), 1, 0, 4, 4, 4),
-					make_statistics(addr(2234), 2, 0, 9, 7, 6, plural
-						+ make_statistics(addr(12234), 1, 0, 2, 2, 2)),
+					make_statistics(addr(1234), 1, 0, 4, 4),
+					make_statistics(addr(2234), 2, 0, 9, 7, plural
+						+ make_statistics(addr(12234), 1, 0, 2, 2)),
 				};
 
 				assert_equivalent(reference, a);
@@ -164,7 +164,7 @@ namespace micro_profiler
 
 				// ASSERT
 				addressed_statistics reference[] = {
-					make_statistics(addr(2234), 1, 0, 20, 20, 20),
+					make_statistics(addr(2234), 1, 0, 20, 20),
 				};
 
 				assert_equivalent(reference, a);

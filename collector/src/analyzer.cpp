@@ -39,7 +39,15 @@ namespace micro_profiler
 	{	return _statistics.end();	}
 
 	void thread_analyzer::accept_calls(const call_record *calls, size_t count)
-	{	_stack.update(calls, calls + count, _statistics);	}
+	{
+		typedef call_graph_node<const void *> node_type;
+
+		auto constructor = [&] (const void *) {
+			return node_type((function_statistics()));
+		};
+
+		_stack.update(calls, calls + count, _statistics, constructor);
+	}
 
 
 	analyzer::analyzer(const overhead &overhead_)

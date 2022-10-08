@@ -33,8 +33,8 @@ namespace micro_profiler
 	public:
 		shadow_stack(const overhead & overhead_);
 
-		template <typename IteratorT>
-		void update(IteratorT trace_begin, IteratorT trace_end, typename T::nodes_map &statistics);
+		template <typename IteratorT, typename C>
+		void update(IteratorT trace_begin, IteratorT trace_end, typename T::nodes_map &statistics, const C &constructor);
 
 	private:
 		struct stack_record;
@@ -48,11 +48,16 @@ namespace micro_profiler
 	template <typename T>
 	struct shadow_stack<T>::stack_record
 	{
-		static void enter(stack &stack_, const call_record &entry);
+		template <typename C>
+		static void enter(stack &stack_, const call_record &entry, const C &constructor);
 		static void exit(stack &stack_, const call_record &entry, timestamp_t inner_overhead, timestamp_t total_overhead);
 		static void reset_stack(stack &stack_, function_statistics &root, typename T::nodes_map &callees);
-		static typename T::node &get(typename T::nodes_map &callees, typename T::key callee);
-		static typename T::node &get_slow(typename T::nodes_map &callees, typename T::key callee);
+
+		template <typename C>
+		static typename T::node &get(typename T::nodes_map &callees, typename T::key callee, const C &constructor);
+
+		template <typename C>
+		static typename T::node &get_slow(typename T::nodes_map &callees, typename T::key callee, const C &constructor);
 
 		typename T::key callee;
 		timestamp_t enter_at;
@@ -69,8 +74,9 @@ namespace micro_profiler
 	{	_stack.push_back();	}
 
 	template <typename T>
-	template <typename IteratorT>
-	inline void shadow_stack<T>::update(IteratorT i, IteratorT end, typename T::nodes_map &statistics)
+	template <typename IteratorT, typename C>
+	inline void shadow_stack<T>::update(IteratorT i, IteratorT end, typename T::nodes_map &statistics,
+		const C &constructor)
 	{
 		function_statistics root;
 
@@ -78,7 +84,7 @@ namespace micro_profiler
 		for (; i != end; ++i)
 		{
 			if (i->callee)
-				stack_record::enter(_stack, *i);
+				stack_record::enter(_stack, *i, constructor);
 			else
 				stack_record::exit(_stack, *i, _inner_overhead, _total_overhead);
 		}
@@ -86,14 +92,15 @@ namespace micro_profiler
 
 
 	template <typename T>
-	inline void shadow_stack<T>::stack_record::enter(stack &stack_, const call_record &entry)
+	template <typename C>
+	inline void shadow_stack<T>::stack_record::enter(stack &stack_, const call_record &entry, const C &constructor)
 	{
 		stack_.push_back();
 
 		auto i = stack_.end();
 		auto &current = *--i;
 		auto &previous = *--i;
-		auto &in_previous = get(*previous.callees, entry.callee);// (*previous.callees)[entry.callee];
+		auto &in_previous = get(*previous.callees, entry.callee, constructor);
 
 		current.callee = entry.callee;
 		current.enter_at = entry.timestamp;
@@ -139,14 +146,17 @@ namespace micro_profiler
 	}
 
 	template <typename T>
-	inline typename T::node &shadow_stack<T>::stack_record::get(typename T::nodes_map &callees, typename T::key callee)
+	template <typename C>
+	inline typename T::node &shadow_stack<T>::stack_record::get(typename T::nodes_map &callees, typename T::key callee,
+		const C &constructor)
 	{
 		auto i = callees.find(callee);
-		return callees.end() != i ? i->second : get_slow(callees, callee);
+		return callees.end() != i ? i->second : get_slow(callees, callee, constructor);
 	}
 
 	template <typename T>
+	template <typename C>
 	FORCE_NOINLINE inline typename T::node &shadow_stack<T>::stack_record::get_slow(typename T::nodes_map &callees,
-		typename T::key callee)
-	{	return callees.insert(std::make_pair(callee, typename T::node())).first->second;	}
+		typename T::key callee, const C &constructor)
+	{	return callees.insert(std::make_pair(callee, constructor(callee))).first->second;	}
 }

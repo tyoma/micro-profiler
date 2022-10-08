@@ -17,7 +17,10 @@ namespace micro_profiler
 			typedef call_graph_types<const void *> statistic_types;
 		}
 
-		begin_test_suite( ShadowStackTests )
+		begin_test_suite( AAShadowStackTests )
+			static statistic_types::node construct_node(const void *)
+			{	return statistic_types::node();	};
+
 			test( UpdatingWithEmptyTraceProvidesNoStatUpdates )
 			{
 				// INIT
@@ -26,7 +29,7 @@ namespace micro_profiler
 				statistic_types::nodes_map statistics;
 
 				// ACT
-				ss.update(trace.begin(), trace.end(), statistics);
+				ss.update(trace.begin(), trace.end(), statistics, &construct_node);
 
 				// ASSERT
 				assert_is_empty(statistics);
@@ -48,7 +51,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(begin(trace1), end(trace1), statistics);
+				ss.update(begin(trace1), end(trace1), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -56,12 +59,63 @@ namespace micro_profiler
 					statistics);
 
 				// ACT
-				ss.update(begin(trace2), end(trace2), statistics);
+				ss.update(begin(trace2), end(trace2), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
 					+ make_statistics((const void *)0x01234567, 1, 13, 13)
 					+ make_statistics((const void *)0x0bcdef12, 1, 29, 29),
+					statistics);
+			}
+
+
+			test( NewNodesAreConstructedViaConstructorSupplied )
+			{
+				// INIT
+				shadow_stack<statistic_types> ss(overhead(0, 0));
+				statistic_types::nodes_map statistics;
+				call_record trace1[] = {
+					{	1000, (void *)1901	},
+					{	1153, (void *)0	},
+					{	1000, (void *)19382	},
+					{	1301, (void *)0	},
+				};
+				call_record trace2[] = {
+					{	8001, (void *)1918171615	},
+					{	9000, (void *)0	},
+				};
+				vector<const void *> log;
+				auto results = plural
+					+ make_statistics((const void *)0, 1, 101, 103).second
+					+ make_statistics((const void *)0, 3, 210, 219).second
+					+ make_statistics((const void *)0, 7, 910, 932).second;
+				auto constructor = [&] (const void *l) -> statistic_types::node {
+					auto n = results.back();
+
+					log.push_back(l);
+					results.pop_back();
+					return n;
+				};
+
+				// ACT
+				ss.update(begin(trace1), end(trace1), statistics, constructor);
+
+				// ASSERT
+				assert_equal(plural + (const void *)1901 + (const void *)19382, log);
+				assert_equivalent(plural
+					+ make_statistics((const void *)1901, 8, 153 + 910, 153 + 932)
+					+ make_statistics((const void *)19382, 4, 301 + 210, 301 + 219),
+					statistics);
+
+				// ACT
+				ss.update(begin(trace2), end(trace2), statistics, constructor);
+
+				// ASSERT
+				assert_equal(plural + (const void *)1901 + (const void *)19382 + (const void *)1918171615, log);
+				assert_equivalent(plural
+					+ make_statistics((const void *)1901, 8, 153 + 910, 153 + 932)
+					+ make_statistics((const void *)19382, 4, 301 + 210, 301 + 219)
+					+ make_statistics((const void *)1918171615, 2, 999 + 101, 999 + 103),
 					statistics);
 			}
 
@@ -77,7 +131,7 @@ namespace micro_profiler
 				call_record trace4[] = {	{	123450029, (void *)0	},	};
 
 				// ACT
-				ss.update(begin(trace1), end(trace1), statistics);
+				ss.update(begin(trace1), end(trace1), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -85,7 +139,7 @@ namespace micro_profiler
 					statistics);
 
 				// ACT
-				ss.update(begin(trace2), end(trace2), statistics);
+				ss.update(begin(trace2), end(trace2), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -93,7 +147,7 @@ namespace micro_profiler
 					statistics);
 
 				// ACT
-				ss.update(begin(trace3), end(trace3), statistics);
+				ss.update(begin(trace3), end(trace3), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -102,7 +156,7 @@ namespace micro_profiler
 					statistics);
 
 				// ACT
-				ss.update(begin(trace4), end(trace4), statistics);
+				ss.update(begin(trace4), end(trace4), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -130,8 +184,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss1.update(begin(trace1), end(trace1), statistics1);
-				ss2.update(begin(trace2), end(trace2), statistics2);
+				ss1.update(begin(trace1), end(trace1), statistics1, &construct_node);
+				ss2.update(begin(trace2), end(trace2), statistics2, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -160,7 +214,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(begin(trace), end(trace), statistics);
+				ss.update(begin(trace), end(trace), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -189,7 +243,7 @@ namespace micro_profiler
 				static_cast<function_statistics &>(statistics[(void *)0x0bcdef12]) = make_statistics((const void *)0x0bcdef12, 3, 1185, 1172).second;
 
 				// ACT
-				ss.update(begin(trace), end(trace), statistics);
+				ss.update(begin(trace), end(trace), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -221,8 +275,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(begin(trace1), end(trace1), statistics);
-				ss.update(begin(trace2), end(trace2), statistics);
+				ss.update(begin(trace1), end(trace1), statistics, &construct_node);
+				ss.update(begin(trace2), end(trace2), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -254,7 +308,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(begin(trace), end(trace), statistics);
+				ss.update(begin(trace), end(trace), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -284,8 +338,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss1.update(begin(trace), end(trace), statistics1);
-				ss2.update(begin(trace), end(trace), statistics2);
+				ss1.update(begin(trace), end(trace), statistics1, &construct_node);
+				ss2.update(begin(trace), end(trace), statistics2, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -332,8 +386,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(begin(trace), end(trace), statistics);
-				ss_delayed.update(begin(trace), end(trace), statistics_delayed);
+				ss.update(begin(trace), end(trace), statistics, &construct_node);
+				ss_delayed.update(begin(trace), end(trace), statistics_delayed, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -383,7 +437,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(begin(trace), end(trace), statistics);
+				ss.update(begin(trace), end(trace), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -430,7 +484,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				ss.update(begin(trace), end(trace), statistics);
+				ss.update(begin(trace), end(trace), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -475,12 +529,12 @@ namespace micro_profiler
 							{	9, (void *)0	},
 				};
 
-				ss1.update(begin(trace1), end(trace1), statistics);
-				ss2.update(begin(trace2), end(trace2), statistics);
+				ss1.update(begin(trace1), end(trace1), statistics, &construct_node);
+				ss2.update(begin(trace2), end(trace2), statistics, &construct_node);
 				statistics.clear();
 
 				// ACT / ASSERT (entries for current stack get recreated, no times are fetched)
-				ss1.update(begin(trace1_exits), begin(trace1_exits), statistics);
+				ss1.update(begin(trace1_exits), begin(trace1_exits), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -494,7 +548,7 @@ namespace micro_profiler
 				statistics.clear();
 
 				// ACT
-				ss1.update(begin(trace1_exits), end(trace1_exits), statistics);
+				ss1.update(begin(trace1_exits), end(trace1_exits), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural
@@ -509,7 +563,7 @@ namespace micro_profiler
 				statistics.clear();
 
 				// ACT
-				ss2.update(end(trace2), end(trace2), statistics);
+				ss2.update(end(trace2), end(trace2), statistics, &construct_node);
 
 				// ASSERT
 				assert_equivalent(plural

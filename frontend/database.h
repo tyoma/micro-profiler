@@ -27,6 +27,8 @@
 #include <common/module.h>
 #include <common/noncopyable.h>
 #include <common/protocol.h>
+#include <common/telemetry.h>
+#include <deque>
 #include <sdb/table.h>
 
 namespace micro_profiler
@@ -72,6 +74,12 @@ namespace micro_profiler
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;
 		};
+
+
+		struct telemetry_history : std::deque<telemetry>
+		{
+			wpl::signal<void ()> invalidate;
+		};
 	}
 
 	struct profiling_session : noncopyable
@@ -82,6 +90,7 @@ namespace micro_profiler
 		tables::modules modules;
 		tables::patches patches;
 		tables::threads threads;
+		tables::telemetry_history telemetry_history;
 	};
 
 

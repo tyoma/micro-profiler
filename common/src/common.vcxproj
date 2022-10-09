@@ -114,6 +114,7 @@
     <ClInclude Include="..\range.h" />
     <ClInclude Include="..\serialization.h" />
     <ClInclude Include="..\stream.h" />
+    <ClInclude Include="..\telemetry.h" />
     <ClInclude Include="..\time.h" />
     <ClInclude Include="..\string.h" />
     <ClInclude Include="..\types.h" />

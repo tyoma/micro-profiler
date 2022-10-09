@@ -134,6 +134,7 @@
     <ClInclude Include="..\allocator.h" />
     <ClInclude Include="..\pool_allocator.h" />
     <ClInclude Include="..\file_stream.h" />
+    <ClInclude Include="..\telemetry.h" />
     <ClInclude Include="..\win32\time.h">
       <Filter>win32</Filter>
     </ClInclude>

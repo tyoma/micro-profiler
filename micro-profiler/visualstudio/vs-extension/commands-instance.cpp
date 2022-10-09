@@ -2,6 +2,7 @@
 #include "helpers.h"
 #include "ui_helpers.h"
 
+#include <common/formatting.h>
 #include <common/path.h>
 #include <common/string.h>
 #include <frontend/file.h>
@@ -16,6 +17,7 @@
 #include <frontend/view_dump.h>
 #include <strmd/serializer.h>
 #include <windows.h>
+#include <wpl/controls.h>
 #include <wpl/form.h>
 #include <wpl/layout.h>
 #include <wpl/vs/command-target.h>
@@ -28,6 +30,41 @@ namespace micro_profiler
 {
 	namespace integration
 	{
+		shared_ptr<wpl::control> create_telemetry_ui(const wpl::factory &factory, shared_ptr<profiling_session> session)
+		{
+			const auto lbl = factory.create_control<wpl::label>("label");
+			const auto ticks_per_second = static_cast<double>(session->process_info.ticks_per_second);
+			const auto tick_interval = 1.0 / ticks_per_second;
+			const auto telemetry = shared_ptr<tables::telemetry_history>(session, &session->telemetry_history);
+			const auto text = make_shared<agge::richtext_modifier_t>(agge::style_modifier::empty);
+			const auto p = make_shared< pair<shared_ptr<wpl::control>, wpl::slot_connection> >(lbl,
+				telemetry->invalidate += [lbl, ticks_per_second, tick_interval, telemetry, text] {
+
+				if (telemetry->size() < 2)
+					return;
+
+				auto i = telemetry->rbegin();
+				const auto &current = *i++;
+				const auto &previous = *i++;
+				const auto snapshots_interval = current.timestamp - previous.timestamp;
+
+				text->clear();
+				*text << "Analysis overhead: ";
+				if (current.total_analyzed)
+					format_interval(*text, 2 * tick_interval * current.total_analysis_time / current.total_analyzed);
+				else
+					*text << "--";
+				*text << "\nCalls per second analysed: ";
+				if (snapshots_interval)
+					itoa<10>(*text, static_cast<unsigned int>(0.5 * ticks_per_second * current.total_analyzed / snapshots_interval));
+				else
+					*text << "--";
+				lbl->set_text(*text);
+			});
+
+			return shared_ptr<wpl::control>(p, lbl.get());
+		}
+
 		void init_instance_menu(command_target &target, list< shared_ptr<void> > &running_objects,
 			const wpl::vs::factory &factory, shared_ptr<profiling_session> session, tables_ui &ui,
 			shared_ptr<scheduler::queue> queue)
@@ -114,6 +151,13 @@ namespace micro_profiler
 					[] (vector<wpl::slot_connection> &, function<void()>) {	});
 			}, false, [injected] (unsigned, unsigned &state) {
 				return state = injected ? command_target::visible | command_target::supported | command_target::enabled : 0, true;
+			});
+
+			target.add_command(cmdidShowTelemetry, [&running_objects, &factory, session] (unsigned) {
+				ui_helpers::show_dialog(running_objects, factory, create_telemetry_ui(factory, session), 330, 91,
+					"MicroProfiler - Telemetry", [] (vector<wpl::slot_connection> &, function<void()>) {	});
+			}, false, [] (unsigned, unsigned &state) {
+				return state = command_target::visible | command_target::supported | command_target::enabled, true;
 			});
 		}
 	}

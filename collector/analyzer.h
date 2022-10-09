@@ -59,9 +59,12 @@ namespace micro_profiler
 		typedef containers::unordered_map<unsigned int, thread_analyzer> thread_analyzers;
 		typedef thread_analyzers::const_iterator const_iterator;
 		typedef std::pair<unsigned int, thread_analyzer> value_type;
+		typedef std::function<void (const void *address, function_statistics &node)> node_setup_fn;
 
 	public:
 		analyzer(const overhead& overhead_);
+
+		void set_node_setup(const node_setup_fn &node_setup);
 
 		void clear() throw();
 		size_t size() const throw();
@@ -74,5 +77,6 @@ namespace micro_profiler
 	private:
 		const overhead _overhead;
 		thread_analyzers _thread_analyzers;
+		node_setup_fn _node_setup;
 	};
 }

@@ -72,8 +72,15 @@ namespace micro_profiler
 
 
 	analyzer::analyzer(const overhead &overhead_)
-		: _overhead(overhead_)
+		: _overhead(overhead_), _node_setup([] (const void *, const statistic_types::node &) {	})
 	{	}
+
+	void analyzer::set_node_setup(const node_setup_fn &node_setup)
+	{
+		for (auto i = _thread_analyzers.begin(); i != _thread_analyzers.end(); ++i)
+			i->second.set_node_setup(node_setup);
+		_node_setup = node_setup;
+	}
 
 	void analyzer::clear() throw()
 	{
@@ -105,7 +112,10 @@ namespace micro_profiler
 		thread_analyzers::iterator i = _thread_analyzers.find(threadid);
 
 		if (i == _thread_analyzers.end())
+		{
 			i = _thread_analyzers.insert(std::make_pair(threadid, thread_analyzer(_overhead))).first;
+			i->second.set_node_setup(_node_setup);
+		}
 		i->second.accept_calls(calls, count);
 	}
 }

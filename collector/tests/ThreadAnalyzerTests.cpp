@@ -173,7 +173,7 @@ namespace micro_profiler
 			}
 
 
-			test( SettingScaleResetsExistingHistogramScales )
+			test( SettingNodeSetupUpdatesExistingNodes )
 			{
 				// INIT
 				linear_scale s1i(101, 90131, 61);

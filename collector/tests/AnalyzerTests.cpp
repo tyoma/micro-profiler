@@ -16,6 +16,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			typedef math::linear_scale<timestamp_t> linear_scale;
+			typedef math::log_scale<timestamp_t> log_scale;
 			typedef std::pair<const void *, call_graph_types<const void *>::node> addressed_statistics;
 			typedef std::pair< mt::thread::id, vector<addressed_statistics> > threaded_statistics;
 		}
@@ -225,6 +227,131 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_true(a.has_data());
+			}
+
+
+			test( SettingNodeSetupUpdatesExistingNodes )
+			{
+				// INIT
+				linear_scale s1i(101, 90131, 61);
+				log_scale s1e(10, 900000, 37);
+				analyzer a(overhead(0, 0));
+				call_record trace11[] = {
+					{	1, addr(1)	},
+					{	2, addr(2)	},
+					{	3, addr(0)	},
+					{	4, addr(3)	},
+					{	5, addr(1)	},
+					{	6, addr(0)	},
+					{	7, addr(0)	},
+					{	8, addr(0)	},
+					{	9, addr(5)	},
+					{	10, addr(0)	},
+				};
+				call_record trace19[] = {
+					{	1, addr(1)	},
+					{	2, addr(0)	},
+				};
+
+				a.accept_calls(11, trace11, array_size(trace11));
+				a.accept_calls(19, trace19, array_size(trace19));
+
+				// ACT
+				a.set_node_setup([&] (const void * /*address*/, function_statistics &node) {
+					node.inclusive.set_scale(s1i), node.exclusive.set_scale(s1e);
+				});
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s1i, s1e, plural
+						+ make_hstatistics(addr(2), s1i, s1e)
+						+ make_hstatistics(addr(3), s1i, s1e, plural
+							+ make_hstatistics(addr(1), s1i, s1e)))
+					+ make_hstatistics(addr(5), s1i, s1e),
+					*find_by_first(a, 11u), less_histogram_scale());
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s1i, s1e),
+					*find_by_first(a, 19u), less_histogram_scale());
+
+				// INIT
+				linear_scale s2i(10, 900, 100);
+				log_scale s2e(10, 100, 300);
+
+				// ACT
+				a.set_node_setup([&] (const void * /*address*/, function_statistics &node) {
+					node.inclusive.set_scale(s2i), node.exclusive.set_scale(s2e);
+				});
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s2i, s2e, plural
+						+ make_hstatistics(addr(2), s2i, s2e)
+						+ make_hstatistics(addr(3), s2i, s2e, plural
+							+ make_hstatistics(addr(1), s2i, s2e)))
+					+ make_hstatistics(addr(5), s2i, s2e),
+					*find_by_first(a, 11u), less_histogram_scale());
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s2i, s2e),
+					*find_by_first(a, 19u), less_histogram_scale());
+			}
+
+
+			test( NodeSetupIsAppliedToNewNodes )
+			{
+				// INIT
+				linear_scale s1i(101, 90131, 61);
+				log_scale s1e(10, 900000, 37);
+				analyzer a(overhead(0, 0));
+				call_record trace11[] = {
+					{	1, addr(1)	},
+					{	2, addr(2)	},
+					{	3, addr(0)	},
+					{	4, addr(3)	},
+					{	5, addr(1)	},
+					{	6, addr(0)	},
+					{	7, addr(0)	},
+					{	8, addr(0)	},
+					{	9, addr(5)	},
+					{	10, addr(0)	},
+				};
+				call_record trace19[] = {
+					{	1, addr(1)	},
+					{	2, addr(0)	},
+				};
+
+				// INIT / ACT
+				a.set_node_setup([&] (const void * /*address*/, function_statistics &node) {
+					node.inclusive.set_scale(s1i), node.exclusive.set_scale(s1e);
+				});
+
+				// ACT
+				a.accept_calls(11, trace11, array_size(trace11));
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s1i, s1e, plural
+						+ make_hstatistics(addr(2), s1i, s1e)
+						+ make_hstatistics(addr(3), s1i, s1e, plural
+							+ make_hstatistics(addr(1), s1i, s1e)))
+					+ make_hstatistics(addr(5), s1i, s1e),
+					*find_by_first(a, 11u), less_histogram_scale());
+
+				// INIT
+				linear_scale s2i(10, 900, 100);
+				log_scale s2e(10, 100, 300);
+
+				// INIT / ACT
+				a.set_node_setup([&] (const void * /*address*/, function_statistics &node) {
+					node.inclusive.set_scale(s2i), node.exclusive.set_scale(s2e);
+				});
+
+				// ACT
+				a.accept_calls(19, trace19, array_size(trace19));
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s2i, s2e),
+					*find_by_first(a, 19u), less_histogram_scale());
 			}
 		end_test_suite
 	}

@@ -33,9 +33,12 @@ namespace micro_profiler
 		typedef statistic_types::nodes_map statistics_t;
 		typedef statistics_t::const_iterator const_iterator;
 		typedef std::pair<statistics_t::key_type, statistics_t::mapped_type> value_type;
+		typedef std::function<void (const void *address, function_statistics &node)> node_setup_fn;
 
 	public:
 		thread_analyzer(const overhead& overhead_);
+
+		void set_node_setup(const node_setup_fn &node_setup);
 
 		void clear() throw();
 		size_t size() const throw();
@@ -47,6 +50,7 @@ namespace micro_profiler
 	private:
 		statistics_t _statistics;
 		shadow_stack<statistic_types> _stack;
+		node_setup_fn _node_setup;
 	};
 
 	class analyzer : public calls_collector_i::acceptor, noncopyable

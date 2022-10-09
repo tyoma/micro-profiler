@@ -20,11 +20,29 @@
 
 #include <collector/analyzer.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
 	thread_analyzer::thread_analyzer(const overhead &overhead_)
-		: _stack(overhead_)
+		: _stack(overhead_), _node_setup([] (const void *, const statistic_types::node &) {	})
 	{	}
+
+	void thread_analyzer::set_node_setup(const node_setup_fn &node_setup)
+	{
+		function<void (statistic_types::nodes_map &map)> reset_map;
+		auto reset = [&] (const void *address, statistic_types::node &node) {
+			node_setup(address, node);
+			reset_map(node.callees);
+		};
+
+		reset_map = [&] (statistic_types::nodes_map &map) {
+			for (auto i = map.begin(); i != map.end(); ++i)
+				reset(i->first, i->second);
+		};
+		reset_map(_statistics);
+		_node_setup = node_setup;
+	}
 
 	void thread_analyzer::clear() throw()
 	{	_statistics.clear();	}
@@ -42,8 +60,11 @@ namespace micro_profiler
 	{
 		typedef call_graph_node<const void *> node_type;
 
-		auto constructor = [&] (const void *) {
-			return node_type((function_statistics()));
+		auto constructor = [&] (const void *address) -> node_type {
+			node_type n((function_statistics()));
+
+			_node_setup(address, n);
+			return n;
 		};
 
 		_stack.update(calls, calls + count, _statistics, constructor);

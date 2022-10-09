@@ -16,6 +16,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			typedef math::linear_scale<timestamp_t> linear_scale;
+			typedef math::log_scale<timestamp_t> log_scale;
 			typedef std::pair<const void *, call_graph_types<const void *>::node> addressed_statistics;
 		}
 
@@ -168,6 +170,114 @@ namespace micro_profiler
 				};
 
 				assert_equivalent(reference, a);
+			}
+
+
+			test( SettingScaleResetsExistingHistogramScales )
+			{
+				// INIT
+				linear_scale s1i(101, 90131, 61);
+				log_scale s1e(10, 900000, 37);
+				linear_scale s1i1(131, 9131, 60);
+				log_scale s1e1(10, 170, 47);
+				thread_analyzer a(overhead(0, 0));
+				call_record trace[] = {
+					{	1, addr(1)	},
+					{	2, addr(2)	},
+					{	3, addr(0)	},
+					{	4, addr(3)	},
+					{	5, addr(1)	},
+					{	6, addr(0)	},
+					{	7, addr(0)	},
+					{	8, addr(0)	},
+					{	9, addr(5)	},
+					{	10, addr(0)	},
+				};
+
+				a.accept_calls(trace, array_size(trace));
+
+				// ACT
+				a.set_node_setup([&] (const void *address, function_statistics &node) {
+					if (address != addr(1))
+						node.inclusive.set_scale(s1i), node.exclusive.set_scale(s1e);
+					else
+						node.inclusive.set_scale(s1i1), node.exclusive.set_scale(s1e1);
+				});
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s1i1, s1e1, plural
+						+ make_hstatistics(addr(2), s1i, s1e)
+						+ make_hstatistics(addr(3), s1i, s1e, plural
+							+ make_hstatistics(addr(1), s1i1, s1e1)))
+					+ make_hstatistics(addr(5), s1i, s1e),
+					a, less_histogram_scale());
+
+				// INIT
+				linear_scale s2i(10, 900, 100);
+				log_scale s2e(10, 100, 300);
+				linear_scale s2i5(13, 700, 39);
+				linear_scale s2e5(30, 150, 39);
+
+				// ACT
+				a.set_node_setup([&] (const void *address, function_statistics &node) {
+					if (address != addr(5))
+						node.inclusive.set_scale(s2i), node.exclusive.set_scale(s2e);
+					else
+						node.inclusive.set_scale(s2i5), node.exclusive.set_scale(s2e5);
+				});
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s2i, s2e, plural
+						+ make_hstatistics(addr(2), s2i, s2e)
+						+ make_hstatistics(addr(3), s2i, s2e, plural
+							+ make_hstatistics(addr(1), s2i, s2e)))
+					+ make_hstatistics(addr(5), s2i5, s2e5),
+					a, less_histogram_scale());
+			}
+
+
+			test( NodeSetupIsAppliedToNewNodes )
+			{
+				// INIT
+				linear_scale s1i(101, 90131, 61);
+				log_scale s1e(10, 900000, 37);
+				linear_scale s1i1(131, 9131, 60);
+				log_scale s1e1(10, 170, 47);
+				thread_analyzer a(overhead(0, 0));
+				call_record trace[] = {
+					{	1, addr(1)	},
+					{	2, addr(2)	},
+					{	3, addr(0)	},
+					{	4, addr(3)	},
+					{	5, addr(1)	},
+					{	6, addr(0)	},
+					{	7, addr(0)	},
+					{	8, addr(0)	},
+					{	9, addr(5)	},
+					{	10, addr(0)	},
+				};
+
+				// INIT / ACT
+				a.set_node_setup([&] (const void *address, function_statistics &node) {
+					if (address != addr(1))
+						node.inclusive.set_scale(s1i), node.exclusive.set_scale(s1e);
+					else
+						node.inclusive.set_scale(s1i1), node.exclusive.set_scale(s1e1);
+				});
+
+				// ACT
+				a.accept_calls(trace, array_size(trace));
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_hstatistics(addr(1), s1i1, s1e1, plural
+						+ make_hstatistics(addr(2), s1i, s1e)
+						+ make_hstatistics(addr(3), s1i, s1e, plural
+							+ make_hstatistics(addr(1), s1i1, s1e1)))
+					+ make_hstatistics(addr(5), s1i, s1e),
+					a, less_histogram_scale());
 			}
 		end_test_suite
 	}

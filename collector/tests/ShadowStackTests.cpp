@@ -17,7 +17,7 @@ namespace micro_profiler
 			typedef call_graph_types<const void *> statistic_types;
 		}
 
-		begin_test_suite( AAShadowStackTests )
+		begin_test_suite( ShadowStackTests )
 			static statistic_types::node construct_node(const void *)
 			{	return statistic_types::node();	};
 

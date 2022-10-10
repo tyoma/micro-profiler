@@ -25,6 +25,9 @@ namespace micro_profiler
 				function_statistics s1(17, 123123123, 32123), s2(1117, 1231123, 3213);
 				function_statistics ds1, ds2;
 
+				s1.inclusive.set_scale(math::log_scale<timestamp_t>(11, 111111, 15));
+				s1.exclusive.set_scale(math::linear_scale<timestamp_t>(13, 171111, 35));
+
 				// ACT (serialization)
 				s(s1);
 				s(s2);

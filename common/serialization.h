@@ -25,6 +25,7 @@
 #include "protocol.h"
 #include "range.h"
 
+#include <math/serialization.h>
 #include <patcher/interface.h>
 #include <strmd/container_ex.h>
 #include <strmd/packer.h>
@@ -69,6 +70,10 @@ namespace micro_profiler
 		archive(data.exclusive_time);
 		if (ver < 6)
 			archive(max_call_time);
+		if (ver >= 6)
+			archive(data.inclusive);
+		if (ver >= 6)
+			archive(data.exclusive);
 	}
 
 	template <typename ArchiveT>

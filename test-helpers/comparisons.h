@@ -63,8 +63,11 @@ namespace micro_profiler
 		return std::lexicographical_compare(lhsd.begin(), lhsd.end(), rhsd.begin(), rhsd.end());
 	}
 
+	inline bool operator ==(const histogram_t &lhs, const histogram_t &rhs)
+	{	return lhs.get_scale() == rhs.get_scale() && std::equal(lhs.begin(), lhs.end(), rhs.begin());	}
+
 	inline bool operator ==(const function_statistics &lhs, const function_statistics &rhs)
-	{	return !(lhs < rhs) && !(rhs < lhs);	}
+	{	return !(lhs < rhs) && !(rhs < lhs) && lhs.inclusive == rhs.inclusive && lhs.exclusive == rhs.exclusive;	}
 
 	template <typename AddressT>
 	inline bool operator ==(const call_graph_node<AddressT> &lhs, const call_graph_node<AddressT> &rhs)

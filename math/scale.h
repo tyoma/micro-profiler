@@ -88,15 +88,15 @@ namespace math
 	{	}
 
 	template <typename T>
-	inline linear_scale<T>::linear_scale(value_type near, value_type far, unsigned int samples_)
-		: _samples(samples_), _near(near), _far(far)
+	inline linear_scale<T>::linear_scale(value_type near_, value_type far_, unsigned int samples_)
+		: _samples(samples_), _near(near_), _far(far_)
 	{
 		if (!samples_)
 		{
 			_near = value_type();
 			_far = value_type();
 		}
-		else if (far <= near)
+		else if (far_ <= near_)
 		{
 			throw std::invalid_argument("invalid closed-open interval is specified");
 		}

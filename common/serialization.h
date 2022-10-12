@@ -41,6 +41,7 @@ namespace strmd
 	template <> struct version<micro_profiler::thread_info> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_apply> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::set_scales_request> {	enum {	value = 4	};	};
 }
 
 namespace micro_profiler
@@ -145,6 +146,13 @@ namespace micro_profiler
 	{
 		archive(data.result);
 		archive(data.id);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, set_scales_request &data, unsigned int /*ver*/)
+	{
+		archive(data.inclusive_scale);
+		archive(data.exclusive_scale);
 	}
 }
 

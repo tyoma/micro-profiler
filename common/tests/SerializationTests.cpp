@@ -45,6 +45,38 @@ namespace micro_profiler
 			}
 
 
+			test( SerializedHistogramSetupIsDeserialized )
+			{
+				// INIT
+				vector_adapter buffer;
+				strmd::serializer<vector_adapter, packer> s(buffer);
+				set_scales_request sr1 = {
+					math::log_scale<timestamp_t>(11, 111111, 15), math::linear_scale<timestamp_t>(13, 171111, 35)
+				};
+				set_scales_request sr2 = {
+					math::linear_scale<timestamp_t>(7, 98, 3), scale_t()
+				};
+				set_scales_request dsr1, dsr2;
+
+				// ACT (serialization)
+				s(sr1);
+				s(sr2);
+
+				// INIT
+				strmd::deserializer<vector_adapter, packer> ds(buffer);
+
+				// ACT (deserialization)
+				ds(dsr1);
+				ds(dsr2);
+
+				// ASSERT
+				assert_equal(scale_t(math::log_scale<timestamp_t>(11, 111111, 15)), dsr1.inclusive_scale);
+				assert_equal(scale_t(math::linear_scale<timestamp_t>(13, 171111, 35)), dsr1.exclusive_scale);
+				assert_equal(scale_t(math::linear_scale<timestamp_t>(7, 98, 3)), dsr2.inclusive_scale);
+				assert_equal(scale_t(), dsr2.exclusive_scale);
+			}
+
+
 			test( SerializedSymbolMetadataIsProperlyDeserialized )
 			{
 				// INIT

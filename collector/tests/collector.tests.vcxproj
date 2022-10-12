@@ -64,6 +64,7 @@
     <ClCompile Include="CallsCollectorTests.cpp" />
     <ClCompile Include="CallsCollectorThreadTests.cpp" />
     <ClCompile Include="CollectorAppPatcherTests.cpp" />
+    <ClCompile Include="CollectorAppSetupTests.cpp" />
     <ClCompile Include="CollectorAppTests.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="ModuleTrackerTests.cpp" />

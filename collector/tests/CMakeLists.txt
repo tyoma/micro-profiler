@@ -7,6 +7,7 @@ set(COLLECTOR_TESTS_SOURCES
 	CallsCollectorTests.cpp
 	CallsCollectorThreadTests.cpp
 	CollectorAppPatcherTests.cpp
+	CollectorAppSetupTests.cpp
 	CollectorAppTests.cpp
 	helpers.cpp
 	mocks.cpp

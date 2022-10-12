@@ -39,7 +39,6 @@ namespace micro_profiler
 		}
 
 		begin_test_suite( CollectorAppTests )
-			mocks::allocator allocator_;
 			active_server_app::client_factory_t factory;
 			shared_ptr<ipc::client_session> client;
 			function<void (ipc::client_session &client_)> initialize_client;

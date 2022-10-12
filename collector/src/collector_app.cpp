@@ -127,6 +127,13 @@ namespace micro_profiler
 			resp(response_reverted, *revert_results);
 		});
 
+		session.add_handler(request_set_default_scales, [this] (response &resp, const set_scales_request &scales) {
+			_analyzer->set_node_setup([scales] (const void * /*address*/, function_statistics &node) {
+				node.inclusive.set_scale(scales.inclusive_scale), node.exclusive.set_scale(scales.exclusive_scale);
+			});
+			resp(response_ok);
+		});
+
 
 		session.message(init, [this] (ipc::serializer &ser) {
 			initialization_data idata = {

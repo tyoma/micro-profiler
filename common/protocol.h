@@ -22,6 +22,7 @@
 
 #include "module.h"
 #include "image_info.h"
+#include "primitives.h"
 #include "types.h"
 #include "unordered_map.h"
 
@@ -32,6 +33,8 @@ namespace micro_profiler
 {
 	enum messages_id {
 		// Requests...
+		response_ok = 0x1000,
+
 		request_update = 0x100, // responded with [modules_loaded, ]statistics_update[, modules_unloaded] sequence.
 		response_modules_loaded = 1,
 		response_statistics_update = 6,
@@ -51,6 +54,9 @@ namespace micro_profiler
 
 		request_query_patches = 20,
 		response_patches_state = 21,
+
+		request_set_default_scales = 30, // -> response_ok
+		request_set_custom_scales = 31, // -> response_ok
 
 		// Notifications...
 		init_v1 = 0,
@@ -87,4 +93,13 @@ namespace micro_profiler
 
 	// response_reverted
 	typedef patch_manager::revert_results response_reverted_data;
+
+	// request_set_default_scales
+	struct set_scales_request
+	{
+		scale_t inclusive_scale, exclusive_scale;
+	};
+
+	// request_set_custom_scales
+	typedef std::vector< std::pair<long_address_t, set_scales_request> > set_custom_scales_request;
 }

@@ -39,8 +39,8 @@ namespace micro_profiler
 {
 	namespace
 	{
-		joined_path<arc, arc> pie_segment(real_t cx, real_t cy, real_t outer_r, real_t inner_r, real_t start, real_t end)
-		{	return join(arc(cx, cy, outer_r, start, end), arc(cx, cy, inner_r, end, start));	}
+		join<arc, arc> pie_segment(real_t cx, real_t cy, real_t outer_r, real_t inner_r, real_t start, real_t end)
+		{	return join<arc, arc>(arc(cx, cy, outer_r, start, end), arc(cx, cy, inner_r, end, start));	}
 	}
 
 	void piechart::set_hint(shared_ptr<function_hint> hint)
@@ -106,7 +106,7 @@ namespace micro_profiler
 		}
 	}
 
-	void piechart::mouse_leave()
+	void piechart::mouse_leave() throw()
 	{
 		if (_hint && _hint->select(npos()))
 			layout_changed(true);

@@ -87,6 +87,8 @@ namespace micro_profiler
 	void system_stylesheet::synchronize()
 	{
 		const auto background = get_system_color(COLOR_BTNFACE);
+		const auto system_font = get_system_font(*_text_engine);
+		auto system_font_d = system_font->get_key();
 
 		set_color("background", background);
 		set_color("text", get_system_color(COLOR_BTNTEXT));
@@ -103,9 +105,7 @@ namespace micro_profiler
 		set_value("border", 1.0f);
 		set_value("padding", 3.0f);
 		set_value("separator", 1.0f);
-
-		const auto system_font = get_system_font(*_text_engine);
-		auto system_font_d = system_font->get_key();
+		set_value("thumb.width.slider", static_cast<real_t>(system_font_d.height));
 
 		system_font_d.weight = semi_bold;
 		system_font_d.height += 1;

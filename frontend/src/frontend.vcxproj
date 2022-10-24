@@ -54,6 +54,7 @@
     <ClCompile Include="threads_model.cpp" />
     <ClCompile Include="untested\function_hint.cpp" />
     <ClCompile Include="untested\image_patch_ui.cpp" />
+    <ClCompile Include="untested\range_slider.cpp" />
     <ClCompile Include="untested\statistics_poll.cpp" />
     <ClCompile Include="untested\system_stylesheet.cpp">
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
@@ -87,6 +88,7 @@
     <ClInclude Include="..\image_patch_ui.h" />
     <ClInclude Include="..\ipc_manager.h" />
     <ClInclude Include="..\key.h" />
+    <ClInclude Include="..\range_slider.h" />
     <ClInclude Include="..\statistic_models.h" />
     <ClInclude Include="..\headers_model.h" />
     <ClInclude Include="..\models.h" />
@@ -111,6 +113,12 @@
     <ClInclude Include="..\threads_model.h" />
     <ClInclude Include="..\trackables_provider.h" />
     <ClInclude Include="..\view_dump.h" />
+    <ClInclude Include="untested\ruler_drawer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\math\src\math.vcxproj">
+      <Project>{096504a2-764c-494a-805c-d16815ac0dc5}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

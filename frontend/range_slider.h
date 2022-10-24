@@ -18,49 +18,41 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
 
-#include <frontend/factory.h>
-#include <frontend/range_slider.h>
-#include <frontend/piechart.h>
+#pragma once
 
-#include <wpl/factory.h>
-#include <wpl/stylesheet_helpers.h>
+#include <wpl/controls/range_slider.h>
 
-using namespace agge;
-using namespace std;
-using namespace wpl;
+#include <agge/stroke.h>
+#include <agge.text/richtext.h>
+
+namespace wpl
+{
+	struct stylesheet;
+}
 
 namespace micro_profiler
 {
-	namespace
+	class range_slider : public wpl::controls::range_slider_core
 	{
-		const color c_palette[] = {
-			color::make(230, 85, 13),
-			color::make(253, 141, 60),
-			color::make(253, 174, 107),
+	public:
+		range_slider();
 
-			color::make(49, 163, 84),
-			color::make(116, 196, 118),
-			color::make(161, 217, 155),
+		void apply_styles(const wpl::stylesheet &stylesheet_);
 
-			color::make(107, 174, 214),
-			color::make(158, 202, 225),
-			color::make(198, 219, 239),
+		// unimodel_control methods
+		virtual void set_model(std::shared_ptr<wpl::sliding_window_model> model) override;
 
-			color::make(117, 107, 177),
-			color::make(158, 154, 200),
-			color::make(188, 189, 220),
-		};
+	private:
+		// range_slider_core methods
+		virtual descriptor initialize(agge::box_r box) const override;
+		virtual void draw(const descriptor &state, wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer) const override;
+		virtual thumb_part hit_test(const descriptor &state, agge::point_r point) override;
 
-		const color c_rest = color::make(128, 128, 128, 255);
-	}
+	private:
+		agge::real_t _thumb_width, _scale_box_height;
 
-	void setup_factory(wpl::factory &factory_)
-	{
-		factory_.register_control("piechart", [] (const factory &, const control_context &) {
-			return make_shared<piechart>(begin(c_palette), end(c_palette), c_rest);
-		});
-		factory_.register_control("range_slider", [] (const factory &, const control_context &context) {
-			return apply_stylesheet(make_shared<micro_profiler::range_slider>(), *context.stylesheet_);
-		});
-	}
+		mutable agge::stroke _stroke[2];
+		mutable agge::richtext_t _text_buffer;
+		std::shared_ptr<wpl::sliding_window_model> _model;
+	};
 }

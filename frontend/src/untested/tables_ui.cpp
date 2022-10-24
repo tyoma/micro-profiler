@@ -58,6 +58,32 @@ namespace micro_profiler
 				return keyer::id()((*ordered)[index]); // TODO: !!!Crash on attempt to add npos()ed item!!!
 			});
 		}
+
+
+		struct my_slider_model : sliding_window_model
+		{
+			my_slider_model()
+				: _window(-6, 2)
+			{	}
+
+			virtual pair<double /*range_min*/, double /*range_width*/> get_range() const override
+			{	return make_pair(-7, 4);	}
+
+			virtual pair<double /*window_min*/, double /*window_width*/> get_window() const override
+			{	return _window;	}
+
+			virtual void scrolling(bool /*begins*/) override
+			{	}
+
+			virtual void set_window(double window_min, double window_width) override
+			{
+				_window = make_pair(window_min, window_width);
+				invalidate(false);
+			}
+
+		private:
+			pair<double, double> _window;
+		};
 	}
 
 
@@ -78,6 +104,8 @@ namespace micro_profiler
 			_main_view(factory_.create_control<listview>("listview")),
 			_callers_view(factory_.create_control<listview>("listview")),
 			_callees_view(factory_.create_control<listview>("listview")),
+			_inclusive_range_slider(factory_.create_control<range_slider>("range_slider")),
+			_exclusive_range_slider(factory_.create_control<range_slider>("range_slider")),
 			_cm_main(new headers_model(c_statistics_columns, 3, false)),
 			_cm_parents(new headers_model(c_caller_statistics_columns, 3, false)),
 			_cm_children(new headers_model(c_callee_statistics_columns, 3, false))
@@ -118,7 +146,7 @@ namespace micro_profiler
 
 	void tables_ui::init_layout(const factory &factory_)
 	{
-		shared_ptr<stack> panel[2];
+		shared_ptr<stack> panel[3];
 
 		set_spacing(5);
 		add(_callers_view, percents(20), true, 3);
@@ -127,9 +155,16 @@ namespace micro_profiler
 			panel[0]->set_spacing(5);
 			panel[0]->add(_filter_selector, pixels(24), false, 4);
 			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), percents(100), false);
-				panel[1]->set_spacing(5);
-				panel[1]->add(_main_piechart, pixels(150), false);
-					_main_piechart->set_hint(_main_hint);
+				panel[1]->add(panel[2] = factory_.create_control<stack>("vstack"), pixels(150), false);
+					panel[2]->set_spacing(5);
+					panel[2]->add(_main_piechart, pixels(150), false);
+						_main_piechart->set_hint(_main_hint);
+
+					panel[2]->add(_inclusive_range_slider, pixels(70), false);
+						_inclusive_range_slider->set_model(make_shared<my_slider_model>());
+
+					panel[2]->add(_exclusive_range_slider, pixels(70), false);
+						_exclusive_range_slider->set_model(make_shared<my_slider_model>());
 
 				panel[1]->add(_main_view, percents(100), false, 1);
 

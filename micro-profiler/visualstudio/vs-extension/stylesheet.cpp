@@ -166,9 +166,13 @@ namespace micro_profiler
 					d.height = sysfont.height;
 			}
 
-			set_font("text", text_engine.create_font(d));
+			auto default_font = text_engine.create_font(d);
+			auto font_box_height = ceilf(default_font->get_metrics().ascent + default_font->get_metrics().descent);
+
+			set_font("text", default_font);
 			set_value("padding", floorf(0.3f * d.height));
 			set_value("padding.hint", floorf(0.4f * d.height));
+			set_value("thumb.width.slider", font_box_height);
 			d.height++;
 			d.weight = semi_bold;
 			set_font("text.header", text_engine.create_font(d));

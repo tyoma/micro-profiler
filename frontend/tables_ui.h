@@ -21,6 +21,7 @@
 #pragma once
 
 #include "primitives.h"
+#include "range_slider.h"
 #include "representation.h"
 
 #include <memory>
@@ -77,6 +78,7 @@ namespace micro_profiler
 		const std::shared_ptr<piechart> _main_piechart, _callees_piechart;
 		const std::shared_ptr<function_hint> _main_hint, _callees_hint;
 		const std::shared_ptr<wpl::listview> _main_view, _callers_view, _callees_view;
+		const std::shared_ptr<range_slider> _inclusive_range_slider, _exclusive_range_slider;
 
 		const std::shared_ptr<headers_model> _cm_main;
 		const std::shared_ptr<headers_model> _cm_parents;

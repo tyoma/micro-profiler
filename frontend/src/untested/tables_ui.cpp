@@ -26,6 +26,7 @@
 #include <frontend/derived_statistics.h>
 #include <frontend/function_hint.h>
 #include <frontend/headers_model.h>
+#include <frontend/hybrid_listview.h>
 #include <frontend/models.h>
 #include <frontend/piechart.h>
 #include <frontend/representation.h>
@@ -51,6 +52,8 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const auto c_defer_scale_request_by = 200;
+
 		template <typename OrderedT>
 		shared_ptr< selection<id_t> > create_selection(shared_ptr< sdb::table<id_t> > scope, shared_ptr<OrderedT> ordered)
 		{
@@ -59,30 +62,121 @@ namespace micro_profiler
 			});
 		}
 
-
-		struct my_slider_model : sliding_window_model
+		struct throttled_set_scale : noncopyable
 		{
-			my_slider_model()
-				: _window(-6, 2)
+			throttled_set_scale(const queue &queue_, shared_ptr<profiling_session> session)
+				: _queue(queue_), _last_enabled(make_shared<bool>(true)), _session(session)
 			{	}
 
-			virtual pair<double /*range_min*/, double /*range_width*/> get_range() const override
-			{	return make_pair(-7, 4);	}
+			~throttled_set_scale()
+			{	*_last_enabled = false;	}
 
-			virtual pair<double /*window_min*/, double /*window_width*/> get_window() const override
-			{	return _window;	}
-
-			virtual void scrolling(bool /*begins*/) override
-			{	}
-
-			virtual void set_window(double window_min, double window_width) override
+			void set_inclusive(double near_, double far_)
 			{
-				_window = make_pair(window_min, window_width);
-				invalidate(false);
+				const auto freq = _session->process_info.ticks_per_second;
+
+				_inclusive = scale_t(math::log_scale<timestamp_t>(timestamp_t(freq * pow(10, near_)),
+					timestamp_t(freq * pow(10, far_)), 64));
+				send_request();
+			}
+
+			void set_exclusive(double near_, double far_)
+			{
+				const auto freq = _session->process_info.ticks_per_second;
+
+				_exclusive = scale_t(math::log_scale<timestamp_t>(timestamp_t(freq * pow(10, near_)),
+					timestamp_t(freq * pow(10, far_)), 64));
+				send_request();
 			}
 
 		private:
-			pair<double, double> _window;
+			void send_request()
+			{
+				auto enabled = make_shared<bool>(true);
+
+				*_last_enabled = false;
+				_last_enabled = enabled;
+				_queue([this, enabled] {
+					if (*enabled)
+						_session->request_default_scale(_inclusive, _exclusive);
+				}, c_defer_scale_request_by);
+			};
+
+		private:
+			const queue _queue;
+			shared_ptr<bool> _last_enabled;
+			const shared_ptr<profiling_session> _session;
+			scale_t _inclusive, _exclusive;
+		};
+
+		struct scale_slider_model : sliding_window_model, noncopyable
+		{
+			scale_slider_model(function<void (double near_, double far_)> on_set_window)
+				: _on_set_window(on_set_window), _range(-7, 4), _window(-5.5, 2)
+			{	}
+
+			virtual pair<double, double> get_range() const override
+			{	return _range;	}
+
+			virtual pair<double, double> get_window() const override
+			{	return _window;	}
+
+			virtual void scrolling(bool begins) override
+			{
+				if (begins)
+				{
+					_pre_slide_range = _range;
+				}
+				else
+				{
+					range r(_range), w(_window);
+					
+					r.near_ = floor(w.near_);
+					r.far_ = ceil(w.far_);
+					_range = r.to_pair();
+					invalidate(true);
+				}
+			}
+
+			virtual void set_window(double window_min, double window_width) override
+			{
+				const auto min_change = window_min != _window.first;
+				const auto width_change = window_width != _window.second;
+				range pre_slide_range(_pre_slide_range), active_range(_range), window(window_min, window_width);
+
+				window.near_ = (max)(-9.0, window.near_);
+				window.far_ = (min)(1.0, window.far_);
+				if (!min_change && width_change)
+				{
+					active_range.far_ = (max)(window.far_, pre_slide_range.far_);
+					window.far_ = (max)(window.far_, window.near_ + 0.5);
+				}
+				else if (min_change && width_change)
+				{
+					active_range.near_ = (min)(window.near_, pre_slide_range.near_);
+					window.near_ = (min)(window.near_, window.far_ - 0.5);
+				}
+
+				_range = active_range.to_pair();
+				_window = window.to_pair();
+				_on_set_window(_window.first, _window.first + _window.second);
+				invalidate(true);
+			}
+
+		private:
+			struct range
+			{
+				range(double min_, double width_) : near_(min_), far_(min_ + width_) {	}
+				range(const pair<double, double> &value) : near_(value.first), far_(value.first + value.second) {	}
+
+				pair<double, double> to_pair() const {	return make_pair(near_, far_ - near_);	}
+
+				double near_, far_;
+			};
+
+		private:
+			const function<void (double near_, double far_)> _on_set_window;
+			pair<double, double> _range, _window, _pre_slide_range;
 		};
 	}
 
@@ -101,9 +195,9 @@ namespace micro_profiler
 				*factory_.context.stylesheet_)),
 			_callees_hint(apply_stylesheet(make_shared<function_hint>(*factory_.context.text_engine),
 				*factory_.context.stylesheet_)),
-			_main_view(factory_.create_control<listview>("listview")),
-			_callers_view(factory_.create_control<listview>("listview")),
-			_callees_view(factory_.create_control<listview>("listview")),
+			_main_view(factory_.create_control<hybrid_listview>("listview.hybrid")),
+			_callers_view(factory_.create_control<hybrid_listview>("listview.hybrid")),
+			_callees_view(factory_.create_control<hybrid_listview>("listview.hybrid")),
 			_inclusive_range_slider(factory_.create_control<range_slider>("range_slider")),
 			_exclusive_range_slider(factory_.create_control<range_slider>("range_slider")),
 			_cm_main(new headers_model(c_statistics_columns, 3, false)),
@@ -147,6 +241,13 @@ namespace micro_profiler
 	void tables_ui::init_layout(const factory &factory_)
 	{
 		shared_ptr<stack> panel[3];
+		const auto scaler = make_shared<throttled_set_scale>(factory_.context.queue_, _session);
+		const auto inclusive_scale_model = make_shared<scale_slider_model>([scaler] (double l, double r) {
+			scaler->set_inclusive(l, r);
+		});
+		const auto exclusive_scale_model = make_shared<scale_slider_model>([scaler] (double l, double r) {
+			scaler->set_exclusive(l, r);
+		});
 
 		set_spacing(5);
 		add(_callers_view, percents(20), true, 3);
@@ -161,10 +262,10 @@ namespace micro_profiler
 						_main_piechart->set_hint(_main_hint);
 
 					panel[2]->add(_inclusive_range_slider, pixels(70), false);
-						_inclusive_range_slider->set_model(make_shared<my_slider_model>());
+						_inclusive_range_slider->set_model(inclusive_scale_model);
 
 					panel[2]->add(_exclusive_range_slider, pixels(70), false);
-						_exclusive_range_slider->set_model(make_shared<my_slider_model>());
+						_exclusive_range_slider->set_model(exclusive_scale_model);
 
 				panel[1]->add(_main_view, percents(100), false, 1);
 
@@ -204,7 +305,7 @@ namespace micro_profiler
 	template <bool callstacks, thread_mode mode>
 	void tables_ui::attach(const representation<callstacks, mode> &rep)
 	{
-		auto attach_listview = [this] (listview &lv, shared_ptr<headers_model> cm, shared_ptr<table_model> model, shared_ptr<dynamic_set_model> selection_) {
+		auto attach_listview = [this] (hybrid_listview &lv, shared_ptr<headers_model> cm, shared_ptr<table_model> model, shared_ptr<dynamic_set_model> selection_) {
 			const auto order = cm->get_sort_order();
 			const auto set_order = [model] (headers_model::index_type column, bool ascending) {
 				model->set_order(column, ascending);

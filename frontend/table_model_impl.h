@@ -31,6 +31,8 @@
 
 namespace micro_profiler
 {
+	struct content_target;
+
 	template <typename T, typename ContextT>
 	inline hierarchy_plain<T> access_hierarchy(const ContextT &/*context*/, const T * /*type tag*/)
 	{	return hierarchy_plain<T>();	}
@@ -65,6 +67,7 @@ namespace micro_profiler
 		// table_model methods
 		virtual void set_order(index_type column, bool ascending) /*override*/;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() /*override*/;
+		/*virtual*/ void get_content(content_target &target, index_type row, index_type column) const /*override*/;
 
 	private:
 		const std::shared_ptr<U> _underlying;
@@ -183,6 +186,18 @@ namespace micro_profiler
 	template <typename BaseT, typename U, typename CtxT, typename T>
 	inline std::shared_ptr< wpl::list_model<double> > table_model_impl<BaseT, U, CtxT, T>::get_column_series()
 	{	return std::shared_ptr< wpl::list_model<double> >(this->shared_from_this(), &_projection);	}
+
+	template <typename BaseT, typename U, typename CtxT, typename T>
+	inline void table_model_impl<BaseT, U, CtxT, T>::get_content(content_target &target, index_type row, index_type column) const
+	{
+		if (column < _columns.size())
+		{
+			auto &c = _columns[column];
+
+			if (c.get_content)
+				c.get_content(target, _context, _ordered[row]);
+		}
+	}
 
 
 	template <typename BaseT, typename U, typename CtxT, typename T>

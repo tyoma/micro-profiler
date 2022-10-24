@@ -30,6 +30,7 @@
 #include <frontend/database.h>
 #include <frontend/helpers.h>
 #include <frontend/model_context.h>
+#include <frontend/models.h>
 #include <frontend/primitives.h>
 #include <frontend/symbol_resolver.h>
 #include <frontend/threads_model.h>
@@ -37,6 +38,7 @@
 #include <utfia/string.h>
 
 using namespace agge;
+using namespace std;
 
 namespace micro_profiler
 {
@@ -84,6 +86,8 @@ namespace micro_profiler
 		auto by_avg_inclusive_call_time = [] (const statistics_model_context &, const call_statistics &lhs, const call_statistics &rhs) {
 			return micro_profiler::compare(lhs.inclusive_time, lhs.times_called, rhs.inclusive_time, rhs.times_called);
 		};
+
+		const function<int (const statistics_model_context &, const call_statistics &, const call_statistics &)> by_statistics_none;
 
 
 		auto row_ = [] (agge::richtext_t &text, const statistics_model_context &, size_t row, const call_statistics &) {
@@ -136,6 +140,18 @@ namespace micro_profiler
 		auto inclusive_time_avg = [] (const statistics_model_context &context, const call_statistics &value) {
 			return value.times_called ? context.tick_interval * value.inclusive_time / value.times_called : 0.0;
 		};
+
+		auto statistics_empty = [] (agge::richtext_t &, const statistics_model_context &, size_t, const call_statistics &) {	};
+		auto statistics_value_none = [] (const statistics_model_context &, const call_statistics &) {	return 0.0;	};
+
+		auto inclusive_histogram = [] (micro_profiler::content_target &target, const statistics_model_context &context, const micro_profiler::function_statistics &record) {
+			target.histogram(record.inclusive, static_cast<micro_profiler::timestamp_t>(1 / context.tick_interval));
+		};
+
+		auto exclusive_histogram = [] (micro_profiler::content_target &target, const statistics_model_context &context, const micro_profiler::function_statistics &record) {
+			target.histogram(record.exclusive, static_cast<micro_profiler::timestamp_t>(1 / context.tick_interval));
+		};
+
 
 		template <typename U>
 		struct format_interval_
@@ -199,6 +215,7 @@ namespace micro_profiler
 			return micro_profiler::compare(lhs.cpu_usage, rhs.cpu_usage);
 		};
 
+
 		auto process_name = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
 			text << (micro_profiler::operator*)(item.path);
 		};
@@ -243,6 +260,8 @@ namespace micro_profiler
 		{	"InclusiveTime", "Inclusive\n" + secondary + "total", 48, agge::align_far, format_interval2(inclusive_time), by_inclusive_time, false, inclusive_time,	},
 		{	"AvgExclusiveTime", "Exclusive\n" + secondary + "average/call", 48, agge::align_far, format_interval2(exclusive_time_avg), by_avg_exclusive_call_time, false, exclusive_time_avg,	},
 		{	"AvgInclusiveTime", "Inclusive\n" + secondary + "average/call", 48, agge::align_far, format_interval2(inclusive_time_avg), by_avg_inclusive_call_time, false, inclusive_time_avg,	},
+		{	"ExclusiveTimeHist", "Exclusive\n" + secondary + "distribution", 80, agge::align_far, statistics_empty, by_statistics_none, false, statistics_value_none, exclusive_histogram	},
+		{	"InclusiveTimeHist", "Inclusive\n" + secondary + "distribution", 80, agge::align_far, statistics_empty, by_statistics_none, false, statistics_value_none, inclusive_histogram	},
 	};
 
 	const column_definition<call_statistics, statistics_model_context> c_caller_statistics_columns[] = {

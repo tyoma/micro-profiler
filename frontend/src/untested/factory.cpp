@@ -19,13 +19,15 @@
 //	THE SOFTWARE.
 
 #include <frontend/factory.h>
+#include <frontend/hybrid_listview.h>
 #include <frontend/range_slider.h>
 #include <frontend/piechart.h>
 
+#include <wpl/controls/header_basic.h>
+#include <wpl/controls/listview_composite.h>
 #include <wpl/factory.h>
 #include <wpl/stylesheet_helpers.h>
 
-using namespace agge;
 using namespace std;
 using namespace wpl;
 
@@ -33,6 +35,8 @@ namespace micro_profiler
 {
 	namespace
 	{
+		using agge::color;
+
 		const color c_palette[] = {
 			color::make(230, 85, 13),
 			color::make(253, 141, 60),
@@ -61,6 +65,10 @@ namespace micro_profiler
 		});
 		factory_.register_control("range_slider", [] (const factory &, const control_context &context) {
 			return apply_stylesheet(make_shared<micro_profiler::range_slider>(), *context.stylesheet_);
+		});
+		factory_.register_control("listview.hybrid", [] (const wpl::factory &f, const control_context &context) {
+			return apply_stylesheet(make_shared< controls::listview_composite<micro_profiler::hybrid_listview,
+				controls::header_basic> >(f, context, "header"), *context.stylesheet_);
 		});
 	}
 }

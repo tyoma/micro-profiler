@@ -121,6 +121,8 @@ namespace micro_profiler
 
 		serialize(archive, v, ver);
 		add(data, v);
+		data.inclusive = v.inclusive;
+		data.exclusive = v.exclusive;
 	}
 
 	template <typename ArchiveT, typename U, typename C, int sl>

@@ -20,24 +20,26 @@
 
 #pragma once
 
-#include <agge.text/richtext.h>
-#include <functional>
+#include <wpl/controls/listview_basic.h>
 
 namespace micro_profiler
 {
-	struct content_target;
+	struct table_model;
 
-	template <typename T, typename CtxT>
-	struct column_definition
+	class hybrid_listview : public wpl::controls::listview_basic
 	{
-		std::string id;
-		agge::richtext_modifier_t caption;
-		short int width;
-		agge::text_alignment alignment;
-		std::function<void (agge::richtext_t &text, const CtxT &context, std::size_t row, const T &record)> get_text;
-		std::function<int (const CtxT &context, const T &lhs, const T &rhs)> compare;
-		bool ascending;
-		std::function<double (const CtxT &context, const T &record)> get_value;
-		std::function<void (content_target &target, const CtxT &context, const T &record)> get_content;
+	public:
+		hybrid_listview();
+
+		void apply_styles(const wpl::stylesheet &stylesheet_);
+
+		void set_model(std::shared_ptr<table_model> model);
+
+		virtual void set_columns_model(std::shared_ptr<wpl::headers_model> model) override;
+		virtual void draw_subitem(wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer, const agge::rect_r &box,
+			unsigned layer, index_type row, unsigned state, wpl::headers_model::index_type column) const override;
+
+	private:
+		std::shared_ptr<table_model> _model;
 	};
 }

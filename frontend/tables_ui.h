@@ -40,6 +40,7 @@ namespace micro_profiler
 {
 	class function_hint;
 	class headers_model;
+	class hybrid_listview;
 	struct hive;
 	class piechart;
 	struct profiling_session;
@@ -77,7 +78,7 @@ namespace micro_profiler
 		const std::shared_ptr<wpl::combobox> _filter_selector;
 		const std::shared_ptr<piechart> _main_piechart, _callees_piechart;
 		const std::shared_ptr<function_hint> _main_hint, _callees_hint;
-		const std::shared_ptr<wpl::listview> _main_view, _callers_view, _callees_view;
+		const std::shared_ptr<hybrid_listview> _main_view, _callers_view, _callees_view;
 		const std::shared_ptr<range_slider> _inclusive_range_slider, _exclusive_range_slider;
 
 		const std::shared_ptr<headers_model> _cm_main;

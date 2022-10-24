@@ -20,13 +20,22 @@
 
 #pragma once
 
+#include "primitives.h"
+
+#include <cstdint>
 #include <wpl/models.h>
 
 namespace micro_profiler
 {
+	struct content_target
+	{
+		std::function<void (const histogram_t &histogram, std::int64_t divisor)> histogram;
+	};
+
 	struct table_model : wpl::richtext_table_model
 	{
 		virtual void set_order(index_type column, bool ascending) = 0;
 		virtual std::shared_ptr< wpl::list_model<double> > get_column_series() = 0;
+		virtual void get_content(content_target &target, index_type row, index_type column) const = 0;
 	};
 }

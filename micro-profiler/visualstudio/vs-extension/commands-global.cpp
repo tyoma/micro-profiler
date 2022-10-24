@@ -336,6 +336,7 @@ namespace micro_profiler
 					else
 						dser(*ui_context);
 
+					ui_context->request_default_scale = [] (scale_t, scale_t) {	};
 					ui_context->modules.request_presence = [&rmodules] (tables::modules::handle_t &, unsigned int id, const tables::modules::metadata_ready_cb &cb) {
 						if (auto m = rmodules.find(id))
 							cb(*m);

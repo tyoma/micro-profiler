@@ -16,6 +16,7 @@ set(FRONTEND_LIB_SOURCES
 
 	untested/about_ui.cpp
 	untested/factory.cpp
+	untested/hybrid_listview.cpp
 	untested/image_patch_ui.cpp
 	untested/ipc_manager.cpp
 	untested/range_slider.cpp

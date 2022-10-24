@@ -53,6 +53,7 @@
     <ClCompile Include="symbol_resolver.cpp" />
     <ClCompile Include="threads_model.cpp" />
     <ClCompile Include="untested\function_hint.cpp" />
+    <ClCompile Include="untested\hybrid_listview.cpp" />
     <ClCompile Include="untested\image_patch_ui.cpp" />
     <ClCompile Include="untested\range_slider.cpp" />
     <ClCompile Include="untested\statistics_poll.cpp" />
@@ -74,6 +75,7 @@
     <ClInclude Include="..\columns_layout.h" />
     <ClInclude Include="..\column_definition.h" />
     <ClInclude Include="..\constructors.h" />
+    <ClInclude Include="..\hybrid_listview.h" />
     <ClInclude Include="..\keyer.h" />
     <ClInclude Include="..\factory.h" />
     <ClInclude Include="..\file.h" />

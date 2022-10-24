@@ -82,6 +82,7 @@ namespace micro_profiler
 		tables::modules modules;
 		tables::patches patches;
 		tables::threads threads;
+		std::function<void (const scale_t &inclusive, const scale_t &exclusive)> request_default_scale;
 	};
 
 

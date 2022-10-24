@@ -73,6 +73,9 @@
     <ClCompile Include="untested\range_slider.cpp">
       <Filter>src\untested</Filter>
     </ClCompile>
+    <ClCompile Include="untested\hybrid_listview.cpp">
+      <Filter>src\untested</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\frontend_manager.h" />
@@ -122,6 +125,7 @@
     <ClInclude Include="untested\ruler_drawer.h">
       <Filter>src\untested</Filter>
     </ClInclude>
+    <ClInclude Include="..\hybrid_listview.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

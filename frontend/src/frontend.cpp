@@ -56,6 +56,16 @@ namespace micro_profiler
 			request_metadata(request, persistent_id, ready);
 		};
 
+		_db->request_default_scale = [this] (const scale_t &inclusive, const scale_t &exclusive) {
+			auto self = this;
+			auto req = new_request_handle();
+			set_scales_request payload = {	inclusive, exclusive	};
+
+			request(*req, request_set_default_scales, payload, response_ok, [self, req] (ipc::deserializer &) {
+				self->_requests.erase(req);
+			});
+		};
+
 		subscribe(*new_request_handle(), init_v1, [this] (ipc::deserializer &) {
 			LOGE(PREAMBLE "attempt to connect from an older collector - disconnecting!");
 			disconnect_session();

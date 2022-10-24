@@ -687,7 +687,9 @@ namespace micro_profiler
 					"\"Exclusive\r\ntotal\"" "\t"
 					"\"Inclusive\r\ntotal\"" "\t"
 					"\"Exclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\naverage/call\"" "\r\n", result);
+					"\"Inclusive\r\naverage/call\"" "\t"
+					"\"Exclusive\r\ndistribution\"" "\t"
+					"\"Inclusive\r\ndistribution\"" "\r\n", result);
 
 				// INIT
 				add_records(*statistics, plural
@@ -709,10 +711,12 @@ namespace micro_profiler
 					"\"Exclusive\r\ntotal\"" "\t"
 					"\"Inclusive\r\ntotal\"" "\t"
 					"\"Exclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\naverage/call\"" "\r\n"
-					"1\t00000BAE\t1711\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\r\n"
-					"2\t000007C6\t1711\t15\t29\t31\t1.93333\t2.06667\r\n"
-					"3\t000007D0\t1711\t35\t366\t453\t10.4571\t12.9429\r\n"), result);
+					"\"Inclusive\r\naverage/call\"" "\t"
+					"\"Exclusive\r\ndistribution\"" "\t"
+					"\"Inclusive\r\ndistribution\"" "\r\n"
+					"1\t00000BAE\t1711\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t\t\r\n"
+					"2\t000007C6\t1711\t15\t29\t31\t1.93333\t2.06667\t\t\r\n"
+					"3\t000007D0\t1711\t35\t366\t453\t10.4571\t12.9429\t\t\r\n"), result);
 
 				// INIT
 				add_records(*threads, plural
@@ -731,10 +735,12 @@ namespace micro_profiler
 					"\"Exclusive\r\ntotal\"" "\t"
 					"\"Inclusive\r\ntotal\"" "\t"
 					"\"Exclusive\r\naverage/call\"" "\t"
-					"\"Inclusive\r\naverage/call\"" "\r\n"
-					"1\t000007C6\t1713\t15\t29\t31\t1.93333\t2.06667\r\n"
-					"2\t000007D0\t1713\t35\t366\t453\t10.4571\t12.9429\r\n"
-					"3\t00000BAE\t1713\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\r\n"), result);
+					"\"Inclusive\r\naverage/call\"" "\t"
+					"\"Exclusive\r\ndistribution\"" "\t"
+					"\"Inclusive\r\ndistribution\"" "\r\n"
+					"1\t000007C6\t1713\t15\t29\t31\t1.93333\t2.06667\t\t\r\n"
+					"2\t000007D0\t1713\t35\t366\t453\t10.4571\t12.9429\t\t\r\n"
+					"3\t00000BAE\t1713\t2\t3.23333e+07\t3.345e+07\t1.61667e+07\t1.6725e+07\t\t\r\n"), result);
 			}
 
 

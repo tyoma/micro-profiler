@@ -52,7 +52,7 @@ namespace micro_profiler
 
 	auto thumb = [] (real_t l, real_t r, real_t y, real_t w) {
 		return micro_profiler::thumb_inner(l - 0.5f * w, l, r, r + 0.5f * w,
-			y - 2.0f * w, y - w, y - 0.5f * w, y, y + 0.5f * w,
+			y - 1.5f * w, y - w, y - 0.5f * w, y, y + 0.5f * w,
 			0.5f * c_qarc_bezier_k * w);
 	};
 
@@ -83,7 +83,7 @@ namespace micro_profiler
 	{
 		const auto channel_overhang = 0.5f * _thumb_width + 3.0f;
 		range_slider::descriptor d = {
-			2 * _thumb_width + _scale_box_height,
+			1.5f * _thumb_width + _scale_box_height,
 			{	channel_overhang, static_cast<real_t>(box_.w) - channel_overhang	},
 		};
 
@@ -97,7 +97,7 @@ namespace micro_profiler
 		const auto scale_box = create_rect(state.channel.near_x, 0.0f, state.channel.far_x, _scale_box_height);
 		line channel(state.channel.near_x, state.y, state.channel.far_x, state.y);
 		ruler_drawer rd = {	ctx, rasterizer_, scale_box, _text_buffer, divisor	};
-		math::log_scale<int64_t> scale(static_cast<int64_t>(pow(10, range.first) * divisor), static_cast<int64_t>(pow(10, range.first + range.second) * divisor), 10);
+		math::log_scale<int64_t> scale(static_cast<int64_t>(pow(10, range.first) * divisor), static_cast<int64_t>(pow(10, range.first + range.second) * divisor), 1000);
 
 		rd(scale);
 		rasterizer_->sort(true);

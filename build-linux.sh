@@ -13,13 +13,13 @@
 echo "Building Linux (x86_64) binaries..."
 mkdir _build.linux.x64
 cd _build.linux.x64
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-m64" -DCMAKE_C_FLAGS="-m64"
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-m64" -DCMAKE_C_FLAGS="-m64" -DMP_NO_TESTS=ON
 make -j4
 cd ..
 
 echo "Building Linux (x86) binaries..."
 mkdir _build.linux.x86
 cd _build.linux.x86
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_C_FLAGS="-m32"
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-m32" -DCMAKE_C_FLAGS="-m32" -DMP_NO_TESTS=ON
 make -j4
 cd ..

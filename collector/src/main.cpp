@@ -51,7 +51,7 @@
 using namespace std;
 
 const size_t c_trace_limit = 5000000;
-const mt::milliseconds c_auto_connect_delay(50);
+const mt::milliseconds c_auto_connect_delay(200);
 #ifdef _MSC_VER
 	extern "C"
 #endif

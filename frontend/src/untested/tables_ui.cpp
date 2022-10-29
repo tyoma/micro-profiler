@@ -53,7 +53,7 @@ namespace micro_profiler
 	namespace
 	{
 		const auto auto_size = pixels(0);
-		const auto c_defer_scale_request_by = 200;
+		const auto c_defer_scale_request_by = 100;
 
 		template <typename OrderedT>
 		shared_ptr< selection<id_t> > create_selection(shared_ptr< sdb::table<id_t> > scope, shared_ptr<OrderedT> ordered)
@@ -157,6 +157,15 @@ namespace micro_profiler
 					active_range.near_ = (min)(window.near_, pre_slide_range.near_);
 					window.near_ = (min)(window.near_, window.far_ - 0.5);
 				}
+				else if (min_change)
+				{
+					const auto range_delta = pre_slide_range.delta();
+
+					if (window.near_ < pre_slide_range.near_)
+						active_range.near_ = (min)(window.near_, pre_slide_range.near_), active_range.far_ = active_range.near_ + range_delta;
+					else if (window.far_ > pre_slide_range.far_)
+						active_range.far_ = (max)(window.far_, pre_slide_range.far_), active_range.near_ = active_range.far_ - range_delta;
+				}
 
 				_range = active_range.to_pair();
 				_window = window.to_pair();
@@ -171,6 +180,7 @@ namespace micro_profiler
 				range(const pair<double, double> &value) : near_(value.first), far_(value.first + value.second) {	}
 
 				pair<double, double> to_pair() const {	return make_pair(near_, far_ - near_);	}
+				double delta() const {	return far_ - near_;	}
 
 				double near_, far_;
 			};

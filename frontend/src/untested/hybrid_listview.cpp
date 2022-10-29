@@ -28,7 +28,6 @@
 #include <math/display_scale.h>
 #include <wpl/stylesheet.h>
 
-using namespace agge;
 using namespace std;
 using namespace wpl;
 using namespace wpl::controls;
@@ -37,15 +36,15 @@ namespace micro_profiler
 {
 	namespace
 	{
-		typedef blender_solid_color<simd::blender_solid_color, platform_pixel_order> blender;
+		typedef agge::blender_solid_color<agge::simd::blender_solid_color, platform_pixel_order> blender;
 
-		real_t max_height(const histogram_t &h)
+		agge::real_t max_height(const histogram_t &h)
 		{
-			real_t mh = 20.0f;
+			agge::real_t mh = 20.0f;
 
 			for (auto i = h.begin(); i != h.end(); ++i)
 			{
-				auto vv = static_cast<real_t>(*i);
+				auto vv = static_cast<agge::real_t>(*i);
 
 				if (vv > mh)
 					mh = vv;
@@ -68,7 +67,7 @@ namespace micro_profiler
 					auto bin = ds.at(i);
 
 					bin.first += box_.x1, bin.second += box_.x1;
-					add_path(*rasterizer_, rectangle(bin.first, box_.y2, bin.second, box_.y2 - mh * samples[i]));
+					add_path(*rasterizer_, agge::rectangle(bin.first, box_.y2, bin.second, box_.y2 - mh * samples[i]));
 				}
 			}
 		}
@@ -97,7 +96,7 @@ namespace micro_profiler
 				gcontext &ctx;
 				gcontext::rasterizer_ptr &rasterizer;
 				const agge::rect_r &box;
-				color color;
+				agge::color color;
 			} draw_context = {
 				ctx,
 				rasterizer_,
@@ -109,7 +108,7 @@ namespace micro_profiler
 					if (!h.get_scale().samples())
 						return;
 					rasterize_histogram(draw_context.rasterizer, draw_context.box, h);
-					draw_context.ctx(draw_context.rasterizer, blender(draw_context.color), winding<>());
+					draw_context.ctx(draw_context.rasterizer, blender(draw_context.color), agge::winding<>());
 				}
 			};
 

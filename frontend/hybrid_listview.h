@@ -29,8 +29,6 @@ namespace micro_profiler
 	class hybrid_listview : public wpl::controls::listview_basic
 	{
 	public:
-		hybrid_listview();
-
 		void apply_styles(const wpl::stylesheet &stylesheet_);
 
 		void set_model(std::shared_ptr<table_model> model);
@@ -41,5 +39,6 @@ namespace micro_profiler
 
 	private:
 		std::shared_ptr<table_model> _model;
+		agge::color _hbars_regular, _hbars_selected;
 	};
 }

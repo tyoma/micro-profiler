@@ -52,6 +52,7 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const auto auto_size = pixels(0);
 		const auto c_defer_scale_request_by = 200;
 
 		template <typename OrderedT>
@@ -240,7 +241,8 @@ namespace micro_profiler
 
 	void tables_ui::init_layout(const factory &factory_)
 	{
-		shared_ptr<stack> panel[3];
+		shared_ptr<label> lbl;
+		shared_ptr<stack> panel[2], sidebar;
 		const auto scaler = make_shared<throttled_set_scale>(factory_.context.queue_, _session);
 		const auto inclusive_scale_model = make_shared<scale_slider_model>([scaler] (double l, double r) {
 			scaler->set_inclusive(l, r);
@@ -256,15 +258,19 @@ namespace micro_profiler
 			panel[0]->set_spacing(5);
 			panel[0]->add(_filter_selector, pixels(24), false, 4);
 			panel[0]->add(panel[1] = factory_.create_control<stack>("hstack"), percents(100), false);
-				panel[1]->add(panel[2] = factory_.create_control<stack>("vstack"), pixels(150), false);
-					panel[2]->set_spacing(5);
-					panel[2]->add(_main_piechart, pixels(150), false);
+				panel[1]->add(sidebar = factory_.create_control<stack>("vstack"), pixels(150), false);
+					sidebar->set_spacing(5);
+					sidebar->add(_main_piechart, pixels(150), false);
 						_main_piechart->set_hint(_main_hint);
 
-					panel[2]->add(_inclusive_range_slider, pixels(70), false);
+					sidebar->add(lbl = factory_.create_control<label>("label"), auto_size);
+						lbl->set_text(agge::style_modifier::empty + "Inclusive range:");
+					sidebar->add(_inclusive_range_slider, auto_size, false);
 						_inclusive_range_slider->set_model(inclusive_scale_model);
 
-					panel[2]->add(_exclusive_range_slider, pixels(70), false);
+					sidebar->add(lbl = factory_.create_control<label>("label"), auto_size);
+						lbl->set_text(agge::style_modifier::empty + "Exclusive range:");
+					sidebar->add(_exclusive_range_slider, auto_size, false);
 						_exclusive_range_slider->set_model(exclusive_scale_model);
 
 				panel[1]->add(_main_view, percents(100), false, 1);

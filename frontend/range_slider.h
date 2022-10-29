@@ -43,6 +43,9 @@ namespace micro_profiler
 		virtual void set_model(std::shared_ptr<wpl::sliding_window_model> model) override;
 
 	private:
+		// control methods
+		virtual int min_height(int for_width) const override;
+
 		// range_slider_core methods
 		virtual descriptor initialize(agge::box_r box) const override;
 		virtual void draw(const descriptor &state, wpl::gcontext &ctx, wpl::gcontext::rasterizer_ptr &rasterizer) const override;

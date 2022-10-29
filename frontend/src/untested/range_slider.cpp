@@ -74,10 +74,14 @@ namespace micro_profiler
 		_stroke[0].set_cap(caps::round());
 		_stroke[1].set_join(joins::bevel());
 		_stroke[1].width(1.0f);
+		layout_changed(false);
 	}
 
 	void range_slider::set_model(shared_ptr<wpl::sliding_window_model> model)
 	{	range_slider_core::set_model(_model = model);	}
+
+	int range_slider::min_height(int /*for_width*/) const
+	{	return static_cast<int>(2.0f * _thumb_width + _scale_box_height) + 2;	}
 
 	range_slider::descriptor range_slider::initialize(box_r box_) const
 	{
@@ -120,14 +124,14 @@ namespace micro_profiler
 
 	range_slider::thumb_part range_slider::hit_test(const descriptor &state, point_r point_)
 	{
-		auto w = 10.0f;
+		auto w = _thumb_width;
 		const auto hw = 0.5f * w;
 		const auto &r = state.thumb;
 		const auto within = [] (real_t v, real_t n, real_t f) {	return n <= v && v < f;	};
 
-		if (within(point_.x, r.near_x - hw, r.near_x + hw) && within(point_.y, state.y - 2.0f * w, state.y + hw))
+		if (within(point_.x, r.near_x - hw, r.near_x) && within(point_.y, state.y - 1.5f * w, state.y + hw))
 			return part_near;
-		else if (within(point_.x, r.far_x - hw, r.far_x + hw) && within(point_.y, state.y - 2.0f * w, state.y + hw))
+		else if (within(point_.x, r.far_x, r.far_x + hw) && within(point_.y, state.y - 1.5f * w, state.y + hw))
 			return part_far;
 		else if (within(point_.x, r.near_x, r.far_x) && within(point_.y, state.y - hw, state.y + hw))
 			return part_shaft;

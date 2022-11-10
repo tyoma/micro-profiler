@@ -23,6 +23,8 @@ namespace micro_profiler
 			typedef const image_info metadata_t;
 			typedef shared_ptr<metadata_t> metadata_ptr;
 
+			const int dummy = 0;
+
 			shared_ptr<symbol_info> get_function_containing(metadata_t &ii, const char *name_part)
 			{
 				shared_ptr<symbol_info> symbol;
@@ -70,6 +72,25 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(loaded_images);
 				assert_is_empty(unloaded_images);
+			}
+
+
+			test( InitialRequestDoesNotIncludeCurrentModule )
+			{
+				// INIT
+				file_id self(module::locate(&dummy).path);
+				module_tracker t;
+				loaded_modules loaded_images;
+				unloaded_modules unloaded_images;
+
+				// ACT
+				t.get_changes(loaded_images, unloaded_images);
+
+				// ASSERT
+				assert_is_false(any_of(loaded_images.begin(), loaded_images.end(),
+					[&] (const module::mapping_instance &instance) {
+					return file_id(instance.second.path) == self;
+				}));
 			}
 
 

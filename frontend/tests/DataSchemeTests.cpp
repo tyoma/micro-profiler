@@ -278,7 +278,7 @@ namespace micro_profiler
 					make_call_statistics(7, 0, 5, 0, 0, 0, 0, 0, 0),
 				};
 				auto lookup = [&] (id_t id) -> const call_statistics * {
-					assert_is_true(0 <= id && id < 6); // allowed range of parents
+					assert_is_true(id < 6); // allowed range of parents
 					return id ? &(data[id - 1]) : nullptr;
 				};
 

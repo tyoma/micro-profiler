@@ -94,7 +94,7 @@ namespace micro_profiler
 		_filter_connection = _filter_selector->selection_changed += [this, tmodel] (combobox::model_t::index_type index) {
 			unsigned thread_id = 0;
 
-			set_mode(_hierarchical, tmodel->get_key(thread_id, index) ? thread_id : threads_model::all);
+			set_mode(_hierarchical, tmodel->get_key(thread_id, index) ? thread_id : static_cast<id_t>(threads_model::all));
 		};
 		_filter_selector->select(0u);
 		_filter_selector->selection_changed(0u);

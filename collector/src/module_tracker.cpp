@@ -33,6 +33,9 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const auto c_dummy = 1;
+		const auto c_this_module_path = module::locate(&c_dummy).path;
+
 		struct locked_mapping
 		{
 			module::mapping_instance module_;
@@ -68,8 +71,12 @@ namespace micro_profiler
 	void module_tracker::get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_)
 	{
 		unordered_set<unsigned> in_snapshot;
+		file_id this_module_file(c_this_module_path);
 
 		module::enumerate_mapped([&] (const module::mapping &mm) {
+			if (this_module_file == file_id(mm.path))
+				return;
+
 			const auto persistent_id = register_path(mm.path);
 			auto &mi = _modules_registry.find(persistent_id)->second; // Guaranteed to present after register_path().
 

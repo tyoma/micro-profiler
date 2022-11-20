@@ -65,7 +65,7 @@ namespace micro_profiler
 		virtual void layout(const wpl::placed_view_appender &append_view, const agge::box<int> &box) override;
 
 		// mouse_input methods
-		virtual void mouse_leave() override;
+		virtual void mouse_leave() throw() override;
 		virtual void mouse_move(int depressed, int x, int y) override;
 		virtual void mouse_down(mouse_buttons button, int depressed, int x, int y) override;
 		virtual void mouse_double_click(mouse_buttons button, int depressed, int x, int y) override;

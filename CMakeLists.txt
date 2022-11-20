@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.13)
 
 project(micro-profiler)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props ${PROJECT_SOURCE_DIR}/libraries/wpl.vs/make/build.props)
+option(MP_NO_TESTS "Do not build test modules." OFF)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props ${PROJECT_SOURCE_DIR}/libraries/wpl.vs/build.props)
 
 include(architecture)
 include(unipath)
@@ -13,6 +15,11 @@ set(sandbox "micro-profiler_sandbox_${archid}")
 
 enable_testing()
 
+set(SPECIFIC_CONFIGS CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL)
+foreach(v ${SPECIFIC_CONFIGS})
+   string(REPLACE /MDd /MTd ${v} ${${v}})
+   string(REPLACE /MD /MT ${v} ${${v}})
+endforeach()
 
 # Setup include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
@@ -73,8 +80,8 @@ set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 )
 set(MSVC_COMPILER_OPTIONS -wd4503;-wd4996;-wd4510;-wd4610;-wd4512;-wd4312;-wd4481;-wd4355)
 set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} -MP;-W4;-GR-;-GS-;-Gy;-Zi)
-set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} -MTd)
-set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} -MT;-GL)
+set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS})
+set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} -GL)
 set(MSVC_COMPILER_OPTIONS_RELEASE_MAX -Ox;-Ob2;-Oi;-Ot;-Oy)
 
 add_compile_options(
@@ -107,7 +114,6 @@ endif ()
 
 
 # Add subdirectories
-add_subdirectory(libraries/freetype2)
 add_subdirectory(libraries/utee)
 
 add_subdirectory(libraries/polyq)
@@ -130,22 +136,24 @@ add_subdirectory(playground)
 add_subdirectory(sandbox/src)
 add_subdirectory(scheduler/src)
 
-add_subdirectory(collector/tests)
-add_subdirectory(common/tests)
-add_subdirectory(frontend/tests)
-add_subdirectory(ipc/tests)
-add_subdirectory(logger/tests)
-add_subdirectory(math/tests)
-add_subdirectory(micro-profiler.tests/guineapigs)
-add_subdirectory(micro-profiler.tests)
-add_subdirectory(mt/tests)
-add_subdirectory(patcher/benchmark)
-add_subdirectory(patcher/tests)
-add_subdirectory(reqm/tests)
-add_subdirectory(sdb/tests)
-add_subdirectory(scheduler/tests)
-add_subdirectory(test-helpers/src)
-add_subdirectory(views/tests)
+if (NOT MP_NO_TESTS)
+	add_subdirectory(collector/tests)
+	add_subdirectory(common/tests)
+	add_subdirectory(frontend/tests)
+	add_subdirectory(ipc/tests)
+	add_subdirectory(logger/tests)
+	add_subdirectory(math/tests)
+	add_subdirectory(micro-profiler.tests/guineapigs)
+	add_subdirectory(micro-profiler.tests)
+	add_subdirectory(mt/tests)
+	add_subdirectory(patcher/benchmark)
+	add_subdirectory(patcher/tests)
+	add_subdirectory(reqm/tests)
+	add_subdirectory(sdb/tests)
+	add_subdirectory(scheduler/tests)
+	add_subdirectory(test-helpers/src)
+	add_subdirectory(views/tests)
+endif()
 
 if (WIN32 OR APPLE)
 	add_subdirectory(standalone)
@@ -158,19 +166,23 @@ if (WIN32 OR APPLE)
 		
 		add_subdirectory(micro-profiler)
 
-		add_subdirectory(explorer/tests)
-		add_subdirectory(injector/tests)
+		if (NOT MP_NO_TESTS)
+			add_subdirectory(explorer/tests)
+			add_subdirectory(injector/tests)
+		endif()
 	endif()
 endif()
 
-# Declare tests/benchmarks
-set(MP_TEST_SUITES collector common frontend ipc logger math micro-profiler mt patcher reqm savant_db scheduler views)
-if (WIN32)
-	set(MP_TEST_SUITES ${MP_TEST_SUITES} explorer injector)
-endif()
+if (NOT MP_NO_TESTS)
+	# Declare tests/benchmarks
+	set(MP_TEST_SUITES collector common frontend ipc logger math micro-profiler mt patcher reqm savant_db scheduler views)
+	if (WIN32)
+		set(MP_TEST_SUITES ${MP_TEST_SUITES} explorer injector)
+	endif()
 
-foreach(t ${MP_TEST_SUITES})
-	set(x "${t}.tests")
-	add_utee_test(${x})
-endforeach()
-add_test(NAME patcher.benchmark COMMAND $<TARGET_FILE:patcher.benchmark>)
+	foreach(t ${MP_TEST_SUITES})
+		set(x "${t}.tests")
+		add_utee_test(${x})
+	endforeach()
+	add_test(NAME patcher.benchmark COMMAND $<TARGET_FILE:patcher.benchmark>)
+endif()

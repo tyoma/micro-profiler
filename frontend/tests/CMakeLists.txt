@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.13)
 
+include(sqlite3.include)
+
 set(FRONTEND_TESTS_SOURCES
 	AsyncFileTests.cpp
 	ColumnsDefinitionTests.cpp
+	DatabaseTests.cpp
 	DataSchemeTests.cpp
 	DerivedStatisticsTests.cpp
 	DeSerializationTests.cpp
@@ -23,7 +26,7 @@ set(FRONTEND_TESTS_SOURCES
 	mocks.cpp
 	PrimitivesTests.cpp
 	ProcessListTests.cpp
-#	ProfilingPreferencesTests.cpp
+	ProfilingPreferencesTests.cpp
 	ProjectionViewTests.cpp
 	RepresentationTests.cpp
 	SelectionModelTests.cpp
@@ -35,4 +38,4 @@ set(FRONTEND_TESTS_SOURCES
 )
 
 add_library(frontend.tests SHARED ${FRONTEND_TESTS_SOURCES})
-target_link_libraries(frontend.tests frontend test-helpers ipc logger common scheduler mt polyq)
+target_link_libraries(frontend.tests frontend test-helpers ipc logger common scheduler mt polyq CONAN_PKG::sqlite3)

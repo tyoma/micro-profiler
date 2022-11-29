@@ -25,21 +25,26 @@
 #include <string>
 #include <vector>
 
+typedef struct sqlite3 sqlite3;
+
 namespace micro_profiler
 {
 	struct profiling_session;
 
-	struct module_profiling_preferences
-	{
-		std::string path;
-		unsigned int hash;
-		std::vector<symbol_info> patched_symbols;
-	};
-
 	class profiling_preferences
 	{
 	public:
-		profiling_preferences(const profiling_session &session, const std::string &preferences_directory,
-			scheduler::queue &worker, scheduler::queue &apartment);
+		profiling_preferences(const std::string &preferences_database);
+		~profiling_preferences();
+
+		void apply_and_track(profiling_session &session);
+
+	private:
+		profiling_preferences(const profiling_preferences &other);
+		void operator =(const profiling_preferences &rhs);
+
+	private:
+		sqlite3 *_database;
+
 	};
 }

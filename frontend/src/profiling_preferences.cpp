@@ -20,11 +20,22 @@
 
 #include <frontend/profiling_preferences.h>
 
+#include <sqlite3.h>
+
 using namespace std;
 
 namespace micro_profiler
 {
-	profiling_preferences::profiling_preferences(const profiling_session &/*session*/, const string &/*preferences_directory*/,
-		scheduler::queue &/*worker*/, scheduler::queue &/*apartment*/)
-	{	}
+	profiling_preferences::profiling_preferences(const string &preferences_database)
+		: _database(nullptr)
+	{
+		sqlite3_open_v2(preferences_database.c_str(), &_database, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+	}
+
+	profiling_preferences::~profiling_preferences()
+	{	sqlite3_close_v2(_database);	}
+
+	void profiling_preferences::apply_and_track(profiling_session &/*session*/)
+	{
+	}
 }

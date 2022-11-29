@@ -21,7 +21,6 @@
 #pragma once
 
 #include "keyer.h"
-#include "profiling_preferences.h"
 #include "serialization_context.h"
 #include "database.h"
 
@@ -139,8 +138,6 @@ namespace micro_profiler
 		unsigned int ver)
 	{	serialize(archive, static_cast<function_statistics &>(data), context.underlying, ver);	}
 
-	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, module_profiling_preferences &data, unsigned int /*ver*/);
 
 	namespace tables
 	{

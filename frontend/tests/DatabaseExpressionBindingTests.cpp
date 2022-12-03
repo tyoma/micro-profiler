@@ -1,4 +1,5 @@
-#include <frontend/sql_parameters.h>
+#include <frontend/sql_expression.h>
+#include <frontend/sql_format.h>
 
 #include <cstdint>
 #include <ut/assert.h>
@@ -29,20 +30,21 @@ namespace micro_profiler
 				};
 
 				template <typename E>
-				string format(const E &e, unsigned int &index)
+				string format(const E &e)
 				{
 					string non_empty = "abc abc";
-					auto previous_index = index;
+					format_visitor v1(non_empty);
 					string value;
+					format_visitor v2(value);
 
-					e.format(non_empty, index);
-					e.format(value, previous_index);
+					e.visit(v1);
+					e.visit(v2);
 					assert_equal("abc abc" + value, non_empty); // format() appends.
 					return value;
 				}
 
 				template <typename BuilderT>
-				void describe(BuilderT builder, person *)
+				void describe(BuilderT &&builder, person *)
 				{
 					builder(&person::last_name, "last_name");
 					builder(&person::first_name, "FirstName");
@@ -52,7 +54,7 @@ namespace micro_profiler
 				}
 
 				template <typename BuilderT>
-				void describe(BuilderT &builder, company *)
+				void describe(BuilderT &&builder, company *)
 				{
 					builder(&company::name, "CompanyName");
 					builder(&company::year_founded, "Founded");
@@ -66,7 +68,8 @@ namespace micro_profiler
 					int val1 = 123;
 					int val2 = 31;
 					int64_t val3 = 123000000000;
-					unsigned int index = 102;
+					string result;
+					format_visitor v(result);
 					
 					// INIT / ACT
 					auto parm1 = p(val1);
@@ -74,18 +77,21 @@ namespace micro_profiler
 					auto parm3 = p(val3);
 
 					// ACT / ASSERT
-					assert_equal(":102", format(parm1, index));
-					assert_equal(":103", format(parm1, index));
-					assert_equal(":104", format(parm2, index));
-					assert_equal(":105", format(parm3, index));
-					assert_equal(106u, index);
+					assert_equal(":1", (parm1.visit(v), result));
+					assert_equal(":1:2", (parm1.visit(v), result));
+					assert_equal(":1:2:3", (parm2.visit(v), result));
+					assert_equal(":1:2:3:4", (parm3.visit(v), result));
+					assert_equal(5u, v.next_index);
 				}
 
 
 				test( ColumnsAreFormattedBasedOnSqlDescription )
 				{
+					// INIT
+					string result;
+					format_visitor v(result);
+
 					// INIT / ACT
-					unsigned int index = 213;
 					auto col1 = c(&person::first_name);
 					auto col2 = c(&person::last_name);
 					auto col3 = c(&person::day);
@@ -93,12 +99,18 @@ namespace micro_profiler
 					auto col5 = c(&company::year_founded);
 
 					// ACT / ASSERT
-					assert_equal("FirstName", format(col1, index));
-					assert_equal("last_name", format(col2, index));
-					assert_equal("Day", format(col3, index));
-					assert_equal("CompanyName", format(col4, index));
-					assert_equal("Founded", format(col5, index));
-					assert_equal(213u, index);
+					assert_equal("FirstName", format(col1));
+					assert_equal("last_name", format(col2));
+					assert_equal("Day", format(col3));
+					assert_equal("CompanyName", format(col4));
+					assert_equal("Founded", format(col5));
+
+					// ACT (bound index stays intact)
+					col1.visit(v);
+					col3.visit(v);
+
+					// ASSERT
+					assert_equal(1u, v.next_index);
 				}
 
 
@@ -114,8 +126,8 @@ namespace micro_profiler
 					auto called = false;
 
 					// ACT / ASSERT
-					parm1.bind([&] (const int &v) {
-						assert_equal(&val1, &v);
+					parm1.visit([&] (const parameter<int> &v) {
+						assert_equal(&val1, &v.object);
 						called = true;
 					});
 
@@ -126,8 +138,8 @@ namespace micro_profiler
 					called = false;
 
 					// ACT / ASSERT
-					parm2.bind([&] (const int &v) {
-						assert_equal(&val2, &v);
+					parm2.visit([&] (const parameter<int> &v) {
+						assert_equal(&val2, &v.object);
 						called = true;
 					});
 
@@ -138,8 +150,8 @@ namespace micro_profiler
 					called = false;
 
 					// ACT / ASSERT
-					parm3.bind([&] (const int64_t &v) {
-						assert_equal(&val3, &v);
+					parm3.visit([&] (const parameter<int64_t> &v) {
+						assert_equal(&val3, &v.object);
 						called = true;
 					});
 
@@ -151,67 +163,86 @@ namespace micro_profiler
 				test( EqualityOperatorFormatsBothExpressions )
 				{
 					// INIT
-					unsigned int index1 = 11, index2 = 100;
 					int val1 = 123;
 					int val2 = 31;
 					string val3 = "test";
 					string val4 = "test2";
 
 					// ACT / ASSERT
-					assert_equal(":11 = :12", format(p(val1) == p(val2), index1));
-					assert_equal(13u, index1);
-					assert_equal(":100 = :101", format(p(val3) == p(val4), index2));
-					assert_equal(102u, index2);
+					assert_equal(":1 = :2", format(p(val1) == p(val2)));
+					assert_equal(":1 = :2", format(p(val3) == p(val4)));
 				}
 
 
 				test( InequalityOperatorFormatsBothExpressions )
 				{
 					// INIT
-					unsigned int index1 = 11, index2 = 100;
 					int val1 = 123;
 					int val2 = 31;
 					string val3 = "test";
 					string val4 = "test2";
 
 					// ACT / ASSERT
-					assert_equal(":11 <> :12", format(p(val1) != p(val2), index1));
-					assert_equal(13u, index1);
-					assert_equal(":100 <> :101", format(p(val3) != p(val4), index2));
-					assert_equal(102u, index2);
+					assert_equal(":1 <> :2", format(p(val1) != p(val2)));
+					assert_equal(":1 <> :2", format(p(val3) != p(val4)));
 				}
 
 
 				test( LogicalOperatorsAreFormattedAppropriately )
 				{
 					// INIT
-					unsigned int index = 0;
-					int val1 = 123;
-					int val2 = 31;
-					string val3 = "test";
-					string val4 = "test2";
+					auto val1 = false;
+					auto val2 = true;
+					auto val3 = true;
+					auto val4 = false;
 
 					// ACT / ASSERT
-					assert_equal(":0 AND :1", format(p(val1) && p(val2), index));
-					assert_equal(":2 AND :3", format(p(val3) && p(val4), index));
-					assert_equal(":4 OR :5", format(p(val1) || p(val2), index));
-					assert_equal(":6 OR :7", format(p(val3) || p(val4), index));
+					assert_equal(":1 AND :2", format(p(val1) && p(val2)));
+					assert_equal(":1 AND :2", format(p(val3) && p(val4)));
+					assert_equal(":1 OR :2", format(p(val1) || p(val2)));
+					assert_equal(":1 OR :2", format(p(val3) || p(val4)));
 				}
 
 
 				test( ComplexExpressionsAreFormattedAppropriately )
 				{
 					// INIT
-					unsigned int index = 0;
+					string result;
+					format_visitor v(result);
 					int val1 = 123;
 					int val2 = 31;
 					string val3 = "test";
 					string val4 = "test2";
 
-					// ACT / ASSERT
-					assert_equal(":0 = :1 AND :2", format(p(val1) == p(val2) && p(val2), index));
-					assert_equal(":3 = :4 OR :5 <> :6", format(p(val1) == p(val2) || p(val3) != p(val4), index));
-					assert_equal(":7 = YearOfBirth OR last_name <> :8", format(p(val2) == c(&person::year) || c(&person::last_name) != p(val4), index));
+					// ACT
+					(
+						p(val1) == p(val2) && p(val3) == p(val4)
+					).visit(v);
+
+					// ASSERT
+					assert_equal(":1 = :2 AND :3 = :4", result);
+
+					// INIT
+					result.clear();
+
+					// ACT
+					(
+						p(val1) == p(val2) || p(val3) != p(val4)
+					).visit(v);
+
+					// ASSERT
+					assert_equal(":5 = :6 OR :7 <> :8", result);
+
+					// INIT
+					result.clear();
+
+					// ACT (moving visitor)
+					(
+						p(val2) == c(&person::year) || c(&person::last_name) != p(val4)
+					).visit(format_visitor(result));
+
+					// ASSERT
+					assert_equal(":1 = YearOfBirth OR last_name <> :2", result);
 				}
 
 			end_test_suite

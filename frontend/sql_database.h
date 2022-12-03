@@ -85,7 +85,7 @@ namespace micro_profiler
 			select_builder<T> builder;
 			sqlite3_stmt *statement = nullptr;
 
-			describe(builder, *static_cast<T*>(nullptr));
+			describe(builder, static_cast<T*>(nullptr));
 
 			auto text = "SELECT " + builder.format_field_names() + " FROM " + table_name;
 

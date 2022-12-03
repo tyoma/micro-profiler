@@ -64,14 +64,14 @@ namespace micro_profiler
 				};
 
 				template <typename BuilderT>
-				void describe(BuilderT &builder, test_a &)
+				void describe(BuilderT &builder, test_a *)
 				{
 					builder(&test_a::name, "name");
 					builder(&test_a::age, "age");
 				}
 
 				template <typename BuilderT>
-				void describe(BuilderT& builder, test_b&)
+				void describe(BuilderT& builder, test_b *)
 				{
 					builder(&test_b::suspect_name, "name");
 					builder(&test_b::suspect_age, "age");

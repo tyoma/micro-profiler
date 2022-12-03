@@ -5,6 +5,7 @@ include(sqlite3.include)
 set(FRONTEND_TESTS_SOURCES
 	AsyncFileTests.cpp
 	ColumnsDefinitionTests.cpp
+	DatabaseExpressionBindingTests.cpp
 	DatabaseTests.cpp
 	DataSchemeTests.cpp
 	DerivedStatisticsTests.cpp

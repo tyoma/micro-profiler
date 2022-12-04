@@ -61,7 +61,7 @@ namespace micro_profiler
 				}
 			}
 
-			begin_test_suite( DatabaseExpressionBindingTests )
+			begin_test_suite( DatabaseExpressionTests )
 				test( ParametersAreFormattedAsExpressions )
 				{
 					// INIT
@@ -169,8 +169,8 @@ namespace micro_profiler
 					string val4 = "test2";
 
 					// ACT / ASSERT
-					assert_equal(":1 = :2", format(p(val1) == p(val2)));
-					assert_equal(":1 = :2", format(p(val3) == p(val4)));
+					assert_equal(":1=:2", format(p(val1) == p(val2)));
+					assert_equal(":1=:2", format(p(val3) == p(val4)));
 				}
 
 
@@ -183,8 +183,8 @@ namespace micro_profiler
 					string val4 = "test2";
 
 					// ACT / ASSERT
-					assert_equal(":1 <> :2", format(p(val1) != p(val2)));
-					assert_equal(":1 <> :2", format(p(val3) != p(val4)));
+					assert_equal(":1<>:2", format(p(val1) != p(val2)));
+					assert_equal(":1<>:2", format(p(val3) != p(val4)));
 				}
 
 
@@ -220,7 +220,7 @@ namespace micro_profiler
 					).visit(v);
 
 					// ASSERT
-					assert_equal(":1 = :2 AND :3 = :4", result);
+					assert_equal(":1=:2 AND :3=:4", result);
 
 					// INIT
 					result.clear();
@@ -231,7 +231,7 @@ namespace micro_profiler
 					).visit(v);
 
 					// ASSERT
-					assert_equal(":5 = :6 OR :7 <> :8", result);
+					assert_equal(":5=:6 OR :7<>:8", result);
 
 					// INIT
 					result.clear();
@@ -242,7 +242,7 @@ namespace micro_profiler
 					).visit(format_visitor(result));
 
 					// ASSERT
-					assert_equal(":1 = YearOfBirth OR last_name <> :2", result);
+					assert_equal(":1=YearOfBirth OR last_name<>:2", result);
 				}
 
 			end_test_suite

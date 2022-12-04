@@ -1,6 +1,7 @@
 #include <frontend/sql_database.h>
 
 #include <frontend/constructors.h>
+#include <frontend/sql_expression.h>
 #include <sqlite3.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/file_helpers.h>
@@ -37,6 +38,7 @@ namespace micro_profiler
 					"INSERT INTO 'reordered_lorem_ipsums' VALUES (3141, 'Bob', 'lorem');"
 					"INSERT INTO 'reordered_lorem_ipsums' VALUES (314159, 'AJ', 'Ipsum');"
 					"INSERT INTO 'reordered_lorem_ipsums' VALUES (314, 'Liz', 'Lorem Ipsum Amet Dolor');"
+					"INSERT INTO 'reordered_lorem_ipsums' VALUES (314, 'K', 'lorem');"
 					"INSERT INTO 'reordered_lorem_ipsums' VALUES (31415926, 'K', 'lorem');"
 
 					"COMMIT;";
@@ -149,6 +151,7 @@ namespace micro_profiler
 						+ initialize<test_b>("Bob", 3141, "lorem")
 						+ initialize<test_b>("AJ", 314159, "Ipsum")
 						+ initialize<test_b>("Liz", 314, "Lorem Ipsum Amet Dolor")
+						+ initialize<test_b>("K", 314, "lorem")
 						+ initialize<test_b>("K", 31415926, "lorem"), results_b);
 				}
 
@@ -171,7 +174,54 @@ namespace micro_profiler
 						+ initialize<test_a>("lorem", 3141)
 						+ initialize<test_a>("Ipsum", 314159)
 						+ initialize<test_a>("Lorem Ipsum Amet Dolor", 314)
+						+ initialize<test_a>("lorem", 314)
 						+ initialize<test_a>("lorem", 31415926), results_a);
+				}
+
+
+				test( ValuesInTableCanBeReadWithAQuery )
+				{
+					// INIT / ACT
+					test_b b;
+					vector<test_b> results;
+					connection conn(path);
+
+					// INIT / ACT
+					auto r = conn.select<test_b>("reordered_lorem_ipsums", c(&test_b::suspect_age) == p<const int>(314));
+
+					// ACT
+					while (r(b))
+						results.push_back(b);
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_b>("K", 314, "lorem")
+						+ initialize<test_b>("Liz", 314, "Lorem Ipsum Amet Dolor"), results);
+
+					// INIT
+					vector<test_b> results2;
+
+					results.clear();
+
+					// INIT / ACT
+					auto r2 = conn.select<test_b>("reordered_lorem_ipsums",
+						c(&test_b::suspect_age) == p<const int>(314) || c(&test_b::suspect_name) == p<const string>("Ipsum"));
+					auto r3 = conn.select<test_b>("reordered_lorem_ipsums",
+						c(&test_b::suspect_name) == p<const string>("Ipsum") || c(&test_b::suspect_age) == p<const int>(314));
+
+					// ACT
+					while (r2(b))
+						results.push_back(b);
+
+					while (r3(b))
+						results2.push_back(b);
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_b>("AJ", 314159, "Ipsum")
+						+ initialize<test_b>("K", 314, "lorem")
+						+ initialize<test_b>("Liz", 314, "Lorem Ipsum Amet Dolor"), results);
+					assert_equivalent(results, results2);
 				}
 			end_test_suite
 		}

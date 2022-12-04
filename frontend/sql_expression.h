@@ -65,11 +65,11 @@ namespace micro_profiler
 
 		template <typename L, typename R, typename T>
 		inline wrapped< operator_<L, R> > operator ==(const wrapped<L, T> &lhs, const wrapped<R, T> &rhs)
-		{	return wrap(initialize< operator_<L, R> >(lhs, rhs, " = "));	}
+		{	return wrap(initialize< operator_<L, R> >(lhs, rhs, "="));	}
 
 		template <typename L, typename R, typename T>
 		inline wrapped< operator_<L, R> > operator !=(const wrapped<L, T> &lhs, const wrapped<R, T> &rhs)
-		{	return wrap(initialize< operator_<L, R> >(lhs, rhs, " <> "));	}
+		{	return wrap(initialize< operator_<L, R> >(lhs, rhs, "<>"));	}
 
 		template <typename L, typename R>
 		inline wrapped< operator_<L, R> > operator &&(const wrapped<L, bool> &lhs, const wrapped<R, bool> &rhs)

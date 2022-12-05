@@ -38,5 +38,9 @@ namespace micro_profiler
 			sqlite3_prepare_v2(&database, expression_text, -1, &p, nullptr);
 			return statement_ptr(p);
 		}
+
+		template <typename T, typename VisitorT>
+		inline void describe(VisitorT &&visitor)
+		{	describe(visitor, static_cast<T *>(nullptr));	}
 	}
 }

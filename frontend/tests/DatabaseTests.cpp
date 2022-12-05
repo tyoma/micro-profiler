@@ -41,6 +41,9 @@ namespace micro_profiler
 					"INSERT INTO 'reordered_lorem_ipsums' VALUES (314, 'K', 'lorem');"
 					"INSERT INTO 'reordered_lorem_ipsums' VALUES (31415926, 'K', 'lorem');"
 
+					"CREATE TABLE 'sample_items_1' ('a' INTEGER, 'b' TEXT);"
+					"CREATE TABLE 'sample_items_2' ('age' INTEGER, 'nickname' TEXT, 'name' TEXT);"
+
 					"COMMIT;";
 
 				struct test_a
@@ -65,6 +68,15 @@ namespace micro_profiler
 					}
 				};
 
+				struct sample_item_1
+				{
+					int a;
+					string b;
+
+					bool operator <(const sample_item_1& rhs) const
+					{	return make_tuple(a, b) < make_tuple(rhs.a, rhs.b);	}
+				};
+
 				template <typename BuilderT>
 				void describe(BuilderT &builder, test_a *)
 				{
@@ -78,6 +90,27 @@ namespace micro_profiler
 					builder(&test_b::suspect_name, "name");
 					builder(&test_b::suspect_age, "age");
 					builder(&test_b::nickname, "nickname");
+				}
+
+				template <typename BuilderT>
+				void describe(BuilderT &builder, sample_item_1 *)
+				{
+					builder(&sample_item_1::a, "a");
+					builder(&sample_item_1::b, "b");
+				}
+
+
+				template <typename T>
+				vector<T> read_all(string path, const char *table_name)
+				{
+					T item;
+					vector<T> result;
+					connection c(path);
+					auto r = c.select<T>(table_name);
+
+					while (r(item))
+						result.push_back(item);
+					return result;
 				}
 			}
 
@@ -222,6 +255,47 @@ namespace micro_profiler
 						+ initialize<test_b>("K", 314, "lorem")
 						+ initialize<test_b>("Liz", 314, "Lorem Ipsum Amet Dolor"), results);
 					assert_equivalent(results, results2);
+				}
+
+
+				test( InsertedRecordsCanBeRead )
+				{
+					// INIT
+					sample_item_1 items1[] = {
+						{	314, "Bob Marley"	},
+						{	141, "Peter Tosh"	},
+						{	3141, "John Zorn"	},
+					};
+					connection conn(path);
+
+					// INIT / ACT
+					auto w1 = conn.insert<sample_item_1>("sample_items_1");
+
+					// ACT
+					for (auto i = begin(items1); i != end(items1); ++i)
+						w1(*i);
+
+					// ASSERT
+					assert_equivalent(items1, read_all<sample_item_1>(path, "sample_items_1"));
+
+					// INIT
+					test_b items2[] = {
+						{	"Bob", 3141, "lorem"	},
+						{	"AJ", 314159, "Ipsum"	},
+						{	"Liz", 314, "Lorem Ipsum Amet Dolor"	},
+						{	"K", 314, "lorem"	},
+						{	"K", 31415926, "lorem"	},
+					};
+
+					// INIT / ACT
+					auto w2 = conn.insert<test_b>("sample_items_2");
+
+					// ACT
+					for (auto i = begin(items2); i != end(items2); ++i)
+						w2(*i);
+
+					// ASSERT
+					assert_equivalent(items2, read_all<test_b>(path, "sample_items_2"));
 				}
 			end_test_suite
 		}

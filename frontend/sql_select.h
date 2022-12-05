@@ -34,8 +34,11 @@ namespace micro_profiler
 		template <typename T>
 		struct record_reader
 		{
-			void operator ()(int T::*field, const char *name);
-			void operator ()(std::string T::*field, const char *name);
+			void operator ()(int T::*field, const char * /*name*/)
+			{	record.*field = sqlite3_column_int(&statement, index++);	}
+
+			void operator ()(std::string T::*field, const char * /*name*/)
+			{	record.*field = (const char *)sqlite3_column_text(&statement, index++);	}
 
 			T &record;
 			sqlite3_stmt &statement;
@@ -76,15 +79,6 @@ namespace micro_profiler
 
 
 		template <typename T>
-		inline void record_reader<T>::operator ()(int T::*field, const char *)
-		{	record.*field = sqlite3_column_int(&statement, index++);	}
-
-		template <typename T>
-		inline void record_reader<T>::operator ()(std::string T::*field, const char *)
-		{	record.*field = (const char *)sqlite3_column_text(&statement, index++);	}
-
-
-		template <typename T>
 		inline reader<T>::reader(statement_ptr &&statement)
 			: _statement(std::move(statement))
 		{	}
@@ -100,7 +94,7 @@ namespace micro_profiler
 			case SQLITE_ROW:
 				record_reader<T> rr = {	record, *_statement, 0	};
 
-				describe(rr, &record);
+				describe<T>(rr);
 				return true;
 			}
 			throw 0;
@@ -111,7 +105,7 @@ namespace micro_profiler
 		inline select_builder<T>::select_builder(const char *table_name)
 			: _index(0), _expression_text("SELECT")
 		{
-			describe(*this, static_cast<T *>(nullptr));
+			describe<T>(*this);
 			_expression_text += " FROM ";
 			_expression_text += table_name;
 		}

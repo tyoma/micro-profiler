@@ -7,29 +7,31 @@ namespace micro_profiler
 {
 	namespace sql
 	{
-		struct parameter_binder
+		inline void bind_parameter(sqlite3_stmt &statement, int value, unsigned int index)
+		{	sqlite3_bind_int(&statement, index, value);	}
+
+		inline void bind_parameter(sqlite3_stmt &statement, const std::string &value, unsigned int index)
+		{	sqlite3_bind_text(&statement, index, value.c_str(), -1, SQLITE_TRANSIENT);	}
+
+		template <typename T, typename F>
+		inline void bind_parameters(sqlite3_stmt &/*statement*/, const column<T, F> &/*e*/, unsigned int &/*index*/)
+		{	}
+
+		template <typename T>
+		inline void bind_parameters(sqlite3_stmt &statement, const parameter<T> &e, unsigned int &index)
+		{	bind_parameter(statement, e.object, index++);	}
+
+		template <typename L, typename R>
+		inline void bind_parameters(sqlite3_stmt &statement, const operator_<L, R> &e, unsigned int &index)
+		{	bind_parameters(statement, e.lhs, index), bind_parameters(statement, e.rhs, index);	}
+
+		template <typename E>
+		inline void bind_parameters(sqlite3_stmt &statement, const E &e)
 		{
-			void bind_next(int value)
-			{	sqlite3_bind_int(&statement, index++, value);	}
+			auto index = 1u;
 
-			void bind_next(const std::string &value)
-			{	sqlite3_bind_text(&statement, index++, value.c_str(), -1, SQLITE_TRANSIENT);	}
-
-			template <typename T>
-			void operator ()(const parameter<T> &e)
-			{	bind_next(e.object);	}
-
-			template <typename T, typename F>
-			void operator ()(const column<T, F> &/*e*/)
-			{	}
-
-			template <typename L, typename R>
-			void operator ()(const operator_<L, R> &e)
-			{	(*this)(e.lhs), (*this)(e.rhs);	}
-
-			sqlite3_stmt &statement;
-			int index;
-		};
+			bind_parameters(statement, e, index);
+		}
 
 		template <typename T>
 		struct record_reader
@@ -129,14 +131,12 @@ namespace micro_profiler
 			auto expression_text = _expression_text;
 
 			expression_text += " WHERE ";
-			where.visit(format_visitor(expression_text));
+			format_expression(expression_text, where);
 
 			auto s = create_statement(database, expression_text.c_str());
-			parameter_binder b = {	*s, 1	};
 
-			where.visit(b);
+			bind_parameters(*s, where);
 			return reader<T>(std::move(s));
 		}
-
 	}
 }

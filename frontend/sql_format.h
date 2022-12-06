@@ -33,37 +33,33 @@ namespace micro_profiler
 			void operator =(const format_column_visitor &rhs);
 		};
 
-		struct format_visitor
+
+
+		template <typename T, typename F>
+		inline void format_expression(std::string &output, const column<T, F> &e, unsigned int &/*index*/)
 		{
-			format_visitor(std::string &output_)
-				: output(output_), next_index(1)
-			{	}
+			format_column_visitor<T, F> v(e.field, output);
+			describe<T>(v);
+		}
 
-			template <typename T>
-			void operator ()(const parameter<T> &/*e*/)
-			{	output += ':', itoa<10>(output, next_index++);	}
+		template <typename T>
+		inline void format_expression(std::string &output, const parameter<T> &/*e*/, unsigned int &index)
+		{	output += ':', itoa<10>(output, index++);	}
 
-			template <typename T, typename F>
-			void operator ()(const column<T, F> &e)
-			{
-				format_column_visitor<T, F> v(e.field, output);
-				describe(v, static_cast<T *>(nullptr));
-			}
+		template <typename L, typename R>
+		inline void format_expression(std::string &output, const operator_<L, R> &e, unsigned int &index)
+		{
+			format_expression(output, e.lhs, index);
+			output += e.literal;
+			format_expression(output, e.rhs, index);
+		}
 
-			template <typename L, typename R>
-			void operator ()(const operator_<L, R> &e)
-			{
-				(*this)(e.lhs);
-				output += e.literal;
-				(*this)(e.rhs);
-			}
+		template <typename E>
+		inline void format_expression(std::string &output, const E &e)
+		{
+			auto index = 1u;
 
-			std::string &output;
-			unsigned int next_index;
-
-		private:
-			format_visitor(const format_visitor &other);
-			void operator =(const format_visitor &rhs);
-		};
+			format_expression(output, e, index);
+		}
 	}
 }

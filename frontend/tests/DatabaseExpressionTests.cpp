@@ -33,31 +33,29 @@ namespace micro_profiler
 				string format(const E &e)
 				{
 					string non_empty = "abc abc";
-					format_visitor v1(non_empty);
 					string value;
-					format_visitor v2(value);
 
-					e.visit(v1);
-					e.visit(v2);
+					format_expression(non_empty, e);
+					format_expression(value, e);
 					assert_equal("abc abc" + value, non_empty); // format() appends.
 					return value;
 				}
 
-				template <typename BuilderT>
-				void describe(BuilderT &&builder, person *)
+				template <typename VisitorT>
+				void describe(VisitorT &&visitor, person *)
 				{
-					builder(&person::last_name, "last_name");
-					builder(&person::first_name, "FirstName");
-					builder(&person::year, "YearOfBirth");
-					builder(&person::month, "Month");
-					builder(&person::day, "Day");
+					visitor(&person::last_name, "last_name");
+					visitor(&person::first_name, "FirstName");
+					visitor(&person::year, "YearOfBirth");
+					visitor(&person::month, "Month");
+					visitor(&person::day, "Day");
 				}
 
-				template <typename BuilderT>
-				void describe(BuilderT &&builder, company *)
+				template <typename VisitorT>
+				void describe(VisitorT &&visitor, company *)
 				{
-					builder(&company::name, "CompanyName");
-					builder(&company::year_founded, "Founded");
+					visitor(&company::name, "CompanyName");
+					visitor(&company::year_founded, "Founded");
 				}
 			}
 
@@ -69,7 +67,6 @@ namespace micro_profiler
 					int val2 = 31;
 					int64_t val3 = 123000000000;
 					string result;
-					format_visitor v(result);
 					
 					// INIT / ACT
 					auto parm1 = p(val1);
@@ -77,20 +74,15 @@ namespace micro_profiler
 					auto parm3 = p(val3);
 
 					// ACT / ASSERT
-					assert_equal(":1", (parm1.visit(v), result));
-					assert_equal(":1:2", (parm1.visit(v), result));
-					assert_equal(":1:2:3", (parm2.visit(v), result));
-					assert_equal(":1:2:3:4", (parm3.visit(v), result));
-					assert_equal(5u, v.next_index);
+					assert_equal(":1", (format_expression(result, parm1), result));
+					assert_equal(":1:1", (format_expression(result, parm1), result));
+					assert_equal(":1:1:1", (format_expression(result, parm2), result));
+					assert_equal(":1:1:1:1", (format_expression(result, parm3), result));
 				}
 
 
 				test( ColumnsAreFormattedBasedOnSqlDescription )
 				{
-					// INIT
-					string result;
-					format_visitor v(result);
-
 					// INIT / ACT
 					auto col1 = c(&person::first_name);
 					auto col2 = c(&person::last_name);
@@ -104,13 +96,6 @@ namespace micro_profiler
 					assert_equal("Day", format(col3));
 					assert_equal("CompanyName", format(col4));
 					assert_equal("Founded", format(col5));
-
-					// ACT (bound index stays intact)
-					col1.visit(v);
-					col3.visit(v);
-
-					// ASSERT
-					assert_equal(1u, v.next_index);
 				}
 
 
@@ -123,40 +108,11 @@ namespace micro_profiler
 					auto parm1 = p(val1);
 					auto parm2 = p(val2);
 					auto parm3 = p(val3);
-					auto called = false;
 
 					// ACT / ASSERT
-					parm1.visit([&] (const parameter<int> &v) {
-						assert_equal(&val1, &v.object);
-						called = true;
-					});
-
-					// ASSERT
-					assert_is_true(called);
-
-					// INIT
-					called = false;
-
-					// ACT / ASSERT
-					parm2.visit([&] (const parameter<int> &v) {
-						assert_equal(&val2, &v.object);
-						called = true;
-					});
-
-					// ASSERT
-					assert_is_true(called);
-
-					// INIT
-					called = false;
-
-					// ACT / ASSERT
-					parm3.visit([&] (const parameter<int64_t> &v) {
-						assert_equal(&val3, &v.object);
-						called = true;
-					});
-
-					// ASSERT
-					assert_is_true(called);
+					assert_equal(&val1, &parm1.object);
+					assert_equal(&val2, &parm2.object);
+					assert_equal(&val3, &parm3.object);
 				}
 
 
@@ -208,16 +164,15 @@ namespace micro_profiler
 				{
 					// INIT
 					string result;
-					format_visitor v(result);
 					int val1 = 123;
 					int val2 = 31;
 					string val3 = "test";
 					string val4 = "test2";
 
 					// ACT
-					(
+					format_expression(result,
 						p(val1) == p(val2) && p(val3) == p(val4)
-					).visit(v);
+					);
 
 					// ASSERT
 					assert_equal(":1=:2 AND :3=:4", result);
@@ -226,20 +181,20 @@ namespace micro_profiler
 					result.clear();
 
 					// ACT
-					(
+					format_expression(result,
 						p(val1) == p(val2) || p(val3) != p(val4)
-					).visit(v);
+					);
 
 					// ASSERT
-					assert_equal(":5=:6 OR :7<>:8", result);
+					assert_equal(":1=:2 OR :3<>:4", result);
 
 					// INIT
 					result.clear();
 
-					// ACT (moving visitor)
-					(
+					// ACT
+					format_expression(result,
 						p(val2) == c(&person::year) || c(&person::last_name) != p(val4)
-					).visit(format_visitor(result));
+					);
 
 					// ASSERT
 					assert_equal(":1=YearOfBirth OR last_name<>:2", result);

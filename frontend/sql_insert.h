@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sql_expression.h"
 #include "sql_misc.h"
 
 #include <string>

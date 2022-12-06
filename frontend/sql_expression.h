@@ -14,10 +14,6 @@ namespace micro_profiler
 			wrapped(const T &inner)
 				: T(inner)
 			{	}
-
-			template <typename VisitorT>
-			void visit(VisitorT &&visitor) const
-			{	visitor(*this);	}
 		};
 
 		template <typename T>
@@ -78,5 +74,9 @@ namespace micro_profiler
 		template <typename L, typename R>
 		inline wrapped< operator_<L, R> > operator ||(const wrapped<L, bool> &lhs, const wrapped<R, bool> &rhs)
 		{	return wrap(initialize< operator_<L, R> >(lhs, rhs, " OR "));	}
+
+		template <typename T, typename VisitorT>
+		inline void describe(VisitorT &&visitor)
+		{	describe(visitor, static_cast<T *>(nullptr));	}
 	}
 }

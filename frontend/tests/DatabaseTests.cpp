@@ -1,7 +1,6 @@
 #include <frontend/sql_database.h>
 
 #include <frontend/constructors.h>
-#include <frontend/sql_expression.h>
 #include <sqlite3.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/file_helpers.h>
@@ -77,26 +76,26 @@ namespace micro_profiler
 					{	return make_tuple(a, b) < make_tuple(rhs.a, rhs.b);	}
 				};
 
-				template <typename BuilderT>
-				void describe(BuilderT &builder, test_a *)
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, test_a *)
 				{
-					builder(&test_a::name, "name");
-					builder(&test_a::age, "age");
+					visitor(&test_a::name, "name");
+					visitor(&test_a::age, "age");
 				}
 
-				template <typename BuilderT>
-				void describe(BuilderT& builder, test_b *)
+				template <typename VisitorT>
+				void describe(VisitorT& visitor, test_b *)
 				{
-					builder(&test_b::suspect_name, "name");
-					builder(&test_b::suspect_age, "age");
-					builder(&test_b::nickname, "nickname");
+					visitor(&test_b::suspect_name, "name");
+					visitor(&test_b::suspect_age, "age");
+					visitor(&test_b::nickname, "nickname");
 				}
 
-				template <typename BuilderT>
-				void describe(BuilderT &builder, sample_item_1 *)
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, sample_item_1 *)
 				{
-					builder(&sample_item_1::a, "a");
-					builder(&sample_item_1::b, "b");
+					visitor(&sample_item_1::a, "a");
+					visitor(&sample_item_1::b, "b");
 				}
 
 
@@ -105,7 +104,7 @@ namespace micro_profiler
 				{
 					T item;
 					vector<T> result;
-					connection c(path);
+					transaction c(create_conneciton(path.c_str()));
 					auto r = c.select<T>(table_name);
 
 					while (r(item))
@@ -138,9 +137,9 @@ namespace micro_profiler
 					// INIT / ACT
 					test_a a;
 					vector<test_a> results_a;
-					connection conn(path);
+					transaction t(create_conneciton(path.c_str()));
 
-					auto r = conn.select<test_a>("lorem_ipsums");
+					auto r = t.select<test_a>("lorem_ipsums");
 
 					// ACT
 					while (r(a))
@@ -157,7 +156,7 @@ namespace micro_profiler
 					results_a.clear();
 
 					// INIT / ACT
-					auto r2 = conn.select<test_a>("other_lorem_ipsums");
+					auto r2 = t.select<test_a>("other_lorem_ipsums");
 
 					// ACT
 					while (r2(a))
@@ -173,7 +172,7 @@ namespace micro_profiler
 					vector<test_b> results_b;
 
 					// INIT / ACT
-					auto rb = conn.select<test_b>("reordered_lorem_ipsums");
+					auto rb = t.select<test_b>("reordered_lorem_ipsums");
 
 					// ACT
 					while (rb(b))
@@ -194,9 +193,9 @@ namespace micro_profiler
 					// INIT / ACT
 					test_a a;
 					vector<test_a> results_a;
-					connection conn(path);
+					transaction t(create_conneciton(path.c_str()));
 
-					auto r = conn.select<test_a>("reordered_lorem_ipsums");
+					auto r = t.select<test_a>("reordered_lorem_ipsums");
 
 					// ACT
 					while (r(a))
@@ -217,10 +216,10 @@ namespace micro_profiler
 					// INIT / ACT
 					test_b b;
 					vector<test_b> results;
-					connection conn(path);
+					transaction t(create_conneciton(path.c_str()));
 
 					// INIT / ACT
-					auto r = conn.select<test_b>("reordered_lorem_ipsums", c(&test_b::suspect_age) == p<const int>(314));
+					auto r = t.select<test_b>("reordered_lorem_ipsums", c(&test_b::suspect_age) == p<const int>(314));
 
 					// ACT
 					while (r(b))
@@ -237,9 +236,9 @@ namespace micro_profiler
 					results.clear();
 
 					// INIT / ACT
-					auto r2 = conn.select<test_b>("reordered_lorem_ipsums",
+					auto r2 = t.select<test_b>("reordered_lorem_ipsums",
 						c(&test_b::suspect_age) == p<const int>(314) || c(&test_b::suspect_name) == p<const string>("Ipsum"));
-					auto r3 = conn.select<test_b>("reordered_lorem_ipsums",
+					auto r3 = t.select<test_b>("reordered_lorem_ipsums",
 						c(&test_b::suspect_name) == p<const string>("Ipsum") || c(&test_b::suspect_age) == p<const int>(314));
 
 					// ACT
@@ -258,6 +257,23 @@ namespace micro_profiler
 				}
 
 
+				test( InsertedRecordsAreNotVisibleBeforeCommit )
+				{
+					// INIT
+					sample_item_1 item = {	314, "Bob Marley"	};
+					transaction t(create_conneciton(path.c_str()));
+
+					// INIT / ACT
+					auto w1 = t.insert<sample_item_1>("sample_items_1");
+
+					// ACT
+					w1(item);
+
+					// ASSERT
+					assert_is_empty(read_all<sample_item_1>(path, "sample_items_1"));
+				}
+
+
 				test( InsertedRecordsCanBeRead )
 				{
 					// INIT
@@ -266,14 +282,15 @@ namespace micro_profiler
 						{	141, "Peter Tosh"	},
 						{	3141, "John Zorn"	},
 					};
-					connection conn(path);
+					transaction t(create_conneciton(path.c_str()));
 
 					// INIT / ACT
-					auto w1 = conn.insert<sample_item_1>("sample_items_1");
+					auto w1 = t.insert<sample_item_1>("sample_items_1");
 
 					// ACT
 					for (auto i = begin(items1); i != end(items1); ++i)
 						w1(*i);
+					t.commit();
 
 					// ASSERT
 					assert_equivalent(items1, read_all<sample_item_1>(path, "sample_items_1"));
@@ -288,14 +305,64 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					auto w2 = conn.insert<test_b>("sample_items_2");
+					transaction t2(create_conneciton(path.c_str()));
+					auto w2 = t2.insert<test_b>("sample_items_2");
 
 					// ACT
 					for (auto i = begin(items2); i != end(items2); ++i)
 						w2(*i);
+					t2.commit();
 
 					// ASSERT
 					assert_equivalent(items2, read_all<test_b>(path, "sample_items_2"));
+				}
+
+
+				test( InnerTransactionsAreProhibited )
+				{
+					// INIT
+					auto conn = create_conneciton(path.c_str());
+
+					// INIT / ACT
+					auto locker = make_shared<transaction>(conn);
+
+					// ACT / ASSERT
+					assert_throws(transaction contender(conn), sql_error);
+
+					// ACT
+					locker.reset();
+
+					// ACT / ASSERT
+					transaction noncontender(conn);
+				}
+
+
+				test( TransactionsCombineAccordinglyToType )
+				{
+					// INIT
+					auto conn1 = create_conneciton(path.c_str());
+					auto conn2 = create_conneciton(path.c_str());
+					auto conn3 = create_conneciton(path.c_str());
+
+					// ACT
+					{
+						transaction locker(conn1, transaction::immediate);
+
+					// ACT / ASSERT
+						assert_throws(transaction contender(conn2, transaction::immediate, 400), sql_error);
+
+					// ACT / ASSERT (does not throw)
+						transaction non_contended(conn2, transaction::deferred, 2000);
+					}
+
+					// ACT
+					{
+						transaction nonlocker(conn1, transaction::deferred);
+
+						// ACT / ASSERT (does not throw)
+						transaction non_contender1(conn2, transaction::immediate, 2000);
+						transaction non_contended2(conn3, transaction::deferred, 2000);
+					}
 				}
 			end_test_suite
 		}

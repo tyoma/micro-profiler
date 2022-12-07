@@ -79,3 +79,8 @@ foreach(CFG ${CMAKE_CONFIGURATION_TYPES})
 	string(TOUPPER ${CFG} CFG)
 	set_target_properties(micro-profiler.ui micro-profiler.ui.vs10 PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${CFG} ${MP_OUTDIR}/1033)
 endforeach()
+
+set_target_properties(micro-profiler_frontend PROPERTIES
+	VS_DEBUGGER_COMMAND $(DevEnvDir)devenv.exe
+	VS_DEBUGGER_COMMAND_ARGUMENTS " /RootSuffix Exp /Log "
+	VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:micro-profiler_frontend>)

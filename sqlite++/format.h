@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "sql_expression.h"
+#include "expression.h"
 
 #include <common/formatting.h>
 

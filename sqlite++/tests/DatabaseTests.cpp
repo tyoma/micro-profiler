@@ -1,6 +1,6 @@
-#include <frontend/sql_database.h>
+#include <sqlite++/database.h>
 
-#include <frontend/sql_types.h>
+#include <sqlite++/types.h>
 #include <frontend/constructors.h>
 #include <sqlite3.h>
 #include <test-helpers/helpers.h>

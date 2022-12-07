@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include "sql_insert.h"
-#include "sql_select.h"
+#include "insert.h"
+#include "select.h"
 
 namespace micro_profiler
 {

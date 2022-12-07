@@ -20,9 +20,9 @@
 
 #pragma once
 
-#include "sql_format.h"
-#include "sql_misc.h"
-#include "sql_types.h"
+#include "format.h"
+#include "misc.h"
+#include "types.h"
 
 #include <cstdint>
 

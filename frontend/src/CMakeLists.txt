@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-include(sqlite3.include)
-
 set(FRONTEND_LIB_SOURCES
 	columns_layout.cpp
 	derived_statistics.cpp
@@ -39,5 +37,4 @@ if(WIN32)
 endif()
 
 add_library(frontend STATIC ${FRONTEND_LIB_SOURCES})
-target_link_libraries(frontend PUBLIC wpl agge.text strmd)
-target_link_libraries(frontend PRIVATE CONAN_PKG::sqlite3)
+target_link_libraries(frontend PUBLIC wpl agge.text strmd sqlite++)

@@ -2,6 +2,9 @@
 
 #include "sql_format.h"
 #include "sql_misc.h"
+#include "sql_types.h"
+
+#include <cstdint>
 
 namespace micro_profiler
 {
@@ -36,11 +39,21 @@ namespace micro_profiler
 		template <typename T>
 		struct record_reader
 		{
+			void operator ()(double T::*field, const char * /*name*/)
+			{	record.*field = sqlite3_column_double(&statement, index++);	}
+
+			void operator ()(std::int64_t T::*field, const char * /*name*/)
+			{	record.*field = sqlite3_column_int64(&statement, index++);	}
+
 			void operator ()(int T::*field, const char * /*name*/)
 			{	record.*field = sqlite3_column_int(&statement, index++);	}
 
 			void operator ()(std::string T::*field, const char * /*name*/)
 			{	record.*field = (const char *)sqlite3_column_text(&statement, index++);	}
+
+			template <typename F>
+			void operator ()(const primary_key<T, F> &field, const char *name)
+			{	(*this)(field.field, name);	}
 
 			T &record;
 			sqlite3_stmt &statement;

@@ -1,5 +1,6 @@
 #include <frontend/sql_database.h>
 
+#include <frontend/sql_types.h>
 #include <frontend/constructors.h>
 #include <sqlite3.h>
 #include <test-helpers/helpers.h>
@@ -42,6 +43,7 @@ namespace micro_profiler
 
 					"CREATE TABLE 'sample_items_1' ('a' INTEGER, 'b' TEXT);"
 					"CREATE TABLE 'sample_items_2' ('age' INTEGER, 'nickname' TEXT, 'name' TEXT);"
+					"CREATE TABLE 'sample_items_3' ('MyID' INTEGER PRIMARY KEY ASC, 'a' INTEGER, 'b' TEXT, 'c' INTEGER, 'd' REAL);"
 
 					"COMMIT;";
 
@@ -76,6 +78,30 @@ namespace micro_profiler
 					{	return make_tuple(a, b) < make_tuple(rhs.a, rhs.b);	}
 				};
 
+				struct sample_item_3
+				{
+					int id;
+					int a;
+					string b;
+					int64_t c;
+					double d;
+
+					bool operator <(const sample_item_3& rhs) const
+					{
+						auto approx_less = [] (double lhs, double rhs) {
+							return lhs < rhs - 0.000001 * (rhs - lhs);
+						};
+						auto tlhs = make_tuple(id, a, b, c);
+						auto trhs = make_tuple(rhs.id, rhs.a, rhs.b, rhs.c);
+
+						if (tlhs < trhs)
+							return true;
+						if (trhs < tlhs)
+							return false;
+						return approx_less(d, rhs.d);
+					}
+				};
+
 				template <typename VisitorT>
 				void describe(VisitorT &visitor, test_a *)
 				{
@@ -96,6 +122,16 @@ namespace micro_profiler
 				{
 					visitor(&sample_item_1::a, "a");
 					visitor(&sample_item_1::b, "b");
+				}
+
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, sample_item_3 *)
+				{
+					visitor(pk(&sample_item_3::id), "MyID");
+					visitor(&sample_item_3::a, "a");
+					visitor(&sample_item_3::b, "b");
+					visitor(&sample_item_3::c, "c");
+					visitor(&sample_item_3::d, "d");
 				}
 
 
@@ -289,7 +325,7 @@ namespace micro_profiler
 
 					// ACT
 					for (auto i = begin(items1); i != end(items1); ++i)
-						w1(*i);
+						w1(static_cast<const sample_item_1 &>(*i));
 					t.commit();
 
 					// ASSERT
@@ -363,6 +399,81 @@ namespace micro_profiler
 						transaction non_contender1(conn2, transaction::immediate, 2000);
 						transaction non_contended2(conn3, transaction::deferred, 2000);
 					}
+				}
+
+
+				test( PrimaryKeyIsSetUponInsertion )
+				{
+					// INIT
+					transaction t(create_conneciton(path.c_str()));
+					auto w = t.insert<sample_item_3>("sample_items_3");
+
+					// ACT
+					for (int n = 1000, previous = 0; n--; )
+					{
+						sample_item_3 item = {};
+
+						w(item);
+
+					// ASSERT
+						if (previous)
+							assert_equal(previous + 1, item.id);
+
+						previous = item.id;
+					}
+				}
+
+
+				test( AllSupportedTypesCanBeSelected )
+				{
+					// INIT
+					vector<sample_item_3> items_read;
+					sample_item_3 items[] = {
+						{	100, 0, "Bod Dylan", 10000000001, 1.5391	},
+						{	100, 110, "Nick Cave", 10000000002, 1e-8	},
+						{	100, 13, "Robert Fripp", 10000000001, 1.5e12	},
+					};
+					transaction t(create_conneciton(path.c_str()));
+					auto w = t.insert<sample_item_3>("sample_items_3");
+
+					for (auto i = begin(items); i != end(items); ++i)
+						w(*i);
+
+					// ACT
+					auto r = t.select<sample_item_3>("sample_items_3");
+
+					for (sample_item_3 item; r(item); )
+						items_read.push_back(item);
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<sample_item_3>(1, 0, "Bod Dylan", 10000000001, 1.5391)
+						+ initialize<sample_item_3>(2, 110, "Nick Cave", 10000000002, 1e-8)
+						+ initialize<sample_item_3>(3, 13, "Robert Fripp", 10000000001, 1.5e12), items_read);
+
+					// INIT
+					sample_item_3 items2[] = {
+						{	100, 0, "Jimi Hendrix", 30000000001, 1.5391	},
+						{	100, 0, "Tom Waits", 70000000002, 3.141e-8	},
+					};
+
+					for (auto i = begin(items2); i != end(items2); ++i)
+						w(*i);
+					items_read.clear();
+
+					// ACT
+					auto r2 = t.select<sample_item_3>("sample_items_3");
+
+					for (sample_item_3 item; r2(item); )
+						items_read.push_back(item);
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<sample_item_3>(1, 0, "Bod Dylan", 10000000001, 1.5391)
+						+ initialize<sample_item_3>(2, 110, "Nick Cave", 10000000002, 1e-8)
+						+ initialize<sample_item_3>(3, 13, "Robert Fripp", 10000000001, 1.5e12)
+						+ initialize<sample_item_3>(4, 0, "Jimi Hendrix", 30000000001, 1.5391)
+						+ initialize<sample_item_3>(5, 0, "Tom Waits", 70000000002, 3.141e-8), items_read);
 				}
 			end_test_suite
 		}

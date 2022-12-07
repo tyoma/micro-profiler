@@ -59,16 +59,22 @@ namespace micro_profiler
 		template <typename T>
 		struct record_reader
 		{
-			void operator ()(double T::*field, const char * /*name*/)
-			{	record.*field = sqlite3_column_double(&statement, index++);	}
-
-			void operator ()(std::int64_t T::*field, const char * /*name*/)
-			{	record.*field = sqlite3_column_int64(&statement, index++);	}
-
-			void operator ()(int T::*field, const char * /*name*/)
+			void operator ()(int T::*field, const char *)
 			{	record.*field = sqlite3_column_int(&statement, index++);	}
 
-			void operator ()(std::string T::*field, const char * /*name*/)
+			void operator ()(unsigned int T::*field, const char *)
+			{	record.*field = static_cast<unsigned int>(sqlite3_column_int(&statement, index++));	}
+
+			void operator ()(std::int64_t T::*field, const char *)
+			{	record.*field = sqlite3_column_int64(&statement, index++);	}
+
+			void operator ()(std::uint64_t T::*field, const char *)
+			{	record.*field = static_cast<std::uint64_t>(sqlite3_column_int64(&statement, index++));	}
+
+			void operator ()(double T::*field, const char *)
+			{	record.*field = sqlite3_column_double(&statement, index++);	}
+
+			void operator ()(std::string T::*field, const char *)
 			{	record.*field = (const char *)sqlite3_column_text(&statement, index++);	}
 
 			template <typename F>

@@ -97,4 +97,11 @@ namespace micro_profiler
 		T value = {	field1, field2, field3, field4, field5,	};
 		return value;
 	}
+
+	template <typename T, typename F1, typename F2, typename F3, typename F4, typename F5, typename F6, typename F7>
+	inline T initialize(const F1 &field1, const F2 &field2, const F3 &field3, const F4 &field4, const F5 &field5, const F6 &field6, const F7 &field7)
+	{
+		T value = {	field1, field2, field3, field4, field5, field6, field7,	};
+		return value;
+	}
 }

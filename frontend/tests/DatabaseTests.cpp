@@ -43,7 +43,7 @@ namespace micro_profiler
 
 					"CREATE TABLE 'sample_items_1' ('a' INTEGER, 'b' TEXT);"
 					"CREATE TABLE 'sample_items_2' ('age' INTEGER, 'nickname' TEXT, 'name' TEXT);"
-					"CREATE TABLE 'sample_items_3' ('MyID' INTEGER PRIMARY KEY ASC, 'a' INTEGER, 'b' TEXT, 'c' INTEGER, 'd' REAL);"
+					"CREATE TABLE 'sample_items_3' ('MyID' INTEGER PRIMARY KEY ASC, 'a' INTEGER, 'b' TEXT, 'c' INTEGER, 'd' REAL, 'e' INTEGER, 'f' INTEGER);"
 
 					"COMMIT;";
 
@@ -85,14 +85,16 @@ namespace micro_profiler
 					string b;
 					int64_t c;
 					double d;
+					uint64_t e;
+					unsigned int f;
 
 					bool operator <(const sample_item_3& rhs) const
 					{
 						auto approx_less = [] (double lhs, double rhs) {
 							return lhs < rhs - 0.000001 * (rhs - lhs);
 						};
-						auto tlhs = make_tuple(id, a, b, c);
-						auto trhs = make_tuple(rhs.id, rhs.a, rhs.b, rhs.c);
+						auto tlhs = make_tuple(id, a, b, c, e, f);
+						auto trhs = make_tuple(rhs.id, rhs.a, rhs.b, rhs.c, rhs.e, rhs.f);
 
 						if (tlhs < trhs)
 							return true;
@@ -132,6 +134,8 @@ namespace micro_profiler
 					visitor(&sample_item_3::b, "b");
 					visitor(&sample_item_3::c, "c");
 					visitor(&sample_item_3::d, "d");
+					visitor(&sample_item_3::e, "e");
+					visitor(&sample_item_3::f, "f");
 				}
 
 
@@ -429,9 +433,9 @@ namespace micro_profiler
 					// INIT
 					vector<sample_item_3> items_read;
 					sample_item_3 items[] = {
-						{	100, 0, "Bod Dylan", 10000000001, 1.5391	},
-						{	100, 110, "Nick Cave", 10000000002, 1e-8	},
-						{	100, 13, "Robert Fripp", 10000000001, 1.5e12	},
+						{	100, 0, "Bod Dylan", 10000000001, 1.5391, 0x8912323200000001, 0xB0000000	},
+						{	100, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
+						{	100, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
 					};
 					transaction t(create_conneciton(path.c_str()));
 					auto w = t.insert<sample_item_3>("sample_items_3");
@@ -446,15 +450,18 @@ namespace micro_profiler
 						items_read.push_back(item);
 
 					// ASSERT
-					assert_equivalent(plural
-						+ initialize<sample_item_3>(1, 0, "Bod Dylan", 10000000001, 1.5391)
-						+ initialize<sample_item_3>(2, 110, "Nick Cave", 10000000002, 1e-8)
-						+ initialize<sample_item_3>(3, 13, "Robert Fripp", 10000000001, 1.5e12), items_read);
+					sample_item_3 reference1[] = {
+						{	1, 0, "Bod Dylan", 10000000001, 1.5391, 0x8912323200000001, 0xB0000000	},
+						{	2, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
+						{	3, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
+					};
+
+					assert_equivalent(reference1, items_read);
 
 					// INIT
 					sample_item_3 items2[] = {
-						{	100, 0, "Jimi Hendrix", 30000000001, 1.5391	},
-						{	100, 0, "Tom Waits", 70000000002, 3.141e-8	},
+						{	100, 0, "Jimi Hendrix", 30000000001, 1.5391, 0, 0	},
+						{	100, 0, "Tom Waits", 70000000002, 3.141e-8, 0, 0	},
 					};
 
 					for (auto i = begin(items2); i != end(items2); ++i)
@@ -468,12 +475,15 @@ namespace micro_profiler
 						items_read.push_back(item);
 
 					// ASSERT
-					assert_equivalent(plural
-						+ initialize<sample_item_3>(1, 0, "Bod Dylan", 10000000001, 1.5391)
-						+ initialize<sample_item_3>(2, 110, "Nick Cave", 10000000002, 1e-8)
-						+ initialize<sample_item_3>(3, 13, "Robert Fripp", 10000000001, 1.5e12)
-						+ initialize<sample_item_3>(4, 0, "Jimi Hendrix", 30000000001, 1.5391)
-						+ initialize<sample_item_3>(5, 0, "Tom Waits", 70000000002, 3.141e-8), items_read);
+					sample_item_3 reference2[] = {
+						{	1, 0, "Bod Dylan", 10000000001, 1.5391, 0x8912323200000001, 0xB0000000	},
+						{	2, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
+						{	3, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
+						{	4, 0, "Jimi Hendrix", 30000000001, 1.5391, 0, 0	},
+						{	5, 0, "Tom Waits", 70000000002, 3.141e-8, 0, 0	},
+					};
+
+					assert_equivalent(reference2, items_read);
 				}
 			end_test_suite
 		}

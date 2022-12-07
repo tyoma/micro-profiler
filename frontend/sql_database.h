@@ -86,7 +86,7 @@ namespace micro_profiler
 		{	return select_builder<T>(table_name).create_reader(*_connection, where);	}
 
 		template <typename T>
-		inline inserter<T> transaction::insert(const char * table_name)
+		inline inserter<T> transaction::insert(const char *table_name)
 		{	return insert_builder<T>(table_name).create_inserter(*_connection);	}
 
 		inline void transaction::commit()

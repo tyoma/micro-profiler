@@ -37,14 +37,20 @@ namespace micro_profiler
 			void operator ()(int T::*field, const char *)
 			{	sqlite3_bind_int(&statement, index++, item.*field);	}
 
+			void operator ()(unsigned int T::*field, const char *)
+			{	sqlite3_bind_int(&statement, index++, static_cast<int>(item.*field));	}
+
 			void operator ()(std::int64_t T::*field, const char *)
 			{	sqlite3_bind_int64(&statement, index++, item.*field);	}
 
-			void operator ()(std::string T::*field, const char *)
-			{	sqlite3_bind_text(&statement, index++, (item.*field).c_str(), -1, SQLITE_STATIC);	}
+			void operator ()(std::uint64_t T::*field, const char *)
+			{	sqlite3_bind_int64(&statement, index++, static_cast<std::int64_t>(item.*field));	}
 
 			void operator ()(double T::*field, const char *)
 			{	sqlite3_bind_double(&statement, index++, item.*field);	}
+
+			void operator ()(std::string T::*field, const char *)
+			{	sqlite3_bind_text(&statement, index++, (item.*field).c_str(), -1, SQLITE_STATIC);	}
 
 			template <typename U>
 			void operator ()(U, const char *)

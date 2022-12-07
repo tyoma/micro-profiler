@@ -383,6 +383,7 @@ namespace micro_profiler
 					auto conn1 = create_conneciton(path.c_str());
 					auto conn2 = create_conneciton(path.c_str());
 					auto conn3 = create_conneciton(path.c_str());
+					auto conn4 = create_conneciton(path.c_str());
 
 					// ACT
 					{
@@ -390,6 +391,7 @@ namespace micro_profiler
 
 					// ACT / ASSERT
 						assert_throws(transaction contender(conn2, transaction::immediate, 400), sql_error);
+						assert_throws(transaction contender(conn2, transaction::exclusive, 400), sql_error);
 
 					// ACT / ASSERT (does not throw)
 						transaction non_contended(conn2, transaction::deferred, 2000);
@@ -402,6 +404,15 @@ namespace micro_profiler
 						// ACT / ASSERT (does not throw)
 						transaction non_contender1(conn2, transaction::immediate, 2000);
 						transaction non_contended2(conn3, transaction::deferred, 2000);
+					}
+
+					// ACT
+					{
+						transaction locker(conn1, transaction::exclusive);
+
+					// ACT / ASSERT
+						assert_throws(transaction contender(conn3, transaction::immediate, 200), sql_error);
+						assert_throws(transaction contender(conn4, transaction::exclusive, 400), sql_error);
 					}
 				}
 
@@ -484,6 +495,54 @@ namespace micro_profiler
 					};
 
 					assert_equivalent(reference2, items_read);
+				}
+
+
+				test( CreatedTablesCanBeUsed )
+				{
+					// INIT
+					transaction t(create_conneciton(path.c_str()));
+
+					// ACT
+					t.create_table<sample_item_3>("Musicians");
+
+					// ASSERT
+					vector<sample_item_3> items_read;
+					sample_item_3 items[] = {
+						{	100, 0, "Bod Dylan", 10000000001, 1.5391, 0x8912323200000001, 0xB0000000	},
+						{	100, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
+						{	100, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
+					};
+					auto w = t.insert<sample_item_3>("Musicians");
+
+					for (auto i = begin(items); i != end(items); ++i)
+						w(*i);
+					auto r = t.select<sample_item_3>("Musicians");
+
+					for (sample_item_3 item; r(item); )
+						items_read.push_back(item);
+
+					assert_equivalent(items, items_read);
+
+					// ACT
+					t.create_table<test_a>("snoobs");
+
+					// ASSERT
+					vector<test_a> items_read2;
+					test_a items2[] = {
+						{	"Bod Dylan", -9001	},
+						{	"Nick Cave", 11123	},
+					};
+					auto w2 = t.insert<test_a>("snoobs");
+
+					for (auto i = begin(items2); i != end(items2); ++i)
+						w2(*i);
+					auto r2 = t.select<test_a>("snoobs");
+
+					for (test_a item; r2(item); )
+						items_read2.push_back(item);
+
+					assert_equivalent(items2, items_read2);
 				}
 			end_test_suite
 		}

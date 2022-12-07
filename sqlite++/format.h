@@ -21,13 +21,67 @@
 #pragma once
 
 #include "expression.h"
+#include "types.h"
 
 #include <common/formatting.h>
+#include <cstdint>
 
 namespace micro_profiler
 {
 	namespace sql
 	{
+		template <typename T>
+		struct column_definition_format_visitor
+		{
+			void operator ()(int T::*, const char *column_name)
+			{	append_integer(column_name);	}
+
+			void operator ()(unsigned int T::*, const char *column_name)
+			{	append_integer(column_name);	}
+
+			void operator ()(std::int64_t T::*, const char *column_name)
+			{	append_integer(column_name);	}
+
+			void operator ()(std::uint64_t T::*, const char *column_name)
+			{	append_integer(column_name);	}
+
+			void operator ()(std::string T::*, const char *column_name)
+			{	append_text(column_name);	}
+
+			void operator ()(double T::*, const char *column_name)
+			{	append_real(column_name);	}
+
+			template <typename F>
+			void operator ()(const primary_key<T, F> &field, const char *column_name)
+			{
+				(*this)(field.field, column_name);
+				column_definitions += " PRIMARY KEY ASC";
+			}
+
+			std::string &column_definitions;
+			bool first;
+
+		private:
+			std::string &append_column(const char *column_name)
+			{
+				if (!first)
+					column_definitions += ',';
+				first = false;
+				column_definitions.append(column_name);
+				return column_definitions;
+			}
+
+			void append_integer(const char *column_name)
+			{	append_column(column_name) += " INTEGER NOT NULL";	}
+
+			void append_text(const char *column_name)
+			{	append_column(column_name) += " TEXT NOT NULL";	}
+
+			void append_real(const char *column_name)
+			{	append_column(column_name) += " REAL NOT NULL";	}
+		};
+
+
 		template <typename T, typename F>
 		struct format_column_visitor
 		{
@@ -47,10 +101,6 @@ namespace micro_profiler
 
 			F T::*field;
 			std::string &column_name;
-
-		private:
-			format_column_visitor(const format_column_visitor &other);
-			void operator =(const format_column_visitor &rhs);
 		};
 
 
@@ -80,6 +130,18 @@ namespace micro_profiler
 			auto index = 1u;
 
 			format_expression(output, e, index);
+		}
+
+		template <typename T>
+		inline void format_create_table(std::string &output, const char *name)
+		{
+			column_definition_format_visitor<T> v = {	output, true	};
+
+			output += "CREATE TABLE ";
+			output += name;
+			output += " (";
+			describe<T>(v);
+			output += ")";
 		}
 	}
 }

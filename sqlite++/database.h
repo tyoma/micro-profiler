@@ -37,11 +37,14 @@ namespace micro_profiler
 		class transaction
 		{
 		public:
-			enum type {	deferred, immediate,	};
+			enum type {	deferred, immediate, exclusive,	};
 
 		public:
 			transaction(connection_ptr connection, type type_ = deferred, int timeout_ms = 500);
 			~transaction();
+
+			template <typename T>
+			void create_table(const char *name);
 
 			template <typename T>
 			reader<T> select(const char *table_name);
@@ -64,7 +67,7 @@ namespace micro_profiler
 		inline transaction::transaction(connection_ptr connection, type type_, int timeout_ms)
 			: _connection(connection), _comitted(false)
 		{
-			const char *begin_sql[] = {	"BEGIN DEFERRED", "BEGIN IMMEDIATE",	};
+			const char *begin_sql[] = {	"BEGIN DEFERRED", "BEGIN IMMEDIATE", "BEGIN EXCLUSIVE",	};
 			const auto begin = create_statement(*_connection, begin_sql[type_]);
 
 			sqlite3_busy_timeout(_connection.get(), timeout_ms);
@@ -75,6 +78,17 @@ namespace micro_profiler
 		{
 			if (const auto commit = !_comitted ? create_statement(*_connection, "ROLLBACK") : nullptr)
 				sqlite3_step(commit.get());
+		}
+
+		template <typename T>
+		inline void transaction::create_table(const char *name)
+		{
+			std::string create_table_ddl;
+
+			format_create_table<T>(create_table_ddl, name);
+			const auto s = create_statement(*_connection, create_table_ddl.c_str());
+
+			sql_error::check_step(_connection, sqlite3_step(s.get()));
 		}
 
 		template <typename T>

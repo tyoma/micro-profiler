@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 set(SLITEPP_TESTS_SOURCES
+	DatabaseDDLTests.cpp
 	DatabaseExpressionTests.cpp
 	DatabaseTests.cpp
 )

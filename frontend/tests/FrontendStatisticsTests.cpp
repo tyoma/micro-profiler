@@ -67,8 +67,12 @@ namespace micro_profiler
 			{
 				typedef pair< shared_ptr<emulator_>, shared_ptr<frontend> > complex_t;
 
+				const auto db_path = dir.track_file("sample-preferences.db");
+
+				frontend::create_database(db_path);
+
 				auto e2 = make_shared<emulator_>(queue);
-				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session, dir.path(), worker, apartment));
+				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session, db_path, worker, apartment));
 				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();

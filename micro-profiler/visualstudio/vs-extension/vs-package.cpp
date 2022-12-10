@@ -35,11 +35,13 @@
 #include <frontend/frontend_manager.h>
 #include <frontend/frontend_ui.h>
 #include <frontend/ipc_manager.h>
+#include <frontend/profiling_preferences_db.h>
 #include <frontend/tables_ui.h>
 #include <logger/log.h>
 #include <scheduler/thread_queue.h>
 #include <scheduler/ui_queue.h>
 #include <setup/environment.h>
+#include <sqlite++/database.h>
 #include <visualstudio/dispatch.h>
 #include <wpl/layout.h>
 #include <wpl/vs/factory.h>
@@ -52,7 +54,7 @@ using namespace placeholders;
 
 namespace micro_profiler
 {
-	extern const string c_cache_directory;
+	extern const string c_preferences_db;
 
 	namespace integration
 	{
@@ -156,7 +158,7 @@ namespace micro_profiler
 			setup_factory(factory);
 			register_path(*processes, false);
 			_frontend_manager.reset(new frontend_manager([this] (ipc::channel &outbound) {
-				return new frontend(outbound, c_cache_directory, *_worker_queue, *_ui_queue);
+				return new frontend(outbound, c_preferences_db, *_worker_queue, *_ui_queue);
 			}, [this] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
 				const auto ui = make_shared<frontend_pane>(get_factory(), session, _configuration, _ui_queue);
 

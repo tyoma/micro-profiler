@@ -67,6 +67,19 @@ namespace micro_profiler
 		};
 
 
+		struct symbol_info : micro_profiler::symbol_info
+		{
+			id_t module_id;
+		};
+
+
+		struct source_file : identity
+		{
+			id_t module_id;
+			std::string path;
+		};
+
+
 		struct patches : sdb::table<patch>
 		{
 			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;

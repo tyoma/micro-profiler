@@ -6,7 +6,9 @@
 
 #include <common/file_stream.h>
 #include <common/serialization.h>
+#include <frontend/profiling_preferences_db.h>
 #include <ipc/server_session.h>
+#include <sqlite++/database.h>
 #include <strmd/serializer.h>
 #include <test-helpers/comparisons.h>
 #include <test-helpers/file_helpers.h>
@@ -57,33 +59,56 @@ namespace micro_profiler
 			{	return [v] (ipc::serializer &s) {	s(v);	};	}
 
 			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
-			module_info_metadata create_metadata_info(SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
+			module_info_metadata create_metadata_info(uint32_t hash_, SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
 			{
 				module_info_metadata mi;
 
+				mi.hash = hash_;
 				mi.symbols = mkvector(symbols);
 				mi.source_files = containers::unordered_map<unsigned int, string>(begin(files), end(files));
 				return mi;
 			}
 
-			template <typename T>
-			void write(const string &path, const T &object)
+			void write_metadata(sql::connection_ptr connection, const module_info_metadata &metadata)
 			{
-				write_file_stream w(path);
-				file_serializer s(w);
+				sql::transaction t(connection);
+				tables::module mm;
+				tables::symbol_info s;
+				tables::source_file sf;
+				auto w_modules = t.insert<tables::module>("modules");
+				auto w_symbols = t.insert<tables::symbol_info>("symbols");
+				auto w_sources = t.insert<tables::source_file>("source_files");
 
-				s(object);
+				static_cast<module_info_metadata &>(mm) = metadata;
+				w_modules(mm);
+				sf.module_id = s.module_id = mm.id;
+				for (auto i = metadata.symbols.begin(); i != metadata.symbols.end(); ++i)
+					static_cast<symbol_info &>(s) = *i, w_symbols(s);
+				for (auto i = metadata.source_files.begin(); i != metadata.source_files.end(); ++i)
+					sf.id = i->first, sf.path = i->second, w_sources(sf);
+				t.commit();
 			}
 
-			template <typename T>
-			T read(const string &path)
+			module_info_metadata read_metadata(sql::connection_ptr connection, uint32_t hash_)
 			{
-				read_file_stream r(path);
-				T object;
-				file_deserializer s(r);
+				sql::transaction t(connection);
+				auto r_modules = t.select<tables::module>("modules", sql::c(&tables::module::hash) == sql::p(hash_));
 
-				s(object);
-				return object;
+				for (tables::module m; r_modules(m); )
+				{
+					auto r_symbols = t.select<tables::symbol_info>("symbols",
+						sql::c(&tables::symbol_info::module_id) == sql::p(m.id));
+					auto r_sources = t.select<tables::source_file>("source_files",
+						sql::c(&tables::source_file::module_id) == sql::p(m.id));
+
+					for (tables::symbol_info item; r_symbols(item); )
+						m.symbols.push_back(item);
+					for (tables::source_file item; r_sources(item); )
+						m.source_files[item.id] = item.path;
+					return m;
+				}
+				assert_is_true(false); // not found...
+				throw 0;
 			}
 		}
 
@@ -94,11 +119,17 @@ namespace micro_profiler
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<void> req[10];
 			temporary_directory dir;
+			sql::connection_ptr preferences_db;
 
 			shared_ptr<frontend> create_frontend()
 			{
+				const auto db_path = dir.track_file("sample-preferences.db");
+
+				frontend::create_database(db_path);
+				preferences_db = sql::create_conneciton(db_path.c_str());
+
 				auto e2 = make_shared<emulator_>();
-				auto f = make_shared<frontend>(e2->server_session, dir.path(), worker, apartment);
+				auto f = make_shared<frontend>(e2->server_session, db_path, worker, apartment);
 
 				e2->outbound = f.get();
 				f->initialized = [this] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
@@ -235,15 +266,12 @@ namespace micro_profiler
 
 					switch (persistent_id)
 					{
-					case 17:	resp(response_module_metadata, create_metadata_info(symbols17, files17));	break;
-					case 99:	resp(response_module_metadata, create_metadata_info(symbols99, files99));	break;
-					case 1000:	resp(response_module_metadata, create_metadata_info(symbols1000, files1000));	break;
+					case 17:	resp(response_module_metadata, create_metadata_info(17, symbols17, files17));	break;
+					case 99:	resp(response_module_metadata, create_metadata_info(99, symbols99, files99));	break;
+					case 1000:	resp(response_module_metadata, create_metadata_info(1000, symbols1000, files1000));	break;
 					}
 				});
 
-				dir.track_file("a-00000000.symcache");
-				dir.track_file("b-00000000.symcache");
-				dir.track_file("c-00000000.symcache");
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
 						+ make_mapping_pair(1, 17, 0x00100000u, "a", 0)
@@ -307,19 +335,19 @@ namespace micro_profiler
 
 				// ACT
 				modules(context)->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
-				write(dir.track_file("foo.dll-00100201.symcache"), create_metadata_info(symbols17, files17));
+				write_metadata(preferences_db, create_metadata_info(0x00100201, symbols17, files17));
 				worker.run_one(), apartment.run_one();
 
 				// ASSERT
 				assert_equal(0u, worker.tasks.size());
 				assert_equal(0u, apartment.tasks.size());
 				assert_equal(1u, log.size());
-				assert_equal(create_metadata_info(symbols17, files17), *log.back());
+				assert_equal(create_metadata_info(0, symbols17, files17), *log.back());
 				assert_equal(&modules_by_id(*context)[17], log.back());
 
 				// INIT
-				write(dir.track_file("some_long_name.so-10100201.symcache"), create_metadata_info(symbols99, files99));
-				write(dir.track_file("libc.so-00000001.symcache"), create_metadata_info(symbols1000, files1000));
+				write_metadata(preferences_db, create_metadata_info(0x10100201, symbols99, files99));
+				write_metadata(preferences_db, create_metadata_info(1, symbols1000, files1000));
 
 				// ACT
 				modules(context)->request_presence(req[1], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
@@ -330,8 +358,8 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(4u, log.size());
 				assert_equal(&modules_by_id(*context)[17], log[1]);
-				assert_equal(create_metadata_info(symbols99, files99), *log[2]);
-				assert_equal(create_metadata_info(symbols1000, files1000), *log[3]);
+				assert_equal(create_metadata_info(0, symbols99, files99), *log[2]);
+				assert_equal(create_metadata_info(0, symbols1000, files1000), *log[3]);
 			}
 
 
@@ -358,7 +386,7 @@ namespace micro_profiler
 				modules(context)->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 				worker.run_one();
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
-					resp(response_module_metadata, create_metadata_info(symbols17, files17));
+					resp(response_module_metadata, create_metadata_info(0x90100201, symbols17, files17));
 				});
 				apartment.run_one();
 
@@ -371,20 +399,20 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_empty(worker.tasks);
-				assert_equal(create_metadata_info(symbols17, files17), read<module_info_metadata>(f1));
+				assert_equal(create_metadata_info(0, symbols17, files17), read_metadata(preferences_db, 0x90100201));
 
 				// ACT
 				modules(context)->request_presence(req[1], 170u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 				worker.run_one();
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
-					resp(response_module_metadata, create_metadata_info(symbols99, files99));
+					resp(response_module_metadata, create_metadata_info(1, symbols99, files99));
 				});
 				apartment.run_till_end();
 				worker.run_one();
 
 				// ASSERT
 				assert_is_empty(worker.tasks);
-				assert_equal(create_metadata_info(symbols99, files99), read<module_info_metadata>(f2));
+				assert_equal(create_metadata_info(0, symbols99, files99), read_metadata(preferences_db, 1));
 			}
 
 
@@ -397,7 +425,7 @@ namespace micro_profiler
 				vector<const module_info_metadata *> log;
 
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
-					resp(response_module_metadata, create_metadata_info(symbols17, files17));
+					resp(response_module_metadata, create_metadata_info(17, symbols17, files17));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 

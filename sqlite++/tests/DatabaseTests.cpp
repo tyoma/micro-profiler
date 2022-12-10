@@ -104,6 +104,32 @@ namespace micro_profiler
 					}
 				};
 
+				struct sample_base
+				{
+					int id;
+					string comment;
+				};
+
+				struct sample_inherited : sample_base
+				{
+					int b;
+					int64_t c;
+
+					static sample_inherited create(int id_, string comment_, int b_, int64_t c_)
+					{
+						sample_inherited v;
+
+						v.id = id_;
+						v.comment = comment_;
+						v.b = b_;
+						v.c = c_;
+						return v;
+					}
+
+					bool operator <(const sample_inherited &rhs) const
+					{	return make_tuple(id, b, c, comment) < make_tuple(rhs.id, rhs.b, rhs.c, rhs.comment);	}
+				};
+
 				template <typename VisitorT>
 				void describe(VisitorT &visitor, test_a *)
 				{
@@ -136,6 +162,15 @@ namespace micro_profiler
 					visitor(&sample_item_3::d, "d");
 					visitor(&sample_item_3::e, "e");
 					visitor(&sample_item_3::f, "f");
+				}
+
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, sample_inherited *)
+				{
+					visitor(pk(&sample_inherited::id), "myid");
+					visitor(&sample_inherited::b, "bb");
+					visitor(&sample_inherited::c, "cc");
+					visitor(&sample_inherited::comment, "comment");
 				}
 
 
@@ -543,6 +578,45 @@ namespace micro_profiler
 						items_read2.push_back(item);
 
 					assert_equivalent(items2, items_read2);
+				}
+
+
+				test( InheritanceIsSupportedWhenInsertingAndReading )
+				{
+					// INIT
+					transaction t(create_conneciton(path.c_str()));
+					auto items = plural
+						+ sample_inherited::create(10, "lorem ipsum", 12, 23)
+						+ sample_inherited::create(10, "ipsum", 121, 213)
+						+ sample_inherited::create(10, "amet dolor", 1, 2223);
+
+					// INIT / ACT
+					t.create_table<sample_inherited>("Test");
+
+					auto w = t.insert<sample_inherited>("Test");
+
+					// ACT
+					for (auto i = begin(items); i != end(items); ++i)
+						w(*i);
+
+					// ASSERT
+					auto reference = plural
+						+ sample_inherited::create(1, "lorem ipsum", 12, 23)
+						+ sample_inherited::create(2, "ipsum", 121, 213)
+						+ sample_inherited::create(3, "amet dolor", 1, 2223);
+
+					assert_equivalent(reference, items);
+
+					// INIT / ACT
+					vector<sample_inherited> items_read;
+					auto r = t.select<sample_inherited>("Test");
+
+					// ACT
+					for (sample_inherited item; r(item); )
+						items_read.push_back(item);
+
+					// ASSERT
+					assert_equivalent(reference, items_read);
 				}
 			end_test_suite
 		}

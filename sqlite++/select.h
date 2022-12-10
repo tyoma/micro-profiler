@@ -59,26 +59,32 @@ namespace micro_profiler
 		template <typename T>
 		struct record_reader
 		{
-			void operator ()(int T::*field, const char *)
+			template <typename U>
+			void operator ()(int U::*field, const char *)
 			{	record.*field = sqlite3_column_int(&statement, index++);	}
 
-			void operator ()(unsigned int T::*field, const char *)
+			template <typename U>
+			void operator ()(unsigned int U::*field, const char *)
 			{	record.*field = static_cast<unsigned int>(sqlite3_column_int(&statement, index++));	}
 
-			void operator ()(std::int64_t T::*field, const char *)
+			template <typename U>
+			void operator ()(std::int64_t U::*field, const char *)
 			{	record.*field = sqlite3_column_int64(&statement, index++);	}
 
-			void operator ()(std::uint64_t T::*field, const char *)
+			template <typename U>
+			void operator ()(std::uint64_t U::*field, const char *)
 			{	record.*field = static_cast<std::uint64_t>(sqlite3_column_int64(&statement, index++));	}
 
-			void operator ()(double T::*field, const char *)
+			template <typename U>
+			void operator ()(double U::*field, const char *)
 			{	record.*field = sqlite3_column_double(&statement, index++);	}
 
-			void operator ()(std::string T::*field, const char *)
+			template <typename U>
+			void operator ()(std::string U::*field, const char *)
 			{	record.*field = (const char *)sqlite3_column_text(&statement, index++);	}
 
-			template <typename F>
-			void operator ()(const primary_key<T, F> &field, const char *name)
+			template <typename U, typename F>
+			void operator ()(const primary_key<U, F> &field, const char *name)
 			{	(*this)(field.field, name);	}
 
 			T &record;

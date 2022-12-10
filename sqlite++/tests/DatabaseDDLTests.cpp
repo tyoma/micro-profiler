@@ -40,6 +40,11 @@ namespace micro_profiler
 				int id;
 			};
 
+			struct type_inherited : type_ided
+			{
+				int c;
+			};
+
 			template <typename VisitorT>
 			void describe(VisitorT &&visitor, type_a *)
 			{
@@ -71,6 +76,14 @@ namespace micro_profiler
 			{
 				visitor(&type_ided::b, "b");
 				visitor(pk(&type_ided::id), "Id");
+			}
+
+			template <typename VisitorT>
+			void describe(VisitorT &&visitor, type_inherited *)
+			{
+				visitor(&type_inherited::b, "b");
+				visitor(pk(&type_inherited::id), "id");
+				visitor(&type_inherited::c, "c");
 			}
 
 			template <typename T>
@@ -116,6 +129,7 @@ namespace micro_profiler
 			{
 				// INIT / ACT / ASSERT
 				assert_equal("CREATE TABLE Baz (b INTEGER NOT NULL,Id INTEGER NOT NULL PRIMARY KEY ASC)", format_create_table<type_ided>("Baz"));
+				assert_equal("CREATE TABLE Baz (b INTEGER NOT NULL,id INTEGER NOT NULL PRIMARY KEY ASC,c INTEGER NOT NULL)", format_create_table<type_inherited>("Baz"));
 			}
 			
 		end_test_suite

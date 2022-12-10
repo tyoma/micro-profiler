@@ -51,8 +51,8 @@ namespace micro_profiler
 			void operator ()(double T::*, const char *column_name)
 			{	append_real(column_name);	}
 
-			template <typename F>
-			void operator ()(const primary_key<T, F> &field, const char *column_name)
+			template <typename U, typename F>
+			void operator ()(const primary_key<U, F> &field, const char *column_name)
 			{
 				(*this)(field.field, column_name);
 				column_definitions += " PRIMARY KEY ASC";
@@ -89,7 +89,8 @@ namespace micro_profiler
 				: field(field_), column_name(column_name_)
 			{	}
 
-			void operator ()(F T::*field_, const char *column_name_) const
+			template <typename U>
+			void operator ()(F U::*field_, const char *column_name_) const
 			{
 				if (field_ == field)
 					column_name.append(column_name_);

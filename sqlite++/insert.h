@@ -34,22 +34,28 @@ namespace micro_profiler
 		template <typename T>
 		struct field_binder
 		{
-			void operator ()(int T::*field, const char *)
+			template <typename U>
+			void operator ()(int U::*field, const char *)
 			{	sqlite3_bind_int(&statement, index++, item.*field);	}
 
-			void operator ()(unsigned int T::*field, const char *)
+			template <typename U>
+			void operator ()(unsigned int U::*field, const char *)
 			{	sqlite3_bind_int(&statement, index++, static_cast<int>(item.*field));	}
 
-			void operator ()(std::int64_t T::*field, const char *)
+			template <typename U>
+			void operator ()(std::int64_t U::*field, const char *)
 			{	sqlite3_bind_int64(&statement, index++, item.*field);	}
 
-			void operator ()(std::uint64_t T::*field, const char *)
+			template <typename U>
+			void operator ()(std::uint64_t U::*field, const char *)
 			{	sqlite3_bind_int64(&statement, index++, static_cast<std::int64_t>(item.*field));	}
 
-			void operator ()(double T::*field, const char *)
+			template <typename U>
+			void operator ()(double U::*field, const char *)
 			{	sqlite3_bind_double(&statement, index++, item.*field);	}
 
-			void operator ()(std::string T::*field, const char *)
+			template <typename U>
+			void operator ()(std::string U::*field, const char *)
 			{	sqlite3_bind_text(&statement, index++, (item.*field).c_str(), -1, SQLITE_STATIC);	}
 
 			template <typename U>
@@ -64,8 +70,8 @@ namespace micro_profiler
 		template <typename T>
 		struct primary_key_binder
 		{
-			template <typename F>
-			void operator ()(const primary_key<T, F> &field, const char *)
+			template <typename U, typename F>
+			void operator ()(const primary_key<U, F> &field, const char *)
 			{	item.*field.field = static_cast<F>(sqlite3_last_insert_rowid(&connection));	}
 
 			template <typename U>
@@ -101,8 +107,8 @@ namespace micro_profiler
 			template <typename F>
 			void operator ()(F field, const char *name);
 
-			template <typename F>
-			void operator ()(const primary_key<T, F> &field, const char *name);
+			template <typename U, typename F>
+			void operator ()(const primary_key<U, F> &field, const char *name);
 
 		private:
 			std::string _expression_text;
@@ -158,8 +164,8 @@ namespace micro_profiler
 		}
 
 		template <typename T>
-		template <typename F>
-		inline void insert_builder<T>::operator ()(const primary_key<T, F> &, const char *)
+		template <typename U, typename F>
+		inline void insert_builder<T>::operator ()(const primary_key<U, F> &, const char *)
 		{	}
 	}
 }

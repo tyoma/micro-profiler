@@ -39,7 +39,7 @@ namespace micro_profiler
 		};
 
 
-		inline connection_ptr create_conneciton(const char *path)
+		inline connection_ptr create_connection(const char *path)
 		{
 			sqlite3 *db = nullptr;
 

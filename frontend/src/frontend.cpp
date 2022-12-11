@@ -45,7 +45,7 @@ namespace micro_profiler
 	frontend::frontend(ipc::channel &outbound, const string &preferences_db,
 			scheduler::queue &worker, scheduler::queue &apartment)
 		: client_session(outbound), _worker_queue_raw(worker), _apartment_queue(apartment),
-			_db(make_shared<profiling_session>()), _preferences_db_connection(sql::create_conneciton(preferences_db.c_str())),
+			_db(make_shared<profiling_session>()), _preferences_db_connection(sql::create_connection(preferences_db.c_str())),
 			_initialized(false), _mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>()),
 			_worker_queue(worker)
 	{
@@ -105,7 +105,7 @@ namespace micro_profiler
 	void frontend::create_database(const string &preferences_db)
 	try
 	{
-		sql::transaction t(sql::create_conneciton(preferences_db.c_str()));
+		sql::transaction t(sql::create_connection(preferences_db.c_str()));
 
 		t.create_table<tables::module>("modules");
 		t.create_table<tables::symbol_info>("symbols");

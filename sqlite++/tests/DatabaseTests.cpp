@@ -179,7 +179,7 @@ namespace micro_profiler
 				{
 					T item;
 					vector<T> result;
-					transaction c(create_conneciton(path.c_str()));
+					transaction c(create_connection(path.c_str()));
 					auto r = c.select<T>(table_name);
 
 					while (r(item))
@@ -212,7 +212,7 @@ namespace micro_profiler
 					// INIT / ACT
 					test_a a;
 					vector<test_a> results_a;
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 
 					auto r = t.select<test_a>("lorem_ipsums");
 
@@ -268,7 +268,7 @@ namespace micro_profiler
 					// INIT / ACT
 					test_a a;
 					vector<test_a> results_a;
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 
 					auto r = t.select<test_a>("reordered_lorem_ipsums");
 
@@ -291,7 +291,7 @@ namespace micro_profiler
 					// INIT / ACT
 					test_b b;
 					vector<test_b> results;
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 
 					// INIT / ACT
 					auto r = t.select<test_b>("reordered_lorem_ipsums", c(&test_b::suspect_age) == p<const int>(314));
@@ -336,7 +336,7 @@ namespace micro_profiler
 				{
 					// INIT
 					sample_item_1 item = {	314, "Bob Marley"	};
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 
 					// INIT / ACT
 					auto w1 = t.insert<sample_item_1>("sample_items_1");
@@ -357,7 +357,7 @@ namespace micro_profiler
 						{	141, "Peter Tosh"	},
 						{	3141, "John Zorn"	},
 					};
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 
 					// INIT / ACT
 					auto w1 = t.insert<sample_item_1>("sample_items_1");
@@ -380,7 +380,7 @@ namespace micro_profiler
 					};
 
 					// INIT / ACT
-					transaction t2(create_conneciton(path.c_str()));
+					transaction t2(create_connection(path.c_str()));
 					auto w2 = t2.insert<test_b>("sample_items_2");
 
 					// ACT
@@ -396,7 +396,7 @@ namespace micro_profiler
 				test( InnerTransactionsAreProhibited )
 				{
 					// INIT
-					auto conn = create_conneciton(path.c_str());
+					auto conn = create_connection(path.c_str());
 
 					// INIT / ACT
 					auto locker = make_shared<transaction>(conn);
@@ -415,10 +415,10 @@ namespace micro_profiler
 				test( TransactionsCombineAccordinglyToType )
 				{
 					// INIT
-					auto conn1 = create_conneciton(path.c_str());
-					auto conn2 = create_conneciton(path.c_str());
-					auto conn3 = create_conneciton(path.c_str());
-					auto conn4 = create_conneciton(path.c_str());
+					auto conn1 = create_connection(path.c_str());
+					auto conn2 = create_connection(path.c_str());
+					auto conn3 = create_connection(path.c_str());
+					auto conn4 = create_connection(path.c_str());
 
 					// ACT
 					{
@@ -455,7 +455,7 @@ namespace micro_profiler
 				test( PrimaryKeyIsSetUponInsertion )
 				{
 					// INIT
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 					auto w = t.insert<sample_item_3>("sample_items_3");
 
 					// ACT
@@ -483,7 +483,7 @@ namespace micro_profiler
 						{	100, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
 						{	100, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
 					};
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 					auto w = t.insert<sample_item_3>("sample_items_3");
 
 					for (auto i = begin(items); i != end(items); ++i)
@@ -536,7 +536,7 @@ namespace micro_profiler
 				test( CreatedTablesCanBeUsed )
 				{
 					// INIT
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 
 					// ACT
 					t.create_table<sample_item_3>("Musicians");
@@ -584,7 +584,7 @@ namespace micro_profiler
 				test( InheritanceIsSupportedWhenInsertingAndReading )
 				{
 					// INIT
-					transaction t(create_conneciton(path.c_str()));
+					transaction t(create_connection(path.c_str()));
 					auto items = plural
 						+ sample_inherited::create(10, "lorem ipsum", 12, 23)
 						+ sample_inherited::create(10, "ipsum", 121, 213)

@@ -126,7 +126,7 @@ namespace micro_profiler
 				const auto db_path = dir.track_file("sample-preferences.db");
 
 				frontend::create_database(db_path);
-				preferences_db = sql::create_conneciton(db_path.c_str());
+				preferences_db = sql::create_connection(db_path.c_str());
 
 				auto e2 = make_shared<emulator_>();
 				auto f = make_shared<frontend>(e2->server_session, db_path, worker, apartment);
@@ -266,17 +266,17 @@ namespace micro_profiler
 
 					switch (persistent_id)
 					{
-					case 17:	resp(response_module_metadata, create_metadata_info(17, symbols17, files17));	break;
-					case 99:	resp(response_module_metadata, create_metadata_info(99, symbols99, files99));	break;
-					case 1000:	resp(response_module_metadata, create_metadata_info(1000, symbols1000, files1000));	break;
+					case 17:	resp(response_module_metadata, create_metadata_info(10, symbols17, files17));	break;
+					case 99:	resp(response_module_metadata, create_metadata_info(100, symbols99, files99));	break;
+					case 1000:	resp(response_module_metadata, create_metadata_info(1, symbols1000, files1000));	break;
 					}
 				});
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
-						+ make_mapping_pair(1, 17, 0x00100000u, "a", 0)
-						+ make_mapping_pair(2, 99, 0x00100000u, "b", 0)
-						+ make_mapping_pair(3, 1000, 0x00100000u, "c", 0));
+						+ make_mapping_pair(1, 17, 0x00100000u, "a", 10)
+						+ make_mapping_pair(2, 99, 0x00100000u, "b", 100)
+						+ make_mapping_pair(3, 1000, 0x00100000u, "c", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 

@@ -15,7 +15,7 @@ namespace scheduler
 	{
 		using namespace micro_profiler::tests;
 
-		begin_test_suite( ATaskImplTests )
+		begin_test_suite( TaskTests )
 			mocks::queue queues[2];
 
 			test( RunningATaskSchedulesOneOnTheQueuePassed )
@@ -24,14 +24,8 @@ namespace scheduler
 				vector<int> called(2);
 
 				// INIT / ACT
-				auto t1 = task<int>::run([&] () -> int {
-					called[0]++;
-					return 18;
-				}, queues[0]);
-				auto t2 = task<int>::run([&] () -> int {
-					called[1]++;
-					return 181;
-				}, queues[1]);
+				auto t1 = task<int>::run([&] {	return called[0]++, 18;	}, queues[0]);
+				auto t2 = task<int>::run([&] {	return called[1]++, 181;	}, queues[1]);
 
 				// ASSERT
 				assert_equal(1u, queues[0].tasks.size());
@@ -62,11 +56,11 @@ namespace scheduler
 				auto t2 = task<int>::run([&] {	return 1;	}, queues[1]);
 
 				// ACT
-				t1.continue_with([&] (const task<int> &) {	return string();	}, queues[0]);
-				t1.continue_with([&] (const task<int> &) {	return 17;	}, queues[1]);
-				t2.continue_with([&] (const task<int> &) {	return string();	}, queues[1]);
-				t2.continue_with([&] (const task<int> &) {	return 17.19;	}, queues[1]);
-				t2.continue_with([&] (const task<int> &) {	return plural + 1 + 19;	}, queues[0]);
+				t1.continue_with([&] (const async_result<int> &) {	return string();	}, queues[0]);
+				t1.continue_with([&] (const async_result<int> &) {	return 17;	}, queues[1]);
+				t2.continue_with([&] (const async_result<int> &) {	return string();	}, queues[1]);
+				t2.continue_with([&] (const async_result<int> &) {	return 17.19;	}, queues[1]);
+				t2.continue_with([&] (const async_result<int> &) {	return plural + 1 + 19;	}, queues[0]);
 
 				// ASSERT
 				assert_equal(1u, queues[0].tasks.size());
@@ -95,11 +89,11 @@ namespace scheduler
 				auto t1 = task<int>::run([&] {	return 18;	}, queues[0]);
 				auto t2 = task<int>::run([&] {	return 1;	}, queues[1]);
 
-				t1.continue_with([&] (const task<int> &) {	return called[0]++, string();	}, queues[0]);
-				t1.continue_with([&] (const task<int> &) {	return called[1]++, 17;	}, queues[1]);
-				t2.continue_with([&] (const task<int> &) {	return called[2]++, string();	}, queues[1]);
-				t2.continue_with([&] (const task<int> &) {	return called[3]++, 17.19;	}, queues[1]);
-				t2.continue_with([&] (const task<int> &) {	return called[4]++, plural + 1 + 19;	}, queues[0]);
+				t1.continue_with([&] (const async_result<int> &) {	return called[0]++, string();	}, queues[0]);
+				t1.continue_with([&] (const async_result<int> &) {	return called[1]++, 17;	}, queues[1]);
+				t2.continue_with([&] (const async_result<int> &) {	return called[2]++, string();	}, queues[1]);
+				t2.continue_with([&] (const async_result<int> &) {	return called[3]++, 17.19;	}, queues[1]);
+				t2.continue_with([&] (const async_result<int> &) {	return called[4]++, plural + 1 + 19;	}, queues[0]);
 
 				// ACT
 				queues[1].run_one();
@@ -145,9 +139,9 @@ namespace scheduler
 
 				// INIT / ACT
 				task<int>::run([&] {	return called[0]++, 18;	}, queues[0])
-					.continue_with([&] (const task<int> &) {	return called[1]++, string("lorem ipsum");	}, queues[1])
-					.continue_with([&] (const task<string> &) {	return called[2]++, 1.1;	}, queues[0])
-					.continue_with([&] (const task<double> &) {	return called[3]++, 0;	}, queues[0]);
+					.continue_with([&] (const async_result<int> &) {	return called[1]++, string("lorem ipsum");	}, queues[1])
+					.continue_with([&] (const async_result<string> &) {	return called[2]++, 1.1;	}, queues[0])
+					.continue_with([&] (const async_result<double> &) {	return called[3]++, 0;	}, queues[0]);
 
 				// ACT
 				queues[0].run_one();
@@ -190,8 +184,8 @@ namespace scheduler
 				auto s1 = task<int>::run([&] {	return 18;	}, queues[0]);
 
 				// INIT / ACT
-				s1.continue_with([&] (const task<int> &a) {	return obtained1.push_back(make_pair(0, *a)), 1;	}, queues[0]);
-				s1.continue_with([&] (const task<int> &a) {	return obtained1.push_back(make_pair(1, *a)), 1;	}, queues[0]);
+				s1.continue_with([&] (const async_result<int> &a) {	return obtained1.push_back(make_pair(0, *a)), 1;	}, queues[0]);
+				s1.continue_with([&] (const async_result<int> &a) {	return obtained1.push_back(make_pair(1, *a)), 1;	}, queues[0]);
 
 				// ACT
 				queues[0].run_one();
@@ -211,9 +205,9 @@ namespace scheduler
 				auto s2 = task<string>::run([&] {	return string("lorem");	}, queues[0]);
 
 				// INIT / ACT
-				s2.continue_with([&] (const task<string> &a) {	return obtained2.push_back(make_pair(0, *a)), 1;	}, queues[0]);
-				s2.continue_with([&] (const task<string> &a) {	return obtained2.push_back(make_pair(1, *a)), 1;	}, queues[0]);
-				s2.continue_with([&] (const task<string> &a) {	return obtained2.push_back(make_pair(2, *a)), 1;	}, queues[0]);
+				s2.continue_with([&] (const async_result<string> &a) {	return obtained2.push_back(make_pair(0, *a)), 1;	}, queues[0]);
+				s2.continue_with([&] (const async_result<string> &a) {	return obtained2.push_back(make_pair(1, *a)), 1;	}, queues[0]);
+				s2.continue_with([&] (const async_result<string> &a) {	return obtained2.push_back(make_pair(2, *a)), 1;	}, queues[0]);
 
 				// ACT
 				queues[0].run_one();
@@ -236,11 +230,11 @@ namespace scheduler
 				// INIT
 				vector< pair<int, int> > obtained1;
 				auto s1 = task<int>::run([] {	return 18;	}, queues[0])
-					.continue_with([] (const task<int> &) {	return 13;	}, queues[0]);
+					.continue_with([] (const async_result<int> &) {	return 13;	}, queues[0]);
 
 				// INIT / ACT
-				s1.continue_with([&] (const task<int> &a) {	return obtained1.push_back(make_pair(0, *a)), 1;	}, queues[0]);
-				s1.continue_with([&] (const task<int> &a) {	return obtained1.push_back(make_pair(1, *a)), 1;	}, queues[0]);
+				s1.continue_with([&] (const async_result<int> &a) {	return obtained1.push_back(make_pair(0, *a)), 1;	}, queues[0]);
+				s1.continue_with([&] (const async_result<int> &a) {	return obtained1.push_back(make_pair(1, *a)), 1;	}, queues[0]);
 
 				// ACT
 				queues[0].run_one();
@@ -259,12 +253,12 @@ namespace scheduler
 				// INIT
 				vector< pair<int, string> > obtained2;
 				auto s2 = task<int>::run([&] {	return 1;	}, queues[0])
-					.continue_with([] (const task<int> &) {	return string("ipsum");	}, queues[0]);
+					.continue_with([] (const async_result<int> &) {	return string("ipsum");	}, queues[0]);
 
 				// INIT / ACT
-				s2.continue_with([&] (const task<string> &a) {	return obtained2.push_back(make_pair(0, *a)), 1;	}, queues[0]);
-				s2.continue_with([&] (const task<string> &a) {	return obtained2.push_back(make_pair(1, *a)), 1;	}, queues[0]);
-				s2.continue_with([&] (const task<string> &a) {	return obtained2.push_back(make_pair(2, *a)), 1;	}, queues[0]);
+				s2.continue_with([&] (const async_result<string> &a) {	return obtained2.push_back(make_pair(0, *a)), 1;	}, queues[0]);
+				s2.continue_with([&] (const async_result<string> &a) {	return obtained2.push_back(make_pair(1, *a)), 1;	}, queues[0]);
+				s2.continue_with([&] (const async_result<string> &a) {	return obtained2.push_back(make_pair(2, *a)), 1;	}, queues[0]);
 
 				// ACT
 				queues[0].run_one();

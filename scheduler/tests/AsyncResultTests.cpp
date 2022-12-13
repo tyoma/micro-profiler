@@ -1,5 +1,6 @@
-#include <scheduler/task.h>
+#include <scheduler/async_result.h>
 
+#include <memory>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -19,6 +20,15 @@ namespace scheduler
 
 				int value;
 			};
+
+			template <typename T>
+			exception_ptr make_exception(const T &e)
+			{
+				try
+				{	throw e;	}
+				catch (...)
+				{	return current_exception();	}
+			}
 		}
 
 		begin_test_suite( ValuedAsyncResultTests )
@@ -43,8 +53,8 @@ namespace scheduler
 				// ACT
 				r1.set(150);
 				r2.set(13);
-				r3.set("lorem");
-				r4.set("ipsum");
+				r3.set(string("lorem"));
+				r4.set(string("ipsum"));
 
 				// ASSERT
 				assert_equal(150, *r1);
@@ -74,7 +84,7 @@ namespace scheduler
 				unique_ptr< async_result< shared_ptr<void> > > r(new async_result< shared_ptr<void> >());
 
 				// ACT
-				r->set(f);
+				r->set(shared_ptr<bool>(f));
 
 				// ASSERT
 				assert_is_true(f.use_count() > 1);
@@ -94,9 +104,9 @@ namespace scheduler
 				auto e2 = make_shared<int>(1192);
 				auto e3 = make_shared<string>("abc");
 
-				r1.fail(make_exception_ptr(1928));
-				r2.fail(make_exception_ptr(e2));
-				r3.fail(make_exception_ptr(e3));
+				r1.fail(make_exception(1928));
+				r2.fail(make_exception(e2));
+				r3.fail(make_exception(e3));
 
 				// ACT
 				try
@@ -146,7 +156,7 @@ namespace scheduler
 				unique_ptr< async_result<int> > r(new async_result<int>());
 
 				// ACT
-				r->fail(make_exception_ptr(f));
+				r->fail(make_exception(f));
 
 				// ASSERT
 				assert_is_true(f.use_count() > 1);
@@ -165,13 +175,13 @@ namespace scheduler
 				async_result<int> with_value, with_exception;
 
 				with_value.set(12345);
-				with_exception.fail(make_exception_ptr(111));
+				with_exception.fail(make_exception(111));
 
 				// ACT / ASSERT
 				assert_throws(with_value.set(1), logic_error);
 				assert_throws(with_exception.set(2), logic_error);
-				assert_throws(with_value.fail(make_exception_ptr("bbb")), logic_error);
-				assert_throws(with_exception.fail(make_exception_ptr("ccc")), logic_error);
+				assert_throws(with_value.fail(make_exception("bbb")), logic_error);
+				assert_throws(with_exception.fail(make_exception("ccc")), logic_error);
 			}
 		end_test_suite
 
@@ -201,6 +211,16 @@ namespace scheduler
 			}
 
 
+			test( DereferencingUnsetResultFails )
+			{
+				// INIT / ACT
+				async_result<void> r;
+
+				// ACT / ASSERT
+				assert_throws(*r, logic_error);
+			}
+
+
 			test( ProvidedExceptionIsThrownOnDereference )
 			{
 				// INIT
@@ -208,9 +228,9 @@ namespace scheduler
 				auto e2 = make_shared<int>(1192);
 				auto e3 = make_shared<string>("abc");
 
-				r1.fail(make_exception_ptr(1928));
-				r2.fail(make_exception_ptr(e2));
-				r3.fail(make_exception_ptr(e3));
+				r1.fail(make_exception(1928));
+				r2.fail(make_exception(e2));
+				r3.fail(make_exception(e3));
 
 				// ACT
 				try
@@ -260,7 +280,7 @@ namespace scheduler
 				unique_ptr< async_result<int> > r(new async_result<int>());
 
 				// ACT
-				r->fail(make_exception_ptr(f));
+				r->fail(make_exception(f));
 
 				// ASSERT
 				assert_is_true(f.use_count() > 1);
@@ -279,13 +299,13 @@ namespace scheduler
 				async_result<void> with_value, with_exception;
 
 				with_value.set();
-				with_exception.fail(make_exception_ptr(111));
+				with_exception.fail(make_exception(111));
 
 				// ACT / ASSERT
 				assert_throws(with_value.set(), logic_error);
 				assert_throws(with_exception.set(), logic_error);
-				assert_throws(with_value.fail(make_exception_ptr("bbb")), logic_error);
-				assert_throws(with_exception.fail(make_exception_ptr("ccc")), logic_error);
+				assert_throws(with_value.fail(make_exception("bbb")), logic_error);
+				assert_throws(with_exception.fail(make_exception("ccc")), logic_error);
 			}
 		end_test_suite
 	}

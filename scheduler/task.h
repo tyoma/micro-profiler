@@ -20,94 +20,32 @@
 
 #pragma once
 
+#include "async_result.h"
 #include "scheduler.h"
 
-#include <stdexcept>
-#include <tuple>
 #include <vector>
 
 namespace scheduler
 {
-	struct queue;
+	template <typename T>
+	class task_node;
 
 	template <typename F, typename ArgT>
 	struct result
-	{	typedef decltype((*static_cast<F *>(nullptr))(*static_cast<ArgT *>(nullptr))) type;	};
+	{	typedef decltype((*static_cast<F *>(nullptr))(*static_cast<async_result<ArgT> *>(nullptr))) type;	};
+
 
 	template <typename T>
-	class async_result
+	class task : std::shared_ptr< task_node<T> >
 	{
 	public:
-		async_result()
-			: _state(empty)
-		{	}
+		explicit task(std::shared_ptr< task_node<T> > &&node);
 
-		~async_result()
-		{
-			if (has_value == _state)
-				static_cast<T *>(static_cast<void *>(_buffer))->~T();
-			else if (has_exception == _state)
-				static_cast<std::exception_ptr *>(static_cast<void *>(_buffer))->~exception_ptr();
-		}
+		template <typename F>
+		task<typename result<F, T>::type> continue_with(F &&continuation_, queue &continue_on);
 
-		void set(T &&from)
-		{
-			check_set();
-			new (_buffer) T(std::forward<T>(from));
-			_state = has_value;
-		}
-
-		void fail(std::exception_ptr &&exception)
-		{
-			check_set();
-			new (_buffer) std::exception_ptr(std::forward<std::exception_ptr>(exception));
-			_state = has_exception;
-		}
-
-		const T &operator *() const
-		{
-			check_read();
-			return *static_cast<const T *>(static_cast<const void *>(_buffer));
-		}
-
-	protected:
-		void check_set() const
-		{
-			if (empty != _state)
-				throw std::logic_error("a value/exception has already been set");
-		}
-
-		void check_read() const
-		{
-			if (has_exception == _state)
-				rethrow_exception(*static_cast<const std::exception_ptr *>(static_cast<const void *>(_buffer)));
-		}
-
-	private:
-		async_result(const async_result &other);
-		void operator =(const async_result &rhs);
-
-	private:
-		char _buffer[sizeof(T) > sizeof(std::exception_ptr) ? sizeof(T) : sizeof(std::exception_ptr)];
-
-	protected:
-		enum {	empty, has_value, has_exception	} _state : 8;
-	};
-
-	template <>
-	class async_result<void> : async_result<int>
-	{
-	public:
-		void set()
-		{	
-			check_set();
-			_state = has_value;
-		}
-
-		using async_result<int>::fail;
-
-		void operator *() const
-		{	check_read();	}
+		template <typename F>
+		static task run(F &&callback, queue &run_on);
 	};
 
 
@@ -117,103 +55,106 @@ namespace scheduler
 		virtual void begin(const std::shared_ptr< async_result<T> > &antecedant) = 0;
 	};
 
-
 	template <typename T>
-	class task
+	class task_node
 	{
 	public:
-		template <typename F>
-		task<typename result< F, async_result<T> >::type> continue_with(F &&continuation_, queue &continue_on)
-		{
-			typedef typename result< F, async_result<T> >::type descendant_type;
-			typedef task<descendant_type> descendant_task;
-			typedef typename descendant_task::template core_continuation<F, T> continuation_task_type;
-
-			auto c = std::make_shared<continuation_task_type>(std::forward<F>(continuation_), continue_on);
-
-			_core->add_continuation(c);
-			return descendant_task(c);
-		}
-
-		const T &operator *() const
-		{	return *_core->result;	}
-
-		template <typename F>
-		static task run(F &&callback, queue &run_on)
-		{
-			auto c = std::make_shared< core_root<F> >(std::forward<F>(callback));
-
-			run_on.schedule([c] {
-				auto result = std::make_shared< async_result<T> >();
-
-				result->set(c->callback());
-				c->begin_continuations(result);
-			});
-			return task(c);
-		}
+		void continue_with(const std::shared_ptr< continuation<T> > &continuation_);
+		void begin_continuations(const std::shared_ptr< async_result<T> > &antecedant);
 
 	private:
-		struct core
-		{
-			void add_continuation(const std::shared_ptr< continuation<T> > &descendant)
-			{
-				_continuations.push_back(descendant);
-			}
-
-			void begin_continuations(const std::shared_ptr< async_result<T> > &antecedant)
-			{
-				for (auto i = std::begin(_continuations); i != std::end(_continuations); ++i)
-					(*i)->begin(antecedant);
-			}
-
-		private:
-			std::vector< std::shared_ptr< continuation<T> > > _continuations;
-		};
-
-		template <typename F>
-		struct core_root : core
-		{
-			core_root(F &&from)
-				: callback(std::forward<F>(from))
-			{	}
-
-			F callback;
-		};
-
-		template <typename F, typename ArgT>
-		struct core_continuation : core, continuation<ArgT>, std::enable_shared_from_this< core_continuation<F, ArgT> >
-		{
-			core_continuation(F &&from, queue &continue_on)
-				: _callback(std::forward<F>(from)), _continue_on(continue_on)
-			{	}
-
-			virtual void begin(const std::shared_ptr< async_result<ArgT> > &antecedant_result) override
-			{
-				auto self = this->shared_from_this();
-
-				_continue_on.schedule([antecedant_result, self] {
-					auto result = std::make_shared< async_result<T> >();
-
-					result->set(self->_callback(*antecedant_result));
-					self->begin_continuations(result);
-				});
-			}
-
-		private:
-			F _callback;
-			queue &_continue_on;
-		};
-
-	private:
-		explicit task(const std::shared_ptr<core> &core_)
-			:_core(core_)
-		{	}
-
-	private:
-		std::shared_ptr<core> _core;
-
-	private:
-		template <typename U>
-		friend class task;
+		std::vector< std::shared_ptr< continuation<T> > > _continuations;
 	};
+
+	template <typename T, typename F>
+	struct task_node_root : task_node<T>
+	{
+		task_node_root(F &&from);
+
+		F callback;
+	};
+
+	template <typename F, typename ArgT>
+	struct task_node_continuation : task_node<typename result<F, ArgT>::type>, continuation<ArgT>,
+		std::enable_shared_from_this< task_node_continuation<F, ArgT> >
+	{
+		task_node_continuation(F &&from, queue &continue_on);
+
+		virtual void begin(const std::shared_ptr< async_result<ArgT> > &antecedant_result) override;
+
+	private:
+		F _callback;
+		queue &_continue_on;
+	};
+
+
+
+	template <typename T>
+	inline task<T>::task(std::shared_ptr< task_node<T> > &&node)
+		: std::shared_ptr< task_node<T> >(std::forward< std::shared_ptr< task_node<T> > >(node))
+	{	}
+
+	template <typename T>
+	template <typename F>
+	inline task<typename result<F, T>::type> task<T>::continue_with(F &&continuation_, queue &continue_on)
+	{
+		auto c = std::make_shared< task_node_continuation<F, T> >(std::forward<F>(continuation_), continue_on);
+
+		(*this)->continue_with(c);
+		return task<typename result<F, T>::type>(std::move(c));
+	}
+
+	template <typename T>
+	template <typename F>
+	inline task<T> task<T>::run(F &&callback, queue &run_on)
+	{
+		auto r = std::make_shared< task_node_root<T, F> >(std::forward<F>(callback));
+
+		run_on.schedule([r] {
+			auto result = std::make_shared< async_result<T> >();
+
+			result->set(r->callback());
+			r->begin_continuations(result);
+		});
+		return task(std::move(r));
+	}
+
+
+	template <typename T>
+	inline void task_node<T>::continue_with(const std::shared_ptr< continuation<T> > &continuation_)
+	{
+		_continuations.push_back(continuation_);
+	}
+
+	template <typename T>
+	inline void task_node<T>::begin_continuations(const std::shared_ptr< async_result<T> > &antecedant)
+	{
+		for (auto i = std::begin(_continuations); i != std::end(_continuations); ++i)
+			(*i)->begin(antecedant);
+	}
+
+
+	template <typename T, typename F>
+	inline task_node_root<T, F>::task_node_root(F &&from)
+		: callback(std::forward<F>(from))
+	{	}
+
+
+	template <typename F, typename ArgT>
+	inline task_node_continuation<F, ArgT>::task_node_continuation(F &&from, queue &continue_on)
+		: _callback(std::forward<F>(from)), _continue_on(continue_on)
+	{	}
+
+	template <typename F, typename ArgT>
+	inline void task_node_continuation<F, ArgT>::begin(const std::shared_ptr< async_result<ArgT> > &antecedant_result)
+	{
+		auto self = this->shared_from_this();
+
+		_continue_on.schedule([antecedant_result, self] {
+			auto result_ = std::make_shared< async_result<typename result<F, ArgT>::type> >();
+
+			result_->set(self->_callback(*antecedant_result));
+			self->begin_continuations(result_);
+		});
+	}
 }

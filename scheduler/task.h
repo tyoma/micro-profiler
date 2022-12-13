@@ -67,6 +67,23 @@ namespace scheduler
 
 
 
+	template <typename T, typename CallbackT>
+	inline void set_result(task_node<T> &target, CallbackT &callback)
+	{	target.set(callback());	}
+
+	template <typename CallbackT>
+	inline void set_result(task_node<void> &target, CallbackT &callback)
+	{	callback(), target.set();	}
+
+	template <typename T, typename CallbackT, typename A>
+	inline void set_result(task_node<T> &target, CallbackT &callback, A &antecedent)
+	{	target.set(callback(antecedent));	}
+
+	template <typename CallbackT, typename A>
+	inline void set_result(task_node<void> &target, CallbackT &callback, A &antecedent)
+	{	callback(antecedent), target.set();	}
+
+
 	template <typename T>
 	inline task<T>::task(std::shared_ptr< task_node<T> > &&node)
 		: std::shared_ptr< task_node<T> >(std::forward< std::shared_ptr< task_node<T> > >(node))
@@ -88,9 +105,7 @@ namespace scheduler
 	{
 		auto r = std::make_shared< task_node_root<T, F> >(std::forward<F>(callback));
 
-		run_on.schedule([r] {
-			r->set(r->callback());
-		});
+		run_on.schedule([r] {	scheduler::set_result(*r, r->callback);	});
 		return task(std::move(r));
 	}
 
@@ -111,8 +126,6 @@ namespace scheduler
 	{
 		auto self = this->shared_from_this();
 
-		_continue_on.schedule([result, self] {
-			self->set(self->_callback(*result));
-		});
+		_continue_on.schedule([result, self] {	scheduler::set_result(*self, self->_callback, *result);	});
 	}
 }

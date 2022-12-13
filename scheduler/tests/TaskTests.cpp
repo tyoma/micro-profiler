@@ -276,6 +276,53 @@ namespace scheduler
 				assert_equal(plural + make_pair(0, string("ipsum")) + make_pair(1, string("ipsum")) + make_pair(2, string("ipsum")), obtained2);
 			}
 
+
+			test( VoidContinuationsMixWellWithNonVoid )
+			{
+				// INIT / ACT
+				auto step = 0;
+				task<void>::run([&] {	step = 17;	}, queues[0])
+					.continue_with([&] (const async_result<void> &r) {	return *r, step = 11, 17;	}, queues[1])
+					.continue_with([&] (const async_result<int> &r) {	*r, step = 3;	}, queues[0])
+					.continue_with([&] (const async_result<void> &r) {	*r, step = 5;	}, queues[0]);
+
+				// ASSERT
+				assert_equal(1u, queues[0].tasks.size());
+				assert_equal(0u, queues[1].tasks.size());
+
+				// ACT
+				queues[0].run_one();
+
+				// ASSERT
+				assert_equal(17, step);
+				assert_equal(0u, queues[0].tasks.size());
+				assert_equal(1u, queues[1].tasks.size());
+
+				// ACT
+				queues[1].run_one();
+
+				// ASSERT
+				assert_equal(11, step);
+				assert_equal(1u, queues[0].tasks.size());
+				assert_equal(0u, queues[1].tasks.size());
+
+				// ACT
+				queues[0].run_one();
+
+				// ASSERT
+				assert_equal(3, step);
+				assert_equal(1u, queues[0].tasks.size());
+				assert_equal(0u, queues[1].tasks.size());
+
+				// ACT
+				queues[0].run_one();
+
+				// ASSERT
+				assert_equal(5, step);
+				assert_equal(0u, queues[0].tasks.size());
+				assert_equal(0u, queues[1].tasks.size());
+			}
+
 		end_test_suite
 	}
 }

@@ -37,10 +37,10 @@ namespace scheduler
 		explicit task(std::shared_ptr< task_node<T> > &&node);
 
 		template <typename F>
-		task<typename task_result<F, T>::type> continue_with(F &&continuation_, queue &continue_on);
+		task<typename task_result<F, T>::type> continue_with(F &&continuation_callback, queue &continue_on);
 
 		template <typename F>
-		static task run(F &&callback, queue &run_on);
+		static task run(F &&task_callback, queue &run_on);
 	};
 
 
@@ -67,21 +67,30 @@ namespace scheduler
 
 
 
+	template <typename T, typename F>
+	inline void handle_exception(task_node<T> &target, F &&f)
+	{
+		try
+		{	f();	}
+		catch (...)
+		{	target.fail(std::current_exception());	}
+	}
+
 	template <typename T, typename CallbackT>
 	inline void set_result(task_node<T> &target, CallbackT &callback)
-	{	target.set(callback());	}
+	{	handle_exception(target, [&] {	target.set(callback());	});	}
 
 	template <typename CallbackT>
 	inline void set_result(task_node<void> &target, CallbackT &callback)
-	{	callback(), target.set();	}
+	{	handle_exception(target, [&] {	callback(), target.set();	});	}
 
 	template <typename T, typename CallbackT, typename A>
 	inline void set_result(task_node<T> &target, CallbackT &callback, A &antecedent)
-	{	target.set(callback(antecedent));	}
+	{	handle_exception(target, [&] {	target.set(callback(antecedent));	});	}
 
 	template <typename CallbackT, typename A>
 	inline void set_result(task_node<void> &target, CallbackT &callback, A &antecedent)
-	{	callback(antecedent), target.set();	}
+	{	handle_exception(target, [&] {	callback(antecedent), target.set();	});	}
 
 
 	template <typename T>
@@ -91,9 +100,9 @@ namespace scheduler
 
 	template <typename T>
 	template <typename F>
-	inline task<typename task_result<F, T>::type> task<T>::continue_with(F &&continuation_, queue &continue_on)
+	inline task<typename task_result<F, T>::type> task<T>::continue_with(F &&continuation_callback, queue &continue_on)
 	{
-		auto c = std::make_shared< task_node_continuation<F, T> >(std::forward<F>(continuation_), continue_on);
+		auto c = std::make_shared< task_node_continuation<F, T> >(std::forward<F>(continuation_callback), continue_on);
 
 		(*this)->continue_with(c);
 		return task<typename task_result<F, T>::type>(std::move(c));
@@ -101,9 +110,9 @@ namespace scheduler
 
 	template <typename T>
 	template <typename F>
-	inline task<T> task<T>::run(F &&callback, queue &run_on)
+	inline task<T> task<T>::run(F &&task_callback, queue &run_on)
 	{
-		auto r = std::make_shared< task_node_root<T, F> >(std::forward<F>(callback));
+		auto r = std::make_shared< task_node_root<T, F> >(std::forward<F>(task_callback));
 
 		run_on.schedule([r] {	scheduler::set_result(*r, r->callback);	});
 		return task(std::move(r));

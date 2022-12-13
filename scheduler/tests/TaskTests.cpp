@@ -323,6 +323,64 @@ namespace scheduler
 				assert_equal(0u, queues[1].tasks.size());
 			}
 
+
+			test( ExceptionThrownByRootCallbackIsDeliveredToContinuation )
+			{
+				// INIT
+				auto called = 0;
+				task<void>::run([] {	throw 13;	}, queues[0]).continue_with([&] (const async_result<void> &r) {
+					try
+					{	*r;	}
+					catch (int v)
+					{	assert_equal(13, v);	}
+					called++;
+				}, queues[0]);
+				task<void>::run([] () -> string {	throw "lorem";	}, queues[0]).continue_with([&] (const async_result<void> &r) {
+					try
+					{	*r;	}
+					catch (const char *v)
+					{	assert_equal("lorem", string(v));	}
+					called++;
+				}, queues[0]);
+
+				// ACT
+				queues[0].run_till_end();
+
+				// ASSERT
+				assert_equal(2, called);
+			}
+
+
+			test( ExceptionThrownByContinuationCallbackIsDeliveredToContinuation )
+			{
+				// INIT
+				auto called = 0;
+				task<void>::run([] {	}, queues[0])
+					.continue_with([] (const async_result<void> &) {	throw 19;	}, queues[0])
+					.continue_with([&] (const async_result<void> &r) {
+						try
+						{	*r;	}
+						catch (int v)
+						{	assert_equal(19, v);	}
+						called++;
+					}, queues[0]);
+				task<void>::run([] {	}, queues[0])
+					.continue_with([] (const async_result<void> &) -> string {	throw "amet";	}, queues[0])
+					.continue_with([&] (const async_result<string> &r) {
+						try
+						{	*r;	}
+						catch (const char *v)
+						{	assert_equal("amet", string(v));	}
+						called++;
+					}, queues[0]);
+
+				// ACT
+				queues[0].run_till_end();
+
+				// ASSERT
+				assert_equal(2, called);
+			}
+
 		end_test_suite
 	}
 }

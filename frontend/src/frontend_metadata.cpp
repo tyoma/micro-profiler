@@ -102,7 +102,7 @@ namespace micro_profiler
 		};
 		const auto cache_completion = make_shared< task_node<module_ptr> >();
 		const auto caching_ready = [ready2, cache_completion] (const module_ptr &m) {
-			cache_completion->set(module_ptr(m));
+			cache_completion->set(frontend::module_ptr(m));
 			ready2(m);
 		};
 

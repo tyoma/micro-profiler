@@ -75,11 +75,12 @@ namespace micro_profiler
 		void request_metadata(std::shared_ptr<void> &request_, unsigned int persistent_id,
 			const tables::modules::metadata_ready_cb &ready);
 
-		void request_metadata_nw_cached(std::shared_ptr<void> &request_, unsigned int persistent_id,
-			const tables::modules::metadata_ready_cb &ready);
+		template <typename F>
+		void request_metadata_nw_cached(std::shared_ptr<void> &request_, unsigned int persistent_id, unsigned int hash,
+			const F &ready);
 
-		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int persistent_id,
-			const tables::modules::metadata_ready_cb &ready);
+		template <typename F>
+		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int persistent_id, const F &ready);
 
 		static module_ptr load_metadata(sql::connection_ptr preferences_db, unsigned int hash);
 		static void store_metadata(sql::connection_ptr preferences_db, const module_info_metadata &metadata);

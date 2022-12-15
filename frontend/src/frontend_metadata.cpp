@@ -71,68 +71,66 @@ namespace micro_profiler
 		else if (init.underlying)
 		{
 			auto &mx = init.multiplexed;
-
-			request_metadata_nw_cached(*init.underlying, persistent_id, [this, persistent_id, &mx] (const module_info_metadata &metadata) {
+			const auto h = _module_hashes.find(persistent_id);
+			const auto ready2 = [this, persistent_id, &mx] (const module_ptr &metadata) {
 				auto rec = sdb::unique_index(_db->modules, keyer::external_id())[persistent_id];
-				auto &m = static_cast<module_info_metadata &>(*rec) = metadata;
+				auto &m = static_cast<module_info_metadata &>(*rec) = *metadata;
 
 				rec.commit();
 				mx.invoke([&m] (const tables::modules::metadata_ready_cb &ready) {
 					ready(m);
 				});
-			});
+			};
+
+			if (h == _module_hashes.end())
+				request_metadata_nw(*init.underlying, persistent_id, ready2);
+			else
+				request_metadata_nw_cached(*init.underlying, persistent_id, h->second, ready2);
 		}
 	}
 
-	void frontend::request_metadata_nw_cached(shared_ptr<void> &request_, unsigned int persistent_id,
-		const tables::modules::metadata_ready_cb &ready)
+	template <typename F>
+	void frontend::request_metadata_nw_cached(shared_ptr<void> &request_, unsigned int persistent_id, unsigned int hash,
+		const F &ready)
 	{
-		const auto h = _module_hashes.find(persistent_id);
-
-		if (h == _module_hashes.end())
-			return request_metadata_nw(request_, persistent_id, ready);
-
-		const auto hash = h->second;
-		const auto cache_request = make_shared<tables::modules::metadata_ready_cb>(ready);
-		const weak_ptr<tables::modules::metadata_ready_cb> weak_cache_request = cache_request;
-		const auto req = make_shared< shared_ptr<void> >(cache_request);
+		const auto req = make_shared< shared_ptr<void> >();
 		const weak_ptr< shared_ptr<void> > wreq = req;
-		const auto preferences_db = _preferences_db_connection;
-		const auto caching_ready = [this, ready, preferences_db] (const module_info_metadata &m) {
-			auto preferences_db_ = preferences_db;
-			auto m_ = make_shared<module_info_metadata>(m);
-
-			_worker_queue.schedule([preferences_db_, m_] {
-				frontend::store_metadata(preferences_db_, *m_);
-			});
-			ready(m);
+		const auto db = _preferences_db_connection;
+		const auto ready2 = [ready, wreq] (const module_ptr &m) {
+			if (!wreq.expired())
+				ready(m);
+		};
+		const auto cache_completion = make_shared< task_node<module_ptr> >();
+		const auto caching_ready = [ready2, cache_completion] (const module_ptr &m) {
+			cache_completion->set(module_ptr(m));
+			ready2(m);
 		};
 
 		request_ = req;
-		task<module_ptr>::run([preferences_db, hash] {
-			return load_metadata(preferences_db, hash);
-		}, _worker_queue).continue_with([this, persistent_id, wreq, weak_cache_request, caching_ready] (const async_result<module_ptr> &match) {
-			if (const auto cb = weak_cache_request.lock())
-			{
-				if (*match)
-					(*cb)(**match);
-				else if (const auto next_request = wreq.lock())
-					request_metadata_nw(*next_request, persistent_id, caching_ready);
-			}
+		task<module_ptr>::run([db, hash] {
+			return load_metadata(db, hash);
+		}, _worker_queue).continue_with([this, persistent_id, wreq, ready2, caching_ready] (const async_result<module_ptr> &m) {
+			if (*m)
+				ready2(*m);
+			else if (const auto next_request = wreq.lock())
+				request_metadata_nw(*next_request, persistent_id, caching_ready);
 		}, _apartment_queue);
+		task<module_ptr>(shared_ptr< task_node<module_ptr> >(cache_completion)).continue_with([db] (const async_result<module_ptr> &m) {
+			frontend::store_metadata(db, **m);
+		}, _worker_queue);
 	}
 
-	void frontend::request_metadata_nw(shared_ptr<void> &request_, unsigned int persistent_id,
-		const tables::modules::metadata_ready_cb &ready)
+	template <typename F>
+	void frontend::request_metadata_nw(shared_ptr<void> &request_, unsigned int persistent_id, const F &ready)
 	{
 		LOG(PREAMBLE "requesting from remote...") % A(this) % A(persistent_id);
 		request(request_, request_module_metadata, persistent_id, response_module_metadata,
 			[this, persistent_id, ready] (ipc::deserializer &d) {
 
-			module_info_metadata m;
+			auto m = make_shared<module_info_metadata>();
 
-			d(m);
-			LOG(PREAMBLE "received...") % A(persistent_id) % A(m.symbols.size()) % A(m.source_files.size());
+			d(*m);
+			LOG(PREAMBLE "received...") % A(persistent_id) % A(m->symbols.size()) % A(m->source_files.size());
 			ready(m);
 		});
 	}

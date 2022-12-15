@@ -24,12 +24,16 @@
 
 namespace scheduler
 {
+	enum async_state {	async_in_progress, async_completed, async_faulted,	};
+
 	template <typename T>
 	class async_result
 	{
 	public:
 		async_result();
 		~async_result();
+
+		async_state state() const;
 
 		void set(T &&from);
 		void fail(std::exception_ptr &&exception);
@@ -48,15 +52,16 @@ namespace scheduler
 		char _buffer[sizeof(T) > sizeof(std::exception_ptr) ? sizeof(T) : sizeof(std::exception_ptr)];
 
 	protected:
-		enum {	empty, has_value, has_exception	} _state : 8;
+		async_state _state;
 	};
 
 	template <>
-	class async_result<void> : async_result<int>
+	class async_result<void> : async_result<short>
 	{
 	public:
+		using async_result<short>::state;
 		void set();
-		using async_result<int>::fail;
+		using async_result<short>::fail;
 
 		void operator *() const;
 	};
@@ -65,24 +70,28 @@ namespace scheduler
 
 	template <typename T>
 	inline async_result<T>::async_result()
-		: _state(empty)
+		: _state(async_in_progress)
 	{	}
 
 	template <typename T>
 	inline async_result<T>::~async_result()
 	{
-		if (has_value == _state)
+		if (async_completed == _state)
 			static_cast<T *>(static_cast<void *>(_buffer))->~T();
-		else if (has_exception == _state)
+		else if (async_faulted == _state)
 			static_cast<std::exception_ptr *>(static_cast<void *>(_buffer))->~exception_ptr();
 	}
+
+	template <typename T>
+	inline async_state async_result<T>::state() const
+	{	return _state;	}
 
 	template <typename T>
 	inline void async_result<T>::set(T &&from)
 	{
 		check_set();
 		new (_buffer) T(std::forward<T>(from));
-		_state = has_value;
+		_state = async_completed;
 	}
 
 	template <typename T>
@@ -90,7 +99,7 @@ namespace scheduler
 	{
 		check_set();
 		new (_buffer) std::exception_ptr(std::forward<std::exception_ptr>(exception));
-		_state = has_exception;
+		_state = async_faulted;
 	}
 
 	template <typename T>
@@ -103,16 +112,16 @@ namespace scheduler
 	template <typename T>
 	inline void async_result<T>::check_set() const
 	{
-		if (empty != _state)
+		if (async_in_progress != _state)
 			throw std::logic_error("a value/exception has already been set");
 	}
 
 	template <typename T>
 	inline void async_result<T>::check_read() const
 	{
-		if (empty == _state)
+		if (async_in_progress == _state)
 			throw std::logic_error("cannot dereference as no value has been set");
-		else if (has_exception == _state)
+		else if (async_faulted == _state)
 			rethrow_exception(*static_cast<const std::exception_ptr *>(static_cast<const void *>(_buffer)));
 	}
 
@@ -120,7 +129,7 @@ namespace scheduler
 	inline void async_result<void>::set()
 	{	
 		check_set();
-		_state = has_value;
+		_state = async_completed;
 	}
 
 	inline void async_result<void>::operator *() const

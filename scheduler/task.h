@@ -53,8 +53,7 @@ namespace scheduler
 	};
 
 	template <typename F, typename ArgT>
-	struct task_node_continuation : task_node<typename task_result<F, ArgT>::type>, continuation<ArgT>,
-		std::enable_shared_from_this< task_node_continuation<F, ArgT> >
+	struct task_node_continuation : task_node<typename task_result<F, ArgT>::type>, continuation<ArgT>
 	{
 		task_node_continuation(F &&from, queue &continue_on);
 
@@ -133,7 +132,7 @@ namespace scheduler
 	template <typename F, typename ArgT>
 	inline void task_node_continuation<F, ArgT>::begin(const std::shared_ptr< const async_result<ArgT> > &result)
 	{
-		auto self = this->shared_from_this();
+		auto self = std::static_pointer_cast<task_node_continuation>(this->shared_from_this());
 
 		_continue_on.schedule([result, self] {	scheduler::set_result(*self, self->_callback, *result);	});
 	}

@@ -39,6 +39,10 @@ namespace scheduler
 					async_result<int> r1;
 					async_result<string> r2;
 
+				// ACT / ASSERT
+					assert_equal(async_in_progress, r1.state());
+					assert_equal(async_in_progress, r2.state());
+
 				// ASSERT (no crash at destroy)
 				}
 			}
@@ -57,8 +61,10 @@ namespace scheduler
 				r4.set(string("ipsum"));
 
 				// ASSERT
+				assert_equal(async_completed, r1.state());
 				assert_equal(150, *r1);
 				assert_equal(13, *r2);
+				assert_equal(async_completed, r3.state());
 				assert_equal("lorem", *r3);
 				assert_equal("ipsum", *r4);
 			}
@@ -120,6 +126,7 @@ namespace scheduler
 				// ASSERT
 					assert_equal(1928, value);
 				}
+				assert_equal(async_faulted, r1.state());
 
 				// ACT
 				try
@@ -193,6 +200,9 @@ namespace scheduler
 				// INIT / ACT
 					async_result<void> r;
 
+				// ASSERT
+					assert_equal(async_in_progress, r.state());
+
 				// ASSERT (no crash at destroy)
 				}
 			}
@@ -208,6 +218,9 @@ namespace scheduler
 
 				// ACT / ASSERT (no exception)
 				*r;
+
+				// ASSERT
+				assert_equal(async_completed, r.state());
 			}
 
 
@@ -244,6 +257,7 @@ namespace scheduler
 				// ASSERT
 					assert_equal(1928, value);
 				}
+				assert_equal(async_faulted, r1.state());
 
 				// ACT
 				try

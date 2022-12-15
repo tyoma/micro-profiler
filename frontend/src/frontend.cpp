@@ -44,10 +44,9 @@ namespace micro_profiler
 
 	frontend::frontend(ipc::channel &outbound, const string &preferences_db,
 			scheduler::queue &worker, scheduler::queue &apartment)
-		: client_session(outbound), _worker_queue_raw(worker), _apartment_queue(apartment),
+		: client_session(outbound), _worker_queue(worker), _apartment_queue(apartment),
 			_db(make_shared<profiling_session>()), _preferences_db_connection(sql::create_connection(preferences_db.c_str())),
-			_initialized(false), _mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>()),
-			_worker_queue(worker)
+			_initialized(false), _mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
 	{
 		_db->statistics.request_update = [this] {
 			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});

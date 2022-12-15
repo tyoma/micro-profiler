@@ -29,8 +29,12 @@
 #include <ipc/client_session.h>
 #include <list>
 #include <reqm/multiplexing_request.h>
-#include <scheduler/private_queue.h>
 #include <sqlite++/misc.h>
+
+namespace scheduler
+{
+	struct queue;
+}
 
 namespace micro_profiler
 {
@@ -50,6 +54,7 @@ namespace micro_profiler
 		std::function<void (const session_type &ui_context)> initialized;
 
 	private:
+		typedef std::shared_ptr<module_info_metadata> module_ptr;
 		typedef containers::unordered_map<unsigned int /*persistent_id*/, std::uint32_t> module_hashes_t;
 		typedef reqm::multiplexing_request<unsigned int, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
 		typedef std::list< std::shared_ptr<void> > requests_t;
@@ -76,12 +81,13 @@ namespace micro_profiler
 		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int persistent_id,
 			const tables::modules::metadata_ready_cb &ready);
 
-		void store_metadata(const module_info_metadata &metadata);
+		static module_ptr load_metadata(sql::connection_ptr preferences_db, unsigned int hash);
+		static void store_metadata(sql::connection_ptr preferences_db, const module_info_metadata &metadata);
 
 		requests_t::iterator new_request_handle();
 
 	private:
-		scheduler::queue &_worker_queue_raw, &_apartment_queue;
+		scheduler::queue &_worker_queue, &_apartment_queue;
 		const std::shared_ptr<profiling_session> _db;
 		const sql::connection_ptr _preferences_db_connection;
 		module_hashes_t _module_hashes;
@@ -98,7 +104,5 @@ namespace micro_profiler
 
 		// request_revert_patches buffers
 		response_reverted_data _reverted_buffer;
-
-		scheduler::private_queue _worker_queue; // Have this member last to guarantee instance validness in tasks.
 	};
 }

@@ -37,7 +37,7 @@ namespace scheduler
 	};
 
 	template <typename T>
-	class task_node_base
+	class task_node_base : public std::enable_shared_from_this< task_node_base<T> >
 	{
 	public:
 		typedef typename continuation<T>::ptr continuation_ptr;
@@ -48,11 +48,12 @@ namespace scheduler
 		void fail(std::exception_ptr &&exception);
 
 	protected:
-		void set_result(std::shared_ptr< const async_result<T> > &&result);
+		template <typename F>
+		void set_result(F &&result_setter);
 
 	private:
 		mt::mutex _mtx;
-		std::shared_ptr< const async_result<T> > _result;
+		async_result<T> _result;
 		std::vector<continuation_ptr> _continuations;
 	};
 
@@ -73,58 +74,39 @@ namespace scheduler
 	template <typename T>
 	inline void task_node_base<T>::continue_with(const continuation_ptr &continuation_)
 	{
-		{
-			mt::lock_guard<mt::mutex> l(_mtx);
-
-			if (!_result)
-			{
-				_continuations.push_back(continuation_);
-				return;
-			}
-		}
-		continuation_->begin(_result);
+		for (mt::lock_guard<mt::mutex> l(_mtx); _result.state() == async_in_progress; )
+			return _continuations.push_back(continuation_);
+		continuation_->begin(std::shared_ptr< async_result<T> >(this->shared_from_this(), &_result));
 	}
 
 	template <typename T>
 	inline void task_node_base<T>::fail(std::exception_ptr &&exception)
-	{
-		auto aresult = std::make_shared< async_result<T> >();
-
-		aresult->fail(std::forward<std::exception_ptr>(exception));
-		set_result(std::move(aresult));
-	}
+	{	set_result([&] (async_result<T> &r) {	r.fail(std::forward<std::exception_ptr>(exception));	});	}
 
 	template <typename T>
-	inline void task_node_base<T>::set_result(std::shared_ptr< const async_result<T> > &&result)
+	template <typename F>
+	inline void task_node_base<T>::set_result(F &&result_setter)
 	{
 		std::vector<continuation_ptr> continuations;
+		auto presult = std::shared_ptr< async_result<T> >(this->shared_from_this(), &_result);
 
 		{
 			mt::lock_guard<mt::mutex> l(_mtx);
 
-			_result = std::move(result);
+			result_setter(_result);
 			continuations.swap(_continuations);
 		}
+
 		for (auto i = std::begin(continuations); i != std::end(continuations); ++i)
-			(*i)->begin(_result);
+			(*i)->begin(presult);
 	}
 
 
 	template <typename T>
 	inline void task_node<T>::set(T &&result)
-	{
-		auto aresult = std::make_shared< async_result<T> >();
-
-		aresult->set(std::forward<T>(result));
-		this->set_result(std::move(aresult));
-	}
+	{	this->set_result([&] (async_result<T> &r) {	r.set(std::forward<T>(result));	});	}
 
 
 	inline void task_node<void>::set()
-	{
-		auto aresult = std::make_shared< async_result<void> >();
-
-		aresult->set();
-		this->set_result(std::move(aresult));
-	}
+	{	this->set_result([] (async_result<void> &r) {	r.set();	});	}
 }

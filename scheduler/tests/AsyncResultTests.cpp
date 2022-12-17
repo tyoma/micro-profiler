@@ -190,6 +190,51 @@ namespace scheduler
 				assert_throws(with_value.fail(make_exception("bbb")), logic_error);
 				assert_throws(with_exception.fail(make_exception("ccc")), logic_error);
 			}
+
+
+			test( AssigningAsyncResultCopiesItsState )
+			{
+				// INIT
+				async_result<int> r1, r2, r3, cr1, cr2, cr3;
+				async_result<string> r4, cr4;
+				async_result<void> r5, cr5;
+				async_result<void> er6, cr6;
+
+				r1.set(17), r2.set(1911), r3.fail(make_exception(string("failure")));
+				r4.set(string("lorem ipsum"));
+				r5.set();
+
+				// ACT
+				cr1 = r1, cr2 = r2, cr3 = r3;
+				cr4 = r4;
+				cr5 = r5;
+				cr6 = er6;
+
+				// ASSERT
+				assert_equal(17, *cr1);
+				assert_equal(1911, *cr2);
+				try {
+					*cr3;
+					assert_is_false(true);
+				} catch (const string &e) {
+					assert_equal("failure", e);
+				}
+				assert_equal("lorem ipsum", *cr4);
+				*cr5; // no exception
+				assert_equal(async_in_progress, er6.state());
+			}
+
+
+			test( AttemptingToAssignToANonEmptyResultFails )
+			{
+				// INIT
+				async_result<int> r1, r2;
+
+				r1.set(17), r2.set(1911);
+
+				// ACT / ASSERT
+				assert_throws(r1 = r2, logic_error);
+			}
 		end_test_suite
 
 

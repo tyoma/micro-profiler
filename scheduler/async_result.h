@@ -35,6 +35,7 @@ namespace scheduler
 
 		async_state state() const;
 
+		void operator =(const async_result &rhs);
 		void set(T &&from);
 		void fail(std::exception_ptr &&exception);
 
@@ -46,7 +47,6 @@ namespace scheduler
 
 	private:
 		async_result(const async_result &other);
-		void operator =(const async_result &rhs);
 
 	private:
 		char _buffer[sizeof(T) > sizeof(std::exception_ptr) ? sizeof(T) : sizeof(std::exception_ptr)];
@@ -85,6 +85,17 @@ namespace scheduler
 	template <typename T>
 	inline async_state async_result<T>::state() const
 	{	return _state;	}
+
+	template <typename T>
+	inline void async_result<T>::operator =(const async_result &rhs)
+	{
+		check_set();
+		if (async_completed == rhs._state)
+			new (_buffer) T(*rhs);
+		else if (async_faulted == rhs._state)
+			new (_buffer) std::exception_ptr(*static_cast<const std::exception_ptr *>(static_cast<const void *>(rhs._buffer)));
+		_state = rhs._state;
+	}
 
 	template <typename T>
 	inline void async_result<T>::set(T &&from)

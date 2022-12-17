@@ -15,6 +15,13 @@ namespace scheduler
 	{
 		using namespace micro_profiler::tests;
 
+		namespace
+		{
+			template <typename T>
+			T copy(const T &from)
+			{	return T(from);	}
+		}
+
 		begin_test_suite( TaskTests )
 			mocks::queue queues[2];
 
@@ -379,6 +386,69 @@ namespace scheduler
 
 				// ASSERT
 				assert_equal(2, called);
+			}
+
+
+			test( UnwrappingANestedTaskCreatesATaskTriggeredWhenNestedIsComplete )
+			{
+				// INIT
+				vector<int> results1;
+				auto called2 = 0;
+				auto s1 = make_shared< task_node<int> >();
+				auto s2 = make_shared< task_node<void> >();
+				auto t1 = task< task<int> >::run([&] {	return task<int>(copy(s1));	}, queues[0]);
+				auto t2 = task< task<void> >::run([&] {	return task<void>(copy(s2));	}, queues[0]);
+
+				// ACT
+				t1.unwrap().continue_with([&] (const async_result<int> &r) {	results1.push_back(*r);	}, queues[1]);
+				t2.unwrap().continue_with([&] (const async_result<void> &)  {	called2++;	}, queues[1]);
+
+				// ASSERT
+				assert_equal(2u, queues[0].tasks.size());
+				assert_is_empty(queues[1].tasks);
+
+				// ACT
+				queues[0].run_one();
+				queues[0].run_one();
+
+				// ASSERT
+				assert_equal(0u, queues[0].tasks.size());
+				assert_is_empty(queues[1].tasks);
+
+				// ACT
+				s1->set(171321);
+
+				// ASSERT
+				assert_is_empty(queues[0].tasks);
+				assert_equal(1u, queues[1].tasks.size());
+				assert_is_empty(results1);
+				assert_equal(0, called2);
+
+				// ACT
+				s2->set();
+
+				// ASSERT
+				assert_is_empty(queues[0].tasks);
+				assert_equal(2u, queues[1].tasks.size());
+				assert_is_empty(results1);
+				assert_equal(0, called2);
+
+				// ACT
+				queues[1].run_one();
+
+				// ASSERT
+				assert_equal(1u, queues[1].tasks.size());
+				assert_equal(plural + 171321, results1);
+				assert_equal(0, called2);
+
+				// ACT
+				queues[1].run_one();
+
+				// ASSERT
+				assert_is_empty(queues[0].tasks);
+				assert_is_empty(queues[1].tasks);
+				assert_equal(plural + 171321, results1);
+				assert_equal(1, called2);
 			}
 
 		end_test_suite

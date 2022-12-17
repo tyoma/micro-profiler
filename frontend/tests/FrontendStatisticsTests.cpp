@@ -293,7 +293,7 @@ namespace micro_profiler
 			}
 
 
-			test( SessionIsDisconnectedAfterAllMetadataFinallyRequestedIsResponded )
+			test( SessionIsDisconnectedAfterAllMetadataRequestedIsFinallyResponded )
 			{
 				// INIT
 				auto frontend_ = create_frontend();
@@ -330,16 +330,20 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0, disconnections);
+				assert_equal(3u, queue.tasks.size());
 
 				// ACT
+				queue.run_one();
 				queue.run_one();
 				queue.run_one();
 
 				// ASSERT
 				assert_equal(0, disconnections);
+				assert_is_empty(queue.tasks);
+				assert_equal(3u, apartment.tasks.size());
 
 				// ACT
-				queue.run_one();
+				apartment.run_till_end();
 
 				// ASSERT
 				assert_equal(1, disconnections);

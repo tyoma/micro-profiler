@@ -96,27 +96,26 @@ namespace micro_profiler
 		const auto req = make_shared< shared_ptr<void> >();
 		const weak_ptr< shared_ptr<void> > wreq = req;
 		const auto db = _preferences_db_connection;
-		const auto ready2 = [ready, wreq] (const module_ptr &m) {
-			if (!wreq.expired())
-				ready(m);
-		};
-		const auto cache_completion = make_shared< task_node<module_ptr> >();
-		const auto caching_ready = [ready2, cache_completion] (const module_ptr &m) {
-			cache_completion->set(frontend::module_ptr(m));
-			ready2(m);
-		};
-
-		request_ = req;
-		task<module_ptr>::run([db, hash] {
+		auto request_with_caching = task<module_ptr>::run([db, hash] {
 			return load_metadata(db, hash);
-		}, _worker_queue).continue_with([this, persistent_id, wreq, ready2, caching_ready] (const async_result<module_ptr> &m) {
+		}, _worker_queue).continue_with([this, persistent_id, wreq] (const async_result<module_ptr> &m) -> task< pair<module_ptr, bool> > {
+			auto c = make_shared< task_node< pair<module_ptr, bool> > >();
+
 			if (*m)
-				ready2(*m);
-			else if (const auto next_request = wreq.lock())
-				request_metadata_nw(*next_request, persistent_id, caching_ready);
+				c->set(make_pair(*m, true));
+			else if (const auto next = wreq.lock())
+				request_metadata_nw(*next, persistent_id, [c] (const module_ptr &m) {	c->set(make_pair(m, false));	});
+			return task< pair<module_ptr, bool> >(shared_ptr< task_node< pair<module_ptr, bool> > >(c));
+		}, _apartment_queue).unwrap();
+		
+		request_ = req;
+		request_with_caching.continue_with([ready, wreq] (const async_result< pair<module_ptr, bool> > &m) {
+			if (!wreq.expired())
+				ready((*m).first);
 		}, _apartment_queue);
-		task<module_ptr>(shared_ptr< task_node<module_ptr> >(cache_completion)).continue_with([db] (const async_result<module_ptr> &m) {
-			frontend::store_metadata(db, **m);
+		request_with_caching.continue_with([db] (const async_result< pair<module_ptr, bool /*cached*/> > &m) {
+			if (!(*m).second)
+				frontend::store_metadata(db, *(*m).first);
 		}, _worker_queue);
 	}
 

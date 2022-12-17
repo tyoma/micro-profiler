@@ -339,8 +339,13 @@ namespace micro_profiler
 				worker.run_one(), apartment.run_one();
 
 				// ASSERT
-				assert_equal(0u, worker.tasks.size());
-				assert_equal(0u, apartment.tasks.size());
+				assert_equal(1u, apartment.tasks.size());
+
+				// ACT
+				apartment.run_one();
+
+				// ASSERT
+				assert_is_empty(apartment.tasks);
 				assert_equal(1u, log.size());
 				assert_equal(create_metadata_info(0, symbols17, files17), *log.back());
 				assert_equal(&modules_by_id(*context)[17], log.back());
@@ -391,7 +396,14 @@ namespace micro_profiler
 				apartment.run_one();
 
 				// ASSERT
+				assert_equal(1u, apartment.tasks.size());
 				assert_equal(1u, worker.tasks.size());
+				assert_equal(0u, log.size());
+
+				// ACT
+				apartment.run_one();
+
+				// ASSERT
 				assert_equal(1u, log.size());
 
 				// ACT

@@ -39,6 +39,15 @@ namespace micro_profiler
 
 	namespace tables
 	{
+		struct cached_patch
+		{
+			id_t scope_id;
+			id_t module_id;
+			unsigned int rva;
+		};
+
+
+
 		template <typename VisitorT>
 		inline void describe(VisitorT &&v, module *m)
 		{
@@ -63,6 +72,14 @@ namespace micro_profiler
 			v(&identity::id, "id");
 			v(&source_file::module_id, "module_id");
 			v(&source_file::path, "path");
+		}
+
+		template <typename VisitorT>
+		inline void describe(VisitorT &&v, cached_patch *)
+		{
+			v(&cached_patch::scope_id, "scope_id");
+			v(&cached_patch::module_id, "module_id");
+			v(&cached_patch::rva, "rva");
 		}
 	}
 }

@@ -421,7 +421,7 @@ namespace micro_profiler
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
-					const auto &idx = sdb::multi_index(*this->patches, keyer::persistent_id());
+					const auto &idx = sdb::multi_index(*this->patches, keyer::module_id());
 
 					log.resize(log.size() + 1);
 					for (auto r = idx.equal_range(payload.image_persistent_id); r.first != r.second; ++r.first)

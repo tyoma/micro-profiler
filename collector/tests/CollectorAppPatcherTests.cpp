@@ -76,10 +76,10 @@ namespace micro_profiler
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
 
-				pmanager.on_apply = [&] (patch_manager::apply_results &, unsigned persistent_id, void *base,
+				pmanager.on_apply = [&] (patch_manager::apply_results &, unsigned module_id, void *base,
 					shared_ptr<void> lock, patch_manager::request_range targets) {
 
-					ids_log.push_back(persistent_id);
+					ids_log.push_back(module_id);
 					bases_log.push_back(base);
 					assert_not_null(lock);
 					rva_log.push_back(vector<unsigned>(targets.begin(), targets.end()));
@@ -194,10 +194,10 @@ namespace micro_profiler
 				client_ready.wait();
 				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
 
-				pmanager.on_revert = [&] (patch_manager::revert_results &, unsigned persistent_id,
+				pmanager.on_revert = [&] (patch_manager::revert_results &, unsigned module_id,
 					patch_manager::request_range targets) {
 
-					ids_log.push_back(persistent_id);
+					ids_log.push_back(module_id);
 					rva_log.push_back(vector<unsigned>(targets.begin(), targets.end()));
 					ready.set();
 				};

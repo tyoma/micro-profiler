@@ -127,14 +127,14 @@ namespace micro_profiler
 			{	record.parent_id = key;	}
 		};
 
-		struct persistent_id
+		struct module_id
 		{
 			id_t operator ()(const patch &record) const
-			{	return record.persistent_id;	}
+			{	return record.module_id;	}
 
 			template <typename IndexT>
 			void operator ()(IndexT &, patch &record, id_t key) const
-			{	record.persistent_id = key;	}
+			{	record.module_id = key;	}
 		};
 
 		struct rva
@@ -232,6 +232,6 @@ namespace micro_profiler
 
 
 		typedef combine3<thread_id, parent_id, address> callnode;
-		typedef combine2<persistent_id, rva> symbol_id;
+		typedef combine2<module_id, rva> symbol_id;
 	}
 }

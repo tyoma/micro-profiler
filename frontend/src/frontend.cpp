@@ -52,10 +52,10 @@ namespace micro_profiler
 			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});
 		};
 
-		_db->modules.request_presence = [this] (shared_ptr<void> &request, unsigned int persistent_id,
+		_db->modules.request_presence = [this] (shared_ptr<void> &request, unsigned int module_id,
 			const tables::modules::metadata_ready_cb &ready) {
 
-			request_metadata(request, persistent_id, ready);
+			request_metadata(request, module_id, ready);
 		};
 
 		subscribe(*new_request_handle(), init_v1, [this] (ipc::deserializer &) {
@@ -83,7 +83,7 @@ namespace micro_profiler
 		subscribe(*new_request_handle(), exiting, [this] (ipc::deserializer &) {	finalize();	});
 
 		_requests.push_back(_db->mappings.created += [this] (tables::module_mappings::const_iterator i) {
-			_module_hashes[i->persistent_id] = i->hash;
+			_module_hashes[i->module_id] = i->hash;
 		});
 
 		init_patcher();
@@ -109,6 +109,7 @@ namespace micro_profiler
 		t.create_table<tables::module>("modules");
 		t.create_table<tables::symbol_info>("symbols");
 		t.create_table<tables::source_file>("source_files");
+		t.create_table<tables::cached_patch>("patches");
 		t.commit();
 		LOG(PREAMBLE "database initialized...");
 	}
@@ -189,10 +190,10 @@ namespace micro_profiler
 			{
 				const auto m = find_range(idx, (*i).address);
 
-				if (!m || requested[m->persistent_id]++)
+				if (!m || requested[m->module_id]++)
 					continue;
 				++*remaining;
-				request_metadata(*new_request_handle(), m->persistent_id,
+				request_metadata(*new_request_handle(), m->module_id,
 					[self, remaining, enable] (const module_info_metadata &) {
 
 					if (!--*remaining && *enable)

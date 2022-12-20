@@ -152,8 +152,8 @@ namespace micro_profiler
 						+ make_mapping_pair(5, 191, 0x01100000u, "d", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned persistent_id) {
-					log.push_back(persistent_id);
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned module_id) {
+					log.push_back(module_id);
 				});
 
 				// ACT
@@ -219,8 +219,8 @@ namespace micro_profiler
 						+ make_mapping_pair(3, 19, 0x00100000u, "c", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned persistent_id) {
-					log.push_back(persistent_id);
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned module_id) {
+					log.push_back(module_id);
 				});
 
 				// ACT
@@ -256,7 +256,7 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned persistent_id) {
+				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned module_id) {
 					symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
 						symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
 						symbols1000[] = {	{	"baz", 0x0010, 1	},	};
@@ -264,7 +264,7 @@ namespace micro_profiler
 						files99[] = {	make_pair(3, "main.cpp"),	},
 						files1000[] = {	make_pair(7, "local.cpp"),	};
 
-					switch (persistent_id)
+					switch (module_id)
 					{
 					case 17:	resp(response_module_metadata, create_metadata_info(10, symbols17, files17));	break;
 					case 99:	resp(response_module_metadata, create_metadata_info(100, symbols99, files99));	break;
@@ -377,8 +377,6 @@ namespace micro_profiler
 				pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	},
 					files99[] = {	make_pair(3, "main.cpp"),	};
 				vector<const module_info_metadata *> log;
-				auto f1 = dir.track_file("foo.dll-90100201.symcache");
-				auto f2 = dir.track_file("kernel32.dll-00000001.symcache");
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural

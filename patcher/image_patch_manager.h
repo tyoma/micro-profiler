@@ -42,10 +42,10 @@ namespace micro_profiler
 
 		void detach_all();
 
-		virtual void query(patch_state &states, unsigned int persistent_id) override;
-		virtual void apply(apply_results &results, unsigned int persistent_id, void *base, std::shared_ptr<void> lock,
+		virtual void query(patch_state &states, unsigned int module_id) override;
+		virtual void apply(apply_results &results, unsigned int module_id, void *base, std::shared_ptr<void> lock,
 			request_range targets) override;
-		virtual void revert(revert_results &results, unsigned int persistent_id, request_range targets) override;
+		virtual void revert(revert_results &results, unsigned int module_id, request_range targets) override;
 
 	private:
 		struct image_patch
@@ -57,7 +57,7 @@ namespace micro_profiler
 			unsigned int patches_applied;
 		};
 
-		typedef std::unordered_map<unsigned int /*persistent_id*/, image_patch> patched_images_t;
+		typedef std::unordered_map<unsigned int /*module_id*/, image_patch> patched_images_t;
 
 	private:
 		patched_images_t _patched_images;

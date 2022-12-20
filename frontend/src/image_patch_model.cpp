@@ -82,7 +82,7 @@ namespace micro_profiler
 		};
 		auto refresh = [this, mappings, invalidate_me] {
 			for (auto i = mappings->begin(); i != mappings->end(); ++i)
-				_module_paths[i->persistent_id] = i->path;
+				_module_paths[i->module_id] = i->path;
 			request_missing(*mappings);
 			invalidate_me();
 		};
@@ -205,11 +205,11 @@ namespace micro_profiler
 	{
 		for (auto i = mappings.begin(); i != mappings.end(); ++i)
 		{
-			auto req = _requests.insert(make_pair(i->persistent_id, shared_ptr<void>()));
+			auto req = _requests.insert(make_pair(i->module_id, shared_ptr<void>()));
 
 			if (!req.second)
 				continue;
-			_modules->request_presence(req.first->second, i->persistent_id,
+			_modules->request_presence(req.first->second, i->module_id,
 				[this] (const module_info_metadata &/*metadata*/) {
 
 				_ordered_view.fetch();
@@ -231,17 +231,17 @@ namespace micro_profiler
 			value << c_patch_states[encode_state(*patch)];
 	}
 
-	void image_patch_model::format_module_name(agge::richtext_t &value, unsigned int persistent_id) const
+	void image_patch_model::format_module_name(agge::richtext_t &value, unsigned int module_id) const
 	{
-		const auto m = _module_paths.find(persistent_id);
+		const auto m = _module_paths.find(module_id);
 
 		if (m != _module_paths.end())
 			value << *m->second;
 	}
 
-	void image_patch_model::format_module_path(agge::richtext_t &value, unsigned int persistent_id) const
+	void image_patch_model::format_module_path(agge::richtext_t &value, unsigned int module_id) const
 	{
-		const auto m = _module_paths.find(persistent_id);
+		const auto m = _module_paths.find(module_id);
 
 		if (m != _module_paths.end())
 			value << m->second.c_str();

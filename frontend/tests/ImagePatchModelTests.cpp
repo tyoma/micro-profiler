@@ -28,13 +28,13 @@ namespace micro_profiler
 			shared_ptr<tables::modules> modules;
 			map<unsigned, tables::modules::metadata_ready_cb> requests;
 
-			void emulate_response(unsigned persistent_id, const vector<symbol_info> &symbols_)
+			void emulate_response(unsigned module_id, const vector<symbol_info> &symbols_)
 			{
-				auto i = requests.find(persistent_id);
+				auto i = requests.find(module_id);
 
 				assert_not_equal(requests.end(), i);
 
-				auto &m = add_metadata(*modules, persistent_id, symbols_);
+				auto &m = add_metadata(*modules, module_id, symbols_);
 
 				i->second(m);
 			}
@@ -591,8 +591,8 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<unsigned> log;
-				modules->request_presence = [&] (shared_ptr<void> &, unsigned persistent_id, tables::modules::metadata_ready_cb) {
-					log.push_back(persistent_id);
+				modules->request_presence = [&] (shared_ptr<void> &, unsigned module_id, tables::modules::metadata_ready_cb) {
+					log.push_back(module_id);
 				};
 
 				add_records(*mappings, plural

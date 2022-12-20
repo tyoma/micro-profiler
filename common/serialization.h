@@ -80,7 +80,7 @@ namespace micro_profiler
 
 		if (ver < 5)
 			archive(dummy);
-		archive(data.persistent_id);
+		archive(data.module_id);
 		archive(data.base);
 		archive(data.path);
 		if (ver >= 6)

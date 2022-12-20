@@ -13,24 +13,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		struct module_id
-		{
-			module_id(unsigned persistent_id_, std::string path_, unsigned hash_)
-				: persistent_id(persistent_id_), path(path_), hash(hash_)
-			{	}
-
-			bool operator <(const module_id &rhs) const
-			{
-				return persistent_id < rhs.persistent_id ? true : persistent_id > rhs.persistent_id ? false :
-					path < rhs.path ? true : path > rhs.path ? false :
-					hash < rhs.hash;
-			}
-		
-			unsigned persistent_id;
-			std::string path;
-			unsigned hash;
-		};
-
 		struct main_columns
 		{
 			enum items

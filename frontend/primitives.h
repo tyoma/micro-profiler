@@ -64,7 +64,7 @@ namespace micro_profiler
 		patch()
 		{	id = 0, state.requested = state.error = state.active = 0;	}
 
-		unsigned int persistent_id;
+		unsigned int module_id;
 		unsigned int rva;
 
 		struct

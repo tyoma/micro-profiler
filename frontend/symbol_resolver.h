@@ -30,7 +30,7 @@ namespace micro_profiler
 	{
 	public:
 		typedef std::pair<std::string, unsigned> fileline_t;
-		typedef std::function<void (unsigned persistent_id)> request_metadata_t;
+		typedef std::function<void (unsigned module_id)> request_metadata_t;
 
 	public:
 		symbol_resolver(std::shared_ptr<const tables::modules> modules,
@@ -47,15 +47,15 @@ namespace micro_profiler
 		typedef containers::unordered_map<unsigned int /*file_id*/, std::string /*file*/> file_lines_map_t;
 
 	private:
-		const symbol_info *find_symbol_by_va(long_address_t address, unsigned int &persistent_id) const;
+		const symbol_info *find_symbol_by_va(long_address_t address, unsigned int &module_id) const;
 
 	private:
 		std::string _empty;
 		const std::shared_ptr<const tables::modules> _modules;
 		const std::shared_ptr<const tables::module_mappings> _mappings;
 
-		mutable containers::unordered_map<unsigned int /*persistent_id*/, ordered_symbols_map_t> _symbols_ordered;
-		mutable containers::unordered_map<unsigned int /*persistent_id*/, const file_lines_map_t *> _file_lines;
-		mutable containers::unordered_map< unsigned int /*persistent_id*/, std::shared_ptr<void> > _requests;
+		mutable containers::unordered_map<unsigned int /*module_id*/, ordered_symbols_map_t> _symbols_ordered;
+		mutable containers::unordered_map<unsigned int /*module_id*/, const file_lines_map_t *> _file_lines;
+		mutable containers::unordered_map< unsigned int /*module_id*/, std::shared_ptr<void> > _requests;
 	};
 }

@@ -60,7 +60,7 @@ namespace micro_profiler
 			typedef std::shared_ptr<void> handle_t;
 
 			typedef std::function<void (const module_info_metadata &metadata)> metadata_ready_cb;
-			std::function<void (handle_t &request, unsigned int persistent_id, const metadata_ready_cb &ready)>
+			std::function<void (handle_t &request, unsigned int module_id, const metadata_ready_cb &ready)>
 				request_presence;
 
 			mutable wpl::signal<void ()> invalidate;
@@ -82,8 +82,8 @@ namespace micro_profiler
 
 		struct patches : sdb::table<patch>
 		{
-			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> apply;
-			std::function<void (unsigned int persistent_id, range<const unsigned int, size_t> rva)> revert;
+			std::function<void (unsigned int module_id, range<const unsigned int, size_t> rva)> apply;
+			std::function<void (unsigned int module_id, range<const unsigned int, size_t> rva)> revert;
 		};
 	}
 

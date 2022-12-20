@@ -576,7 +576,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				client->request(req, request_module_metadata, mmi[1].second.persistent_id, response_module_metadata,
+				client->request(req, request_module_metadata, mmi[1].second.module_id, response_module_metadata,
 					[&] (deserializer &d) {
 
 					d(md);
@@ -593,7 +593,7 @@ namespace micro_profiler
 				assert_equal((file_id)c_symbol_container_2, (file_id)md.path);
 
 				// ACT
-				client->request(req, request_module_metadata, mmi[0].second.persistent_id, response_module_metadata,
+				client->request(req, request_module_metadata, mmi[0].second.module_id, response_module_metadata,
 					[&] (deserializer &d) {
 
 					d(md);

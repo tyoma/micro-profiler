@@ -20,31 +20,40 @@
 
 #pragma once
 
-#include <common/image_info.h>
-#include <scheduler/private_queue.h>
-#include <string>
-#include <vector>
+#include "database.h"
 
-typedef struct sqlite3 sqlite3;
+#include <scheduler/task.h>
+#include <sqlite++/database.h>
+
+namespace scheduler
+{
+	struct queue;
+}
 
 namespace micro_profiler
 {
 	struct profiling_session;
 
+	struct database_mapping_tasks
+	{
+		virtual scheduler::task<id_t> persisted_module_id(id_t module_id) = 0;
+	};
+
 	class profiling_preferences
 	{
 	public:
-		profiling_preferences(const std::string &preferences_database);
-		~profiling_preferences();
+		profiling_preferences(const std::string &preferences_db, scheduler::queue &worker, scheduler::queue &apartment);
 
-		void apply_and_track(profiling_session &session);
-
-	private:
-		profiling_preferences(const profiling_preferences &other);
-		void operator =(const profiling_preferences &rhs);
+		void apply_and_track(std::shared_ptr<profiling_session> session, std::shared_ptr<database_mapping_tasks> mapping);
 
 	private:
-		sqlite3 *_database;
+		static std::vector<patch> load_patches(sql::connection_ptr preferences_db, id_t persistent_id);
+		void load_and_apply(std::shared_ptr<tables::patches> patches, id_t module_id,
+			scheduler::task<id_t> cached_module_id_task);
 
+	private:
+		const std::string _preferences_db;
+		scheduler::queue &_worker, &_apartment;
+		wpl::slot_connection _module_loaded_connection;
 	};
 }

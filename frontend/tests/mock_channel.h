@@ -16,7 +16,7 @@ namespace micro_profiler
 
 			public:
 				bool disconnected;
-				std::vector<unsigned int /*persistent_id*/> requested_metadata;
+				std::vector<unsigned int /*module_id*/> requested_metadata;
 				std::vector< std::vector<unsigned int /*thread_id*/> > requested_threads;
 				unsigned requested_upadtes;
 

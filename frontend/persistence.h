@@ -74,6 +74,6 @@ namespace micro_profiler
 			archive(data.threads, as_map);
 
 		//if (ver >= 5)
-		//	archive(static_cast<containers::unordered_map<unsigned int /*persistent_id*/, tables::image_patches> &>(const_cast<tables::patches &>(*data.patches)));
+		//	archive(static_cast<containers::unordered_map<unsigned int /*module_id*/, tables::image_patches> &>(const_cast<tables::patches &>(*data.patches)));
 	}
 }

@@ -55,7 +55,7 @@ namespace micro_profiler
 
 	private:
 		typedef std::shared_ptr<module_info_metadata> module_ptr;
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, std::uint32_t> module_hashes_t;
+		typedef containers::unordered_map<unsigned int /*module_id*/, std::uint32_t> module_hashes_t;
 		typedef reqm::multiplexing_request<unsigned int, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
 		typedef std::list< std::shared_ptr<void> > requests_t;
 
@@ -64,23 +64,23 @@ namespace micro_profiler
 		virtual void disconnect() throw() override;
 
 		void init_patcher();
-		void apply(unsigned int persistent_id, range<const unsigned int, size_t> rva);
-		void revert(unsigned int persistent_id, range<const unsigned int, size_t> rva);
+		void apply(unsigned int module_id, range<const unsigned int, size_t> rva);
+		void revert(unsigned int module_id, range<const unsigned int, size_t> rva);
 
 		template <typename OnUpdate>
 		void request_full_update(std::shared_ptr<void> &request_, const OnUpdate &on_update);
 		void update_threads(std::vector<unsigned int> &thread_ids);
 		void finalize();
 
-		void request_metadata(std::shared_ptr<void> &request_, unsigned int persistent_id,
+		void request_metadata(std::shared_ptr<void> &request_, unsigned int module_id,
 			const tables::modules::metadata_ready_cb &ready);
 
 		template <typename F>
-		void request_metadata_nw_cached(std::shared_ptr<void> &request_, unsigned int persistent_id, unsigned int hash,
+		void request_metadata_nw_cached(std::shared_ptr<void> &request_, unsigned int module_id, unsigned int hash,
 			const F &ready);
 
 		template <typename F>
-		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int persistent_id, const F &ready);
+		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int module_id, const F &ready);
 
 		static module_ptr load_metadata(sql::connection_ptr preferences_db, unsigned int hash);
 		static void store_metadata(sql::connection_ptr preferences_db, const module_info_metadata &metadata);

@@ -52,9 +52,9 @@ namespace micro_profiler
 
 		patch_manager() {	}
 
-		virtual void query(patch_state &states, unsigned int persistent_id) = 0;
-		virtual void apply(apply_results &results, unsigned int persistent_id, void *base, std::shared_ptr<void> lock,
+		virtual void query(patch_state &states, unsigned int module_id) = 0;
+		virtual void apply(apply_results &results, unsigned int module_id, void *base, std::shared_ptr<void> lock,
 			request_range targets) = 0;
-		virtual void revert(revert_results &results, unsigned int persistent_id, request_range targets) = 0;
+		virtual void revert(revert_results &results, unsigned int module_id, request_range targets) = 0;
 	};
 }

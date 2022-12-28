@@ -20,7 +20,10 @@
 
 #include <frontend/profiling_preferences.h>
 
+#include <frontend/keyer.h>
 #include <frontend/profiling_preferences_db.h>
+#include <scheduler/task.h>
+#include <sdb/integrated_index.h>
 #include <sqlite++/database.h>
 
 using namespace scheduler;
@@ -45,40 +48,108 @@ namespace micro_profiler
 				read.push_back(entry);
 			return move(read);
 		}
+
+		template <typename T, typename C>
+		void write_records(sql::inserter<T> &&inserter, const C &records)
+		{
+			for (auto i = begin(records); i != end(records); ++i)
+				inserter(*i);
+		}
 	}
 
-	profiling_preferences::profiling_preferences(const string &preferences_db, queue &worker, queue &apartment)
-		: _preferences_db(preferences_db), _worker(worker), _apartment(apartment)
-	{	}
-
-	void profiling_preferences::apply_and_track(shared_ptr<profiling_session> session,
-		shared_ptr<database_mapping_tasks> mapping)
+	struct profiling_preferences::cached_patch_command : cached_patch
 	{
-		auto on_new_mapping = [this, session, mapping] (tables::module_mappings::const_iterator record) {
-			load_and_apply(micro_profiler::patches(session), record->module_id,
-				mapping->persisted_module_id(record->module_id));
+		cached_patch_command()
+			: command(restored_patch)
+		{	}
+
+		patch_command command;
+	};
+
+	profiling_preferences::profiling_preferences(shared_ptr<profiling_session> session,
+			shared_ptr<database_mapping_tasks> db_mapping, const string &preferences_db, queue &worker, queue &apartment)
+		: _preferences_db(preferences_db), _worker(worker), _apartment(apartment)
+	{
+		const auto changes = make_shared<changes_log>();
+		auto &changes_symbol_idx = sdb::unique_index(*changes, keyer::symbol_id());
+		const auto db = sql::create_connection(_preferences_db.c_str());
+		const auto patches_ = micro_profiler::patches(session);
+		const auto mappings_ = micro_profiler::mappings(session);
+		auto on_new_mapping = [this, db, patches_, changes, db_mapping] (tables::module_mappings::const_iterator record) {
+			restore_and_apply(db, patches_, changes, record->module_id, *db_mapping);
+		};
+		auto on_patch_upsert = [changes, &changes_symbol_idx] (tables::patches::const_iterator record) {
+			auto r = changes_symbol_idx[keyer::symbol_id()(*record)];
+
+			if (r.is_new())
+			{
+				(*r).scope_id = 0; // TODO: support patch-scopes in the future.
+				(*r).command = profiling_preferences::add_patch;
+				r.commit();
+			}
 		};
 
-		_module_loaded_connection = session->mappings.created += on_new_mapping;
+		_connection.push_back(patches_->created += on_patch_upsert);
+		_connection.push_back(patches_->invalidate += [this, db, mappings_, changes, db_mapping] {
+			persist(db, *mappings_, changes, *db_mapping);
+		});
+		_connection.push_back(session->mappings.created += on_new_mapping);
+
 		for (auto i = session->mappings.begin(); i != session->mappings.end(); ++i)
 			on_new_mapping(i);
 	}
 
-	void profiling_preferences::load_and_apply(shared_ptr<tables::patches> patches, id_t module_id,
-		task<id_t> cached_module_id_task)
+	void profiling_preferences::restore_and_apply(sql::connection_ptr db, shared_ptr<tables::patches> patches,
+		shared_ptr<changes_log> changes, id_t module_id, database_mapping_tasks &db_mapping)
 	{
-		const auto db = sql::create_connection(_preferences_db.c_str());
+		db_mapping.persisted_module_id(module_id)
+			.continue_with([db] (const async_result<id_t> &cached_module_id) -> vector<cached_patch> {
+				sql::transaction t(db);
 
-		cached_module_id_task.continue_with([db] (const async_result<id_t> &cached_module_id) -> vector<cached_patch> {
-			sql::transaction t(db);
+				return as_vector(t.select<cached_patch>("patches",
+					sql::c(&cached_patch::module_id) == sql::p(*cached_module_id)));
+			}, _worker)
+			.continue_with([patches, changes, module_id] (const async_result< vector<cached_patch> > &loaded) {
+				vector<unsigned int> rva;
+				auto &changes_symbol_idx = sdb::unique_index(*changes, keyer::symbol_id());
 
-			return as_vector(t.select<cached_patch>("patches", sql::c(&cached_patch::module_id) == sql::p(*cached_module_id)));
-		}, _worker).continue_with([patches, module_id] (const async_result< vector<cached_patch> > &loaded) {
-			vector<unsigned int> rva;
+				for (auto i = begin(*loaded); i != end(*loaded); ++i)
+				{
+					auto r = changes_symbol_idx[make_tuple(module_id, i->rva)];
 
-			for (auto i = begin(*loaded); i != end(*loaded); ++i)
-				rva.push_back(i->rva);
-			patches->apply(module_id, range<const unsigned int, size_t>(rva.data(), rva.size()));
-		}, _apartment);
+					rva.push_back(i->rva);
+					(*r).command = profiling_preferences::restored_patch;
+					r.commit();
+				}
+				patches->apply(module_id, range<const unsigned int, size_t>(rva.data(), rva.size()));
+			}, _apartment);
+	}
+
+	void profiling_preferences::persist(sql::connection_ptr db, const tables::module_mappings &mappings,
+		shared_ptr<changes_log> changes, database_mapping_tasks &db_mapping)
+	{
+		auto &segmented_changes_idx = sdb::multi_index(*changes, keyer::module_id());
+
+		for (auto m = mappings.begin(); m != mappings.end(); ++m)
+		{
+			const auto module_id = m->module_id;
+			const auto added_range = segmented_changes_idx.equal_range(module_id);
+			const auto added = make_shared< vector<cached_patch> >();
+
+			for (auto p = added_range.first; p != added_range.second; ++p)
+				if (add_patch == p->command)
+					added->push_back(*p);
+			if (added->empty())
+				continue;
+			db_mapping.persisted_module_id(module_id)
+				.continue_with([db, added] (const async_result<id_t> &cached_module_id) {
+					sql::transaction t(db);
+
+					for (auto i = begin(*added); i != end(*added); ++i)
+						i->module_id = *cached_module_id;
+					write_records(t.insert<tables::cached_patch>("patches"), *added);
+					t.commit();
+				}, _worker);
+		}
 	}
 }

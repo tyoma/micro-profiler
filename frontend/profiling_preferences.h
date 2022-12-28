@@ -22,12 +22,12 @@
 
 #include "database.h"
 
-#include <scheduler/task.h>
 #include <sqlite++/database.h>
 
 namespace scheduler
 {
 	struct queue;
+	template <typename T> class task;
 }
 
 namespace micro_profiler
@@ -42,18 +42,23 @@ namespace micro_profiler
 	class profiling_preferences
 	{
 	public:
-		profiling_preferences(const std::string &preferences_db, scheduler::queue &worker, scheduler::queue &apartment);
-
-		void apply_and_track(std::shared_ptr<profiling_session> session, std::shared_ptr<database_mapping_tasks> mapping);
+		profiling_preferences(std::shared_ptr<profiling_session> session, std::shared_ptr<database_mapping_tasks> mapping,
+			const std::string &preferences_db, scheduler::queue &worker, scheduler::queue &apartment);
 
 	private:
-		static std::vector<patch> load_patches(sql::connection_ptr preferences_db, id_t persistent_id);
-		void load_and_apply(std::shared_ptr<tables::patches> patches, id_t module_id,
-			scheduler::task<id_t> cached_module_id_task);
+		enum patch_command {	restored_patch, add_patch, remove_patch,	};
+		struct cached_patch_command;
+		typedef sdb::table<cached_patch_command> changes_log;
+
+	private:
+		void restore_and_apply(sql::connection_ptr db, std::shared_ptr<tables::patches> patches,
+			std::shared_ptr<changes_log> changes, id_t module_id, database_mapping_tasks &db_mapping);
+		void persist(sql::connection_ptr db, const tables::module_mappings &mappings,
+			std::shared_ptr<changes_log> changes, database_mapping_tasks &db_mapping);
 
 	private:
 		const std::string _preferences_db;
 		scheduler::queue &_worker, &_apartment;
-		wpl::slot_connection _module_loaded_connection;
+		std::vector<wpl::slot_connection> _connection;
 	};
 }

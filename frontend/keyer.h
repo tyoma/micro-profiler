@@ -129,21 +129,23 @@ namespace micro_profiler
 
 		struct module_id
 		{
-			id_t operator ()(const patch &record) const
+			template <typename T>
+			id_t operator ()(const T &record) const
 			{	return record.module_id;	}
 
-			template <typename IndexT>
-			void operator ()(IndexT &, patch &record, id_t key) const
+			template <typename IndexT, typename T>
+			void operator ()(IndexT &, T &record, id_t key) const
 			{	record.module_id = key;	}
 		};
 
 		struct rva
 		{
-			unsigned int operator ()(const patch &record) const
+			template <typename T>
+			unsigned int operator ()(const T &record) const
 			{	return record.rva;	}
 
-			template <typename IndexT>
-			void operator ()(IndexT &, patch &record, unsigned int key) const
+			template <typename IndexT, typename T>
+			void operator ()(IndexT &, T &record, unsigned int key) const
 			{	record.rva = key;	}
 		};
 

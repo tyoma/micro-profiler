@@ -59,11 +59,7 @@ namespace micro_profiler
 
 	struct profiling_preferences::cached_patch_command : cached_patch
 	{
-		cached_patch_command()
-			: command(restored_patch)
-		{	}
-
-		patch_command command;
+		patch_state command;
 	};
 
 	profiling_preferences::profiling_preferences(shared_ptr<profiling_session> session,
@@ -78,18 +74,22 @@ namespace micro_profiler
 		auto on_new_mapping = [this, db, patches_, changes, db_mapping] (tables::module_mappings::const_iterator record) {
 			restore_and_apply(db, patches_, changes, record->module_id, *db_mapping);
 		};
-		auto on_patch_upsert = [changes, &changes_symbol_idx] (tables::patches::const_iterator record) {
-			auto r = changes_symbol_idx[keyer::symbol_id()(*record)];
-
-			if (r.is_new())
+		auto on_patch_upsert = [changes, &changes_symbol_idx] (tables::patches::const_iterator p) {
+			if (p->state.active & !p->state.error & !p->state.requested)
 			{
-				(*r).scope_id = 0; // TODO: support patch-scopes in the future.
-				(*r).command = profiling_preferences::add_patch;
-				r.commit();
+				auto r = changes_symbol_idx[keyer::symbol_id()(*p)];
+
+				if (r.is_new())
+				{
+					(*r).scope_id = 0; // TODO: support patch-scopes in the future.
+					(*r).command = profiling_preferences::patch_added;
+					r.commit();
+				}
 			}
 		};
 
 		_connection.push_back(patches_->created += on_patch_upsert);
+		_connection.push_back(patches_->modified += on_patch_upsert);
 		_connection.push_back(patches_->invalidate += [this, db, mappings_, changes, db_mapping] {
 			persist(db, *mappings_, changes, *db_mapping);
 		});
@@ -118,7 +118,7 @@ namespace micro_profiler
 					auto r = changes_symbol_idx[make_tuple(module_id, i->rva)];
 
 					rva.push_back(i->rva);
-					(*r).command = profiling_preferences::restored_patch;
+					(*r).command = profiling_preferences::patch_saved;
 					r.commit();
 				}
 				patches->apply(module_id, range<const unsigned int, size_t>(rva.data(), rva.size()));
@@ -137,7 +137,7 @@ namespace micro_profiler
 			const auto added = make_shared< vector<cached_patch> >();
 
 			for (auto p = added_range.first; p != added_range.second; ++p)
-				if (add_patch == p->command)
+				if (patch_added == p->command)
 					added->push_back(*p);
 			if (added->empty())
 				continue;
@@ -151,5 +151,6 @@ namespace micro_profiler
 					t.commit();
 				}, _worker);
 		}
+		changes->clear();
 	}
 }

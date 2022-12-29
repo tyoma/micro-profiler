@@ -46,7 +46,7 @@ namespace micro_profiler
 			const std::string &preferences_db, scheduler::queue &worker, scheduler::queue &apartment);
 
 	private:
-		enum patch_command {	restored_patch, add_patch, remove_patch,	};
+		enum patch_state {	patch_saved, patch_added, patch_removed,	};
 		struct cached_patch_command;
 		typedef sdb::table<cached_patch_command> changes_log;
 

@@ -7,6 +7,7 @@
 #include <frontend/constructors.h>
 #include <frontend/database.h>
 #include <frontend/frontend.h>
+#include <frontend/keyer.h>
 #include <frontend/profiling_preferences_db.h>
 #include <scheduler/task.h>
 #include <sqlite++/database.h>
@@ -71,7 +72,7 @@ namespace micro_profiler
 			}
 		}
 
-		begin_test_suite( ProcessPreferencesTests )
+		begin_test_suite( AAProcessPreferencesTests )
 			temporary_directory dir;
 			string db_path;
 			mocks::queue worker, apartment;
@@ -229,7 +230,15 @@ namespace micro_profiler
 					+ make_patch(13, 100321, 0, false, false, true)
 					+ make_patch(13, 400121, 0, false, false, true)
 					+ make_patch(17, 100121, 0, false, false, true)
-					+ make_patch(17, 400121, 0, false, false, true));
+					+ make_patch(17, 400121, 0, false, false, true)
+					
+					// These records won't affect cached addition.
+					+ make_patch(13, 50002, 0, false, true, false)
+					+ make_patch(13, 50003, 0, false, true, true)
+					+ make_patch(13, 50004, 0, true, false, false)
+					+ make_patch(13, 50005, 0, true, false, true)
+					+ make_patch(13, 50006, 0, true, true, false)
+					+ make_patch(13, 50007, 0, true, true, true));
 
 				// ASSERT
 				assert_is_empty(apartment.tasks);
@@ -259,6 +268,41 @@ namespace micro_profiler
 					+ initialize<tables::cached_patch>(0u, 1911u, 400121u)
 					+ initialize<tables::cached_patch>(0u, 1009u, 100121u)
 					+ initialize<tables::cached_patch>(0u, 1009u, 400121u), r, cached_patch_less);
+
+				// ACT
+				add_records(s->patches, plural
+					+ make_patch(13, 50002, 0, false, false, true)
+					+ make_patch(13, 50004, 0, false, false, true)
+					+ make_patch(13, 50006, 0, false, false, true), keyer::symbol_id());
+
+				// ASSERT
+				assert_is_empty(apartment.tasks);
+				assert_is_empty(worker.tasks);
+
+				// ACT
+				s->patches.invalidate();
+
+				// ASSERT
+				assert_is_empty(apartment.tasks);
+				assert_equal(1u, worker.tasks.size());
+
+				// ACT
+				worker.run_one();
+				r = read_records<tables::cached_patch>(db_path);
+
+				// ASSERT
+				assert_is_empty(apartment.tasks);
+				assert_is_empty(worker.tasks);
+				assert_equivalent_pred(plural
+					+ initialize<tables::cached_patch>(0u, 1911u, 100121u)
+					+ initialize<tables::cached_patch>(0u, 1911u, 200121u)
+					+ initialize<tables::cached_patch>(0u, 1911u, 100321u)
+					+ initialize<tables::cached_patch>(0u, 1911u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 1009u, 100121u)
+					+ initialize<tables::cached_patch>(0u, 1009u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 1911u, 50002u)
+					+ initialize<tables::cached_patch>(0u, 1911u, 50004u)
+					+ initialize<tables::cached_patch>(0u, 1911u, 50006u), r, cached_patch_less);
 			}
 
 
@@ -284,7 +328,7 @@ namespace micro_profiler
 				worker.run_till_end(); // pull cached patches
 				apartment.run_till_end();
 
-				// ACT (these changes will be ignored)
+				// ACT (these changes emulate patch application)
 				add_records(s->patches, plural
 					+ make_patch(100, 10001u, 0, true, false, false)
 					+ make_patch(100, 10101u, 0, true, false, false)

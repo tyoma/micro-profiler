@@ -21,6 +21,7 @@
 #pragma once
 
 #include "insert.h"
+#include "remove.h"
 #include "select.h"
 
 namespace micro_profiler
@@ -68,7 +69,7 @@ namespace micro_profiler
 			inserter<T> insert(const char *table_name);
 
 			template <typename T, typename W>
-			unsigned int remove(const W &where, const char *table_name);
+			statement remove(const W &where, const char *table_name);
 
 			void commit();
 
@@ -157,10 +158,8 @@ namespace micro_profiler
 		{	return insert_builder<T>(table_name).create_inserter(*_connection);	}
 
 		template <typename T, typename W>
-		inline unsigned int transaction::remove(const W &/*where*/, const char * /*table_name*/)
-		{
-			return 0;
-		}
+		inline statement transaction::remove(const W &where, const char *table_name)
+		{	return remove_builder(table_name).create_statement(*_connection, where);	}
 
 		inline void transaction::commit()
 		{

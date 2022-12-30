@@ -754,7 +754,7 @@ namespace micro_profiler
 				}
 
 
-				ignored_test( RecordsAreDeletedAccordinglyToTheCriteria )
+				test( RecordsAreDeletedAccordinglyToTheCriteria )
 				{
 					// INIT
 					transaction t(create_connection(path.c_str()));
@@ -778,9 +778,13 @@ namespace micro_profiler
 					write_all(t, items1, "test1");
 					write_all(t, items2, "test2");
 
-					// ACT / ASSERT
-					assert_equal(0u, t.remove<test_b>(p<const string>("foo") == c(&test_b::nickname) && p<const int>(31) == c(&test_b::suspect_age), "test1"));
-					assert_equal(1u, t.remove<test_b>(p<const string>("foo") == c(&test_b::nickname) && p<const int>(17) == c(&test_b::suspect_age), "test1"));
+					// INIT / ACT
+					auto stmt1 = t.remove<test_b>(p<const string>("qqq") == c(&test_b::nickname), "test1");
+					auto stmt2 = t.remove<test_b>(p<const string>("foo") == c(&test_b::nickname) && p<const int>(17) == c(&test_b::suspect_age), "test1");
+
+					// ACT
+					stmt1.execute();
+					stmt2.execute();
 
 					// ASSERT
 					assert_equivalent(plural
@@ -788,24 +792,30 @@ namespace micro_profiler
 						+ initialize<test_b>("bar", 31, "amet")
 						+ initialize<test_b>("bar", 23, "dolor")
 						+ initialize<test_b>("bar", 29, "lorem")
-						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "table1"));
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "test1"));
 
-					// ACT / ASSERT
-					assert_equal(2u, t.remove<test_b>(p<const string>("lorem") == c(&test_b::suspect_name), "test1"));
+					// INIT / ACT
+					auto stmt3 = t.remove<test_b>(p<const string>("lorem") == c(&test_b::suspect_name), "test1");
+
+					// ACT
+					stmt3.execute();
 
 					// ASSERT
 					assert_equivalent(plural
 						+ initialize<test_b>("bar", 31, "amet")
 						+ initialize<test_b>("bar", 23, "dolor")
-						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "table1"));
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "test1"));
 
-					// ACT / ASSERT
-					assert_equal(3u, t.remove<sample_item_1>(p<const int>(2) == c(&sample_item_1::a), "test2"));
+					// INIT / ACT
+					auto stmt4 = t.remove<sample_item_1>(p<const int>(2) == c(&sample_item_1::a), "test2");
+
+					// ACT
+					stmt4.execute();
 
 					// ASSERT
 					assert_equivalent(plural
 						+ initialize<sample_item_1>(1, "test")
-						+ initialize<sample_item_1>(3, "sample"), read_all<sample_item_1>(t, "table2"));
+						+ initialize<sample_item_1>(3, "sample"), read_all<sample_item_1>(t, "test2"));
 				}
 			end_test_suite
 		}

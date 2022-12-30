@@ -49,10 +49,10 @@ namespace micro_profiler
 			};
 
 			template <typename T>
-			void write_records(string db_path, T &patches, const char *table_name = "patches")
+			void write_records(string db_path, const vector<T> &patches)
 			{
 				sql::transaction t(sql::create_connection(db_path.c_str()));
-				auto w = t.insert<tables::cached_patch>(table_name);
+				auto w = t.insert<T>();
 
 				for (auto i = begin(patches); i != end(patches); ++i)
 					w(*i);
@@ -60,10 +60,10 @@ namespace micro_profiler
 			}
 
 			template <typename T>
-			vector<T> read_records(string db_path, const char *table_name = "patches")
+			vector<T> read_records(string db_path)
 			{
 				sql::transaction t(sql::create_connection(db_path.c_str()));
-				auto r = t.select<T>(table_name);
+				auto r = t.select<T>();
 				vector<T> read;
 
 				for (T entry; r(entry); )

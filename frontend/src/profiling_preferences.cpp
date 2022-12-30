@@ -59,7 +59,7 @@ namespace micro_profiler
 
 	struct profiling_preferences::cached_patch_command : cached_patch
 	{
-		patch_state command;
+		patch_state state;
 	};
 
 	profiling_preferences::profiling_preferences(shared_ptr<profiling_session> session,
@@ -82,7 +82,7 @@ namespace micro_profiler
 				if (r.is_new())
 				{
 					(*r).scope_id = 0; // TODO: support patch-scopes in the future.
-					(*r).command = profiling_preferences::patch_added;
+					(*r).state = profiling_preferences::patch_added;
 					r.commit();
 				}
 			}
@@ -106,8 +106,7 @@ namespace micro_profiler
 			.continue_with([db] (const async_result<id_t> &cached_module_id) -> vector<cached_patch> {
 				sql::transaction t(db);
 
-				return as_vector(t.select<cached_patch>("patches",
-					sql::c(&cached_patch::module_id) == sql::p(*cached_module_id)));
+				return as_vector(t.select<cached_patch>(sql::c(&cached_patch::module_id) == sql::p(*cached_module_id)));
 			}, _worker)
 			.continue_with([patches, changes, module_id] (const async_result< vector<cached_patch> > &loaded) {
 				vector<unsigned int> rva;
@@ -118,7 +117,7 @@ namespace micro_profiler
 					auto r = changes_symbol_idx[make_tuple(module_id, i->rva)];
 
 					rva.push_back(i->rva);
-					(*r).command = profiling_preferences::patch_saved;
+					(*r).state = profiling_preferences::patch_saved;
 					r.commit();
 				}
 				patches->apply(module_id, range<const unsigned int, size_t>(rva.data(), rva.size()));
@@ -133,12 +132,11 @@ namespace micro_profiler
 		for (auto m = mappings.begin(); m != mappings.end(); ++m)
 		{
 			const auto module_id = m->module_id;
-			const auto added_range = segmented_changes_idx.equal_range(module_id);
 			const auto added = make_shared< vector<cached_patch> >();
 
-			for (auto p = added_range.first; p != added_range.second; ++p)
-				if (patch_added == p->command)
-					added->push_back(*p);
+			for (auto p = segmented_changes_idx.equal_range(module_id); p.first != p.second; ++p.first)
+				if (patch_added == p.first->state)
+					added->push_back(*p.first);
 			if (added->empty())
 				continue;
 			db_mapping.persisted_module_id(module_id)
@@ -147,7 +145,7 @@ namespace micro_profiler
 
 					for (auto i = begin(*added); i != end(*added); ++i)
 						i->module_id = *cached_module_id;
-					write_records(t.insert<tables::cached_patch>("patches"), *added);
+					write_records(t.insert<tables::cached_patch>(), *added);
 					t.commit();
 				}, _worker);
 		}

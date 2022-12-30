@@ -106,10 +106,10 @@ namespace micro_profiler
 	{
 		sql::transaction t(sql::create_connection(preferences_db.c_str()));
 
-		t.create_table<tables::module>("modules");
-		t.create_table<tables::symbol_info>("symbols");
-		t.create_table<tables::source_file>("source_files");
-		t.create_table<tables::cached_patch>("patches");
+		t.create_table<tables::module>();
+		t.create_table<tables::symbol_info>();
+		t.create_table<tables::source_file>();
+		t.create_table<tables::cached_patch>();
 		t.commit();
 		LOG(PREAMBLE "database initialized...");
 	}

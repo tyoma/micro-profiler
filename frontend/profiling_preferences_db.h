@@ -51,6 +51,7 @@ namespace micro_profiler
 		template <typename VisitorT>
 		inline void describe(VisitorT &&v, module *m)
 		{
+			v("modules");
 			describe(v, static_cast<identity *>(m));
 			describe(v, static_cast<module_info_metadata *>(m));
 		}
@@ -58,6 +59,7 @@ namespace micro_profiler
 		template <typename VisitorT>
 		inline void describe(VisitorT &&v, symbol_info *)
 		{
+			v("symbols");
 			v(&symbol_info::module_id, "module_id");
 			v(&symbol_info::rva, "rva");
 			v(&symbol_info::size, "size");
@@ -69,6 +71,7 @@ namespace micro_profiler
 		template <typename VisitorT>
 		inline void describe(VisitorT &&v, source_file *)
 		{
+			v("source_files");
 			v(&identity::id, "id");
 			v(&source_file::module_id, "module_id");
 			v(&source_file::path, "path");
@@ -77,6 +80,7 @@ namespace micro_profiler
 		template <typename VisitorT>
 		inline void describe(VisitorT &&v, cached_patch *)
 		{
+			v("patches");
 			v(&cached_patch::scope_id, "scope_id");
 			v(&cached_patch::module_id, "module_id");
 			v(&cached_patch::rva, "rva");

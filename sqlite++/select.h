@@ -60,6 +60,10 @@ namespace micro_profiler
 		struct record_reader
 		{
 			template <typename U>
+			void operator ()(U)
+			{	}
+
+			template <typename U>
 			void operator ()(int U::*field, const char *)
 			{	record.*field = sqlite3_column_int(&statement, index++);	}
 
@@ -110,6 +114,9 @@ namespace micro_profiler
 		public:
 			select_builder(const char *table_name);
 
+			template <typename U>
+			void operator ()(U);
+
 			template <typename F>
 			void operator ()(F field, const char *name);
 
@@ -156,6 +163,11 @@ namespace micro_profiler
 			_expression_text += " FROM ";
 			_expression_text += table_name;
 		}
+
+		template <typename T>
+		template <typename U>
+		inline void select_builder<T>::operator ()(U)
+		{	}
 
 		template <typename T>
 		template <typename F>

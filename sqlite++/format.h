@@ -33,6 +33,10 @@ namespace micro_profiler
 		template <typename T>
 		struct column_definition_format_visitor
 		{
+			template <typename U>
+			void operator ()(U)
+			{	}
+
 			void operator ()(int T::*, const char *column_name)
 			{	append_integer(column_name);	}
 
@@ -95,6 +99,10 @@ namespace micro_profiler
 				if (field_ == field)
 					column_name.append(column_name_);
 			}
+
+			template <typename U>
+			void operator ()(U)
+			{	}
 
 			template <typename U> 
 			void operator ()(U, const char *) const

@@ -40,14 +40,12 @@ namespace micro_profiler
 	frontend::module_ptr frontend::load_metadata(sql::connection_ptr preferences_db, unsigned int hash)
 	{
 		sql::transaction t(preferences_db);
-		auto r_modules = t.select<tables::module>("modules", sql::c(&tables::module::hash) == sql::p(hash));
+		auto r_modules = t.select<tables::module>(sql::c(&tables::module::hash) == sql::p(hash));
 
 		for (auto m = make_shared<tables::module>(); r_modules(*m); )
 		{
-			auto r_symbols = t.select<tables::symbol_info>("symbols",
-				sql::c(&tables::symbol_info::module_id) == sql::p(m->id));
-			auto r_sources = t.select<tables::source_file>("source_files",
-				sql::c(&tables::source_file::module_id) == sql::p(m->id));
+			auto r_symbols = t.select<tables::symbol_info>(sql::c(&tables::symbol_info::module_id) == sql::p(m->id));
+			auto r_sources = t.select<tables::source_file>(sql::c(&tables::source_file::module_id) == sql::p(m->id));
 
 			for (tables::symbol_info item; r_symbols(item); )
 				m->symbols.push_back(item);
@@ -140,9 +138,9 @@ namespace micro_profiler
 		tables::module mm;
 		tables::symbol_info s;
 		tables::source_file sf;
-		auto w_modules = t.insert<tables::module>("modules");
-		auto w_symbols = t.insert<tables::symbol_info>("symbols");
-		auto w_sources = t.insert<tables::source_file>("source_files");
+		auto w_modules = t.insert<tables::module>();
+		auto w_symbols = t.insert<tables::symbol_info>();
+		auto w_sources = t.insert<tables::source_file>();
 
 		static_cast<module_info_metadata &>(mm) = m;
 		w_modules(mm);

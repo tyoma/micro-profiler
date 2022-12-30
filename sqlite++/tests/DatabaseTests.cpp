@@ -69,6 +69,24 @@ namespace micro_profiler
 					}
 				};
 
+				struct test_c
+				{
+					int a, b;
+
+					bool operator <(const test_c &rhs) const
+					{	return make_tuple(a, b) < make_tuple(rhs.a, rhs.b);	}
+				};
+
+				struct test_d
+				{
+					int bb;
+					string bbb;
+					int bbbb;
+
+					bool operator <(const test_d &rhs) const
+					{	return make_tuple(bb, bbb, bbbb) < make_tuple(rhs.bb, rhs.bbb, rhs.bbbb);	}
+				};
+
 				struct sample_item_1
 				{
 					int a;
@@ -173,18 +191,59 @@ namespace micro_profiler
 					visitor(&sample_inherited::comment, "comment");
 				}
 
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, test_c *)
+				{
+					visitor("test_c_table");
+					visitor(&test_c::a, "aa");
+					visitor(&test_c::b, "aaa");
+				}
+
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, test_d *)
+				{
+					visitor("TestTableD");
+					visitor(&test_d::bb, "bb");
+					visitor(&test_d::bbb, "bbb");
+					visitor(&test_d::bbbb, "bbbb");
+				}
+
+				template <typename T>
+				vector<T> read_all(reader<T> &&reader)
+				{
+					T item;
+					vector<T> result;
+
+					while (reader(item))
+						result.push_back(item);
+					return result;
+				}
+
+				template <typename T>
+				vector<T> read_all(transaction &tx, const char *table_name)
+				{	return read_all(tx.select<T>(table_name));	}
 
 				template <typename T>
 				vector<T> read_all(string path, const char *table_name)
 				{
-					T item;
-					vector<T> result;
-					transaction c(create_connection(path.c_str()));
-					auto r = c.select<T>(table_name);
+					transaction tx(create_connection(path.c_str()));
+					return read_all<T>(tx, table_name);
+				}
 
-					while (r(item))
-						result.push_back(item);
-					return result;
+				template <typename T>
+				void write_all(transaction &tx, const vector<T> &records, const char *table_name)
+				{
+					auto w = tx.insert<T>(table_name);
+
+					for (auto i = records.begin(); i != records.end(); ++i)
+						w(*i);
+				}
+
+				template <typename T>
+				void write_all(string path, const vector<T> &records, const char *table_name)
+				{
+					transaction tx(create_connection(path.c_str()));
+					write_all(tx, records, table_name);
 				}
 			}
 
@@ -294,7 +353,7 @@ namespace micro_profiler
 					transaction t(create_connection(path.c_str()));
 
 					// INIT / ACT
-					auto r = t.select<test_b>("reordered_lorem_ipsums", c(&test_b::suspect_age) == p<const int>(314));
+					auto r = t.select<test_b>(c(&test_b::suspect_age) == p<const int>(314), "reordered_lorem_ipsums");
 
 					// ACT
 					while (r(b))
@@ -311,10 +370,10 @@ namespace micro_profiler
 					results.clear();
 
 					// INIT / ACT
-					auto r2 = t.select<test_b>("reordered_lorem_ipsums",
-						c(&test_b::suspect_age) == p<const int>(314) || c(&test_b::suspect_name) == p<const string>("Ipsum"));
-					auto r3 = t.select<test_b>("reordered_lorem_ipsums",
-						c(&test_b::suspect_name) == p<const string>("Ipsum") || c(&test_b::suspect_age) == p<const int>(314));
+					auto r2 = t.select<test_b>(c(&test_b::suspect_age) == p<const int>(314)
+						|| c(&test_b::suspect_name) == p<const string>("Ipsum"), "reordered_lorem_ipsums");
+					auto r3 = t.select<test_b>(c(&test_b::suspect_name) == p<const string>("Ipsum")
+						|| c(&test_b::suspect_age) == p<const int>(314), "reordered_lorem_ipsums");
 
 					// ACT
 					while (r2(b))
@@ -617,6 +676,136 @@ namespace micro_profiler
 
 					// ASSERT
 					assert_equivalent(reference, items_read);
+				}
+
+
+				test( DefaultTableNameIsUsedWhenNotProvided )
+				{
+					// INIT
+					transaction t(create_connection(path.c_str()));
+					auto items1 = plural
+						+ initialize<test_c>(1, 11)
+						+ initialize<test_c>(1, 13)
+						+ initialize<test_c>(7, 11);
+					auto items2 = plural
+						+ initialize<test_d>(1, "lost", 11)
+						+ initialize<test_d>(2, "lost", 13)
+						+ initialize<test_d>(7, "lost", 17)
+						+ initialize<test_d>(3, "found", 19);
+
+					// ACT
+					t.create_table<test_c>();
+					t.create_table<test_d>();
+
+					// INIT / ACT
+					auto w1 = t.insert<test_c>("test_c_table");
+					auto w2 = t.insert<test_d>("TestTableD");
+
+					for (auto i = begin(items1); i != end(items1); ++i)
+						w1(*i);
+					for (auto i = begin(items2); i != end(items2); ++i)
+						w2(*i);
+
+					// ACT
+					auto r1 = read_all(t.select<test_c>());
+					auto r2 = read_all(t.select<test_d>());
+
+					// ASSERT
+					assert_equivalent(items1, r1);
+					assert_equivalent(items2, r2);
+
+					// ACT
+					auto r3 = read_all(t.select<test_c>(c(&test_c::b) == p<const int>(11)));
+					auto r4 = read_all(t.select<test_d>(c(&test_d::bbb) == p<const string>("lost")));
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_c>(1, 11)
+						+ initialize<test_c>(7, 11), r3);
+					assert_equivalent(plural
+						+ initialize<test_d>(1, "lost", 11)
+						+ initialize<test_d>(2, "lost", 13)
+						+ initialize<test_d>(7, "lost", 17), r4);
+
+					// INIT
+					auto item1 = initialize<test_c>(1, 130);
+					auto item2 = initialize<test_d>(1, "abc", 100);
+
+					// ACT
+					auto w3 = t.insert<test_c>();
+					auto w4 = t.insert<test_d>();
+
+					// ACT / ASSERT
+					w3(item1);
+					w4(item2);
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_c>(1, 11)
+						+ initialize<test_c>(1, 13)
+						+ initialize<test_c>(7, 11)
+						+ initialize<test_c>(1, 130), read_all(t.select<test_c>()));
+					assert_equivalent(plural
+						+ initialize<test_d>(1, "lost", 11)
+						+ initialize<test_d>(2, "lost", 13)
+						+ initialize<test_d>(7, "lost", 17)
+						+ initialize<test_d>(3, "found", 19)
+						+ initialize<test_d>(1, "abc", 100), read_all(t.select<test_d>()));
+				}
+
+
+				ignored_test( RecordsAreDeletedAccordinglyToTheCriteria )
+				{
+					// INIT
+					transaction t(create_connection(path.c_str()));
+					auto items1 = plural
+						+ initialize<test_b>("foo", 1, "lorem")
+						+ initialize<test_b>("foo", 17, "ipsum")
+						+ initialize<test_b>("bar", 31, "amet")
+						+ initialize<test_b>("bar", 23, "dolor")
+						+ initialize<test_b>("bar", 29, "lorem")
+						+ initialize<test_b>("baz", 7, "ipsum");
+					auto items2 = plural
+						+ initialize<sample_item_1>(1, "test")
+						+ initialize<sample_item_1>(2, "testtest")
+						+ initialize<sample_item_1>(3, "sample")
+						+ initialize<sample_item_1>(2, "feature")
+						+ initialize<sample_item_1>(2, "goal");
+
+					t.create_table<test_b>("test1");
+					t.create_table<sample_item_1>("test2");
+
+					write_all(t, items1, "test1");
+					write_all(t, items2, "test2");
+
+					// ACT / ASSERT
+					assert_equal(0u, t.remove<test_b>(p<const string>("foo") == c(&test_b::nickname) && p<const int>(31) == c(&test_b::suspect_age), "test1"));
+					assert_equal(1u, t.remove<test_b>(p<const string>("foo") == c(&test_b::nickname) && p<const int>(17) == c(&test_b::suspect_age), "test1"));
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_b>("foo", 1, "lorem")
+						+ initialize<test_b>("bar", 31, "amet")
+						+ initialize<test_b>("bar", 23, "dolor")
+						+ initialize<test_b>("bar", 29, "lorem")
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "table1"));
+
+					// ACT / ASSERT
+					assert_equal(2u, t.remove<test_b>(p<const string>("lorem") == c(&test_b::suspect_name), "test1"));
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_b>("bar", 31, "amet")
+						+ initialize<test_b>("bar", 23, "dolor")
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "table1"));
+
+					// ACT / ASSERT
+					assert_equal(3u, t.remove<sample_item_1>(p<const int>(2) == c(&sample_item_1::a), "test2"));
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<sample_item_1>(1, "test")
+						+ initialize<sample_item_1>(3, "sample"), read_all<sample_item_1>(t, "table2"));
 				}
 			end_test_suite
 		}

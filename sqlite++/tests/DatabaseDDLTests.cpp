@@ -103,7 +103,7 @@ namespace micro_profiler
 
 				sql::format_create_table<T>(result, name);
 				return result;
-			};
+			}
 		}
 
 		begin_test_suite( DatabaseDDLTests )

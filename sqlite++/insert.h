@@ -35,6 +35,10 @@ namespace micro_profiler
 		struct field_binder
 		{
 			template <typename U>
+			void operator ()(U)
+			{	}
+
+			template <typename U>
 			void operator ()(int U::*field, const char *)
 			{	sqlite3_bind_int(&statement, index++, item.*field);	}
 
@@ -75,6 +79,10 @@ namespace micro_profiler
 			{	item.*field.field = static_cast<F>(sqlite3_last_insert_rowid(&connection));	}
 
 			template <typename U>
+			void operator ()(U)
+			{	}
+
+			template <typename U>
 			void operator ()(U, const char *)
 			{	}
 
@@ -103,6 +111,9 @@ namespace micro_profiler
 			insert_builder(const char *table_name);
 
 			inserter<T> create_inserter(sqlite3 &connection);
+
+			template <typename U>
+			void operator ()(U);
 
 			template <typename F>
 			void operator ()(F field, const char *name);
@@ -153,6 +164,11 @@ namespace micro_profiler
 		template <typename T>
 		inline inserter<T> insert_builder<T>::create_inserter(sqlite3 &connection)
 		{	return inserter<T>(connection, create_statement(connection, _expression_text.c_str()));	}
+
+		template <typename T>
+		template <typename U>
+		inline void insert_builder<T>::operator ()(U)
+		{	}
 
 		template <typename T>
 		template <typename F>

@@ -69,6 +69,9 @@ namespace micro_profiler
 			inserter<T> insert(const char *table_name);
 
 			template <typename T, typename W>
+			statement remove(const W &where);
+
+			template <typename T, typename W>
 			statement remove(const W &where, const char *table_name);
 
 			void commit();
@@ -156,6 +159,10 @@ namespace micro_profiler
 		template <typename T>
 		inline inserter<T> transaction::insert(const char *table_name)
 		{	return insert_builder<T>(table_name).create_inserter(*_connection);	}
+
+		template <typename T, typename W>
+		inline statement transaction::remove(const W &where)
+		{	return remove<T>(where, default_table_name<T>().c_str());	}
 
 		template <typename T, typename W>
 		inline statement transaction::remove(const W &where, const char *table_name)

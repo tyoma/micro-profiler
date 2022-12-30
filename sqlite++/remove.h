@@ -53,11 +53,7 @@ namespace micro_profiler
 
 			expression_text += " WHERE ";
 			format_expression(expression_text, where);
-
-			auto s = sql::create_statement(database, expression_text.c_str());
-
-			bind_parameters(*s, where);
-			return statement(std::move(s));
+			return statement(sql::create_statement(database, expression_text.c_str()), where);
 		}
 	}
 }

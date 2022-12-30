@@ -20,7 +20,10 @@
 
 #pragma once
 
+#include "binding.h"
 #include "misc.h"
+
+#include <functional>
 
 namespace micro_profiler
 {
@@ -29,19 +32,34 @@ namespace micro_profiler
 		class statement
 		{
 		public:
-			statement(statement_ptr &&underlying);
+			template <typename W>
+			statement(statement_ptr &&underlying, const W &where);
 
+			void reset();
 			void execute();
 
 		private:
 			statement_ptr _underlying;
+			std::function<void ()> _reset_bindings;
 		};
 
 
 
-		inline statement::statement(statement_ptr &&underlying)
+		template <typename W>
+		inline statement::statement(statement_ptr &&underlying, const W &where)
 			: _underlying(std::move(underlying))
-		{	}
+		{
+			auto reset_bindings_ = [this, where] {	bind_parameters(*_underlying, where);	};
+
+			_reset_bindings = reset_bindings_;
+			reset_bindings_();
+		}
+
+		inline void statement::reset()
+		{
+			sqlite3_reset(_underlying.get());
+			_reset_bindings();
+		}
 
 		inline void statement::execute()
 		{	sqlite3_step(_underlying.get());	}

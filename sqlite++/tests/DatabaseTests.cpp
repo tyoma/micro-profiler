@@ -751,6 +751,29 @@ namespace micro_profiler
 						+ initialize<test_d>(7, "lost", 17)
 						+ initialize<test_d>(3, "found", 19)
 						+ initialize<test_d>(1, "abc", 100), read_all(t.select<test_d>()));
+
+					// INIT / ACT
+					auto d1 = t.remove<test_d>(c(&test_d::bb) == p<const int>(1));
+
+					// ACT
+					d1.execute();
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_d>(2, "lost", 13)
+						+ initialize<test_d>(7, "lost", 17)
+						+ initialize<test_d>(3, "found", 19), read_all(t.select<test_d>()));
+
+					// INIT / ACT
+					auto d2 = t.remove<test_c>(c(&test_c::b) == p<const int>(11));
+
+					// ACT
+					d2.execute();
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_c>(1, 13)
+						+ initialize<test_c>(1, 130), read_all(t.select<test_c>()));
 				}
 
 
@@ -816,6 +839,57 @@ namespace micro_profiler
 					assert_equivalent(plural
 						+ initialize<sample_item_1>(1, "test")
 						+ initialize<sample_item_1>(3, "sample"), read_all<sample_item_1>(t, "test2"));
+				}
+
+
+				test( ResetStatementIsExecutedWithNewParameters )
+				{
+					// INIT
+					transaction t(create_connection(path.c_str()));
+					auto items1 = plural
+						+ initialize<test_b>("foo", 1, "lorem")
+						+ initialize<test_b>("foo", 17, "ipsum")
+						+ initialize<test_b>("bar", 31, "lorem")
+						+ initialize<test_b>("bar", 29, "dolor")
+						+ initialize<test_b>("bar", 29, "lorem")
+						+ initialize<test_b>("baz", 7, "ipsum");
+					string arg1, arg2;
+					int arg3 = 0;
+
+					t.create_table<test_b>("test1");
+
+					write_all(t, items1, "test1");
+
+					// INIT / ACT
+					auto stmt1 = t.remove<test_b>(p(arg1) == c(&test_b::nickname), "test1");
+					auto stmt2 = t.remove<test_b>(p(arg2) == c(&test_b::suspect_name) && p(arg3) == c(&test_b::suspect_age), "test1");
+
+					stmt1.execute();
+					stmt2.execute();
+
+					// ACT
+					arg1 = "foo";
+					stmt1.reset();
+					stmt1.execute();
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_b>("bar", 31, "lorem")
+						+ initialize<test_b>("bar", 29, "dolor")
+						+ initialize<test_b>("bar", 29, "lorem")
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "test1"));
+
+					// ACT
+					arg2 = "lorem";
+					arg3 = 29;
+					stmt2.reset();
+					stmt2.execute();
+
+					// ASSERT
+					assert_equivalent(plural
+						+ initialize<test_b>("bar", 31, "lorem")
+						+ initialize<test_b>("bar", 29, "dolor")
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "test1"));
 				}
 			end_test_suite
 		}

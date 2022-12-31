@@ -72,7 +72,7 @@ namespace micro_profiler
 			}
 		}
 
-		begin_test_suite( AAProcessPreferencesTests )
+		begin_test_suite( ProcessPreferencesTests )
 			temporary_directory dir;
 			string db_path;
 			mocks::queue worker, apartment;
@@ -344,6 +344,170 @@ namespace micro_profiler
 					+ initialize<tables::cached_patch>(0u, 1u, 10101u)
 					+ initialize<tables::cached_patch>(0u, 1u, 21001u)
 					+ initialize<tables::cached_patch>(0u, 3u, 90101u), read_records<tables::cached_patch>(db_path),
+					cached_patch_less);
+			}
+
+
+			test( RemovedPatchesAreErasedFromDatabase )
+			{
+				// INIT
+				const auto s = make_shared<profiling_session>();
+				auto &patches_idx = sdb::unique_index(s->patches, keyer::symbol_id());
+				auto patches = plural
+					+ initialize<tables::cached_patch>(0u, 1u, 100121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 200121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 100321u)
+					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 3u, 100121u)
+					+ initialize<tables::cached_patch>(0u, 3u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50004u)
+					+ initialize<tables::cached_patch>(0u, 3u, 50006u);
+				map< id_t, vector<unsigned> > additions_log;
+
+				s->patches.apply = [&patches_idx] (id_t module_id, range<const unsigned, size_t> rva) {
+					for (auto i = begin(rva); i != end(rva); ++i)
+					{
+						auto r = patches_idx[make_tuple(module_id, *i)];
+
+						(*r).state.active = true, (*r).state.error = false, (*r).state.requested = false;
+						r.commit();
+					}
+				};
+				write_records(db_path, patches);
+				add_records(s->mappings, plural
+					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
+
+				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+
+				mapping->tasks.find(100)->second->set(1);
+				mapping->tasks.find(300)->second->set(3);
+
+				worker.run_till_end(); // pull cached patches
+				apartment.run_till_end();
+
+				// ACT
+				add_records(s->patches, plural
+					+ make_patch(100, 200121u, 0, false, false, false)
+					+ make_patch(100, 100321u, 0, false, false, false)
+					+ make_patch(300, 100121u, 0, false, false, false), keyer::symbol_id());
+
+				// ASSERT
+				assert_is_empty(worker.tasks);
+				assert_is_empty(apartment.tasks);
+				assert_equivalent_pred(patches, read_records<tables::cached_patch>(db_path), cached_patch_less);
+
+				// ACT
+				s->patches.invalidate();
+
+				// ASSERT
+				assert_equal(2u, worker.tasks.size());
+				assert_is_empty(apartment.tasks);
+				assert_equivalent_pred(patches, read_records<tables::cached_patch>(db_path), cached_patch_less);
+
+				// ACT
+				worker.run_till_end();
+
+				// ASSERT
+				assert_is_empty(worker.tasks);
+				assert_is_empty(apartment.tasks);
+				assert_equivalent_pred(plural
+					+ initialize<tables::cached_patch>(0u, 1u, 100121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 3u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50004u)
+					+ initialize<tables::cached_patch>(0u, 3u, 50006u), read_records<tables::cached_patch>(db_path),
+					cached_patch_less);
+
+				// ACT
+				add_records(s->patches, plural
+					+ make_patch(300, 50006u, 0, false, false, false), keyer::symbol_id());
+				s->patches.invalidate();
+
+				// ASSERT
+				assert_equal(1u, worker.tasks.size());
+				assert_is_empty(apartment.tasks);
+
+				// ACT
+				worker.run_till_end();
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ initialize<tables::cached_patch>(0u, 1u, 100121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 3u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50004u), read_records<tables::cached_patch>(db_path),
+					cached_patch_less);
+
+				// ACT
+				add_records(s->patches, plural
+					+ make_patch(100u, 100121u, 0, false, true, false)
+					+ make_patch(100u, 400121u, 0, true, false, false)
+					+ make_patch(300u, 400121u, 0, true, true, false)
+					+ make_patch(100u, 50002u, 0, true, false, true)
+					+ make_patch(100u, 50004u, 0, false, true, true), keyer::symbol_id());
+				s->patches.invalidate();
+
+				// ASSERT
+				assert_is_empty(worker.tasks);
+				assert_is_empty(apartment.tasks);
+			}
+
+
+			test( AddedPatchesDoNotProduceAnyCacheChangesIfDeleted )
+			{
+				// INIT
+				const auto s = make_shared<profiling_session>();
+				auto &patches_idx = sdb::unique_index(s->patches, keyer::symbol_id());
+				map< id_t, vector<unsigned> > additions_log;
+
+				s->patches.apply = [&patches_idx] (id_t /*module_id*/, range<const unsigned, size_t> /*rva*/) {
+				};
+				add_records(s->mappings, plural
+					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
+
+				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+
+				mapping->tasks.find(100)->second->set(1);
+				mapping->tasks.find(17)->second->set(17);
+				mapping->tasks.find(300)->second->set(3);
+
+				worker.run_till_end();
+				apartment.run_till_end();
+
+				add_records(s->patches, plural
+					+ make_patch(100u, 100121u, 0, false, false, true)
+					+ make_patch(100u, 400121u, 0, false, false, true)
+					+ make_patch(300u, 400121u, 0, false, false, true)
+					+ make_patch(100u, 50002u, 0, false, false, true)
+					+ make_patch(100u, 50004u, 0, false, false, true), keyer::symbol_id());
+
+				// these records shall not be deleted.
+				write_records(db_path, plural
+					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50004u));
+
+				// ACT
+				add_records(s->patches, plural
+					+ make_patch(100u, 400121u, 0, false, false, false)
+					+ make_patch(100u, 50002u, 0, false, false, false)
+					+ make_patch(100u, 50004u, 0, false, false, false), keyer::symbol_id());
+				s->patches.invalidate();
+				worker.run_till_end();
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					// guard records
+					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
+					+ initialize<tables::cached_patch>(0u, 1u, 50004u)
+
+					// added records
+					+ initialize<tables::cached_patch>(0u, 1u, 100121u)
+					+ initialize<tables::cached_patch>(0u, 3u, 400121u), read_records<tables::cached_patch>(db_path),
 					cached_patch_less);
 			}
 		end_test_suite

@@ -57,7 +57,6 @@ namespace micro_profiler
 			std::shared_ptr<changes_log> changes, database_mapping_tasks &db_mapping);
 
 	private:
-		const std::string _preferences_db;
 		scheduler::queue &_worker, &_apartment;
 		std::vector<wpl::slot_connection> _connection;
 	};

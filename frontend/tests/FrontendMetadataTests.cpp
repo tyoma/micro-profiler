@@ -2,14 +2,12 @@
 
 #include "helpers.h"
 #include "helpers_database.h"
+#include "mock_cache.h"
 #include "mock_channel.h"
 
 #include <common/file_stream.h>
 #include <common/serialization.h>
-#include <frontend/profiling_cache_sqlite.h>
-#include <frontend/profiling_preferences_db.h>
 #include <ipc/server_session.h>
-#include <sqlite++/database.h>
 #include <strmd/serializer.h>
 #include <test-helpers/comparisons.h>
 #include <test-helpers/file_helpers.h>
@@ -69,46 +67,6 @@ namespace micro_profiler
 				mi.source_files = containers::unordered_map<unsigned int, string>(begin(files), end(files));
 				return mi;
 			}
-
-			void write_metadata(sql::connection_ptr connection, const module_info_metadata &metadata)
-			{
-				sql::transaction t(connection);
-				tables::module mm;
-				tables::symbol_info s;
-				tables::source_file sf;
-				auto w_modules = t.insert<tables::module>();
-				auto w_symbols = t.insert<tables::symbol_info>();
-				auto w_sources = t.insert<tables::source_file>();
-
-				static_cast<module_info_metadata &>(mm) = metadata;
-				w_modules(mm);
-				sf.module_id = s.module_id = mm.id;
-				for (auto i = metadata.symbols.begin(); i != metadata.symbols.end(); ++i)
-					static_cast<symbol_info &>(s) = *i, w_symbols(s);
-				for (auto i = metadata.source_files.begin(); i != metadata.source_files.end(); ++i)
-					sf.id = i->first, sf.path = i->second, w_sources(sf);
-				t.commit();
-			}
-
-			module_info_metadata read_metadata(sql::connection_ptr connection, uint32_t hash_)
-			{
-				sql::transaction t(connection);
-				auto r_modules = t.select<tables::module>(sql::c(&tables::module::hash) == sql::p(hash_));
-
-				for (tables::module m; r_modules(m); )
-				{
-					auto r_symbols = t.select<tables::symbol_info>(sql::c(&tables::symbol_info::module_id) == sql::p(m.id));
-					auto r_sources = t.select<tables::source_file>(sql::c(&tables::source_file::module_id) == sql::p(m.id));
-
-					for (tables::symbol_info item; r_symbols(item); )
-						m.symbols.push_back(item);
-					for (tables::source_file item; r_sources(item); )
-						m.source_files[item.id] = item.path;
-					return m;
-				}
-				assert_is_true(false); // not found...
-				throw 0;
-			}
 		}
 
 
@@ -118,18 +76,14 @@ namespace micro_profiler
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<void> req[10];
 			temporary_directory dir;
-			sql::connection_ptr preferences_db;
+			shared_ptr<mocks::profiling_cache> preferences_db;
 
 			shared_ptr<frontend> create_frontend()
 			{
-				const auto db_path = dir.track_file("sample-preferences.db");
-
-				profiling_cache_sqlite::create_database(db_path);
-				preferences_db = sql::create_connection(db_path.c_str());
+				preferences_db = make_shared<mocks::profiling_cache>();
 
 				auto e2 = make_shared<emulator_>();
-				auto f = make_shared<frontend>(e2->server_session, make_shared<profiling_cache_sqlite>(db_path),
-					worker, apartment);
+				auto f = make_shared<frontend>(e2->server_session, preferences_db, worker, apartment);
 
 				e2->outbound = f.get();
 				f->initialized = [this] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
@@ -332,10 +286,14 @@ namespace micro_profiler
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned) {	assert_is_false(true);	});
+				preferences_db->on_load_metadata = [&] (unsigned hash, id_t associated_module_id) -> unique_ptr<module_info_metadata> {
+					assert_equal(0x00100201u, hash);
+					assert_equal(17u, associated_module_id);
+					return unique_ptr<module_info_metadata>(new module_info_metadata(create_metadata_info(0x00100201, symbols17, files17)));
+				};
 
 				// ACT
 				modules(context)->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
-				write_metadata(preferences_db, create_metadata_info(0x00100201, symbols17, files17));
 				worker.run_one(), apartment.run_one();
 
 				// ASSERT
@@ -351,8 +309,14 @@ namespace micro_profiler
 				assert_equal(&modules_by_id(*context)[17], log.back());
 
 				// INIT
-				write_metadata(preferences_db, create_metadata_info(0x10100201, symbols99, files99));
-				write_metadata(preferences_db, create_metadata_info(1, symbols1000, files1000));
+				preferences_db->on_load_metadata = [&] (unsigned hash, id_t associated_module_id) -> unique_ptr<module_info_metadata> {
+					const auto k = make_tuple(hash, associated_module_id);
+
+					assert_is_true(make_tuple(0x10100201u, 99u) == k || make_tuple(1u, 1000u) == k);
+					return make_tuple(0x10100201u, 99u) == k
+						? unique_ptr<module_info_metadata>(new module_info_metadata(create_metadata_info(0x10100201, symbols99, files99)))
+						: unique_ptr<module_info_metadata>(new module_info_metadata(create_metadata_info(1, symbols1000, files1000)));
+				};
 
 				// ACT
 				modules(context)->request_presence(req[1], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
@@ -377,6 +341,7 @@ namespace micro_profiler
 				pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	},
 					files99[] = {	make_pair(3, "main.cpp"),	};
 				vector<const module_info_metadata *> log;
+				map<id_t, module_info_metadata> cache_log;
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
@@ -384,6 +349,9 @@ namespace micro_profiler
 						+ make_mapping_pair(3, 170, 0x00100000u, "c:\\windows\\kernel32.dll", 0x1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
+				preferences_db->on_store_metadata = [&cache_log] (const module_info_metadata &metadata, id_t associated_module_id) {
+					cache_log[associated_module_id] = metadata;
+				};
 
 				// ACT
 				modules(context)->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
@@ -409,7 +377,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_empty(worker.tasks);
-				assert_equal(create_metadata_info(0, symbols17, files17), read_metadata(preferences_db, 0x90100201));
+				assert_equal(1u, cache_log.size());
+				assert_equal(create_metadata_info(0x90100201, symbols17, files17), cache_log[17]);
 
 				// ACT
 				modules(context)->request_presence(req[1], 170u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
@@ -422,7 +391,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_empty(worker.tasks);
-				assert_equal(create_metadata_info(0, symbols99, files99), read_metadata(preferences_db, 1));
+				assert_equal(2u, cache_log.size());
+				assert_equal(create_metadata_info(1, symbols99, files99), cache_log[170]);
 			}
 
 

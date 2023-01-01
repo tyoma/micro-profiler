@@ -2,7 +2,9 @@
 
 #include <frontend/profiling_cache.h>
 #include <functional>
+#include <map>
 #include <memory>
+#include <scheduler/task.h>
 
 namespace micro_profiler
 {
@@ -10,6 +12,13 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
+			struct profiling_cache_tasks : micro_profiler::profiling_cache_tasks
+			{
+				virtual scheduler::task<id_t> persisted_module_id(id_t module_id) override;
+
+				std::map< id_t, std::shared_ptr< scheduler::task_node<id_t> > > tasks;
+			};
+
 			class profiling_cache : public micro_profiler::profiling_cache
 			{
 			public:
@@ -30,7 +39,22 @@ namespace micro_profiler
 					std::vector<unsigned int> remove_rva)> on_update_default_patches;
 			};
 
+			struct profiling_cache_with_tasks : profiling_cache_tasks, profiling_cache
+			{
+			};
 
+
+
+			inline scheduler::task<id_t> profiling_cache_tasks::persisted_module_id(id_t module_id)
+			{
+				const auto i = tasks.find(module_id);
+
+				if (i != tasks.end())
+					return scheduler::task<id_t>(std::shared_ptr< scheduler::task_node<id_t> >(i->second));
+				auto n = std::make_shared< scheduler::task_node<id_t> >();
+				tasks.insert(std::make_pair(module_id, n));
+				return scheduler::task<id_t>(std::move(n));
+			}
 
 			inline std::shared_ptr<module_info_metadata> profiling_cache::load_metadata(unsigned int hash,
 				id_t associated_module_id)

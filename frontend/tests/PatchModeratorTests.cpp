@@ -8,10 +8,7 @@
 #include <frontend/constructors.h>
 #include <frontend/database.h>
 #include <frontend/keyer.h>
-#include <frontend/profiling_cache_sqlite.h>
-#include <frontend/profiling_preferences_db.h>
 #include <scheduler/task.h>
-#include <sqlite++/database.h>
 #include <test-helpers/mock_queue.h>
 #include <test-helpers/file_helpers.h>
 #include <ut/assert.h>
@@ -24,69 +21,20 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace mocks
-		{
-			struct database_mapping_tasks : micro_profiler::profiling_cache_tasks
-			{
-				virtual task<id_t> persisted_module_id(id_t module_id) override
-				{
-					const auto i = tasks.find(module_id);
-
-					if (i != tasks.end())
-						return task<id_t>(shared_ptr< task_node<id_t> >(i->second));
-					auto n = make_shared< task_node<id_t> >();
-					tasks.insert(make_pair(module_id, n));
-					return task<id_t>(move(n));
-				}
-
-				map< id_t, shared_ptr< task_node<id_t> > > tasks;
-			};
-		}
-
 		namespace
 		{
 			const auto cached_patch_less = [] (const tables::cached_patch &lhs, const tables::cached_patch &rhs) {
 				return make_tuple(lhs.scope_id, lhs.module_id, lhs.rva) < make_tuple(rhs.scope_id, rhs.module_id, rhs.rva);
 			};
-
-			template <typename T>
-			void write_records(string cache, const vector<T> &patches)
-			{
-				sql::transaction t(sql::create_connection(cache.c_str()));
-				auto w = t.insert<T>();
-
-				for (auto i = begin(patches); i != end(patches); ++i)
-					w(*i);
-				t.commit();
-			}
-
-			template <typename T>
-			vector<T> read_records(string cache)
-			{
-				sql::transaction t(sql::create_connection(cache.c_str()));
-				auto r = t.select<T>();
-				vector<T> read;
-
-				for (T entry; r(entry); )
-					read.push_back(entry);
-				return read;
-			}
 		}
 
 		begin_test_suite( PatchModeratorTests )
-			temporary_directory dir;
-			string db_path;
-			shared_ptr<profiling_cache> cache;
+			shared_ptr<mocks::profiling_cache_with_tasks> cache;
 			mocks::queue worker, apartment;
-			shared_ptr<mocks::database_mapping_tasks> mapping;
-
 
 			init( CreatePreferencesDB )
 			{
-				db_path = dir.track_file("preferences.db");
-				profiling_cache_sqlite::create_database(db_path);
-				cache = make_shared<profiling_cache_sqlite>(db_path);
-				mapping = make_shared<mocks::database_mapping_tasks>();
+				cache = make_shared<mocks::profiling_cache_with_tasks>();
 			}
 
 
@@ -101,7 +49,7 @@ namespace micro_profiler
 				};
 
 				// INIT / ACT
-				patch_moderator pp(s, mapping, cache, worker, apartment);
+				patch_moderator pp(s, cache, cache, worker, apartment);
 
 				// ASSERT
 				assert_equal(0u, s->patches.size());
@@ -114,23 +62,23 @@ namespace micro_profiler
 			{
 				// INIT
 				const auto s = make_shared<profiling_session>();
-				patch_moderator pp(s, mapping, cache, worker, apartment);
+				patch_moderator pp(s, cache, cache, worker, apartment);
 
 				// ACT
 				add_records(s->mappings, plural + make_mapping(1, 11, 1));
 
 				// ASSERT
-				assert_equal(1u, mapping->tasks.size());
-				assert_equal(1u, mapping->tasks.count(11));
+				assert_equal(1u, cache->tasks.size());
+				assert_equal(1u, cache->tasks.count(11));
 
 				// ACT
 				add_records(s->mappings, plural + make_mapping(3, 13, 1) + make_mapping(7, 191, 1));
 
 				// ASSERT
-				assert_equal(3u, mapping->tasks.size());
-				assert_equal(1u, mapping->tasks.count(11));
-				assert_equal(1u, mapping->tasks.count(13));
-				assert_equal(1u, mapping->tasks.count(191));
+				assert_equal(3u, cache->tasks.size());
+				assert_equal(1u, cache->tasks.count(11));
+				assert_equal(1u, cache->tasks.count(13));
+				assert_equal(1u, cache->tasks.count(191));
 			}
 
 
@@ -142,12 +90,12 @@ namespace micro_profiler
 				add_records(s->mappings, plural + make_mapping(1, 2, 1) + make_mapping(9, 3, 1));
 
 				// ACT
-				patch_moderator pp(s, mapping, cache, worker, apartment);
+				patch_moderator pp(s, cache, cache, worker, apartment);
 
 				// ASSERT
-				assert_equal(2u, mapping->tasks.size());
-				assert_equal(1u, mapping->tasks.count(2));
-				assert_equal(1u, mapping->tasks.count(3));
+				assert_equal(2u, cache->tasks.size());
+				assert_equal(1u, cache->tasks.count(2));
+				assert_equal(1u, cache->tasks.count(3));
 			}
 
 
@@ -155,30 +103,29 @@ namespace micro_profiler
 			{
 				// INIT
 				const auto s = make_shared<profiling_session>();
-				auto patches = plural
-					+ initialize<tables::cached_patch>(0u, 101u, 10001u)
-					+ initialize<tables::cached_patch>(0u, 101u, 10101u)
-					+ initialize<tables::cached_patch>(0u, 101u, 10011u)
-					+ initialize<tables::cached_patch>(0u, 102u, 11001u)
-					+ initialize<tables::cached_patch>(0u, 102u, 11101u)
-					+ initialize<tables::cached_patch>(0u, 103u, 21001u)
-					+ initialize<tables::cached_patch>(0u, 103u, 90101u);
 				vector< pair<id_t, vector<unsigned>> > rva_log;
 
 				s->patches.apply = [&] (id_t module_id, range<const unsigned, size_t> rva) {
 					rva_log.push_back(make_pair(module_id, vector<unsigned>(rva.begin(), rva.end())));
 				};
-				write_records(db_path, patches);
 				add_records(s->mappings, plural + make_mapping(1, 2, 1) + make_mapping(9, 3, 1) + make_mapping(7, 13, 1));
 
-				patch_moderator pp(s, mapping, cache, worker, apartment);
+				patch_moderator pp(s, cache, cache, worker, apartment);
 
 				// ACT
-				mapping->tasks.find(3)->second->set(102);
+				cache->tasks.find(3)->second->set(102);
 
 				// ASSERT
 				assert_equal(1u, worker.tasks.size());
 				assert_equal(0u, apartment.tasks.size());
+
+				// INIT
+				cache->on_load_default_patches = [] (id_t cached_module_id) -> vector<tables::cached_patch> {
+					assert_equal(102u, cached_module_id);
+					return plural
+						+ initialize<tables::cached_patch>(0u, 102u, 11001u)
+						+ initialize<tables::cached_patch>(0u, 102u, 11101u);
+				};
 
 				// ACT
 				worker.run_one();
@@ -197,8 +144,23 @@ namespace micro_profiler
 					+ make_pair(3u, plural + 11001u + 11101u), rva_log);
 
 				// ACT
-				mapping->tasks.find(2)->second->set(101);
-				mapping->tasks.find(13)->second->set(103);
+				cache->tasks.find(2)->second->set(101);
+				cache->tasks.find(13)->second->set(103);
+
+				// INIT
+				cache->on_load_default_patches = [] (id_t cached_module_id) -> vector<tables::cached_patch> {
+					assert_is_true(101u == cached_module_id || 103u == cached_module_id);
+					return 101u == cached_module_id
+						? plural
+							+ initialize<tables::cached_patch>(0u, 101u, 10001u)
+							+ initialize<tables::cached_patch>(0u, 101u, 10101u)
+							+ initialize<tables::cached_patch>(0u, 101u, 10011u)
+						: plural
+							+ initialize<tables::cached_patch>(0u, 103u, 21001u)
+							+ initialize<tables::cached_patch>(0u, 103u, 90101u);
+				};
+
+				//ACT
 				worker.run_till_end();
 				apartment.run_till_end();
 
@@ -214,14 +176,18 @@ namespace micro_profiler
 			{
 				// INIT
 				const auto s = make_shared<profiling_session>();
+				vector< tuple< id_t, vector<unsigned>, vector<unsigned> > > log;
 
 				add_records(s->mappings, plural
 					+ make_mapping(1, 13, 1000000) + make_mapping(2, 17, 3000000) + make_mapping(3, 99, 5000000));
 
-				patch_moderator pp(s, mapping, cache, worker, apartment);
+				patch_moderator pp(s, cache, cache, worker, apartment);
 
-				mapping->tasks.find(13)->second->set(1911);
-				mapping->tasks.find(17)->second->set(1009);
+				cache->on_update_default_patches = [&] (id_t module_id, vector<unsigned> added, vector<unsigned> removed) {
+					log.push_back(make_tuple(module_id, added, removed));
+				};
+				cache->tasks.find(13)->second->set(1911);
+				cache->tasks.find(17)->second->set(1009);
 
 				worker.run_till_end(); // pull cached patches
 				apartment.run_till_end(); // apply cached patches
@@ -246,7 +212,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(apartment.tasks);
 				assert_is_empty(worker.tasks);
-				assert_is_empty(read_records<tables::cached_patch>(db_path));
+				assert_is_empty(log);
 
 				// ACT
 				s->patches.invalidate();
@@ -254,23 +220,24 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(apartment.tasks);
 				assert_equal(2u, worker.tasks.size());
-				assert_is_empty(read_records<tables::cached_patch>(db_path));
+				assert_is_empty(log);
 
 				//ACT
 				worker.run_one();
 				worker.run_one();
-				auto r = read_records<tables::cached_patch>(db_path);
 
 				// ASSERT
+				sort(log.begin(), log.end());
+
 				assert_is_empty(apartment.tasks);
 				assert_is_empty(worker.tasks);
-				assert_equivalent_pred(plural
-					+ initialize<tables::cached_patch>(0u, 1911u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 200121u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 100321u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 1009u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 1009u, 400121u), r, cached_patch_less);
+				assert_equal(2u, log.size());
+				assert_equal(1009u, get<0>(log[0]));
+				assert_equivalent(plural + 100121u + 400121u, get<1>(log[0]));
+				assert_is_empty(get<2>(log[0]));
+				assert_equal(1911u, get<0>(log[1]));
+				assert_equivalent(plural + 100121u + 200121u + 100321u + 400121u, get<1>(log[1]));
+				assert_is_empty(get<2>(log[1]));
 
 				// ACT
 				add_records(s->patches, plural
@@ -291,21 +258,14 @@ namespace micro_profiler
 
 				// ACT
 				worker.run_one();
-				r = read_records<tables::cached_patch>(db_path);
 
 				// ASSERT
 				assert_is_empty(apartment.tasks);
 				assert_is_empty(worker.tasks);
-				assert_equivalent_pred(plural
-					+ initialize<tables::cached_patch>(0u, 1911u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 200121u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 100321u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 1009u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 1009u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 50002u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 50004u)
-					+ initialize<tables::cached_patch>(0u, 1911u, 50006u), r, cached_patch_less);
+				assert_equal(3u, log.size());
+				assert_equal(1911u, get<0>(log[2]));
+				assert_equivalent(plural + 50002u + 50004u + 50006u, get<1>(log[2]));
+				assert_is_empty(get<2>(log[2]));
 			}
 
 
@@ -313,20 +273,29 @@ namespace micro_profiler
 			{
 				// INIT
 				const auto s = make_shared<profiling_session>();
-				auto patches = plural
-					+ initialize<tables::cached_patch>(0u, 1u, 10001u)
-					+ initialize<tables::cached_patch>(0u, 1u, 10101u)
-					+ initialize<tables::cached_patch>(0u, 1u, 21001u)
-					+ initialize<tables::cached_patch>(0u, 3u, 90101u);
 
-				write_records(db_path, patches);
+				cache->on_update_default_patches = [] (id_t, vector<unsigned>, vector<unsigned>) {
+
+				// ASSERT
+					assert_is_false(true);
+				};
+				cache->on_load_default_patches = [] (id_t cached_module_id) -> vector<tables::cached_patch> {
+					assert_is_true(1u == cached_module_id || 3u == cached_module_id);
+					return 1u == cached_module_id
+						? plural
+							+ initialize<tables::cached_patch>(0u, 1u, 10001u)
+							+ initialize<tables::cached_patch>(0u, 1u, 10101u)
+							+ initialize<tables::cached_patch>(0u, 1u, 21001u)
+						: plural
+							+ initialize<tables::cached_patch>(0u, 3u, 90101u);
+				};
 				add_records(s->mappings, plural
 					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
 
-				patch_moderator pp(s, mapping, cache, worker, apartment);
+				patch_moderator pp(s, cache, cache, worker, apartment);
 
-				mapping->tasks.find(100)->second->set(1);
-				mapping->tasks.find(300)->second->set(3);
+				cache->tasks.find(100)->second->set(1);
+				cache->tasks.find(300)->second->set(3);
 
 				worker.run_till_end(); // pull cached patches
 				apartment.run_till_end();
@@ -342,12 +311,6 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(apartment.tasks);
 				assert_is_empty(worker.tasks);
-				assert_equivalent_pred(plural
-					+ initialize<tables::cached_patch>(0u, 1u, 10001u)
-					+ initialize<tables::cached_patch>(0u, 1u, 10101u)
-					+ initialize<tables::cached_patch>(0u, 1u, 21001u)
-					+ initialize<tables::cached_patch>(0u, 3u, 90101u), read_records<tables::cached_patch>(db_path),
-					cached_patch_less);
 			}
 
 
@@ -356,18 +319,26 @@ namespace micro_profiler
 				// INIT
 				const auto s = make_shared<profiling_session>();
 				auto &patches_idx = sdb::unique_index(s->patches, keyer::symbol_id());
-				auto patches = plural
-					+ initialize<tables::cached_patch>(0u, 1u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 200121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 100321u)
-					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 3u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 3u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50004u)
-					+ initialize<tables::cached_patch>(0u, 3u, 50006u);
 				map< id_t, vector<unsigned> > additions_log;
+				vector< tuple< id_t, vector<unsigned>, vector<unsigned> > > log;
 
+				cache->on_update_default_patches = [&] (id_t cached_module_id, vector<unsigned> added, vector<unsigned> removed) {
+					log.push_back(make_tuple(cached_module_id, added, removed));
+				};
+				cache->on_load_default_patches = [] (id_t cached_module_id) {
+					return 1u == cached_module_id
+						? plural
+							+ initialize<tables::cached_patch>(0u, 1u, 100121u)
+							+ initialize<tables::cached_patch>(0u, 1u, 200121u)
+							+ initialize<tables::cached_patch>(0u, 1u, 100321u)
+							+ initialize<tables::cached_patch>(0u, 1u, 400121u)
+							+ initialize<tables::cached_patch>(0u, 1u, 50002u)
+							+ initialize<tables::cached_patch>(0u, 1u, 50004u)
+						: plural
+							+ initialize<tables::cached_patch>(0u, 3u, 100121u)
+							+ initialize<tables::cached_patch>(0u, 3u, 400121u)
+							+ initialize<tables::cached_patch>(0u, 3u, 50006u);
+				};
 				s->patches.apply = [&patches_idx] (id_t module_id, range<const unsigned, size_t> rva) {
 					for (auto i = rva.begin(); i != rva.end(); ++i)
 					{
@@ -377,14 +348,13 @@ namespace micro_profiler
 						r.commit();
 					}
 				};
-				write_records(db_path, patches);
 				add_records(s->mappings, plural
 					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
 
-				patch_moderator pp(s, mapping, cache, worker, apartment);
+				patch_moderator pp(s, cache, cache, worker, apartment);
 
-				mapping->tasks.find(100)->second->set(1);
-				mapping->tasks.find(300)->second->set(3);
+				cache->tasks.find(100)->second->set(1);
+				cache->tasks.find(300)->second->set(3);
 
 				worker.run_till_end(); // pull cached patches
 				apartment.run_till_end();
@@ -398,7 +368,6 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(worker.tasks);
 				assert_is_empty(apartment.tasks);
-				assert_equivalent_pred(patches, read_records<tables::cached_patch>(db_path), cached_patch_less);
 
 				// ACT
 				s->patches.invalidate();
@@ -406,22 +375,23 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, worker.tasks.size());
 				assert_is_empty(apartment.tasks);
-				assert_equivalent_pred(patches, read_records<tables::cached_patch>(db_path), cached_patch_less);
+				assert_is_empty(log);
 
 				// ACT
 				worker.run_till_end();
 
 				// ASSERT
+				sort(log.begin(), log.end());
+
 				assert_is_empty(worker.tasks);
 				assert_is_empty(apartment.tasks);
-				assert_equivalent_pred(plural
-					+ initialize<tables::cached_patch>(0u, 1u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 3u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50004u)
-					+ initialize<tables::cached_patch>(0u, 3u, 50006u), read_records<tables::cached_patch>(db_path),
-					cached_patch_less);
+				assert_equal(2u, log.size());
+				assert_equal(1u, get<0>(log[0]));
+				assert_is_empty(get<1>(log[0]));
+				assert_equivalent(plural + 200121u + 100321u, get<2>(log[0]));
+				assert_equal(3u, get<0>(log[1]));
+				assert_is_empty(get<1>(log[1]));
+				assert_equivalent(plural + 100121u, get<2>(log[1]));
 
 				// ACT
 				add_records(s->patches, plural
@@ -436,13 +406,10 @@ namespace micro_profiler
 				worker.run_till_end();
 
 				// ASSERT
-				assert_equivalent_pred(plural
-					+ initialize<tables::cached_patch>(0u, 1u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 3u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50004u), read_records<tables::cached_patch>(db_path),
-					cached_patch_less);
+				assert_equal(3u, log.size());
+				assert_equal(3u, get<0>(log[2]));
+				assert_is_empty(get<1>(log[2]));
+				assert_equivalent(plural + 50006u, get<2>(log[2]));
 
 				// ACT
 				add_records(s->patches, plural
@@ -454,6 +421,7 @@ namespace micro_profiler
 				s->patches.invalidate();
 
 				// ASSERT
+				assert_equal(3u, log.size());
 				assert_is_empty(worker.tasks);
 				assert_is_empty(apartment.tasks);
 			}
@@ -465,17 +433,21 @@ namespace micro_profiler
 				const auto s = make_shared<profiling_session>();
 				auto &patches_idx = sdb::unique_index(s->patches, keyer::symbol_id());
 				map< id_t, vector<unsigned> > additions_log;
+				vector< tuple< id_t, vector<unsigned>, vector<unsigned> > > log;
 
+				cache->on_update_default_patches = [&] (id_t cached_module_id, vector<unsigned> added, vector<unsigned> removed) {
+					log.push_back(make_tuple(cached_module_id, added, removed));
+				};
 				s->patches.apply = [&patches_idx] (id_t /*module_id*/, range<const unsigned, size_t> /*rva*/) {
 				};
 				add_records(s->mappings, plural
 					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
 
-				patch_moderator pp(s, mapping, cache, worker, apartment);
+				patch_moderator pp(s, cache, cache, worker, apartment);
 
-				mapping->tasks.find(100)->second->set(1);
-				mapping->tasks.find(17)->second->set(17);
-				mapping->tasks.find(300)->second->set(3);
+				cache->tasks.find(100)->second->set(1);
+				cache->tasks.find(17)->second->set(17);
+				cache->tasks.find(300)->second->set(3);
 
 				worker.run_till_end();
 				apartment.run_till_end();
@@ -487,12 +459,6 @@ namespace micro_profiler
 					+ make_patch(100u, 50002u, 0, false, false, true)
 					+ make_patch(100u, 50004u, 0, false, false, true), keyer::symbol_id());
 
-				// these records shall not be deleted.
-				write_records(db_path, plural
-					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50004u));
-
 				// ACT
 				add_records(s->patches, plural
 					+ make_patch(100u, 400121u, 0, false, false, false)
@@ -502,16 +468,11 @@ namespace micro_profiler
 				worker.run_till_end();
 
 				// ASSERT
-				assert_equivalent_pred(plural
-					// guard records
-					+ initialize<tables::cached_patch>(0u, 1u, 400121u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50002u)
-					+ initialize<tables::cached_patch>(0u, 1u, 50004u)
+				sort(log.begin(), log.end());
 
-					// added records
-					+ initialize<tables::cached_patch>(0u, 1u, 100121u)
-					+ initialize<tables::cached_patch>(0u, 3u, 400121u), read_records<tables::cached_patch>(db_path),
-					cached_patch_less);
+				assert_equal(plural
+					+ make_tuple(1u, plural + 100121u, vector<unsigned>())
+					+ make_tuple(3u, plural + 400121u, vector<unsigned>()), log);
 			}
 		end_test_suite
 	}

@@ -1,6 +1,7 @@
 #include <frontend/patch_moderator.h>
 
 #include "helpers.h"
+#include "mock_cache.h"
 #include "primitive_helpers.h"
 
 #include <common/path.h>

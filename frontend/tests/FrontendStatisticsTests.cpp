@@ -3,14 +3,13 @@
 
 #include "comparisons.h"
 #include "helpers.h"
+#include "mock_cache.h"
 #include "primitive_helpers.h"
 
 #include <collector/serialization.h> // TODO: remove?
-#include <frontend/profiling_cache_sqlite.h>
 #include <frontend/serialization_context.h>
 #include <ipc/server_session.h>
 #include <test-helpers/comparisons.h>
-#include <test-helpers/file_helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
@@ -62,19 +61,14 @@ namespace micro_profiler
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<const profiling_session> session;
 			shared_ptr<void> req[5];
-			temporary_directory dir;
 
 			shared_ptr<frontend> create_frontend()
 			{
 				typedef pair< shared_ptr<emulator_>, shared_ptr<frontend> > complex_t;
 
-				const auto db_path = dir.track_file("sample-preferences.db");
-
-				profiling_cache_sqlite::create_database(db_path);
-
 				auto e2 = make_shared<emulator_>(queue);
 				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session,
-					make_shared<profiling_cache_sqlite>(db_path), worker, apartment));
+					make_shared<mocks::profiling_cache>(), worker, apartment));
 				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();

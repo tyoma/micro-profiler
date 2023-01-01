@@ -1,4 +1,4 @@
-#include <frontend/profiling_preferences.h>
+#include <frontend/patch_moderator.h>
 
 #include "helpers.h"
 #include "primitive_helpers.h"
@@ -6,8 +6,8 @@
 #include <common/path.h>
 #include <frontend/constructors.h>
 #include <frontend/database.h>
-#include <frontend/frontend.h>
 #include <frontend/keyer.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <frontend/profiling_preferences_db.h>
 #include <scheduler/task.h>
 #include <sqlite++/database.h>
@@ -25,7 +25,7 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			struct database_mapping_tasks : micro_profiler::database_mapping_tasks
+			struct database_mapping_tasks : micro_profiler::profiling_cache_tasks
 			{
 				virtual task<id_t> persisted_module_id(id_t module_id) override
 				{
@@ -49,9 +49,9 @@ namespace micro_profiler
 			};
 
 			template <typename T>
-			void write_records(string db_path, const vector<T> &patches)
+			void write_records(string cache, const vector<T> &patches)
 			{
-				sql::transaction t(sql::create_connection(db_path.c_str()));
+				sql::transaction t(sql::create_connection(cache.c_str()));
 				auto w = t.insert<T>();
 
 				for (auto i = begin(patches); i != end(patches); ++i)
@@ -60,9 +60,9 @@ namespace micro_profiler
 			}
 
 			template <typename T>
-			vector<T> read_records(string db_path)
+			vector<T> read_records(string cache)
 			{
-				sql::transaction t(sql::create_connection(db_path.c_str()));
+				sql::transaction t(sql::create_connection(cache.c_str()));
 				auto r = t.select<T>();
 				vector<T> read;
 
@@ -72,9 +72,10 @@ namespace micro_profiler
 			}
 		}
 
-		begin_test_suite( ProcessPreferencesTests )
+		begin_test_suite( PatchModeratorTests )
 			temporary_directory dir;
 			string db_path;
+			shared_ptr<profiling_cache> cache;
 			mocks::queue worker, apartment;
 			shared_ptr<mocks::database_mapping_tasks> mapping;
 
@@ -82,7 +83,8 @@ namespace micro_profiler
 			init( CreatePreferencesDB )
 			{
 				db_path = dir.track_file("preferences.db");
-				frontend::create_database(db_path);
+				profiling_cache_sqlite::create_database(db_path);
+				cache = make_shared<profiling_cache_sqlite>(db_path);
 				mapping = make_shared<mocks::database_mapping_tasks>();
 			}
 
@@ -98,7 +100,7 @@ namespace micro_profiler
 				};
 
 				// INIT / ACT
-				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+				patch_moderator pp(s, mapping, cache, worker, apartment);
 
 				// ASSERT
 				assert_equal(0u, s->patches.size());
@@ -111,7 +113,7 @@ namespace micro_profiler
 			{
 				// INIT
 				const auto s = make_shared<profiling_session>();
-				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+				patch_moderator pp(s, mapping, cache, worker, apartment);
 
 				// ACT
 				add_records(s->mappings, plural + make_mapping(1, 11, 1));
@@ -139,7 +141,7 @@ namespace micro_profiler
 				add_records(s->mappings, plural + make_mapping(1, 2, 1) + make_mapping(9, 3, 1));
 
 				// ACT
-				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+				patch_moderator pp(s, mapping, cache, worker, apartment);
 
 				// ASSERT
 				assert_equal(2u, mapping->tasks.size());
@@ -168,7 +170,7 @@ namespace micro_profiler
 				write_records(db_path, patches);
 				add_records(s->mappings, plural + make_mapping(1, 2, 1) + make_mapping(9, 3, 1) + make_mapping(7, 13, 1));
 
-				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+				patch_moderator pp(s, mapping, cache, worker, apartment);
 
 				// ACT
 				mapping->tasks.find(3)->second->set(102);
@@ -215,7 +217,7 @@ namespace micro_profiler
 				add_records(s->mappings, plural
 					+ make_mapping(1, 13, 1000000) + make_mapping(2, 17, 3000000) + make_mapping(3, 99, 5000000));
 
-				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+				patch_moderator pp(s, mapping, cache, worker, apartment);
 
 				mapping->tasks.find(13)->second->set(1911);
 				mapping->tasks.find(17)->second->set(1009);
@@ -320,7 +322,7 @@ namespace micro_profiler
 				add_records(s->mappings, plural
 					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
 
-				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+				patch_moderator pp(s, mapping, cache, worker, apartment);
 
 				mapping->tasks.find(100)->second->set(1);
 				mapping->tasks.find(300)->second->set(3);
@@ -366,7 +368,7 @@ namespace micro_profiler
 				map< id_t, vector<unsigned> > additions_log;
 
 				s->patches.apply = [&patches_idx] (id_t module_id, range<const unsigned, size_t> rva) {
-					for (auto i = begin(rva); i != end(rva); ++i)
+					for (auto i = rva.begin(); i != rva.end(); ++i)
 					{
 						auto r = patches_idx[make_tuple(module_id, *i)];
 
@@ -378,7 +380,7 @@ namespace micro_profiler
 				add_records(s->mappings, plural
 					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
 
-				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+				patch_moderator pp(s, mapping, cache, worker, apartment);
 
 				mapping->tasks.find(100)->second->set(1);
 				mapping->tasks.find(300)->second->set(3);
@@ -468,7 +470,7 @@ namespace micro_profiler
 				add_records(s->mappings, plural
 					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
 
-				profiling_preferences pp(s, mapping, db_path, worker, apartment);
+				patch_moderator pp(s, mapping, cache, worker, apartment);
 
 				mapping->tasks.find(100)->second->set(1);
 				mapping->tasks.find(17)->second->set(17);

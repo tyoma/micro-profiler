@@ -6,6 +6,7 @@
 
 #include <common/serialization.h>
 #include <frontend/keyer.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <ipc/server_session.h>
 #include <patcher/interface.h>
 #include <test-helpers/file_helpers.h>
@@ -66,7 +67,8 @@ namespace micro_profiler
 				auto e = make_shared<emulator_>(queue);
 				auto context = make_shared<profiling_session>();
 
-				frontend_ = make_shared<frontend>(e->server_session, dir.path(), worker_queue, queue);
+				frontend_ = make_shared<frontend>(e->server_session,
+					make_shared<profiling_cache_sqlite>(dir.track_file("a.db")), worker_queue, queue);
 				e->outbound = frontend_.get();
 				frontend_->initialized = [&] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e, &e->server_session);

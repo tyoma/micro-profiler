@@ -85,6 +85,13 @@ namespace micro_profiler
 			std::function<void (unsigned int module_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int module_id, range<const unsigned int, size_t> rva)> revert;
 		};
+
+		struct cached_patch
+		{
+			id_t scope_id;
+			id_t module_id;
+			unsigned int rva;
+		};
 	}
 
 	struct profiling_session : noncopyable

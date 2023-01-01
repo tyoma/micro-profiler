@@ -9,7 +9,8 @@ set(FRONTEND_LIB_SOURCES
 	frontend_patcher.cpp
 	headers_model.cpp
 	image_patch_model.cpp
-	profiling_preferences.cpp
+	patch_moderator.cpp
+	profiling_cache_sqlite.cpp
 	representation.cpp
 	symbol_resolver.cpp
 	threads_model.cpp

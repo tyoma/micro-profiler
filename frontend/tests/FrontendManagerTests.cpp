@@ -8,6 +8,7 @@
 #include <common/serialization.h>
 #include <frontend/frontend.h>
 #include <frontend/frontend_ui.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <strmd/serializer.h>
 #include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>
@@ -100,7 +101,7 @@ namespace micro_profiler
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
 				new_frontend = [this] (ipc::channel &outbound) {
-					return new frontend(outbound, dir.path(), worker, apartment);
+					return new frontend(outbound, make_shared<profiling_cache_sqlite>(dir.track_file("pfc.db")), worker, apartment);
 				};
 			}
 

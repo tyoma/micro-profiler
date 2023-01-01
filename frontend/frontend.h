@@ -29,7 +29,6 @@
 #include <ipc/client_session.h>
 #include <list>
 #include <reqm/multiplexing_request.h>
-#include <sqlite++/misc.h>
 
 namespace scheduler
 {
@@ -38,17 +37,17 @@ namespace scheduler
 
 namespace micro_profiler
 {
+	struct profiling_cache;
+
 	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
 		typedef std::shared_ptr<profiling_session> session_type;
 
 	public:
-		frontend(ipc::channel &outbound, const std::string &preferences_db,
+		frontend(ipc::channel &outbound, std::shared_ptr<profiling_cache> cache,
 			scheduler::queue &worker, scheduler::queue &apartment);
 		~frontend();
-
-		static void create_database(const std::string &preferences_db);
 
 	public:
 		std::function<void (const session_type &ui_context)> initialized;
@@ -82,15 +81,12 @@ namespace micro_profiler
 		template <typename F>
 		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int module_id, const F &ready);
 
-		static module_ptr load_metadata(sql::connection_ptr preferences_db, unsigned int hash);
-		static void store_metadata(sql::connection_ptr preferences_db, const module_info_metadata &metadata);
-
 		requests_t::iterator new_request_handle();
 
 	private:
 		scheduler::queue &_worker_queue, &_apartment_queue;
 		const std::shared_ptr<profiling_session> _db;
-		const sql::connection_ptr _preferences_db_connection;
+		const std::shared_ptr<profiling_cache> _cache;
 		module_hashes_t _module_hashes;
 		scontext::additive _serialization_context;
 		bool _initialized;

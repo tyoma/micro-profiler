@@ -6,6 +6,7 @@
 
 #include <collector/serialization.h> // TODO: remove?
 #include <common/serialization.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <ipc/server_session.h>
 #include <strmd/serializer.h>
 #include <test-helpers/file_helpers.h>
@@ -66,7 +67,8 @@ namespace micro_profiler
 			shared_ptr<frontend> create_frontend()
 			{
 				auto e2 = make_shared<emulator_>();
-				auto f = make_shared<frontend>(e2->server_session, dir.path(), worker, apartment);
+				auto f = make_shared<frontend>(e2->server_session,
+					make_shared<profiling_cache_sqlite>(dir.track_file("a.db")), worker, apartment);
 
 				e2->outbound = f.get();
 				f->initialized = [this] (shared_ptr<profiling_session> ctx) {	context = ctx;	};

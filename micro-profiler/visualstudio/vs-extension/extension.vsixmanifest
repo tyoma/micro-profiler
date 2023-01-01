@@ -9,23 +9,15 @@
 		<License>license.rtf</License>
 	</Metadata>
 	<Installation InstalledByMsi="false" AllUsers="false" SystemComponent="false" Scope="ProductExtension">
-		<InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[17.0, 18.0)">
-			<ProductArchitecture>amd64</ProductArchitecture>
-		</InstallationTarget>
-		<InstallationTarget Id="Microsoft.VisualStudio.Premium" Version="[17.0, 18.0)">
-			<ProductArchitecture>amd64</ProductArchitecture>
-		</InstallationTarget>
-		<InstallationTarget Id="Microsoft.VisualStudio.Ultimate" Version="[17.0, 18.0)">
-			<ProductArchitecture>amd64</ProductArchitecture>
-		</InstallationTarget>
-		<InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
-			<ProductArchitecture>amd64</ProductArchitecture>
-		</InstallationTarget>
+		<InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[11.0, 17.0)" />
+		<InstallationTarget Id="Microsoft.VisualStudio.Premium" Version="[11.0, 17.0)" />
+		<InstallationTarget Id="Microsoft.VisualStudio.Ultimate" Version="[11.0, 17.0)" />
+		<InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[11.0, 17.0)" />
 	</Installation>
 	<Assets>
 		<Asset Type="Microsoft.VisualStudio.VsPackage" Path="micro-profiler.pkgdef" />
 	</Assets>
 	<Prerequisites>
-		<Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
+		<Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[11.0,17.0)" DisplayName="Visual Studio core editor" />
 	</Prerequisites>
 </PackageManifest>

@@ -39,15 +39,6 @@ namespace micro_profiler
 
 	namespace tables
 	{
-		struct cached_patch
-		{
-			id_t scope_id;
-			id_t module_id;
-			unsigned int rva;
-		};
-
-
-
 		template <typename VisitorT>
 		inline void describe(VisitorT &&v, module *m)
 		{

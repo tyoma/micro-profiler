@@ -21,9 +21,9 @@ set(FRONTEND_TESTS_SOURCES
 	legacy_serialization.cpp
 	mock_channel.cpp
 	mocks.cpp
+	PatchModeratorTests.cpp
 	PrimitivesTests.cpp
 	ProcessListTests.cpp
-	ProfilingPreferencesTests.cpp
 	ProjectionViewTests.cpp
 	RepresentationTests.cpp
 	SelectionModelTests.cpp

@@ -21,12 +21,10 @@
 #include <frontend/frontend.h>
 
 #include <frontend/helpers.h>
-#include <frontend/profiling_preferences_db.h>
 #include <frontend/serialization.h>
 
 #include <logger/log.h>
 #include <sdb/indexed_serialization.h>
-#include <sqlite++/database.h>
 
 #define PREAMBLE "Frontend: "
 
@@ -42,11 +40,11 @@ namespace micro_profiler
 		const auto detached_frontend_stub2 = bind([] {});
 	}
 
-	frontend::frontend(ipc::channel &outbound, const string &preferences_db,
+	frontend::frontend(ipc::channel &outbound, shared_ptr<profiling_cache> cache,
 			scheduler::queue &worker, scheduler::queue &apartment)
 		: client_session(outbound), _worker_queue(worker), _apartment_queue(apartment),
-			_db(make_shared<profiling_session>()), _preferences_db_connection(sql::create_connection(preferences_db.c_str())),
-			_initialized(false), _mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
+			_db(make_shared<profiling_session>()), _cache(cache), _initialized(false),
+			_mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
 	{
 		_db->statistics.request_update = [this] {
 			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});
@@ -99,22 +97,6 @@ namespace micro_profiler
 		_db->patches.revert = detached_frontend_stub;
 
 		LOG(PREAMBLE "destroyed...") % A(this);
-	}
-
-	void frontend::create_database(const string &preferences_db)
-	try
-	{
-		sql::transaction t(sql::create_connection(preferences_db.c_str()));
-
-		t.create_table<tables::module>();
-		t.create_table<tables::symbol_info>();
-		t.create_table<tables::source_file>();
-		t.create_table<tables::cached_patch>();
-		t.commit();
-		LOG(PREAMBLE "database initialized...");
-	}
-	catch (...)
-	{
 	}
 
 	void frontend::disconnect() throw()

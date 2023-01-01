@@ -27,6 +27,7 @@
 #include <common/string.h>
 #include <direct.h>
 #include <frontend/frontend.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <ipc/com/endpoint.h>
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
@@ -101,7 +102,7 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 		const string exe = module::executable();
 		const file_version vs = get_file_version(exe);
 
-		frontend::create_database(c_preferences_db);
+		profiling_cache_sqlite::create_database(c_preferences_db);
 
 		LOG(PREAMBLE "loaded...")
 			% A(getpid()) % A(self) % A(exe)

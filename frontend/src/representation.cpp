@@ -20,6 +20,7 @@
 
 #include <frontend/representation.h>
 
+#include <common/memory.h>
 #include <frontend/aggregators.h>
 #include <frontend/derived_statistics.h>
 #include <frontend/key.h>
@@ -42,10 +43,6 @@ namespace micro_profiler
 
 	namespace
 	{
-		template <typename T>
-		shared_ptr<T> make_shared_copy(const T &from)
-		{	return make_shared<T>(from);	}
-
 		struct sum_functions
 		{
 			template <typename I>

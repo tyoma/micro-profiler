@@ -52,4 +52,10 @@ namespace micro_profiler
 		const byte_range _region;
 		size_t _occupied;
 	};
+
+
+
+	template <typename T>
+	inline std::shared_ptr<T> make_shared_copy(const T &from)
+	{	return std::make_shared<T>(from);	}
 }

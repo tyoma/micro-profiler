@@ -6,6 +6,7 @@
 
 #include <common/file_stream.h>
 #include <common/serialization.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <frontend/profiling_preferences_db.h>
 #include <ipc/server_session.h>
 #include <sqlite++/database.h>
@@ -123,11 +124,12 @@ namespace micro_profiler
 			{
 				const auto db_path = dir.track_file("sample-preferences.db");
 
-				frontend::create_database(db_path);
+				profiling_cache_sqlite::create_database(db_path);
 				preferences_db = sql::create_connection(db_path.c_str());
 
 				auto e2 = make_shared<emulator_>();
-				auto f = make_shared<frontend>(e2->server_session, db_path, worker, apartment);
+				auto f = make_shared<frontend>(e2->server_session, make_shared<profiling_cache_sqlite>(db_path),
+					worker, apartment);
 
 				e2->outbound = f.get();
 				f->initialized = [this] (shared_ptr<profiling_session> ctx) {	context = ctx;	};

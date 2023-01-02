@@ -47,9 +47,9 @@ namespace micro_profiler
 
 	private:
 		void restore_and_apply(std::shared_ptr<profiling_cache> cache, std::shared_ptr<tables::patches> patches,
-			std::shared_ptr<changes_log> changes, id_t module_id, profiling_cache_tasks &db_mapping);
+			std::shared_ptr<changes_log> changes, const tables::module_mapping &mapping, profiling_cache_tasks &tasks);
 		void persist(std::shared_ptr<profiling_cache> cache, const tables::module_mappings &mappings,
-			std::shared_ptr<changes_log> changes, profiling_cache_tasks &db_mapping);
+			std::shared_ptr<changes_log> changes, profiling_cache_tasks &tasks);
 
 	private:
 		scheduler::queue &_worker, &_apartment;

@@ -286,9 +286,8 @@ namespace micro_profiler
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
 				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned) {	assert_is_false(true);	});
-				preferences_db->on_load_metadata = [&] (unsigned hash, id_t associated_module_id) -> unique_ptr<module_info_metadata> {
+				preferences_db->on_load_metadata = [&] (unsigned hash) -> unique_ptr<module_info_metadata> {
 					assert_equal(0x00100201u, hash);
-					assert_equal(17u, associated_module_id);
 					return unique_ptr<module_info_metadata>(new module_info_metadata(create_metadata_info(0x00100201, symbols17, files17)));
 				};
 
@@ -309,11 +308,9 @@ namespace micro_profiler
 				assert_equal(&modules_by_id(*context)[17], log.back());
 
 				// INIT
-				preferences_db->on_load_metadata = [&] (unsigned hash, id_t associated_module_id) -> unique_ptr<module_info_metadata> {
-					const auto k = make_tuple(hash, associated_module_id);
-
-					assert_is_true(make_tuple(0x10100201u, 99u) == k || make_tuple(1u, 1000u) == k);
-					return make_tuple(0x10100201u, 99u) == k
+				preferences_db->on_load_metadata = [&] (unsigned hash) -> unique_ptr<module_info_metadata> {
+					assert_is_true(0x10100201u == hash || 1u == hash);
+					return 0x10100201u == hash
 						? unique_ptr<module_info_metadata>(new module_info_metadata(create_metadata_info(0x10100201, symbols99, files99)))
 						: unique_ptr<module_info_metadata>(new module_info_metadata(create_metadata_info(1, symbols1000, files1000)));
 				};
@@ -341,7 +338,7 @@ namespace micro_profiler
 				pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	},
 					files99[] = {	make_pair(3, "main.cpp"),	};
 				vector<const module_info_metadata *> log;
-				map<id_t, module_info_metadata> cache_log;
+				map<unsigned /*hash*/, module_info_metadata> cache_log;
 
 				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
 					resp(response_modules_loaded, plural
@@ -349,8 +346,8 @@ namespace micro_profiler
 						+ make_mapping_pair(3, 170, 0x00100000u, "c:\\windows\\kernel32.dll", 0x1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
-				preferences_db->on_store_metadata = [&cache_log] (const module_info_metadata &metadata, id_t associated_module_id) {
-					cache_log[associated_module_id] = metadata;
+				preferences_db->on_store_metadata = [&cache_log] (const module_info_metadata &metadata) {
+					cache_log[metadata.hash] = metadata;
 				};
 
 				// ACT
@@ -378,7 +375,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(worker.tasks);
 				assert_equal(1u, cache_log.size());
-				assert_equal(create_metadata_info(0x90100201, symbols17, files17), cache_log[17]);
+				assert_equal(create_metadata_info(0x90100201, symbols17, files17), cache_log[0x90100201u]);
 
 				// ACT
 				modules(context)->request_presence(req[1], 170u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
@@ -392,7 +389,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(worker.tasks);
 				assert_equal(2u, cache_log.size());
-				assert_equal(create_metadata_info(1, symbols99, files99), cache_log[170]);
+				assert_equal(create_metadata_info(1, symbols99, files99), cache_log[1u]);
 			}
 
 

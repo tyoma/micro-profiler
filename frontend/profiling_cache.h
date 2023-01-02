@@ -37,13 +37,13 @@ namespace micro_profiler
 
 	struct profiling_cache_tasks
 	{
-		virtual scheduler::task<id_t> persisted_module_id(id_t module_id) = 0;
+		virtual scheduler::task<id_t> persisted_module_id(unsigned int hash) = 0;
 	};
 
 	struct profiling_cache
 	{
-		virtual std::shared_ptr<module_info_metadata> load_metadata(unsigned int hash, id_t associated_module_id) = 0;
-		virtual void store_metadata(const module_info_metadata &metadata, id_t associated_module_id) = 0;
+		virtual std::shared_ptr<module_info_metadata> load_metadata(unsigned int hash) = 0;
+		virtual void store_metadata(const module_info_metadata &metadata) = 0;
 
 		virtual std::vector<tables::cached_patch> load_default_patches(id_t cached_module_id) = 0;
 		virtual void update_default_patches(id_t cached_module_id, std::vector<unsigned int> add_rva,

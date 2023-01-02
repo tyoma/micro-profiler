@@ -27,12 +27,13 @@
 
 #define PREAMBLE "Profiling Cache (sqlite): "
 
+using namespace scheduler;
 using namespace std;
 
 namespace micro_profiler
 {
-	profiling_cache_sqlite::profiling_cache_sqlite(const string &preferences_db)
-		: _preferences_db(preferences_db)
+	profiling_cache_sqlite::profiling_cache_sqlite(const string &preferences_db, queue &worker)
+		: _preferences_db(preferences_db), _worker(worker)
 	{	}
 
 	void profiling_cache_sqlite::create_database(const string &preferences_db)
@@ -51,10 +52,10 @@ namespace micro_profiler
 	{
 	}
 
-	scheduler::task<id_t> profiling_cache_sqlite::persisted_module_id(id_t module_id)
-	{	return scheduler::task<id_t>(get_cached_module_id_task(module_id));	}
+	scheduler::task<id_t> profiling_cache_sqlite::persisted_module_id(unsigned int hash)
+	{	return scheduler::task<id_t>(get_cached_module_id_task(hash));	}
 
-	shared_ptr<module_info_metadata> profiling_cache_sqlite::load_metadata(unsigned int hash, id_t associated_module_id)
+	shared_ptr<module_info_metadata> profiling_cache_sqlite::load_metadata(unsigned int hash)
 	{
 		sql::transaction tx(sql::create_connection(_preferences_db.c_str()));
 		auto r_modules = tx.select<tables::module>(sql::c(&tables::module::hash) == sql::p(hash));
@@ -68,13 +69,12 @@ namespace micro_profiler
 				m->symbols.push_back(item);
 			for (tables::source_file item; r_sources(item); )
 				m->source_files[item.id] = item.path;
-			get_cached_module_id_task(associated_module_id)->set(move(m->id));
 			return m;
 		}
 		return nullptr;
 	}
 
-	void profiling_cache_sqlite::store_metadata(const module_info_metadata &metadata, id_t associated_module_id)
+	void profiling_cache_sqlite::store_metadata(const module_info_metadata &metadata)
 	{
 		sql::transaction t(sql::create_connection(_preferences_db.c_str()), sql::transaction::immediate);
 		tables::module mm;
@@ -92,7 +92,16 @@ namespace micro_profiler
 		for (auto i = metadata.source_files.begin(); i != metadata.source_files.end(); ++i)
 			sf.id = i->first, sf.path = i->second, w_sources(sf);
 		t.commit();
-		get_cached_module_id_task(associated_module_id)->set(move(mm.id));
+
+		mt::lock_guard<mt::mutex> l(_mtx);
+		const auto i = _module_mapping_tasks.find(mm.hash);
+		const auto task = i == _module_mapping_tasks.end()
+			? _module_mapping_tasks.insert(make_pair(mm.hash, make_shared< task_node<id_t> >())).first->second
+			: i->second;
+		try
+		{	task->set(move(mm.id)); }
+		catch (...)
+		{	}
 	}
 
 	vector<tables::cached_patch> profiling_cache_sqlite::load_default_patches(id_t cached_module_id)
@@ -123,13 +132,35 @@ namespace micro_profiler
 		tx.commit();
 	}
 
-	shared_ptr< scheduler::task_node<id_t> > profiling_cache_sqlite::get_cached_module_id_task(id_t module_id)
+	shared_ptr< scheduler::task_node<id_t> > profiling_cache_sqlite::get_cached_module_id_task(unsigned int hash)
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);
-		auto i = _module_mapping_tasks.find(module_id);
+		const auto i = _module_mapping_tasks.find(hash);
 
-		if (i == _module_mapping_tasks.end())
-			i = _module_mapping_tasks.insert(make_pair(module_id, make_shared< scheduler::task_node<id_t> >())).first;
-		return i->second;
+		if (i != _module_mapping_tasks.end())
+			return i->second;
+
+		const auto preferences_db = _preferences_db;
+		const auto task = make_shared< task_node<id_t> >();
+
+		_module_mapping_tasks.insert(make_pair(hash, task));
+		_worker.schedule([hash, preferences_db, task] {	find_module(task, preferences_db, hash);	});
+		return task;
+	}
+
+	void profiling_cache_sqlite::find_module(shared_ptr< scheduler::task_node<id_t> > task, const string &preferences_db,
+		unsigned int hash)
+	{
+		sql::transaction tx(sql::create_connection(preferences_db.c_str()));
+		auto r_modules = tx.select<tables::module>(sql::c(&tables::module::hash) == sql::p(hash));
+
+		for (tables::module m; r_modules(m); )
+		{
+			try
+			{	task->set(move(m.id));	}
+			catch (...)
+			{	}
+			return;
+		}
 	}
 }

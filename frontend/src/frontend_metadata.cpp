@@ -74,8 +74,8 @@ namespace micro_profiler
 		const auto req = make_shared< shared_ptr<void> >();
 		const weak_ptr< shared_ptr<void> > wreq = req;
 		const auto cache = _cache;
-		auto request_with_caching = task<module_ptr>::run([cache, hash, module_id] {
-				return cache->load_metadata(hash, module_id);
+		auto request_with_caching = task<module_ptr>::run([cache, hash] {
+				return cache->load_metadata(hash);
 			}, _worker_queue)
 			.continue_with([this, module_id, wreq] (const async_result<module_ptr> &m) -> task< pair<module_ptr, bool> > {
 				auto c = make_shared< task_node< pair<module_ptr, bool> > >();
@@ -94,9 +94,9 @@ namespace micro_profiler
 					ready((*m).first);
 			}, _apartment_queue);
 		request_with_caching
-			.continue_with([cache, module_id] (const async_result< pair<module_ptr, bool /*cached*/> > &m) {
+			.continue_with([cache] (const async_result< pair<module_ptr, bool /*cached*/> > &m) {
 				if (!(*m).second)
-					cache->store_metadata(*(*m).first, module_id);
+					cache->store_metadata(*(*m).first);
 			}, _worker_queue);
 	}
 

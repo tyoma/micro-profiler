@@ -35,6 +35,7 @@
 #include <frontend/frontend_manager.h>
 #include <frontend/frontend_ui.h>
 #include <frontend/ipc_manager.h>
+#include <frontend/patch_moderator.h>
 #include <frontend/profiling_cache_sqlite.h>
 #include <frontend/tables_ui.h>
 #include <logger/log.h>
@@ -152,6 +153,7 @@ namespace micro_profiler
 		{
 			CComPtr<profiler_package> self = this;
 			const auto processes = make_shared<process_explorer>(mt::milliseconds(200), *_ui_queue, _clock);
+			const auto cache = make_shared<profiling_cache_sqlite>(c_preferences_db, *_worker_queue);
 
 			obtain_service<_DTE>([self] (CComPtr<_DTE> p) {
 				LOG(PREAMBLE "DTE obtained...") % A(p);
@@ -159,14 +161,15 @@ namespace micro_profiler
 			});
 			setup_factory(factory);
 			register_path(*processes, false);
-			_frontend_manager.reset(new frontend_manager([this] (ipc::channel &outbound) {
-				return new frontend(outbound, make_shared<profiling_cache_sqlite>(c_preferences_db),
-					*_worker_queue, *_ui_queue);
-			}, [this] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
+			_frontend_manager.reset(new frontend_manager([this, cache] (ipc::channel &outbound) {
+				return new frontend(outbound, cache, *_worker_queue, *_ui_queue);
+			}, [this, cache] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
+				const auto moderator = make_shared<patch_moderator>(session, cache, cache, *_worker_queue, *_ui_queue);
 				const auto ui = make_shared<frontend_pane>(get_factory(), session, _configuration, _ui_queue);
+				const auto complex = make_shared_copy(make_pair(moderator, ui));
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
-				return ui;
+				return shared_ptr<frontend_ui>(complex, ui.get());
 			}));
 			_ipc_manager.reset(new ipc_manager(_frontend_manager,
 				*_ui_queue,

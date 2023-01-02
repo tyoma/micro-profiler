@@ -65,20 +65,20 @@ namespace micro_profiler
 				patch_moderator pp(s, cache, cache, worker, apartment);
 
 				// ACT
-				add_records(s->mappings, plural + make_mapping(1, 11, 1));
+				add_records(s->mappings, plural + make_mapping(1, 11, 1, "", 17012u));
 
 				// ASSERT
 				assert_equal(1u, cache->tasks.size());
-				assert_equal(1u, cache->tasks.count(11));
+				assert_equal(1u, cache->tasks.count(17012u));
 
 				// ACT
-				add_records(s->mappings, plural + make_mapping(3, 13, 1) + make_mapping(7, 191, 1));
+				add_records(s->mappings, plural + make_mapping(3, 13, 1, "", 17013u) + make_mapping(7, 191, 1, "", 37012u));
 
 				// ASSERT
 				assert_equal(3u, cache->tasks.size());
-				assert_equal(1u, cache->tasks.count(11));
-				assert_equal(1u, cache->tasks.count(13));
-				assert_equal(1u, cache->tasks.count(191));
+				assert_equal(1u, cache->tasks.count(17012u));
+				assert_equal(1u, cache->tasks.count(17013u));
+				assert_equal(1u, cache->tasks.count(37012u));
 			}
 
 
@@ -87,15 +87,15 @@ namespace micro_profiler
 				// INIT
 				const auto s = make_shared<profiling_session>();
 
-				add_records(s->mappings, plural + make_mapping(1, 2, 1) + make_mapping(9, 3, 1));
+				add_records(s->mappings, plural + make_mapping(1, 2, 1, "", 37012u) + make_mapping(9, 3, 1, "", 37013u));
 
 				// ACT
 				patch_moderator pp(s, cache, cache, worker, apartment);
 
 				// ASSERT
 				assert_equal(2u, cache->tasks.size());
-				assert_equal(1u, cache->tasks.count(2));
-				assert_equal(1u, cache->tasks.count(3));
+				assert_equal(1u, cache->tasks.count(37012u));
+				assert_equal(1u, cache->tasks.count(37013u));
 			}
 
 
@@ -108,12 +108,15 @@ namespace micro_profiler
 				s->patches.apply = [&] (id_t module_id, range<const unsigned, size_t> rva) {
 					rva_log.push_back(make_pair(module_id, vector<unsigned>(rva.begin(), rva.end())));
 				};
-				add_records(s->mappings, plural + make_mapping(1, 2, 1) + make_mapping(9, 3, 1) + make_mapping(7, 13, 1));
+				add_records(s->mappings, plural
+					+ make_mapping(1, 2, 1, "", 37012u)
+					+ make_mapping(9, 3, 1, "", 37013u)
+					+ make_mapping(7, 13, 1, "", 37015u));
 
 				patch_moderator pp(s, cache, cache, worker, apartment);
 
 				// ACT
-				cache->tasks.find(3)->second->set(102);
+				cache->tasks.find(37013u)->second->set(102);
 
 				// ASSERT
 				assert_equal(1u, worker.tasks.size());
@@ -144,8 +147,8 @@ namespace micro_profiler
 					+ make_pair(3u, plural + 11001u + 11101u), rva_log);
 
 				// ACT
-				cache->tasks.find(2)->second->set(101);
-				cache->tasks.find(13)->second->set(103);
+				cache->tasks.find(37012u)->second->set(101);
+				cache->tasks.find(37015u)->second->set(103);
 
 				// INIT
 				cache->on_load_default_patches = [] (id_t cached_module_id) -> vector<tables::cached_patch> {
@@ -179,15 +182,17 @@ namespace micro_profiler
 				vector< tuple< id_t, vector<unsigned>, vector<unsigned> > > log;
 
 				add_records(s->mappings, plural
-					+ make_mapping(1, 13, 1000000) + make_mapping(2, 17, 3000000) + make_mapping(3, 99, 5000000));
+					+ make_mapping(1, 13, 1000000, "", 37015u)
+					+ make_mapping(2, 17, 3000000, "", 37016u)
+					+ make_mapping(3, 99, 5000000, "", 37019u));
 
 				patch_moderator pp(s, cache, cache, worker, apartment);
 
 				cache->on_update_default_patches = [&] (id_t module_id, vector<unsigned> added, vector<unsigned> removed) {
 					log.push_back(make_tuple(module_id, added, removed));
 				};
-				cache->tasks.find(13)->second->set(1911);
-				cache->tasks.find(17)->second->set(1009);
+				cache->tasks.find(37015u)->second->set(1911);
+				cache->tasks.find(37016u)->second->set(1009);
 
 				worker.run_till_end(); // pull cached patches
 				apartment.run_till_end(); // apply cached patches
@@ -290,12 +295,14 @@ namespace micro_profiler
 							+ initialize<tables::cached_patch>(0u, 3u, 90101u);
 				};
 				add_records(s->mappings, plural
-					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
+					+ make_mapping(19, 100, 1000000, "", 111)
+					+ make_mapping(20, 17, 3000000, "", 112)
+					+ make_mapping(21, 300, 5000000, "", 131));
 
 				patch_moderator pp(s, cache, cache, worker, apartment);
 
-				cache->tasks.find(100)->second->set(1);
-				cache->tasks.find(300)->second->set(3);
+				cache->tasks.find(111)->second->set(1);
+				cache->tasks.find(131)->second->set(3);
 
 				worker.run_till_end(); // pull cached patches
 				apartment.run_till_end();
@@ -349,12 +356,14 @@ namespace micro_profiler
 					}
 				};
 				add_records(s->mappings, plural
-					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
+					+ make_mapping(19, 100, 1000000, "", 21)
+					+ make_mapping(20, 17, 3000000, "", 27)
+					+ make_mapping(21, 300, 5000000, "", 23));
 
 				patch_moderator pp(s, cache, cache, worker, apartment);
 
-				cache->tasks.find(100)->second->set(1);
-				cache->tasks.find(300)->second->set(3);
+				cache->tasks.find(21)->second->set(1);
+				cache->tasks.find(23)->second->set(3);
 
 				worker.run_till_end(); // pull cached patches
 				apartment.run_till_end();
@@ -441,13 +450,15 @@ namespace micro_profiler
 				s->patches.apply = [&patches_idx] (id_t /*module_id*/, range<const unsigned, size_t> /*rva*/) {
 				};
 				add_records(s->mappings, plural
-					+ make_mapping(19, 100, 1000000) + make_mapping(20, 17, 3000000) + make_mapping(21, 300, 5000000));
+					+ make_mapping(19, 100, 1000000, "", 1)
+					+ make_mapping(20, 17, 3000000, "", 2)
+					+ make_mapping(21, 300, 5000000, "", 3));
 
 				patch_moderator pp(s, cache, cache, worker, apartment);
 
-				cache->tasks.find(100)->second->set(1);
-				cache->tasks.find(17)->second->set(17);
-				cache->tasks.find(300)->second->set(3);
+				cache->tasks.find(1)->second->set(1);
+				cache->tasks.find(2)->second->set(17);
+				cache->tasks.find(3)->second->set(3);
 
 				worker.run_till_end();
 				apartment.run_till_end();

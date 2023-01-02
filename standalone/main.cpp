@@ -152,9 +152,9 @@ namespace micro_profiler
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};
-		auto frontend_manager_ = make_shared<frontend_manager>([&app] (ipc::channel &outbound) {
-			return new frontend(outbound, make_shared<profiling_cache_sqlite>(c_preferences_db),
-				app.get_worker_queue(), app.get_ui_queue());
+		auto cache = make_shared<profiling_cache_sqlite>(c_preferences_db, app.get_worker_queue());
+		auto frontend_manager_ = make_shared<frontend_manager>([&app, cache] (ipc::channel &outbound) {
+			return new frontend(outbound, cache, app.get_worker_queue(), app.get_ui_queue());
 		}, ui_factory);
 		ipc_manager ipc_manager(frontend_manager_, app.get_ui_queue(),
 			make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),

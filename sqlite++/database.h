@@ -69,12 +69,15 @@ namespace micro_profiler
 			inserter<T> insert(const char *table_name);
 
 			template <typename T, typename W>
-			statement remove(const W &where);
+			remover remove(const W &where);
 
 			template <typename T, typename W>
-			statement remove(const W &where, const char *table_name);
+			remover remove(const W &where, const char *table_name);
 
 			void commit();
+
+		private:
+			void execute(const char *sql_statemet);
 
 		private:
 			connection_ptr _connection;
@@ -109,16 +112,20 @@ namespace micro_profiler
 			: _connection(connection), _comitted(false)
 		{
 			const char *begin_sql[] = {	"BEGIN DEFERRED", "BEGIN IMMEDIATE", "BEGIN EXCLUSIVE",	};
-			const auto begin = create_statement(*_connection, begin_sql[type_]);
 
 			sqlite3_busy_timeout(_connection.get(), timeout_ms);
-			sql_error::check_step(_connection, sqlite3_step(begin.get()));
+			execute(begin_sql[type_]);
 		}
 
 		inline transaction::~transaction()
 		{
-			if (const auto commit = !_comitted ? create_statement(*_connection, "ROLLBACK") : nullptr)
-				sqlite3_step(commit.get());
+			try
+			{
+				if (!_comitted)
+					execute("ROLLBACK");
+			}
+			catch (...)
+			{  }
 		}
 
 		template <typename T>
@@ -131,9 +138,7 @@ namespace micro_profiler
 			std::string create_table_ddl;
 
 			format_create_table<T>(create_table_ddl, name);
-			const auto s = create_statement(*_connection, create_table_ddl.c_str());
-
-			sql_error::check_step(_connection, sqlite3_step(s.get()));
+			execute(create_table_ddl.c_str());
 		}
 
 		template <typename T>
@@ -161,19 +166,26 @@ namespace micro_profiler
 		{	return insert_builder<T>(table_name).create_inserter(*_connection);	}
 
 		template <typename T, typename W>
-		inline statement transaction::remove(const W &where)
+		inline remover transaction::remove(const W &where)
 		{	return remove<T>(where, default_table_name<T>().c_str());	}
 
 		template <typename T, typename W>
-		inline statement transaction::remove(const W &where, const char *table_name)
+		inline remover transaction::remove(const W &where, const char *table_name)
 		{	return remove_builder(table_name).create_statement(*_connection, where);	}
 
 		inline void transaction::commit()
-		{
-			const auto commit = create_statement(*_connection, "COMMIT");
+		{	execute("COMMIT");	}
 
-			sql_error::check_step(_connection, sqlite3_step(commit.get()));
-			_comitted = true;
+		inline void transaction::execute(const char *sql_statemet)
+		try
+		{
+			statement stmt(create_statement(*_connection, sql_statemet));
+
+			stmt.execute();
+		}
+		catch (execution_error &e)
+		{
+			sql_error::check_step(_connection, e.code);
 		}
 
 
@@ -181,10 +193,8 @@ namespace micro_profiler
 			: std::runtime_error(text)
 		{	}
 
-		inline void sql_error::check_step(const connection_ptr &connection, int step_result)
+		inline void sql_error::check_step(const connection_ptr &connection, int /*step_result*/)
 		{
-			if (SQLITE_DONE == step_result)
-				return;
 			std::string text = "SQLite error: ";
 			
 			text += sqlite3_errmsg(connection.get());

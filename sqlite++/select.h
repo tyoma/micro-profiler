@@ -38,49 +38,32 @@ namespace micro_profiler
 			void operator ()(U)
 			{	}
 
-			template <typename U>
-			void operator ()(int U::*field, const char *)
-			{	record.*field = sqlite3_column_int(&statement, index++);	}
-
-			template <typename U>
-			void operator ()(unsigned int U::*field, const char *)
-			{	record.*field = static_cast<unsigned int>(sqlite3_column_int(&statement, index++));	}
-
-			template <typename U>
-			void operator ()(std::int64_t U::*field, const char *)
-			{	record.*field = sqlite3_column_int64(&statement, index++);	}
-
-			template <typename U>
-			void operator ()(std::uint64_t U::*field, const char *)
-			{	record.*field = static_cast<std::uint64_t>(sqlite3_column_int64(&statement, index++));	}
-
-			template <typename U>
-			void operator ()(double U::*field, const char *)
-			{	record.*field = sqlite3_column_double(&statement, index++);	}
+			template <typename FieldT, typename U>
+			void operator ()(FieldT U::*field, const char *)
+			{	record.*field = statement_.get(index++);	}
 
 			template <typename U>
 			void operator ()(std::string U::*field, const char *)
-			{	record.*field = (const char *)sqlite3_column_text(&statement, index++);	}
+			{	record.*field = static_cast<const char *>(statement_.get(index++));	}
 
 			template <typename U, typename F>
 			void operator ()(const primary_key<U, F> &field, const char *name)
 			{	(*this)(field.field, name);	}
 
 			T &record;
-			sqlite3_stmt &statement;
+			statement &statement_;
 			int index;
 		};
 
 		template <typename T>
-		class reader
+		class reader : statement
 		{
 		public:
+			template <typename W>
+			reader(statement_ptr &&statement, const W &where);
 			reader(statement_ptr &&statement);
 
 			bool operator ()(T& value);
-
-		private:
-			statement_ptr _statement;
 		};
 
 		template <typename T>
@@ -108,25 +91,22 @@ namespace micro_profiler
 
 
 		template <typename T>
-		inline reader<T>::reader(statement_ptr &&statement)
-			: _statement(std::move(statement))
+		template <typename W>
+		inline reader<T>::reader(statement_ptr &&statement_, const W &where)
+			: statement(std::move(statement_))
+		{	bind_parameters(*this, where);	}
+
+		template <typename T>
+		inline reader<T>::reader(statement_ptr &&statement_)
+			: statement(std::move(statement_))
 		{	}
 
 		template <typename T>
 		inline bool reader<T>::operator ()(T& record)
 		{
-			switch (sqlite3_step(_statement.get()))
-			{
-			case SQLITE_DONE:
-				return false;
+			record_reader<T> rr = {	record, *this, 0	};
 
-			case SQLITE_ROW:
-				record_reader<T> rr = {	record, *_statement, 0	};
-
-				describe<T>(rr);
-				return true;
-			}
-			throw 0;
+			return execute() ? describe<T>(rr), true : false;
 		}
 
 
@@ -164,11 +144,7 @@ namespace micro_profiler
 
 			expression_text += " WHERE ";
 			format_expression(expression_text, where);
-
-			auto s = create_statement(database, expression_text.c_str());
-
-			bind_parameters(*s, where);
-			return reader<T>(std::move(s));
+			return reader<T>(create_statement(database, expression_text.c_str()), where);
 		}
 	}
 }

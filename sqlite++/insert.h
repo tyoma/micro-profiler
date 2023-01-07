@@ -20,8 +20,10 @@
 
 #pragma once
 
+#include "binding.h"
 #include "expression.h"
 #include "misc.h"
+#include "statement.h"
 #include "types.h"
 
 #include <cstdint>
@@ -32,66 +34,7 @@ namespace micro_profiler
 	namespace sql
 	{
 		template <typename T>
-		struct field_binder
-		{
-			template <typename U>
-			void operator ()(U)
-			{	}
-
-			template <typename U>
-			void operator ()(int U::*field, const char *)
-			{	sqlite3_bind_int(&statement, index++, item.*field);	}
-
-			template <typename U>
-			void operator ()(unsigned int U::*field, const char *)
-			{	sqlite3_bind_int(&statement, index++, static_cast<int>(item.*field));	}
-
-			template <typename U>
-			void operator ()(std::int64_t U::*field, const char *)
-			{	sqlite3_bind_int64(&statement, index++, item.*field);	}
-
-			template <typename U>
-			void operator ()(std::uint64_t U::*field, const char *)
-			{	sqlite3_bind_int64(&statement, index++, static_cast<std::int64_t>(item.*field));	}
-
-			template <typename U>
-			void operator ()(double U::*field, const char *)
-			{	sqlite3_bind_double(&statement, index++, item.*field);	}
-
-			template <typename U>
-			void operator ()(std::string U::*field, const char *)
-			{	sqlite3_bind_text(&statement, index++, (item.*field).c_str(), -1, SQLITE_STATIC);	}
-
-			template <typename U>
-			void operator ()(U, const char *)
-			{	}
-
-			sqlite3_stmt &statement;
-			const T &item;
-			int index;
-		};
-
-		template <typename T>
-		struct primary_key_binder
-		{
-			template <typename U, typename F>
-			void operator ()(const primary_key<U, F> &field, const char *)
-			{	item.*field.field = static_cast<F>(sqlite3_last_insert_rowid(&connection));	}
-
-			template <typename U>
-			void operator ()(U)
-			{	}
-
-			template <typename U>
-			void operator ()(U, const char *)
-			{	}
-
-			sqlite3 &connection;
-			T &item;
-		};
-
-		template <typename T>
-		class inserter
+		class inserter : statement
 		{
 		public:
 			inserter(sqlite3 &connection, statement_ptr &&statement);
@@ -101,7 +44,6 @@ namespace micro_profiler
 
 		private:
 			sqlite3 &_connection;
-			statement_ptr _statement;
 		};
 
 		template <typename T>
@@ -129,22 +71,18 @@ namespace micro_profiler
 
 
 		template <typename T>
-		inline inserter<T>::inserter(sqlite3 &connection, statement_ptr &&statement)
-			: _connection(connection), _statement(std::move(statement))
+		inline inserter<T>::inserter(sqlite3 &connection, statement_ptr &&statement_)
+			: statement(std::move(statement_)), _connection(connection)
 		{	}
 
 		template <typename T>
 		template <typename T2>
 		inline void inserter<T>::operator ()(T2 &item)
 		{
-			field_binder<T> b = {	*_statement, item, 1	};
-			primary_key_binder<T2> pkb = {	_connection, item	};
-
-			describe<T>(b);
-			sqlite3_step(_statement.get());
-			describe<T>(pkb);
-			sqlite3_reset(_statement.get());
-			sqlite3_clear_bindings(_statement.get());
+			bind_fields<T>(*this, item);
+			execute();
+			bind_identity<T>(_connection, item);
+			reset();
 		}
 
 

@@ -21,35 +21,89 @@
 #pragma once
 
 #include "expression.h"
+#include "statement.h"
+#include "types.h"
 
 namespace micro_profiler
 {
 	namespace sql
 	{
-		inline void bind_parameter(sqlite3_stmt &statement, int value, unsigned int index)
-		{	sqlite3_bind_int(&statement, index, value);	}
+		template <typename T>
+		struct field_binder
+		{
+			template <typename U>
+			void operator ()(U)
+			{	}
 
-		inline void bind_parameter(sqlite3_stmt &statement, const std::string &value, unsigned int index)
-		{	sqlite3_bind_text(&statement, index, value.c_str(), -1, SQLITE_TRANSIENT);	}
+			template <typename FieldT, typename U>
+			void operator ()(FieldT U::*field, const char *)
+			{	statement_.bind(index++, item.*field);	}
+
+			template <typename U>
+			void operator ()(U, const char *)
+			{	}
+
+			statement &statement_;
+			const T &item;
+			int index;
+		};
+
+		template <typename T>
+		struct primary_key_binder
+		{
+			template <typename U>
+			void operator ()(U)
+			{	}
+
+			template <typename U, typename F>
+			void operator ()(const primary_key<U, F> &field, const char *)
+			{	item.*field.field = static_cast<F>(sqlite3_last_insert_rowid(&connection));	}
+
+			template <typename U>
+			void operator ()(U, const char *)
+			{	}
+
+			sqlite3 &connection;
+			T &item;
+		};
+
+
 
 		template <typename T, typename F>
-		inline void bind_parameters(sqlite3_stmt &/*statement*/, const column<T, F> &/*e*/, unsigned int &/*index*/)
+		inline void bind_parameters(statement &/*statement_*/, const column<T, F> &/*e*/, unsigned int &/*index*/)
 		{	}
 
 		template <typename T>
-		inline void bind_parameters(sqlite3_stmt &statement, const parameter<T> &e, unsigned int &index)
-		{	bind_parameter(statement, e.object, index++);	}
+		inline void bind_parameters(statement &statement_, const parameter<T> &e, unsigned int &index)
+		{	statement_.bind(index++, e.object);	}
 
 		template <typename L, typename R>
-		inline void bind_parameters(sqlite3_stmt &statement, const operator_<L, R> &e, unsigned int &index)
-		{	bind_parameters(statement, e.lhs, index), bind_parameters(statement, e.rhs, index);	}
+		inline void bind_parameters(statement &statement_, const operator_<L, R> &e, unsigned int &index)
+		{	bind_parameters(statement_, e.lhs, index), bind_parameters(statement_, e.rhs, index);	}
+
 
 		template <typename E>
-		inline void bind_parameters(sqlite3_stmt &statement, const E &e)
+		inline void bind_parameters(statement &statement_, const E &e)
 		{
 			auto index = 1u;
 
-			bind_parameters(statement, e, index);
+			bind_parameters(statement_, e, index);
+		}
+
+		template <typename T, typename T2>
+		inline void bind_fields(statement &statement_, T2 &record)
+		{
+			field_binder<T> b = {	statement_, record, 1	};
+
+			describe<T>(b);
+		}
+
+		template <typename T, typename T2>
+		inline void bind_identity(sqlite3 &connection, T2 &record)
+		{
+			primary_key_binder<T2> b = {	connection, record	};
+
+			describe<T>(b);
 		}
 	}
 }

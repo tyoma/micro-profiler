@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 project(micro-profiler)
 
 option(MP_NO_TESTS "Do not build test modules." OFF)
+option(MP_ENABLE_PATCHABLE "Make all functions patchable." OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props ${PROJECT_SOURCE_DIR}/libraries/wpl.vs/build.props)
 
@@ -102,6 +103,14 @@ add_link_options(
 	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<VERSION_GREATER_EQUAL:${MSVC_VERSION},1910>>:-DEBUG:FULL>" # Visual Studio 2017 (15.*) and up
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<NOT:$<CONFIG:Debug>>:-LTCG;-OPT:REF>>"
 )
+
+if (MP_ENABLE_PATCHABLE)
+	add_compile_options(
+		"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>>:-hotpatch>"
+		"$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-inline;-fpatchable-function-entry=14,12>"
+	)
+	add_link_options("$<$<CXX_COMPILER_ID:MSVC>:-functionpadmin:24>")
+endif()
 
 if (MSVC)
 	set(CMAKE_STATIC_LINKER_FLAGS_RELEASE ${CMAKE_STATIC_LINKER_FLAGS_RELEASE} -LTCG)

@@ -69,6 +69,8 @@ namespace micro_profiler
 
 		string temporary_directory::copy_file(const string &source)
 		{
+			const auto destination = track_file(*source);
+#ifdef _WIN32
 			const auto file_open = [] (const char *path, const char *mode) -> shared_ptr<FILE> {
 				const auto f = fopen(path, mode);
 
@@ -76,7 +78,6 @@ namespace micro_profiler
 				return shared_ptr<FILE>(f, &fclose);
 			};
 			const auto fsource = file_open(source.c_str(), "rb");
-			const auto destination = track_file(*source);
 			const auto fdestination = file_open(destination.c_str(), "wb");
 			char buffer[1000];
 
@@ -85,6 +86,9 @@ namespace micro_profiler
 				bytes = fread(buffer, 1, bytes, fsource.get());
 				fwrite(buffer, 1, bytes, fdestination.get());
 			}
+#else
+			system(("cp \"" + source + "\" \"" + destination + "\"").c_str());
+#endif
 			return destination;
 		}
 	}

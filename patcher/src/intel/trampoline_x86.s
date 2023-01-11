@@ -56,10 +56,21 @@
 	jumper_proto_end:
 
 .data
-	c_trampoline_proto: .int trampoline_proto
-	c_trampoline_size: .byte (trampoline_proto_end - trampoline_proto)
-	c_jumper_proto: .int jumper_proto
-	c_jumper_size: .byte (jumper_proto_end - jumper_proto)
+	c_trampoline_proto:
+	_c_trampoline_proto:
+		.long trampoline_proto
 
-	.global c_trampoline_proto, c_trampoline_size
-	.global c_jumper_proto, c_jumper_size
+	c_jumper_proto:
+	_c_jumper_proto:
+		.long jumper_proto
+
+	c_trampoline_size:
+	_c_trampoline_size:
+		.byte (trampoline_proto_end - trampoline_proto)
+
+	c_jumper_size:
+	_c_jumper_size:
+		.byte (jumper_proto_end - jumper_proto)
+
+	.global c_trampoline_proto, c_trampoline_size, c_jumper_proto, c_jumper_size
+	.global _c_trampoline_proto, _c_trampoline_size, _c_jumper_proto, _c_jumper_size

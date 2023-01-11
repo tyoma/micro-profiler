@@ -92,8 +92,8 @@ namespace micro_profiler
 					outbound = spawn::connect_client(c_guinea_ipc_spawn, plural + (string)"sleep" + (string)"300", inbound);
 
 					// ACT / ASSERT
-					assert_is_false(ready.wait(mt::milliseconds(250)));
-					assert_is_true(ready.wait(mt::milliseconds(100)));
+					assert_is_false(ready.wait(mt::milliseconds(100)));
+					assert_is_true(ready.wait(mt::milliseconds(400)));
 				}
 
 

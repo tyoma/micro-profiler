@@ -186,7 +186,10 @@ endif()
 
 if (NOT MP_NO_TESTS)
 	# Declare tests/benchmarks
-	set(MP_TEST_SUITES collector common frontend ipc logger math micro-profiler mt patcher reqm savant_db scheduler sqlite++ views)
+	set(MP_TEST_SUITES common frontend ipc logger math micro-profiler mt reqm savant_db scheduler sqlite++ views)
+	if (NOT APPLE)
+		set(MP_TEST_SUITES ${MP_TEST_SUITES} collector patcher)
+	endif()
 	if (WIN32)
 		set(MP_TEST_SUITES ${MP_TEST_SUITES} explorer injector)
 	endif()

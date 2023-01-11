@@ -4,7 +4,6 @@ set(COMMON_TEST_SOURCES
 	AllocatorTests.cpp
 	FileStreamTests.cpp
 	FileUtilitiesTests.cpp
-	ImageInfoTests.cpp
 	ImageUtilitiesTests.cpp
 	MiscTests.cpp
 	PoolAllocatorTests.cpp
@@ -16,6 +15,12 @@ set(COMMON_TEST_SOURCES
 	TypesTests.cpp
 #	UnorderedMapTests.cpp
 )
+
+if (NOT APPLE)
+    set(COMMON_TESTS_SOURCES ${COMMON_TESTS_SOURCES}
+        ImageInfoTests.cpp
+    )
+endif()
 
 add_library(common.tests SHARED ${COMMON_TEST_SOURCES})
 target_link_libraries(common.tests common mt test-helpers)

@@ -1,5 +1,7 @@
 if (MSVC)
 	enable_language(ASM_MASM)
+elseif (XCODE)
+	enable_language(ASM)
 else()
 	enable_language(ASM-ATT)
 endif()

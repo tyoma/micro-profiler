@@ -19,7 +19,10 @@
 ;	THE SOFTWARE.
 
 .code
-	trampoline_proto: ; argument passing: RCX, RDX, R8, and R9, <stack>
+	PUBLIC micro_profiler_trampoline_proto, micro_profiler_trampoline_proto_end
+	PUBLIC micro_profiler_jumper_proto, micro_profiler_jumper_proto_end
+
+	micro_profiler_trampoline_proto: ; argument passing: RCX, RDX, R8, and R9, <stack>
 		push	rcx
 		push	rdx
 		push	r8
@@ -70,21 +73,11 @@
 		on_enter	dq	3141592600000003h
 		on_exit	dq	3141592600000004h
 		target	dq	3141592600000005h
-	trampoline_proto_end:
+	micro_profiler_trampoline_proto_end:
 
-	jumper_proto:
+	micro_profiler_jumper_proto:
 		jmp	[jumper_target]
 
 		jumper_target	dq	3141592600000001h
-	jumper_proto_end:
-
-.data
-	c_trampoline_proto	dq	trampoline_proto
-	c_trampoline_size		db	(trampoline_proto_end - trampoline_proto)
-	c_jumper_proto			dq	jumper_proto
-	c_jumper_size			dd	(jumper_proto_end - jumper_proto)
-
-	PUBLIC c_trampoline_proto, c_trampoline_size
-	PUBLIC c_jumper_proto, c_jumper_size
-
+	micro_profiler_jumper_proto_end:
 end

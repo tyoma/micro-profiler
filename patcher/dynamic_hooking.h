@@ -25,6 +25,8 @@
 
 namespace micro_profiler
 {
+	extern const size_t c_trampoline_size;
+
 	template <typename InterceptorT>
 	struct hook_types
 	{
@@ -32,7 +34,6 @@ namespace micro_profiler
 			timestamp_t timestamp, const void *callee) _CC(fastcall);
 		typedef const void *(CC_(fastcall) on_exit_t)(InterceptorT *interceptor, const void **stack_ptr,
 			timestamp_t timestamp) _CC(fastcall);
-
 	};
 	
 	template <typename InterceptorT>
@@ -45,9 +46,6 @@ namespace micro_profiler
 		{	return reinterpret_cast<hook_types<void>::on_exit_t *>(&InterceptorT::on_exit);	}
 	};
 
-
-
-	extern const size_t c_trampoline_size;
 
 
 	void initialize_trampoline(void *trampoline, const void *target, const void *id, void *interceptor,

@@ -43,7 +43,7 @@ int main()
 
 	stopwatch sw;
 	blank_interceptor interceptor;
-	executable_memory_allocator allocator;
+	executable_memory_allocator allocator(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max());
 	shared_ptr<void> thunk = allocator.allocate(c_trampoline_size);
 
 	initialize_trampoline(thunk.get(), tests::address_cast_hack<const void *>(&empty_function), 0, &interceptor);

@@ -55,7 +55,7 @@ namespace micro_profiler
 	}
 
 
-	executable_memory_allocator::executable_memory_allocator()
+	executable_memory_allocator::executable_memory_allocator(const_byte_range /*reachable_region*/, ptrdiff_t /*max_distance*/)
 		: _block(new block(block_size))
 	{	}
 

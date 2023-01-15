@@ -189,6 +189,10 @@ namespace micro_profiler
 			shared_ptr<void> thunk_memory;
 			mocks::trace_events trace;
 
+			DynamicHookingTests()
+				: allocator(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max())
+			{	}
+
 			init( AllocateMemory )
 			{
 				thunk_memory = allocator.allocate(c_trampoline_size);

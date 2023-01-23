@@ -33,6 +33,19 @@ namespace micro_profiler
 {
 	namespace
 	{
+		int generic_protection(DWORD win32_protection)
+		{
+			switch (win32_protection)
+			{
+			case PAGE_READONLY: return mapped_region::read;
+			case PAGE_READWRITE: return mapped_region::read | mapped_region::write;
+			case PAGE_EXECUTE: return mapped_region::execute;
+			case PAGE_EXECUTE_READ: return mapped_region::execute | mapped_region::read;
+			case PAGE_EXECUTE_READWRITE: return mapped_region::execute | mapped_region::read | mapped_region::write;
+			default: return 0;
+			}
+		}
+
 		class module_lock : noncopyable
 		{
 		public:
@@ -58,6 +71,23 @@ namespace micro_profiler
 			buffer[length] = 0;
 			::GetModuleFileName(hmodule, buffer, length);
 			unicode(path, buffer);
+		}
+
+		void enumerate_regions(vector<mapped_region> &regions, const void *inside_address)
+		{
+			MEMORY_BASIC_INFORMATION mi;
+
+			::VirtualQuery(const_cast<void *>(inside_address), &mi, sizeof mi);
+			for (byte *ptr = static_cast<byte *>(mi.AllocationBase), *base = ptr;
+				::VirtualQuery(ptr, &mi, sizeof mi) && mi.AllocationBase == base;
+				ptr += mi.RegionSize)
+			{
+				mapped_region region = {
+					static_cast<const byte *>(mi.BaseAddress), mi.RegionSize, generic_protection(mi.Protect)
+				};
+
+				regions.push_back(region);
+			}
 		}
 	}
 
@@ -111,9 +141,9 @@ namespace micro_profiler
 				continue;
 			unicode(module.path, entry.szExePath);
 			module.base = entry.modBaseAddr;
-			module.addresses.push_back(byte_range(entry.modBaseAddr, entry.modBaseSize));
+			enumerate_regions(module.regions, entry.modBaseAddr);
 			callback(module);
-			module.addresses.clear();
+			module.regions.clear();
 		}
 	}
 }

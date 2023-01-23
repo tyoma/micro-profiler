@@ -22,10 +22,17 @@ namespace micro_profiler
 		unsigned _previous_access;
 	};
 
-	struct virtual_memory
+	struct mapped_region
 	{
 		enum protection_flags {	read = (1 << 0), write = (1 << 1), execute = (1 << 2),	};
 
+		const byte *address;
+		std::size_t size;
+		int protection;
+	};
+
+	struct virtual_memory
+	{
 		struct bad_fixed_alloc;
 
 		static std::size_t granularity();

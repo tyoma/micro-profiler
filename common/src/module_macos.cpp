@@ -30,49 +30,47 @@ using namespace std;
 
 namespace micro_profiler
 {
-    namespace
-    {
-        struct address_hash_eq
-        {
-            size_t operator ()(const module::mapping &item) const
-            {   return reinterpret_cast<size_t>(item.base); }
-            
-            bool operator ()(const module::mapping &lhs, const module::mapping &rhs) const
-            {   return lhs.base == rhs.base;    }
-        };
-    
-        mt::mutex g_mapping_mutex;
-        std::unordered_set<module::mapping, address_hash_eq, address_hash_eq> g_mappings;
-        
-        struct notifier_init
-        {
-            notifier_init()
-            {
-                _dyld_register_func_for_add_image(&on_add_image);
-                _dyld_register_func_for_remove_image(&on_remove_image);
-            }
-            
-            static void on_add_image(const mach_header *, intptr_t base)
-            {
-                mt::lock_guard<mt::mutex> l(g_mapping_mutex);
-                Dl_info dinfo = { };
-                dladdr(reinterpret_cast<void *>(base), &dinfo);
-                if (!dinfo.dli_fbase)
-                    return;
-                module::mapping m = {   dinfo.dli_fname, reinterpret_cast<byte *>(base), };
-                
-                g_mappings.insert(move(m));
-            }
-            
-            static void on_remove_image(const mach_header *, intptr_t base)
-            {
-                module::mapping m = {   string(), reinterpret_cast<byte *>(base), };
-                mt::lock_guard<mt::mutex> l(g_mapping_mutex);
+	namespace
+	{
+		struct address_hash_eq
+		{
+			size_t operator ()(const module::mapping& item) const
+			{	return reinterpret_cast<size_t>(item.base);	}
 
-                g_mappings.erase(m);
-            }
-        } g_init;
-    }
+			bool operator ()(const module::mapping& lhs, const module::mapping& rhs) const
+			{	return lhs.base == rhs.base;	}
+		};
+
+		mt::mutex g_mapping_mutex;
+		std::unordered_set<module::mapping, address_hash_eq, address_hash_eq> g_mappings;
+
+		struct notifier_init
+		{
+			notifier_init()
+			{
+				_dyld_register_func_for_add_image(&on_add_image);
+				_dyld_register_func_for_remove_image(&on_remove_image);
+			}
+
+			static void on_add_image(const mach_header *, intptr_t base)
+			{
+				mt::lock_guard<mt::mutex> l(g_mapping_mutex);
+				Dl_info dinfo = {};
+
+				dladdr(reinterpret_cast<void *>(base), &dinfo);
+				if (!dinfo.dli_fbase)
+					return;
+				g_mappings.insert(module::mapping {	dinfo.dli_fname, reinterpret_cast<byte *>(base),	});
+			}
+
+			static void on_remove_image(const mach_header *, intptr_t base)
+			{
+				mt::lock_guard<mt::mutex> l(g_mapping_mutex);
+
+				g_mappings.erase(module::mapping {	string(), reinterpret_cast<byte *>(base),	});
+			}
+		} g_init;
+	}
 
 	void *module::dynamic::find_function(const char *name) const
 	{	return ::dlsym(_handle.get(), name);	}
@@ -92,9 +90,9 @@ namespace micro_profiler
 	{
 		char dummy;
 		uint32_t l = 0;
-		
+
 		::_NSGetExecutablePath(&dummy, &l);
-			
+
 		vector<char> buffer(l);
 
 		::_NSGetExecutablePath(&buffer[0], &l);
@@ -116,11 +114,11 @@ namespace micro_profiler
 		return info;
 	}
 
-	void module::enumerate_mapped(const mapping_callback_t &callback)
+	void module::enumerate_mapped(const mapping_callback_t& callback)
 	{
-        mt::lock_guard<mt::mutex> l(g_mapping_mutex);
-        
-        for (auto &i : g_mappings)
-            callback(i);
+		mt::lock_guard<mt::mutex> l(g_mapping_mutex);
+
+		for (auto& i : g_mappings)
+			callback(i);
 	}
 }

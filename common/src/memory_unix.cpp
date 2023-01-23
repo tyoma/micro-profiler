@@ -35,9 +35,9 @@ namespace micro_profiler
 		{
 			auto value = 0;
 
-			value |= virtual_memory::execute & protection ? PROT_EXEC : 0;
-			value |= virtual_memory::write & protection ? PROT_WRITE : 0;
-			value |= virtual_memory::read & protection ? PROT_READ : 0;
+			value |= mapped_region::execute & protection ? PROT_EXEC : 0;
+			value |= mapped_region::write & protection ? PROT_WRITE : 0;
+			value |= mapped_region::read & protection ? PROT_READ : 0;
 			return value;
 		}
 	}

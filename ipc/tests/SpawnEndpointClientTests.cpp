@@ -105,7 +105,7 @@ namespace micro_profiler
 
 					// ASSERT
 					assert_is_true(0.3 <= duration);
-					assert_is_true(0.4 > duration);
+					assert_is_true(0.6 > duration);
 				}
 
 

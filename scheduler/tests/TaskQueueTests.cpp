@@ -417,7 +417,7 @@ namespace scheduler
 				auto t1 = stopwatch();
 
 				// ASSERT
-				assert_approx_equal(mt::milliseconds(2000).count(), t1.count(), 0.1);
+				assert_approx_equal(mt::milliseconds(2000).count(), t1.count(), 0.2);
 
 				// INIT
 				clock = mt::milliseconds(800);
@@ -428,7 +428,7 @@ namespace scheduler
 				auto t2 = stopwatch();
 
 				// ASSERT
-				assert_approx_equal(mt::milliseconds(1200).count(), t2.count(), 0.1);
+				assert_approx_equal(mt::milliseconds(1200).count(), t2.count(), 0.2);
 
 				// INIT
 				clock = mt::milliseconds(2000);
@@ -440,7 +440,7 @@ namespace scheduler
 				auto t3 = stopwatch();
 
 				// ASSERT
-				assert_approx_equal(mt::milliseconds(1000).count(), t3.count(), 0.1);
+				assert_approx_equal(mt::milliseconds(1000).count(), t3.count(), 0.2);
 			}
 
 

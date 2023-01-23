@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "memory.h"
 #include "range.h"
 
 #include <cstdint>
@@ -38,7 +39,7 @@ namespace micro_profiler
 		{
 			std::string path;
 			byte *base;
-			std::vector<byte_range> addresses;
+			std::vector<mapped_region> regions;
 		};
 
 		struct mapping_ex

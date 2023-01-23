@@ -15,7 +15,7 @@ namespace micro_profiler
 			{	return shared_ptr<void>(address, [size] (void *p) {	virtual_memory::free(p, size);	});	}
 
 			shared_ptr<void> linear_blocks(size_t size)
-			{	return autorelease(virtual_memory::allocate(size, virtual_memory::read), size);	}
+			{	return autorelease(virtual_memory::allocate(size, mapped_region::read), size);	}
 		}
 
 		begin_test_suite( VirtualMemoryTests )
@@ -26,7 +26,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_is_true(granularity > 0);
-				for (int i = 0; i < sizeof(void *) * 8; ++i)
+				for (auto i = 0u; i < sizeof(void *) * 8; ++i)
 					if (((size_t)1 << i) == granularity)
 						return;
 				assert_is_false(true);
@@ -37,7 +37,7 @@ namespace micro_profiler
 			{
 				// INIT / ACT / ASSERT
 				assert_throws(virtual_memory::allocate(numeric_limits<size_t>::max(),
-					virtual_memory::read | virtual_memory::write), bad_alloc);
+					mapped_region::read | mapped_region::write), bad_alloc);
 			}
 
 
@@ -49,13 +49,13 @@ namespace micro_profiler
 				const auto occupied = static_cast<byte *>(voccupied.get());
 
 				// ACT / ASSERT
-				assert_throws(virtual_memory::allocate(occupied, 10 * g, virtual_memory::read),
+				assert_throws(virtual_memory::allocate(occupied, 10 * g, mapped_region::read),
 					virtual_memory::bad_fixed_alloc);
-				assert_throws(virtual_memory::allocate(occupied, g, virtual_memory::read | virtual_memory::write),
+				assert_throws(virtual_memory::allocate(occupied, g, mapped_region::read | mapped_region::write),
 					virtual_memory::bad_fixed_alloc);
-				assert_throws(virtual_memory::allocate(occupied + 9 * g, g, virtual_memory::read),
+				assert_throws(virtual_memory::allocate(occupied + 9 * g, g, mapped_region::read),
 					virtual_memory::bad_fixed_alloc);
-				assert_throws(virtual_memory::allocate(occupied + g, 8 * g, virtual_memory::read),
+				assert_throws(virtual_memory::allocate(occupied + g, 8 * g, mapped_region::read),
 					virtual_memory::bad_fixed_alloc);
 			}
 
@@ -71,11 +71,11 @@ namespace micro_profiler
 				voccupied.reset();
 
 				// INIT / ACT
-				auto p1 = autorelease(virtual_memory::allocate(occupied, g, virtual_memory::read), g);
+				auto p1 = autorelease(virtual_memory::allocate(occupied, g, mapped_region::read), g);
 				auto p2 = autorelease(virtual_memory::allocate(occupied + 8 * g, 2 * g,
-					virtual_memory::read | virtual_memory::execute), 2 * g);
+					mapped_region::read | mapped_region::execute), 2 * g);
 				auto p3 = autorelease(virtual_memory::allocate(occupied + g, 7 * g,
-					virtual_memory::read | virtual_memory::write), 7 * g);
+					mapped_region::read | mapped_region::write), 7 * g);
 
 				// ASSERT
 				assert_equal(occupied, p1.get());

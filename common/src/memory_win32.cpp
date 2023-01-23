@@ -32,12 +32,12 @@ namespace micro_profiler
 	{
 		DWORD win32_protection(int protection)
 		{
-			return (virtual_memory::execute & protection)
-				? (virtual_memory::write & protection)
-					? PAGE_EXECUTE_READWRITE : (virtual_memory::read & protection)
+			return (mapped_region::execute & protection)
+				? (mapped_region::write & protection)
+					? PAGE_EXECUTE_READWRITE : (mapped_region::read & protection)
 						? PAGE_EXECUTE_READ : PAGE_EXECUTE
-				: (virtual_memory::write & protection)
-					? PAGE_READWRITE : (virtual_memory::read & protection)
+				: (mapped_region::write & protection)
+					? PAGE_READWRITE : (mapped_region::read & protection)
 						? PAGE_READONLY : PAGE_NOACCESS;
 		}
 	}

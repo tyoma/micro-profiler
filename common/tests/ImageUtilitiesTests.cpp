@@ -33,15 +33,15 @@ namespace micro_profiler
 				}
 			};
 
-			bool is_address_inside(const vector<byte_range> &ranges, const void *address)
+			bool is_address_inside(const vector<mapped_region> &regions, const void *executable_address)
 			{
 #ifndef __APPLE__
-				for (vector<byte_range>::const_iterator i = ranges.begin(); i != ranges.end(); ++i)
-					if (i->inside(static_cast<const byte *>(address)))
+				for (auto i = regions.begin(); i != regions.end(); ++i)
+					if (i->address <= executable_address && executable_address < i->address + i->size && (i->protection & mapped_region::execute))
 						return true;
 				return false;
 #else
-                return true;
+				return true;
 #endif
 			}
 
@@ -106,6 +106,7 @@ namespace micro_profiler
 				assert_equal(images[1].base_ptr(), info2.base);
 			}
 
+
 			test( EnumeratingModulesListsLoadedModules )
 			{
 				// INIT
@@ -117,7 +118,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, modules.size());
-				assert_is_true(is_address_inside(modules[0].addresses, img1.get_symbol_address("get_function_addresses_1")));
+				assert_is_true(is_address_inside(modules[0].regions, img1.get_symbol_address("get_function_addresses_1")));
 				assert_equal(file_id(img1.absolute_path()), file_id(modules[0].path));
 				assert_equal((byte *)img1.base(), modules[0].base);
 
@@ -134,11 +135,11 @@ namespace micro_profiler
 
 				sort(modules.begin(), modules.end(), less_module());
 
-				assert_is_true(is_address_inside(modules[1].addresses, img2.get_symbol_address("get_function_addresses_2")));
+				assert_is_true(is_address_inside(modules[1].regions, img2.get_symbol_address("get_function_addresses_2")));
 				assert_equal(file_id(img2.absolute_path()), file_id(modules[1].path));
 				assert_equal((byte *)img2.base(), modules[1].base);
 
-				assert_is_true(is_address_inside(modules[2].addresses, img3.get_symbol_address("get_function_addresses_3")));
+				assert_is_true(is_address_inside(modules[2].regions, img3.get_symbol_address("get_function_addresses_3")));
 				assert_equal(file_id(img3.absolute_path()), file_id(modules[2].path));
 				assert_equal((byte *)img3.base(), modules[2].base);
 			}

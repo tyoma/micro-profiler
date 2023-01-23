@@ -4,6 +4,7 @@
 
 #include <common/module.h>
 #include <common/path.h>
+#include <common/time.h>
 #include <mt/event.h>
 #include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
@@ -78,22 +79,33 @@ namespace micro_profiler
 				test( DisconnectionIsNotSentUntilTheServerExits )
 				{
 					// INIT
-					inbound.on_disconnect = [&] {	ready.set();	};
+					stopwatch sw;
+					auto duration = 0.0;
+
+					inbound.on_disconnect = [&] {	duration = sw(), ready.set();	};
 
 					// INIT / ACT
 					auto outbound = spawn::connect_client(c_guinea_ipc_spawn, plural + (string)"sleep" + (string)"100",
 						inbound);
+					sw(); // Reset timer.
 
-					// ACT / ASSERT
-					assert_is_false(ready.wait(mt::milliseconds(50)));
-					assert_is_true(ready.wait(mt::milliseconds(100)));
+					// ACT
+					ready.wait();
+
+					// ASSERT
+					assert_is_true(0.1 <= duration);
+					assert_is_true(0.3 > duration);
 
 					// INIT / ACT
 					outbound = spawn::connect_client(c_guinea_ipc_spawn, plural + (string)"sleep" + (string)"300", inbound);
+					sw(); // Reset timer.
 
-					// ACT / ASSERT
-					assert_is_false(ready.wait(mt::milliseconds(100)));
-					assert_is_true(ready.wait(mt::milliseconds(400)));
+					// ACT
+					ready.wait();
+
+					// ASSERT
+					assert_is_true(0.3 <= duration);
+					assert_is_true(0.4 > duration);
 				}
 
 

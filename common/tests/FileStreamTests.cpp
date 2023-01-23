@@ -100,7 +100,7 @@ namespace micro_profiler
 				read_file_stream s(c_symbol_container_1);
 
 				// ACT / ASSERT
-				s.skip(1000000); // we know it's shorter
+				s.skip(10000000); // we know it's shorter
 				assert_equal(0u, s.read_l(b, 1));
 			}
 

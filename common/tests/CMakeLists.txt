@@ -14,6 +14,7 @@ set(COMMON_TEST_SOURCES
 	TextFormattingServicesTests.cpp
 	TypesTests.cpp
 #	UnorderedMapTests.cpp
+	VirtualMemoryTests.cpp
 )
 
 if (NOT APPLE)

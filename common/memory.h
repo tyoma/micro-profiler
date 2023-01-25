@@ -51,7 +51,7 @@ namespace micro_profiler
 		enum { block_size = 0x10000 };
 
 	public:
-		executable_memory_allocator(const_byte_range reachable_region, std::ptrdiff_t max_distance);
+		executable_memory_allocator();
 
 		virtual std::shared_ptr<void> allocate(std::size_t size);
 

@@ -14,7 +14,7 @@ namespace micro_profiler
 			test( DistinctAllocateCallsReturnDistinctPointers )
 			{
 				// INIT
-				executable_memory_allocator a(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max());
+				executable_memory_allocator a;
 
 				// ACT
 				shared_ptr<void> m1 = a.allocate(1122);
@@ -31,7 +31,7 @@ namespace micro_profiler
 			test( AllocatedMemoryIsReadableWritable )
 			{
 				// INIT
-				executable_memory_allocator a(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max());
+				executable_memory_allocator a;
 				const byte sample1[] = "this is a string to be written";
 				const byte sample2[] = "Are you the new person drawn toward me?\n"
 					"To begin with, take warning, I am surely far different from what you suppose; ";
@@ -51,8 +51,7 @@ namespace micro_profiler
 			test( AllocatedMemoryIsReadableWritableAfterAllocatorIsDeleted )
 			{
 				// INIT
-				unique_ptr<executable_memory_allocator> a(new executable_memory_allocator(const_byte_range(0, 0),
-					numeric_limits<ptrdiff_t>::max()));
+				unique_ptr<executable_memory_allocator> a(new executable_memory_allocator);
 				const byte sample1[] = "this is a string to be written";
 				const byte sample2[] = "Are you the new person drawn toward me?\n"
 					"To begin with, take warning, I am surely far different from what you suppose; ";
@@ -73,7 +72,7 @@ namespace micro_profiler
 			test( AllocatedMemoryIsReadableWritableAfterBlockSizedAllocation )
 			{
 				// INIT
-				executable_memory_allocator a(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max());
+				executable_memory_allocator a;
 				const byte sample1[] = "this is a string to be written";
 				const byte sample2[] = "Are you the new person drawn toward me?\n"
 					"To begin with, take warning, I am surely far different from what you suppose; ";
@@ -94,7 +93,7 @@ namespace micro_profiler
 			test( AllocationsAreFollowingEachOther )
 			{
 				// INIT
-				executable_memory_allocator a(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max());
+				executable_memory_allocator a;
 
 				// ACT
 				shared_ptr<void> m1 = a.allocate(10);
@@ -110,7 +109,7 @@ namespace micro_profiler
 			test( AttemptToAllocateMoreThanBlockSizeLeadsToBadAllocException )
 			{
 				// INIT
-				executable_memory_allocator a(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max());
+				executable_memory_allocator a;
 
 				// ACT / ASSERT
 				assert_throws(a.allocate(executable_memory_allocator::block_size + 1), bad_alloc);
@@ -120,7 +119,7 @@ namespace micro_profiler
 			test( AllocatorIsWorkableAfterExceptionIsThrown )
 			{
 				// INIT
-				executable_memory_allocator a(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max());
+				executable_memory_allocator a;
 				shared_ptr<void> m1 = a.allocate(10);
 
 				assert_throws(a.allocate(executable_memory_allocator::block_size + 1), bad_alloc);

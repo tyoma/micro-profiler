@@ -1,6 +1,7 @@
 #include <scheduler/task_queue.h>
 
 #include <common/time.h>
+#include <cstdint>
 #include <mt/chrono.h>
 #include <mt/thread.h>
 #include <time.h>

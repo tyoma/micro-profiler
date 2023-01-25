@@ -123,7 +123,6 @@ namespace micro_profiler
 			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr)
 		: _logger(create_writer(), (log::g_logger = &_logger, &get_datetime)),
 			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
-			_eallocator(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max()),
 			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks),
 			_patch_manager(_collector, _eallocator), _auto_connect(true)
 	{

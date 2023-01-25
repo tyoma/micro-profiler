@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <common/memory.h>
+#include <cstdint>
 #include <limits>
 #include <stdexcept>
 

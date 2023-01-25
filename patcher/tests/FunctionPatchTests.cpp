@@ -23,10 +23,6 @@ namespace micro_profiler
 			mocks::trace_events trace;
 			temporary_directory dir;
 
-			FunctionPatchTests()
-				: allocator(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max())
-			{	}
-
 
 			test( PatchIsNotActiveActiveAtConstruction )
 			{

@@ -48,8 +48,7 @@ namespace micro_profiler
 			{
 			public:
 				executable_memory_allocator()
-					: micro_profiler::executable_memory_allocator(const_byte_range(0, 0), numeric_limits<ptrdiff_t>::max()),
-						allocated(0)
+					: allocated(0)
 				{	}
 
 				virtual shared_ptr<void> allocate(size_t size) override

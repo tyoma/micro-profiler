@@ -2,13 +2,13 @@
 
 #include "comparisons.h"
 #include "helpers.h"
+#include "mock_cache.h"
 #include "primitive_helpers.h"
 
 #include <common/serialization.h>
 #include <frontend/keyer.h>
 #include <ipc/server_session.h>
 #include <patcher/interface.h>
-#include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
@@ -59,14 +59,14 @@ namespace micro_profiler
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<frontend> frontend_;
 			shared_ptr<const tables::patches> patches;
-			temporary_directory dir;
 
 			init( Init )
 			{
 				auto e = make_shared<emulator_>(queue);
 				auto context = make_shared<profiling_session>();
 
-				frontend_ = make_shared<frontend>(e->server_session, dir.path(), worker_queue, queue);
+				frontend_ = make_shared<frontend>(e->server_session, make_shared<mocks::profiling_cache>(),
+					worker_queue, queue);
 				e->outbound = frontend_.get();
 				frontend_->initialized = [&] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
 				emulator = shared_ptr<ipc::server_session>(e, &e->server_session);
@@ -421,7 +421,7 @@ namespace micro_profiler
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
-					const auto &idx = sdb::multi_index(*this->patches, keyer::persistent_id());
+					const auto &idx = sdb::multi_index(*this->patches, keyer::module_id());
 
 					log.resize(log.size() + 1);
 					for (auto r = idx.equal_range(payload.image_persistent_id); r.first != r.second; ++r.first)

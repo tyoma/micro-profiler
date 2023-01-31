@@ -37,7 +37,7 @@ namespace micro_profiler
 	inline bool operator <(const patch &lhs, const patch &rhs)
 	{
 		return lhs.id < rhs.id ? true : rhs.id < lhs.id ? false :
-			lhs.persistent_id < rhs.persistent_id ? true : rhs.persistent_id < lhs.persistent_id ? false :
+			lhs.module_id < rhs.module_id ? true : rhs.module_id < lhs.module_id ? false :
 			lhs.rva < rhs.rva ? true : rhs.rva < lhs.rva ? false :
 			lhs.state.requested < rhs.state.requested ? true :
 			lhs.state.error < rhs.state.error ? true :
@@ -46,8 +46,8 @@ namespace micro_profiler
 
 	inline bool operator <(const module::mapping_ex &lhs, const module::mapping_ex &rhs)
 	{
-		return std::make_tuple(lhs.persistent_id, lhs.path, lhs.base)
-			< std::make_tuple(rhs.persistent_id, rhs.path, rhs.base);
+		return std::make_tuple(lhs.module_id, lhs.path, lhs.base)
+			< std::make_tuple(rhs.module_id, rhs.path, rhs.base);
 	}
 
 

@@ -16,12 +16,12 @@ namespace micro_profiler
 			return s;
 		}
 
-		inline patch make_patch(id_t persistent_id, unsigned rva, id_t id, bool requested, bool error, bool active)
+		inline patch make_patch(id_t module_id, unsigned rva, id_t id, bool requested, bool error, bool active)
 		{
 			patch p;
 
 			p.id = id;
-			p.persistent_id = persistent_id;
+			p.module_id = module_id;
 			p.rva = rva;
 			p.state.requested = !!requested, p.state.error = !!error, p.state.active = !!active;
 			return p;

@@ -29,6 +29,7 @@
 #include <frontend/image_patch_model.h>
 #include <frontend/image_patch_ui.h>
 #include <frontend/ipc_manager.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <frontend/statistics_poll.h>
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
@@ -50,7 +51,7 @@ namespace micro_profiler
 	{
 		const string c_configuration_path_[] = {	"gevorkyan.org", "MicroProfiler",	};
 		const string c_logname = "micro-profiler_standalone.log";
-		const string c_cache_directory = constants::data_directory() & "cache";
+		const string c_preferences_db = constants::data_directory() & "preferences.db";
 
 		class logger_instance
 		{
@@ -89,7 +90,7 @@ namespace micro_profiler
 	void main(application &app)
 	{
 		mkdir(constants::data_directory().c_str(), 0777);
-		mkdir(c_cache_directory.c_str(), 0777);
+		profiling_cache_sqlite::create_database(c_preferences_db);
 
 		logger_instance logger;
 
@@ -151,8 +152,9 @@ namespace micro_profiler
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};
-		auto frontend_manager_ = make_shared<frontend_manager>([&app] (ipc::channel &outbound) {
-			return new frontend(outbound, c_cache_directory, app.get_worker_queue(), app.get_ui_queue());
+		auto cache = make_shared<profiling_cache_sqlite>(c_preferences_db, app.get_worker_queue());
+		auto frontend_manager_ = make_shared<frontend_manager>([&app, cache] (ipc::channel &outbound) {
+			return new frontend(outbound, cache, app.get_worker_queue(), app.get_ui_queue());
 		}, ui_factory);
 		ipc_manager ipc_manager(frontend_manager_, app.get_ui_queue(),
 			make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),

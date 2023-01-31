@@ -29,17 +29,23 @@
 #include <ipc/client_session.h>
 #include <list>
 #include <reqm/multiplexing_request.h>
-#include <scheduler/private_queue.h>
+
+namespace scheduler
+{
+	struct queue;
+}
 
 namespace micro_profiler
 {
+	struct profiling_cache;
+
 	class frontend : public ipc::client_session, noncopyable
 	{
 	public:
 		typedef std::shared_ptr<profiling_session> session_type;
 
 	public:
-		frontend(ipc::channel &outbound, const std::string &cache_directory,
+		frontend(ipc::channel &outbound, std::shared_ptr<profiling_cache> cache,
 			scheduler::queue &worker, scheduler::queue &apartment);
 		~frontend();
 
@@ -47,7 +53,8 @@ namespace micro_profiler
 		std::function<void (const session_type &ui_context)> initialized;
 
 	private:
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, std::string> symbol_cache_paths_t;
+		typedef std::shared_ptr<module_info_metadata> module_ptr;
+		typedef containers::unordered_map<unsigned int /*module_id*/, std::uint32_t> module_hashes_t;
 		typedef reqm::multiplexing_request<unsigned int, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
 		typedef std::list< std::shared_ptr<void> > requests_t;
 
@@ -56,33 +63,31 @@ namespace micro_profiler
 		virtual void disconnect() throw() override;
 
 		void init_patcher();
-		void apply(unsigned int persistent_id, range<const unsigned int, size_t> rva);
-		void revert(unsigned int persistent_id, range<const unsigned int, size_t> rva);
+		void apply(unsigned int module_id, range<const unsigned int, size_t> rva);
+		void revert(unsigned int module_id, range<const unsigned int, size_t> rva);
 
 		template <typename OnUpdate>
 		void request_full_update(std::shared_ptr<void> &request_, const OnUpdate &on_update);
 		void update_threads(std::vector<unsigned int> &thread_ids);
 		void finalize();
 
-		void request_metadata(std::shared_ptr<void> &request_, unsigned int persistent_id,
+		void request_metadata(std::shared_ptr<void> &request_, unsigned int module_id,
 			const tables::modules::metadata_ready_cb &ready);
 
-		void request_metadata_nw_cached(std::shared_ptr<void> &request_, unsigned int persistent_id,
-			const tables::modules::metadata_ready_cb &ready);
+		template <typename F>
+		void request_metadata_nw_cached(std::shared_ptr<void> &request_, unsigned int module_id, unsigned int hash,
+			const F &ready);
 
-		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int persistent_id,
-			const tables::modules::metadata_ready_cb &ready);
+		template <typename F>
+		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int module_id, const F &ready);
 
-		void store_metadata(const std::string &cache_path, const module_info_metadata &metadata);
-
-		std::string construct_cache_path(const module::mapping_ex &mapping) const;
 		requests_t::iterator new_request_handle();
 
 	private:
-		const std::string _cache_directory;
 		scheduler::queue &_worker_queue, &_apartment_queue;
 		const std::shared_ptr<profiling_session> _db;
-		symbol_cache_paths_t _symbol_cache_paths;
+		const std::shared_ptr<profiling_cache> _cache;
+		module_hashes_t _module_hashes;
 		scontext::additive _serialization_context;
 		bool _initialized;
 

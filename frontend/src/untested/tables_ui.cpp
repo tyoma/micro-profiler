@@ -227,7 +227,7 @@ namespace micro_profiler
 		_filter_connection = _filter_selector->selection_changed += [this, tmodel] (combobox::model_t::index_type index) {
 			unsigned thread_id = 0;
 
-			set_mode(_hierarchical, tmodel->get_key(thread_id, index) ? thread_id : threads_model::all);
+			set_mode(_hierarchical, tmodel->get_key(thread_id, index) ? thread_id : static_cast<id_t>(threads_model::all));
 		};
 		_filter_selector->select(0u);
 		_filter_selector->selection_changed(0u);
@@ -300,14 +300,14 @@ namespace micro_profiler
 		if (_initialized && hierarchical == _hierarchical && thread_id == _thread_id)
 			return;
 		if (hierarchical)
-			switch (thread_id)
+			switch (static_cast<int>(thread_id))
 			{
 			case threads_model::all: attach(representation<true, threads_all>::create(statistics_)); break;
 			case threads_model::cumulative: attach(representation<true, threads_cumulative>::create(statistics_)); break;
 			default: attach(representation<true, threads_filtered>::create(statistics_, thread_id)); break;
 			}
 		else
-			switch (thread_id)
+			switch (static_cast<int>(thread_id))
 			{
 			case threads_model::all: attach(representation<false, threads_all>::create(statistics_)); break;
 			case threads_model::cumulative: attach(representation<false, threads_cumulative>::create(statistics_)); break;

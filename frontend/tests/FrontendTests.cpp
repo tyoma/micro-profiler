@@ -2,13 +2,13 @@
 
 #include "comparisons.h"
 #include "helpers.h"
+#include "mock_cache.h"
 #include "mock_channel.h"
 
 #include <collector/serialization.h> // TODO: remove?
 #include <common/serialization.h>
 #include <ipc/server_session.h>
 #include <strmd/serializer.h>
-#include <test-helpers/file_helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -61,12 +61,12 @@ namespace micro_profiler
 			shared_ptr<profiling_session> context;
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<void> req[10];
-			temporary_directory dir;
 
 			shared_ptr<frontend> create_frontend()
 			{
 				auto e2 = make_shared<emulator_>();
-				auto f = make_shared<frontend>(e2->server_session, dir.path(), worker, apartment);
+				auto f = make_shared<frontend>(e2->server_session, make_shared<mocks::profiling_cache>(),
+					worker, apartment);
 
 				e2->outbound = f.get();
 				f->initialized = [this] (shared_ptr<profiling_session> ctx) {	context = ctx;	};

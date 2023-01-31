@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.13)
 project(micro-profiler)
 
 option(MP_NO_TESTS "Do not build test modules." OFF)
+option(MP_ENABLE_PATCHABLE "Make all functions patchable." OFF)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props ${PROJECT_SOURCE_DIR}/libraries/wpl.vs/make/build.props)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build.props ${PROJECT_SOURCE_DIR}/libraries/wpl.vs/build.props)
 
 include(architecture)
 include(unipath)
@@ -15,6 +16,11 @@ set(sandbox "micro-profiler_sandbox_${archid}")
 
 enable_testing()
 
+set(SPECIFIC_CONFIGS CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL)
+foreach(v ${SPECIFIC_CONFIGS})
+   string(REPLACE /MDd /MTd ${v} ${${v}})
+   string(REPLACE /MD /MT ${v} ${${v}})
+endforeach()
 
 # Setup include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
@@ -75,8 +81,8 @@ set(GCC_CLANG_COMPILER_OPTIONS_CXX ${GCC_CLANG_COMPILER_OPTIONS_C}
 )
 set(MSVC_COMPILER_OPTIONS -wd4503;-wd4996;-wd4510;-wd4610;-wd4512;-wd4312;-wd4481;-wd4355)
 set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} -MP;-W4;-GR-;-GS-;-Gy;-Zi)
-set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS} -MTd)
-set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} -MT;-GL)
+set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS})
+set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} -GL)
 set(MSVC_COMPILER_OPTIONS_RELEASE_MAX -Ox;-Ob2;-Oi;-Ot;-Oy)
 
 add_compile_options(
@@ -98,6 +104,14 @@ add_link_options(
 	"$<$<CXX_COMPILER_ID:MSVC>:$<$<NOT:$<CONFIG:Debug>>:-LTCG;-OPT:REF>>"
 )
 
+if (MP_ENABLE_PATCHABLE)
+	add_compile_options(
+		"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>>:-hotpatch>"
+		"$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-inline;-fpatchable-function-entry=14,12>"
+	)
+	add_link_options("$<$<CXX_COMPILER_ID:MSVC>:-functionpadmin:24>")
+endif()
+
 if (MSVC)
 	set(CMAKE_STATIC_LINKER_FLAGS_RELEASE ${CMAKE_STATIC_LINKER_FLAGS_RELEASE} -LTCG)
 	set(CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO ${CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO} -LTCG)
@@ -109,7 +123,6 @@ endif ()
 
 
 # Add subdirectories
-add_subdirectory(libraries/freetype2)
 add_subdirectory(libraries/utee)
 
 add_subdirectory(libraries/polyq)
@@ -131,6 +144,7 @@ add_subdirectory(patcher/src)
 add_subdirectory(playground)
 add_subdirectory(sandbox/src)
 add_subdirectory(scheduler/src)
+add_subdirectory(sqlite++/src)
 
 if (NOT MP_NO_TESTS)
 	add_subdirectory(collector/tests)
@@ -145,8 +159,9 @@ if (NOT MP_NO_TESTS)
 	add_subdirectory(patcher/benchmark)
 	add_subdirectory(patcher/tests)
 	add_subdirectory(reqm/tests)
-	add_subdirectory(sdb/tests)
 	add_subdirectory(scheduler/tests)
+	add_subdirectory(sdb/tests)
+	add_subdirectory(sqlite++/tests)
 	add_subdirectory(test-helpers/src)
 	add_subdirectory(views/tests)
 endif()
@@ -171,7 +186,10 @@ endif()
 
 if (NOT MP_NO_TESTS)
 	# Declare tests/benchmarks
-	set(MP_TEST_SUITES collector common frontend ipc logger math micro-profiler mt patcher reqm savant_db scheduler views)
+	set(MP_TEST_SUITES common frontend ipc logger math micro-profiler mt reqm savant_db scheduler sqlite++ views)
+	if (NOT APPLE)
+		set(MP_TEST_SUITES ${MP_TEST_SUITES} collector patcher)
+	endif()
 	if (WIN32)
 		set(MP_TEST_SUITES ${MP_TEST_SUITES} explorer injector)
 	endif()

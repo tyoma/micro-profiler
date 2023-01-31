@@ -1,5 +1,7 @@
 #include <scheduler/private_queue.h>
 
+#include "mocks.h"
+
 #include <scheduler/scheduler.h>
 #include <deque>
 #include <ut/assert.h>
@@ -11,33 +13,6 @@ namespace scheduler
 {
 	namespace tests
 	{
-		namespace mocks
-		{
-			class queue : public scheduler::queue
-			{
-			public:
-				deque< pair<function<void ()>, mt::milliseconds> > tasks;
-
-				void run_one()
-				{
-					auto t = tasks.front().first;
-
-					tasks.pop_front();
-					t();
-				}
-
-				void run_till_end()
-				{
-					while (!tasks.empty())
-						run_one();
-				}
-
-			private:
-				virtual void schedule(function<void ()> &&task, mt::milliseconds defer_by) override
-				{	tasks.emplace_back(make_pair(move(task), defer_by));	}
-			};
-		}
-
 		begin_test_suite( PrivateQueueTests )
 			test( SchedulingIsDelegatedToUnderlyingQueue )
 			{

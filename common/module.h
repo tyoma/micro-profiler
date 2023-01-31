@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "memory.h"
 #include "range.h"
 
 #include <cstdint>
@@ -38,12 +39,12 @@ namespace micro_profiler
 		{
 			std::string path;
 			byte *base;
-			std::vector<byte_range> addresses;
+			std::vector<mapped_region> regions;
 		};
 
 		struct mapping_ex
 		{
-			unsigned int persistent_id; // Persistent one-based ID of the image this mapping is for.
+			unsigned int module_id; // Persistent one-based ID of the image this mapping is for.
 			std::string path;
 			long_address_t base;
 			std::uint32_t hash;

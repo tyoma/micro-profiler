@@ -10,10 +10,6 @@
 
 using namespace std;
 
-extern "C" {
-	extern micro_profiler::byte c_jumper_size;
-}
-
 namespace micro_profiler
 {
 	namespace tests

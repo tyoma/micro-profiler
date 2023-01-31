@@ -7,8 +7,8 @@
 
 namespace micro_profiler
 {
-	void mem_copy(void *dest, const void *src, size_t length);
-	void mem_set(void *dest, byte value, size_t length);
+	void mem_copy(void *dest, const void *src, std::size_t length);
+	void mem_set(void *dest, byte value, std::size_t length);
 
 
 	class scoped_unprotect : noncopyable
@@ -22,6 +22,28 @@ namespace micro_profiler
 		unsigned _previous_access;
 	};
 
+	struct mapped_region
+	{
+		enum protection_flags {	read = (1 << 0), write = (1 << 1), execute = (1 << 2),	};
+
+		const byte *address;
+		std::size_t size;
+		int protection;
+	};
+
+	struct virtual_memory
+	{
+		struct bad_fixed_alloc;
+
+		static std::size_t granularity();
+		static void *allocate(std::size_t size, int protection);
+		static void *allocate(const void *at, std::size_t size, int protection);
+		static void free(void *address, std::size_t size);
+	};
+
+	struct virtual_memory::bad_fixed_alloc : std::bad_alloc
+	{
+	};
 
 	class executable_memory_allocator : noncopyable
 	{
@@ -31,7 +53,7 @@ namespace micro_profiler
 	public:
 		executable_memory_allocator();
 
-		virtual std::shared_ptr<void> allocate(size_t size);
+		virtual std::shared_ptr<void> allocate(std::size_t size);
 
 	private:
 		class block;
@@ -43,13 +65,19 @@ namespace micro_profiler
 	class executable_memory_allocator::block : noncopyable
 	{
 	public:
-		block(size_t size);
+		block(std::size_t size);
 		~block();
 
-		void *allocate(size_t size);
+		void *allocate(std::size_t size);
 
 	private:
 		const byte_range _region;
-		size_t _occupied;
+		std::size_t _occupied;
 	};
+
+
+
+	template <typename T>
+	inline std::shared_ptr<T> make_shared_copy(const T &from)
+	{	return std::make_shared<T>(from);	}
 }

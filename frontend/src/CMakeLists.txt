@@ -9,7 +9,8 @@ set(FRONTEND_LIB_SOURCES
 	frontend_patcher.cpp
 	headers_model.cpp
 	image_patch_model.cpp
-	profiling_preferences.cpp
+	patch_moderator.cpp
+	profiling_cache_sqlite.cpp
 	representation.cpp
 	symbol_resolver.cpp
 	threads_model.cpp
@@ -39,4 +40,4 @@ if(WIN32)
 endif()
 
 add_library(frontend STATIC ${FRONTEND_LIB_SOURCES})
-target_link_libraries(frontend wpl agge.text strmd math)
+target_link_libraries(frontend PUBLIC wpl agge.text strmd sqlite++ math)

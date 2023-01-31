@@ -34,10 +34,10 @@ namespace micro_profiler
 			{
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
-				modules->request_presence = [this] (shared_ptr<void> &, unsigned persistent_id, tables::modules::metadata_ready_cb cb) {
-					if (const auto i = sdb::unique_index<keyer::external_id>(*this->modules).find(persistent_id))
+				modules->request_presence = [this] (shared_ptr<void> &, unsigned module_id, tables::modules::metadata_ready_cb cb) {
+					if (const auto i = sdb::unique_index<keyer::external_id>(*this->modules).find(module_id))
 						cb(*i);
-					_requested.push_back(persistent_id);
+					_requested.push_back(module_id);
 				};
 			}
 
@@ -309,7 +309,7 @@ namespace micro_profiler
 			//	symbol_resolver::fileline_t results[4];
 
 			//	add_mapping(basic);
-			//	add_metadata(*modules, basic.persistent_id, metadata);
+			//	add_metadata(*modules, basic.module_id, metadata);
 
 			//	// ACT
 			//	shared_ptr<symbol_resolver> r2(new symbol_resolver(modules, mappings));

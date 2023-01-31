@@ -201,7 +201,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, l[0].size());
-				assert_is_true(1 <= l[0][0].second.persistent_id);
+				assert_is_true(1 <= l[0][0].second.module_id);
 
 				// ACT
 				image image1(c_symbol_container_2);
@@ -209,9 +209,9 @@ namespace micro_profiler
 				t.get_changes(l[1], u);
 
 				// ASSERT
-				assert_is_true(l[0][0].second.persistent_id < l[1][0].second.persistent_id);
-				assert_is_true(l[0][0].second.persistent_id < l[1][1].second.persistent_id);
-				assert_not_equal(l[1][0].second.persistent_id, l[1][1].second.persistent_id);
+				assert_is_true(l[0][0].second.module_id < l[1][0].second.module_id);
+				assert_is_true(l[0][0].second.module_id < l[1][1].second.module_id);
+				assert_not_equal(l[1][0].second.module_id, l[1][1].second.module_id);
 			}
 
 
@@ -322,7 +322,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, l[2].size());
 				
-				assert_equal(mmi[1]->second.persistent_id, l[2][0].second.persistent_id);
+				assert_equal(mmi[1]->second.module_id, l[2][0].second.module_id);
 				assert_is_true(initial_iid_max < l[2][0].first);
 				assert_not_equal(mmi[1]->second.base, l[2][0].second.base);
 
@@ -331,7 +331,7 @@ namespace micro_profiler
 				t.get_changes(l[3], u);
 
 				// ASSERT
-				assert_equal(mmi[0]->second.persistent_id, l[3][0].second.persistent_id);
+				assert_equal(mmi[0]->second.module_id, l[3][0].second.module_id);
 				assert_is_true(l[2][0].first < l[3][0].first);
 				assert_not_equal(mmi[0]->second.base, l[3][0].second.base);
 
@@ -340,7 +340,7 @@ namespace micro_profiler
 				t.get_changes(l[4], u);
 
 				// ASSERT
-				assert_equal(mmi[2]->second.persistent_id, l[4][0].second.persistent_id);
+				assert_equal(mmi[2]->second.module_id, l[4][0].second.module_id);
 				assert_is_true(l[3][0].first < l[4][0].first);
 				assert_not_equal(mmi[2]->second.base, l[4][0].second.base);
 			}
@@ -359,8 +359,8 @@ namespace micro_profiler
 				auto found2 = find_module(l, c_symbol_container_2);
 
 				// ACT / ASSERT
-				assert_equal(*found1, *t.lock_mapping(found1->second.persistent_id));
-				assert_equal(*found2, *t.lock_mapping(found2->second.persistent_id));
+				assert_equal(*found1, *t.lock_mapping(found1->second.module_id));
+				assert_equal(*found2, *t.lock_mapping(found2->second.module_id));
 			}
 
 
@@ -376,8 +376,8 @@ namespace micro_profiler
 				t.get_changes(l, u);
 
 				// ACT / ASSERT
-				assert_not_null(t.get_metadata(find_module(l, c_symbol_container_1)->second.persistent_id));
-				assert_not_null(t.get_metadata(find_module(l, c_symbol_container_2)->second.persistent_id));
+				assert_not_null(t.get_metadata(find_module(l, c_symbol_container_1)->second.module_id));
+				assert_not_null(t.get_metadata(find_module(l, c_symbol_container_2)->second.module_id));
 			}
 
 
@@ -412,8 +412,8 @@ namespace micro_profiler
 				t.get_changes(l, u);
 
 				metadata_ptr md[] = {
-					t.get_metadata(find_module(l, c_symbol_container_1)->second.persistent_id),
-					t.get_metadata(find_module(l, c_symbol_container_2)->second.persistent_id),
+					t.get_metadata(find_module(l, c_symbol_container_1)->second.module_id),
+					t.get_metadata(find_module(l, c_symbol_container_2)->second.module_id),
 				};
 
 				// ACT
@@ -447,7 +447,7 @@ namespace micro_profiler
 				t.get_changes(l, u);
 
 				// ACT / ASSERT
-				assert_not_null(t.get_metadata(mmi.second.persistent_id));
+				assert_not_null(t.get_metadata(mmi.second.module_id));
 			}
 
 
@@ -471,8 +471,8 @@ namespace micro_profiler
 				const auto lm2 = *get_loaded(l, module2_path);
 
 				// ACT
-				auto lock1 = t.lock_mapping(lm1.second.persistent_id);
-				auto lock2 = t.lock_mapping(lm2.second.persistent_id);
+				auto lock1 = t.lock_mapping(lm1.second.module_id);
+				auto lock2 = t.lock_mapping(lm2.second.module_id);
 
 				// ASSERT
 				assert_not_null(lock1);

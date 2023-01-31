@@ -40,20 +40,20 @@ namespace micro_profiler
 		const auto detached_frontend_stub2 = bind([] {});
 	}
 
-	frontend::frontend(ipc::channel &outbound, const string &cache_directory,
+	frontend::frontend(ipc::channel &outbound, shared_ptr<profiling_cache> cache,
 			scheduler::queue &worker, scheduler::queue &apartment)
-		: client_session(outbound), _cache_directory(cache_directory), _worker_queue(worker), _apartment_queue(apartment),
-			_db(make_shared<profiling_session>()), _initialized(false),
+		: client_session(outbound), _worker_queue(worker), _apartment_queue(apartment),
+			_db(make_shared<profiling_session>()), _cache(cache), _initialized(false),
 			_mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())
 	{
 		_db->statistics.request_update = [this] {
 			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});
 		};
 
-		_db->modules.request_presence = [this] (shared_ptr<void> &request, unsigned int persistent_id,
+		_db->modules.request_presence = [this] (shared_ptr<void> &request, unsigned int module_id,
 			const tables::modules::metadata_ready_cb &ready) {
 
-			request_metadata(request, persistent_id, ready);
+			request_metadata(request, module_id, ready);
 		};
 
 		_db->request_default_scale = [this] (const scale_t &inclusive, const scale_t &exclusive) {
@@ -91,7 +91,7 @@ namespace micro_profiler
 		subscribe(*new_request_handle(), exiting, [this] (ipc::deserializer &) {	finalize();	});
 
 		_requests.push_back(_db->mappings.created += [this] (tables::module_mappings::const_iterator i) {
-			_symbol_cache_paths[i->persistent_id] = construct_cache_path(*i);
+			_module_hashes[i->module_id] = i->hash;
 		});
 
 		init_patcher();
@@ -182,10 +182,10 @@ namespace micro_profiler
 			{
 				const auto m = find_range(idx, (*i).address);
 
-				if (!m || requested[m->persistent_id]++)
+				if (!m || requested[m->module_id]++)
 					continue;
 				++*remaining;
-				request_metadata(*new_request_handle(), m->persistent_id,
+				request_metadata(*new_request_handle(), m->module_id,
 					[self, remaining, enable] (const module_info_metadata &) {
 
 					if (!--*remaining && *enable)

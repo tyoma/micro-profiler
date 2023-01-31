@@ -10,7 +10,7 @@ namespace micro_profiler
 {
 	namespace
 	{
-		auto c_repetitions = 10000000;
+		auto c_repetitions = 100000000;
 
 		struct blank_interceptor
 		{

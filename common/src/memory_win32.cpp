@@ -24,8 +24,24 @@
 #include <stdexcept>
 #include <windows.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
+	namespace
+	{
+		DWORD win32_protection(int protection)
+		{
+			return (mapped_region::execute & protection)
+				? (mapped_region::write & protection)
+					? PAGE_EXECUTE_READWRITE : (mapped_region::read & protection)
+						? PAGE_EXECUTE_READ : PAGE_EXECUTE
+				: (mapped_region::write & protection)
+					? PAGE_READWRITE : (mapped_region::read & protection)
+						? PAGE_READONLY : PAGE_NOACCESS;
+		}
+	}
+
 	scoped_unprotect::scoped_unprotect(byte_range region)
 		: _region(region)
 	{
@@ -42,6 +58,37 @@ namespace micro_profiler
 		::VirtualProtect(_region.begin(), _region.length(), _previous_access, &dummy);
 		::FlushInstructionCache(::GetCurrentProcess(), _region.begin(), _region.length());
 	}
+
+
+	size_t virtual_memory::granularity()
+	{
+		SYSTEM_INFO si = {};
+
+		::GetSystemInfo(&si);
+		return si.dwAllocationGranularity;
+	}
+
+	void *virtual_memory::allocate(size_t size, int protection)
+	{
+		if (auto address = ::VirtualAlloc(0, size, MEM_COMMIT, win32_protection(protection)))
+			return address;
+		throw bad_alloc();
+	}
+
+	void *virtual_memory::allocate(const void *at, size_t size, int protection)
+	{
+		auto probe = ::VirtualAlloc(const_cast<void *>(at), size, MEM_RESERVE | MEM_COMMIT, win32_protection(protection));
+
+		if (probe == at)
+			return probe;
+		if (probe)
+			free(probe, size);
+		throw bad_fixed_alloc();
+	}
+
+	void virtual_memory::free(void *address, size_t /*size*/)
+	{	::VirtualFree(address, 0, MEM_RELEASE);	}
+
 
 	executable_memory_allocator::block::block(size_t size)
 		: _region(static_cast<byte *>(::VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE)), size),

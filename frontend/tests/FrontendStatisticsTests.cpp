@@ -3,13 +3,13 @@
 
 #include "comparisons.h"
 #include "helpers.h"
+#include "mock_cache.h"
 #include "primitive_helpers.h"
 
 #include <collector/serialization.h> // TODO: remove?
 #include <frontend/serialization_context.h>
 #include <ipc/server_session.h>
 #include <test-helpers/comparisons.h>
-#include <test-helpers/file_helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <test-helpers/primitive_helpers.h>
 #include <ut/assert.h>
@@ -61,14 +61,14 @@ namespace micro_profiler
 			shared_ptr<ipc::server_session> emulator;
 			shared_ptr<const profiling_session> session;
 			shared_ptr<void> req[5];
-			temporary_directory dir;
 
 			shared_ptr<frontend> create_frontend()
 			{
 				typedef pair< shared_ptr<emulator_>, shared_ptr<frontend> > complex_t;
 
 				auto e2 = make_shared<emulator_>(queue);
-				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session, dir.path(), worker, apartment));
+				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session,
+					make_shared<mocks::profiling_cache>(), worker, apartment));
 				auto f = shared_ptr<frontend>(c, c->second.get());
 
 				e2->outbound = f.get();
@@ -289,7 +289,7 @@ namespace micro_profiler
 			}
 
 
-			test( SessionIsDisconnectedAfterAllMetadataFinallyRequestedIsResponded )
+			test( SessionIsDisconnectedAfterAllMetadataRequestedIsFinallyResponded )
 			{
 				// INIT
 				auto frontend_ = create_frontend();
@@ -326,16 +326,20 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0, disconnections);
+				assert_equal(3u, queue.tasks.size());
 
 				// ACT
+				queue.run_one();
 				queue.run_one();
 				queue.run_one();
 
 				// ASSERT
 				assert_equal(0, disconnections);
+				assert_is_empty(queue.tasks);
+				assert_equal(3u, apartment.tasks.size());
 
 				// ACT
-				queue.run_one();
+				apartment.run_till_end();
 
 				// ASSERT
 				assert_equal(1, disconnections);

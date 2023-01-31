@@ -29,6 +29,19 @@ using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		int generic_protection(uint64_t segment_access)
+		{
+			int value = 0;
+
+			value |= (segment_access & PF_X) ? mapped_region::execute : 0;
+			value |= (segment_access & PF_W) ? mapped_region::write : 0;
+			value |= (segment_access & PF_R) ? mapped_region::read : 0;
+			return value;
+		}
+	}
+
 	void *module::dynamic::find_function(const char *name) const
 	{	return ::dlsym(_handle.get(), name);	}
 
@@ -56,14 +69,10 @@ namespace micro_profiler
 		Dl_info di = { };
 
 		::dladdr(address, &di);
-
-		mapping info = {
+		return mapping {
 			di.dli_fname && *di.dli_fname ? di.dli_fname : executable(),
 			static_cast<byte *>(di.dli_fbase),
-			std::vector<byte_range>()
 		};
-
-		return info;
 	}
 
 	void module::enumerate_mapped(const mapping_callback_t &callback)
@@ -77,12 +86,13 @@ namespace micro_profiler
 				mapping m = {
 					phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : executable(),
 					reinterpret_cast<byte *>(phdr->dlpi_addr),
-					std::vector<byte_range>()
 				};
 
 				for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)
 					if (segment->p_type == PT_LOAD)
-						m.addresses.push_back(byte_range(m.base + segment->p_vaddr, segment->p_memsz));
+						m.regions.push_back(mapped_region {
+							m.base + segment->p_vaddr, segment->p_memsz, generic_protection(segment->p_flags)
+						});
 				if (!access(m.path.c_str(), 0))
 					callback(m);
 				return 0;

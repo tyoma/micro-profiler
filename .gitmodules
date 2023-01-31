@@ -22,10 +22,6 @@
 	path = libraries/wpl.vs
 	url = ../wpl.vs.git
 	branch = origin/master
-[submodule "libraries/freetype2"]
-	path = libraries/freetype2
-	url = ../freetype2.git
-	branch = origin/master
 [submodule "libraries/utfia"]
 	path = libraries/utfia
 	url = ../utfia.git

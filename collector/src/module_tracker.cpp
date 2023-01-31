@@ -77,13 +77,13 @@ namespace micro_profiler
 			if (this_module_file == file_id(mm.path))
 				return;
 
-			const auto persistent_id = register_path(mm.path);
-			auto &mi = _modules_registry.find(persistent_id)->second; // Guaranteed to present after register_path().
+			const auto module_id = register_path(mm.path);
+			auto &mi = _modules_registry.find(module_id)->second; // Guaranteed to present after register_path().
 
 			if (!mi.mapping)
 			{
 				module::mapping_ex m = {
-					persistent_id,
+					module_id,
 					mm.path,
 					reinterpret_cast<uintptr_t>(mm.base),
 					mi.hash
@@ -93,7 +93,7 @@ namespace micro_profiler
 				mi.mapping = mmi;
 				_lqueue.push_back(*mmi);
 			}
-			in_snapshot.insert(persistent_id);
+			in_snapshot.insert(module_id);
 		});
 
 		for (auto i = _modules_registry.begin(); i != _modules_registry.end(); ++i)
@@ -111,9 +111,9 @@ namespace micro_profiler
 		swap(unloaded_modules_, _uqueue);
 	}
 
-	shared_ptr<module::mapping_instance> module_tracker::lock_mapping(unsigned int persistent_id)
+	shared_ptr<module::mapping_instance> module_tracker::lock_mapping(unsigned int module_id)
 	{
-		const auto i = _modules_registry.find(persistent_id);
+		const auto i = _modules_registry.find(module_id);
 
 		if (_modules_registry.end() == i)
 			throw invalid_argument("invalid persistent id");
@@ -124,9 +124,9 @@ namespace micro_profiler
 		return shared_ptr<module::mapping_instance>(l, &l->module_);
 	}
 
-	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int persistent_id) const
+	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int module_id) const
 	{
-		modules_registry_t::const_iterator i = _modules_registry.find(persistent_id);
+		modules_registry_t::const_iterator i = _modules_registry.find(module_id);
 
 		return i != _modules_registry.end() ? load_image_info(i->second.path.c_str()) : 0;
 	}
@@ -138,10 +138,10 @@ namespace micro_profiler
 
 		if (_files_registry.end() == i)
 		{
-			auto persistent_id = _next_persistent_id++;
+			auto module_id = _next_persistent_id++;
 
-			i = _files_registry.insert(make_pair(fid, persistent_id)).first;
-			_modules_registry.insert(make_pair(persistent_id, path));
+			i = _files_registry.insert(make_pair(fid, module_id)).first;
+			_modules_registry.insert(make_pair(module_id, path));
 		}
 		return i->second;
 	}

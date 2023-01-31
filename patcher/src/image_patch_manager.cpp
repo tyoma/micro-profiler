@@ -39,13 +39,13 @@ namespace micro_profiler
 		}
 	}
 
-	void image_patch_manager::query(patch_state &/*states*/, unsigned int /*persistent_id*/)
+	void image_patch_manager::query(patch_state &/*states*/, unsigned int /*module_id*/)
 	{	}
 
-	void image_patch_manager::apply(apply_results &results, unsigned int persistent_id, void *base,
+	void image_patch_manager::apply(apply_results &results, unsigned int module_id, void *base,
 		shared_ptr<void> lock, request_range targets)
 	{
-		auto &image = _patched_images[persistent_id];
+		auto &image = _patched_images[module_id];
 
 		for (auto i = targets.begin(); i != targets.end(); ++i)
 		{
@@ -75,9 +75,9 @@ namespace micro_profiler
 			image.lock = lock;
 	}
 
-	void image_patch_manager::revert(revert_results &results, unsigned int persistent_id, request_range targets)
+	void image_patch_manager::revert(revert_results &results, unsigned int module_id, request_range targets)
 	{
-		auto &image = _patched_images[persistent_id];
+		auto &image = _patched_images[module_id];
 
 		for (auto i = targets.begin(); i != targets.end(); ++i)
 		{

@@ -2,6 +2,7 @@
 
 #include "helpers.h"
 #include "mocks.h"
+#include "mock_cache.h"
 #include "mock_channel.h"
 
 #include <algorithm>
@@ -9,7 +10,6 @@
 #include <frontend/frontend.h>
 #include <frontend/frontend_ui.h>
 #include <strmd/serializer.h>
-#include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
@@ -90,7 +90,6 @@ namespace micro_profiler
 			shared_ptr<tables::statistics> statistics;
 			shared_ptr<tables::modules> modules;
 			shared_ptr<tables::module_mappings> mappings;
-			temporary_directory dir;
 			mocks::queue worker, apartment;
 			function<frontend *(ipc::channel &outbound)> new_frontend;
 
@@ -100,7 +99,7 @@ namespace micro_profiler
 				modules = make_shared<tables::modules>();
 				mappings = make_shared<tables::module_mappings>();
 				new_frontend = [this] (ipc::channel &outbound) {
-					return new frontend(outbound, dir.path(), worker, apartment);
+					return new frontend(outbound, make_shared<mocks::profiling_cache>(), worker, apartment);
 				};
 			}
 

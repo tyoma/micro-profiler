@@ -1,6 +1,7 @@
 #include <scheduler/task_queue.h>
 
 #include <common/time.h>
+#include <cstdint>
 #include <mt/chrono.h>
 #include <mt/thread.h>
 #include <time.h>
@@ -29,14 +30,9 @@ namespace scheduler
 
 			function<mt::milliseconds ()> create_stopwatch()
 			{
-				const auto previous = make_shared<mt::milliseconds>(myclock());
+				auto sw = make_shared<micro_profiler::stopwatch>();
 
-				return [previous] () -> mt::milliseconds {
-					const auto now = myclock();
-					const auto d = now - *previous;
-
-					return *previous = now, d;
-				};
+				return [sw] {	return mt::milliseconds(static_cast<int64_t>(1000 * (*sw)()));	};
 			}
 		}
 
@@ -411,9 +407,9 @@ namespace scheduler
 				queue_ptr queue(create_queue());
 				vector<int> order;
 
-				queue->schedule([&] { }, mt::milliseconds(400));
-				queue->schedule([&] { }, mt::milliseconds(200));
-				queue->schedule([&] { }, mt::milliseconds(300));
+				queue->schedule([&] { }, mt::milliseconds(4000));
+				queue->schedule([&] { }, mt::milliseconds(2000));
+				queue->schedule([&] { }, mt::milliseconds(3000));
 
 				auto stopwatch = create_stopwatch();
 
@@ -422,10 +418,10 @@ namespace scheduler
 				auto t1 = stopwatch();
 
 				// ASSERT
-				assert_approx_equal(mt::milliseconds(200).count(), t1.count(), 0.2);
+				assert_approx_equal(mt::milliseconds(2000).count(), t1.count(), 0.2);
 
 				// INIT
-				clock = mt::milliseconds(80);
+				clock = mt::milliseconds(800);
 				stopwatch = create_stopwatch();
 
 				// ACT
@@ -433,10 +429,10 @@ namespace scheduler
 				auto t2 = stopwatch();
 
 				// ASSERT
-				assert_approx_equal(mt::milliseconds(120).count(), t2.count(), 0.2);
+				assert_approx_equal(mt::milliseconds(1200).count(), t2.count(), 0.2);
 
 				// INIT
-				clock = mt::milliseconds(200);
+				clock = mt::milliseconds(2000);
 				queue->execute_ready(mt::milliseconds(1));
 				stopwatch = create_stopwatch();
 
@@ -445,7 +441,7 @@ namespace scheduler
 				auto t3 = stopwatch();
 
 				// ASSERT
-				assert_approx_equal(mt::milliseconds(100).count(), t3.count(), 0.2);
+				assert_approx_equal(mt::milliseconds(1000).count(), t3.count(), 0.2);
 			}
 
 

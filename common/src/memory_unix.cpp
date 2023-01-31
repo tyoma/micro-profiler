@@ -23,9 +23,25 @@
 #include <new>
 #include <stdexcept>
 #include <sys/mman.h>
+#include <unistd.h>
+
+using namespace std;
 
 namespace micro_profiler
 {
+	namespace
+	{
+		int posix_protection(int protection)
+		{
+			auto value = 0;
+
+			value |= mapped_region::execute & protection ? PROT_EXEC : 0;
+			value |= mapped_region::write & protection ? PROT_WRITE : 0;
+			value |= mapped_region::read & protection ? PROT_READ : 0;
+			return value;
+		}
+	}
+
 	scoped_unprotect::scoped_unprotect(byte_range region)
 		: _region(region)
 	{
@@ -34,11 +50,40 @@ namespace micro_profiler
 		
 		_region = byte_range(page, full_length);
 		if (mprotect(_region.begin(), _region.length(), PROT_EXEC | PROT_READ | PROT_WRITE))
-			throw std::runtime_error("Cannot change protection mode!");
+			throw runtime_error("Cannot change protection mode!");
 	}
 
 	scoped_unprotect::~scoped_unprotect()
 	{	mprotect(_region.begin(), _region.length(), PROT_EXEC | PROT_READ);	}
+
+
+	size_t virtual_memory::granularity()
+	{	return sysconf(_SC_PAGE_SIZE);	}
+
+	void *virtual_memory::allocate(size_t size, int protection)
+	{
+		const auto addr = ::mmap(0, size, posix_protection(protection), MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+		if (MAP_FAILED != addr)
+			return addr;
+		throw bad_alloc();
+	}
+
+	void *virtual_memory::allocate(const void *at, size_t size, int protection)
+	{
+		auto probe = ::mmap(const_cast<void *>(at), size, posix_protection(protection),
+			MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+		if (probe == at)
+			return probe;
+		if (MAP_FAILED == probe)
+			throw bad_alloc(); // Hardly testable. If thrown means the requested (or larger) amount may no longer be tried.
+		free(probe, size);
+		throw bad_fixed_alloc();
+	}
+
+	void virtual_memory::free(void *address, size_t size)
+	{	::munmap(address, size);	}
 
 
 	executable_memory_allocator::block::block(size_t size)
@@ -46,7 +91,7 @@ namespace micro_profiler
 			 MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)), size), _occupied(0)
 	{
 		if (!_region.begin())
-			throw std::bad_alloc();
+			throw bad_alloc();
 	}
 
 	executable_memory_allocator::block::~block()

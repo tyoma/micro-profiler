@@ -42,8 +42,8 @@ namespace micro_profiler
 		module_tracker();
 
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-		std::shared_ptr<module::mapping_instance> lock_mapping(unsigned int persistent_id);
-		metadata_ptr get_metadata(unsigned int persistent_id) const;
+		std::shared_ptr<module::mapping_instance> lock_mapping(unsigned int module_id);
+		metadata_ptr get_metadata(unsigned int module_id) const;
 
 	private:
 		struct module_info
@@ -57,13 +57,13 @@ namespace micro_profiler
 			std::shared_ptr<module::mapping_instance> mapping;
 		};
 
-		typedef containers::unordered_map<unsigned int /*persistent_id*/, module_info> modules_registry_t;
+		typedef containers::unordered_map<unsigned int /*module_id*/, module_info> modules_registry_t;
 
 	private:
-		unsigned int /*persistent_id*/ register_path(const std::string &path);
+		unsigned int /*module_id*/ register_path(const std::string &path);
 
 	private:
-		containers::unordered_map<file_id, unsigned int /*persistent_id*/> _files_registry;
+		containers::unordered_map<file_id, unsigned int /*module_id*/> _files_registry;
 		modules_registry_t _modules_registry;
 		loaded_modules _lqueue;
 		unloaded_modules _uqueue;

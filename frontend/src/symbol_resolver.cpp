@@ -35,20 +35,20 @@ namespace micro_profiler
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
 	{
-		unsigned int persistent_id;
+		unsigned int module_id;
 
-		if (const auto symbol = find_symbol_by_va(address, persistent_id))
+		if (const auto symbol = find_symbol_by_va(address, module_id))
 			return symbol->name;
 		return _empty;
 	}
 
 	bool symbol_resolver::symbol_fileline_by_va(long_address_t address, fileline_t &result) const
 	{
-		unsigned int persistent_id;
+		unsigned int module_id;
 
-		if (const auto symbol = find_symbol_by_va(address, persistent_id))
+		if (const auto symbol = find_symbol_by_va(address, module_id))
 		{
-			const auto i = _file_lines.find(persistent_id);
+			const auto i = _file_lines.find(module_id);
 
 			if (_file_lines.end() != i)
 			{
@@ -61,19 +61,19 @@ namespace micro_profiler
 		return false;
 	}
 
-	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, unsigned int &persistent_id) const
+	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, unsigned int &module_id) const
 	{
 		if (const auto mapping = find_range(sdb::ordered_index_(*_mappings, keyer::base()), address))
 		{
-			auto m = _symbols_ordered.find(persistent_id = mapping->persistent_id);
+			auto m = _symbols_ordered.find(module_id = mapping->module_id);
 
 			if (_symbols_ordered.end() == m)
 			{
-				const auto i = _requests.insert(make_pair(mapping->persistent_id, shared_ptr<void>()));
+				const auto i = _requests.insert(make_pair(mapping->module_id, shared_ptr<void>()));
 
 				if (i.second)
 				{
-					_modules->request_presence(i.first->second, mapping->persistent_id,
+					_modules->request_presence(i.first->second, mapping->module_id,
 						[this, i] (const module_info_metadata &metadata) {
 
 						auto &cached_symbols = _symbols_ordered[i.first->first];
@@ -84,7 +84,7 @@ namespace micro_profiler
 						invalidate();
 						_requests.erase(i.first);
 					});
-					m = _symbols_ordered.find(mapping->persistent_id);
+					m = _symbols_ordered.find(mapping->module_id);
 				}
 			}
 

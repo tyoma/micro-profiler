@@ -25,22 +25,20 @@
 
 #include <algorithm>
 #include <common/memory.h>
+#include <cstdint>
 #include <limits>
 #include <stdexcept>
 
 using namespace std;
 
 extern "C" {
-	extern const void *c_trampoline_proto;
-	extern micro_profiler::byte c_trampoline_size;
-	extern const void *c_jumper_proto;
-	extern micro_profiler::byte c_jumper_size;
+	extern const uint8_t micro_profiler_trampoline_proto;
+	extern const uint8_t micro_profiler_trampoline_proto_end;
 }
 
 namespace micro_profiler
 {
-	const size_t c_trampoline_size = ::c_trampoline_size;
-
+	const size_t c_trampoline_size = &micro_profiler_trampoline_proto_end - &micro_profiler_trampoline_proto;
 
 
 	void initialize_trampoline(void *trampoline_address, const void *target, const void *id,
@@ -48,7 +46,7 @@ namespace micro_profiler
 	{
 		byte_range trampoline(static_cast<byte *>(trampoline_address), c_trampoline_size);
 
-		mem_copy(trampoline.begin(), c_trampoline_proto, trampoline.length());
+		mem_copy(trampoline.begin(), &micro_profiler_trampoline_proto, trampoline.length());
 		replace(trampoline, 1, [interceptor] (...) {	return reinterpret_cast<size_t>(interceptor);	});
 		replace(trampoline, 2, [id] (...) {	return reinterpret_cast<size_t>(id);	});
 		replace(trampoline, 3, [on_enter] (...) {	return reinterpret_cast<size_t>(on_enter);	});

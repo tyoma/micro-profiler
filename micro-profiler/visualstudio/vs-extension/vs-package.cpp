@@ -35,11 +35,14 @@
 #include <frontend/frontend_manager.h>
 #include <frontend/frontend_ui.h>
 #include <frontend/ipc_manager.h>
+#include <frontend/patch_moderator.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <frontend/tables_ui.h>
 #include <logger/log.h>
 #include <scheduler/thread_queue.h>
 #include <scheduler/ui_queue.h>
 #include <setup/environment.h>
+#include <sqlite++/database.h>
 #include <visualstudio/dispatch.h>
 #include <wpl/layout.h>
 #include <wpl/vs/factory.h>
@@ -52,7 +55,7 @@ using namespace placeholders;
 
 namespace micro_profiler
 {
-	extern const string c_cache_directory;
+	extern const string c_preferences_db;
 
 	namespace integration
 	{
@@ -66,7 +69,9 @@ namespace micro_profiler
 		{
 			extern const GUID c_guidGlobalCmdSet = guidGlobalCmdSet;
 			extern const GUID c_guidInstanceCmdSet = guidInstanceCmdSet;
-			extern const GUID UICONTEXT_VCProject = { 0x8BC9CEB8, 0x8B4A, 0x11D0, { 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42 } };
+			extern const GUID UICONTEXT_VCProject = {
+				0x8BC9CEB8, 0x8B4A, 0x11D0, { 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42 }
+			};
 
 
 			class frontend_pane : public frontend_ui, noncopyable
@@ -147,7 +152,8 @@ namespace micro_profiler
 		void profiler_package::initialize(wpl::vs::factory &factory)
 		{
 			CComPtr<profiler_package> self = this;
-			auto processes = make_shared<process_explorer>(mt::milliseconds(200), *_ui_queue, _clock);
+			const auto processes = make_shared<process_explorer>(mt::milliseconds(200), *_ui_queue, _clock);
+			const auto cache = make_shared<profiling_cache_sqlite>(c_preferences_db, *_worker_queue);
 
 			obtain_service<_DTE>([self] (CComPtr<_DTE> p) {
 				LOG(PREAMBLE "DTE obtained...") % A(p);
@@ -155,20 +161,22 @@ namespace micro_profiler
 			});
 			setup_factory(factory);
 			register_path(*processes, false);
-			_frontend_manager.reset(new frontend_manager([this] (ipc::channel &outbound) {
-				return new frontend(outbound, c_cache_directory, *_worker_queue, *_ui_queue);
-			}, [this] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
+			_frontend_manager.reset(new frontend_manager([this, cache] (ipc::channel &outbound) {
+				return new frontend(outbound, cache, *_worker_queue, *_ui_queue);
+			}, [this, cache] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
+				const auto moderator = make_shared<patch_moderator>(session, cache, cache, *_worker_queue, *_ui_queue);
 				const auto ui = make_shared<frontend_pane>(get_factory(), session, _configuration, _ui_queue);
+				const auto complex = make_shared_copy(make_pair(moderator, ui));
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
-				return ui;
+				return shared_ptr<frontend_ui>(complex, ui.get());
 			}));
 			_ipc_manager.reset(new ipc_manager(_frontend_manager,
 				*_ui_queue,
 				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 				&constants::integrated_frontend_id));
-			setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()).c_str(),
-				1);
+			setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost,
+				_ipc_manager->get_sockets_port()).c_str(), 1);
 			init_menu(processes);
 		}
 
@@ -200,7 +208,8 @@ namespace micro_profiler
 				VSITEMID itemid;
 				CComPtr<IVsWindowFrame> frame;
 
-				if (od->OpenDocumentViaProject(unicode(file).c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame), !!frame)
+				if (od->OpenDocumentViaProject(unicode(file).c_str(), LOGVIEWID_Code, &sp, &hierarchy, &itemid, &frame),
+					!!frame)
 				{
 					CComPtr<IVsCodeWindow> window;
 

@@ -656,7 +656,7 @@ namespace micro_profiler
 				assert_equal("libls.ex.dylib", normalize::lib("ls.ex"));
 				assert_equal("libls.exe.test.dylib", normalize::lib("ls.exe.test"));
 				assert_equal("test/libls.dylib", normalize::lib("test/ls"));
-				assert_equal("test/test/libls.eX.dylib", normalize::lib("test\\test/ls.eX"));
+				assert_equal("test\\test/libls.eX.dylib", normalize::lib("test\\test/ls.eX"));
 				assert_equal("subpath/libls.ex.dylib", normalize::lib("subpath/ls.ex"));
 #else
 				assert_equal("libls.so", normalize::lib("ls"));

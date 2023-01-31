@@ -39,7 +39,7 @@ namespace micro_profiler
 	class threads_model : public wpl::list_model<std::string>, noncopyable
 	{
 	public:
-		enum {	all = static_cast<id_t>(-2), cumulative = static_cast<id_t>(-1),	};
+		enum {	all = -2, cumulative = -1,	};
 
 	public:
 		threads_model(std::shared_ptr<const tables::threads> threads);

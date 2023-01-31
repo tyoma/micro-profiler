@@ -19,7 +19,13 @@
 #	THE SOFTWARE.
 
 .text
-	trampoline_proto:	# argument passing: RDI, RSI, RDX, RCX, R8, and R9, <stack>
+	.globl micro_profiler_trampoline_proto, micro_profiler_trampoline_proto_end
+	.globl _micro_profiler_trampoline_proto, _micro_profiler_trampoline_proto_end
+	.globl micro_profiler_jumper_proto, micro_profiler_jumper_proto_end
+	.globl _micro_profiler_jumper_proto, _micro_profiler_jumper_proto_end
+
+	micro_profiler_trampoline_proto:	# argument passing: RDI, RSI, RDX, RCX, R8, and R9, <stack>
+	_micro_profiler_trampoline_proto:
 		push	%ecx
 		push	%edx
 		rdtsc
@@ -49,17 +55,11 @@
 		mov	%eax, 0x04(%esp) # restore return address
 		pop	%eax
 		ret
-	trampoline_proto_end:
+	micro_profiler_trampoline_proto_end:
+	_micro_profiler_trampoline_proto_end:
 
-	jumper_proto:
-		jmp	jumper_proto_end + 0x31415981 # trampoline address (displacement)
-	jumper_proto_end:
-
-.data
-	c_trampoline_proto: .int trampoline_proto
-	c_trampoline_size: .byte (trampoline_proto_end - trampoline_proto)
-	c_jumper_proto: .int jumper_proto
-	c_jumper_size: .byte (jumper_proto_end - jumper_proto)
-
-	.global c_trampoline_proto, c_trampoline_size
-	.global c_jumper_proto, c_jumper_size
+	micro_profiler_jumper_proto:
+	_micro_profiler_jumper_proto:
+		jmp	micro_profiler_jumper_proto_end + 0x31415981 # trampoline address (displacement)
+	micro_profiler_jumper_proto_end:
+	_micro_profiler_jumper_proto_end:

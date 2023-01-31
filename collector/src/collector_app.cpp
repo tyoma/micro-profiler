@@ -79,10 +79,10 @@ namespace micro_profiler
 		});
 
 		session.add_handler(request_module_metadata,
-			[module_tracker_, metadata] (response &resp, unsigned int persistent_id) {
+			[module_tracker_, metadata] (response &resp, unsigned int module_id) {
 
-			const auto l = module_tracker_->lock_mapping(persistent_id);
-			const auto metadata_ = module_tracker_->get_metadata(persistent_id);
+			const auto l = module_tracker_->lock_mapping(module_id);
+			const auto metadata_ = module_tracker_->get_metadata(module_id);
 			auto &md = *metadata;
 
 			metadata->path = l->second.path;

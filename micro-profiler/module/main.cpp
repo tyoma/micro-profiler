@@ -26,6 +26,8 @@
 #include <common/path.h>
 #include <common/string.h>
 #include <direct.h>
+#include <frontend/frontend.h>
+#include <frontend/profiling_cache_sqlite.h>
 #include <ipc/com/endpoint.h>
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
@@ -40,7 +42,7 @@ namespace micro_profiler
 	class Module : public CAtlDllModuleT<Module> { } g_module;
 
 	const string c_logname = "micro-profiler_vspackage.log";
-	extern const string c_cache_directory = constants::data_directory() & "cache";
+	extern const string c_preferences_db = constants::data_directory() & "preferences.db";
 	HINSTANCE g_instance;
 	unique_ptr<log::multithreaded_logger> g_logger;
 
@@ -92,7 +94,6 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 
 		g_instance = hinstance;
 		mkdir(constants::data_directory().c_str());
-		mkdir(c_cache_directory.c_str());
 		g_logger.reset(new log::multithreaded_logger(log::create_writer(constants::data_directory() & c_logname),
 			&get_datetime));
 		log::g_logger = g_logger.get();
@@ -100,6 +101,8 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 		const string self = module::locate(&c_logname).path;
 		const string exe = module::executable();
 		const file_version vs = get_file_version(exe);
+
+		profiling_cache_sqlite::create_database(c_preferences_db);
 
 		LOG(PREAMBLE "loaded...")
 			% A(getpid()) % A(self) % A(exe)

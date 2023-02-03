@@ -73,7 +73,7 @@ namespace micro_profiler
 		unordered_set<unsigned> in_snapshot;
 		file_id this_module_file(c_this_module_path);
 
-		module::enumerate_mapped([&] (const module::mapping &mm) {
+		module::notify([&] (const module::mapping &mm) {
 			if (this_module_file == file_id(mm.path))
 				return;
 
@@ -94,7 +94,7 @@ namespace micro_profiler
 				_lqueue.push_back(*mmi);
 			}
 			in_snapshot.insert(module_id);
-		});
+		}, [] (const void *) {	});
 
 		for (auto i = _modules_registry.begin(); i != _modules_registry.end(); ++i)
 		{
@@ -130,6 +130,13 @@ namespace micro_profiler
 
 		return i != _modules_registry.end() ? load_image_info(i->second.path.c_str()) : 0;
 	}
+
+	shared_ptr<void> module_tracker::notify(events &/*events_*/)
+	{
+		throw 0;
+	}
+
+
 
 	unsigned int module_tracker::register_path(const string &path)
 	{

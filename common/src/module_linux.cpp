@@ -20,10 +20,14 @@
 
 #include <common/module.h>
 
+#include <common/file_id.h>
 #include <dlfcn.h>
 #include <link.h>
+#include <mt/event.h>
+#include <mt/thread.h>
 #include <stdexcept>
 #include <unistd.h>
+#include <unordered_map>
 
 using namespace std;
 
@@ -31,6 +35,8 @@ namespace micro_profiler
 {
 	namespace
 	{
+		const mt::milliseconds c_mapping_monitor_interval(100);
+
 		int generic_protection(uint64_t segment_access)
 		{
 			int value = 0;
@@ -41,6 +47,27 @@ namespace micro_profiler
 			return value;
 		}
 	}
+
+	class module::tracker
+	{
+	public:
+		tracker(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped);
+		~tracker();
+
+	private:
+		static int on_module(dl_phdr_info *phdr, size_t, void *cb);
+		void on_module(const module::mapping &m);
+
+	private:
+		mt::event _exit;
+		const module::mapping_callback_t _mapped;
+		const module::unmapping_callback_t _unmapped;
+		unordered_map< file_id, pair<module::mapping, bool /*deleted*/> > _mappings;
+		module::mapping _tmp_mapping;
+		unique_ptr<mt::thread> _monitor;
+	};
+
+
 
 	void *module::dynamic::find_function(const char *name) const
 	{	return ::dlsym(_handle.get(), name);	}
@@ -75,30 +102,70 @@ namespace micro_profiler
 		};
 	}
 
-	void module::enumerate_mapped(const mapping_callback_t &callback)
+	shared_ptr<void> module::notify(mapping_callback_t mapped, module::unmapping_callback_t unmapped)
+	{	return make_shared<tracker>(mapped, unmapped);	}
+
+
+	module::tracker::tracker(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped)
+		: _mapped(mapped), _unmapped(unmapped)
 	{
-		struct local
-		{
-			static int on_phdr(dl_phdr_info *phdr, size_t, void *cb)
+		::dl_iterate_phdr(&tracker::on_module, this);
+		_monitor.reset(new mt::thread([this] {
+			while (!_exit.wait(c_mapping_monitor_interval))
 			{
-				int n = phdr->dlpi_phnum;
-				const mapping_callback_t &callback = *static_cast<const mapping_callback_t *>(cb);
-				mapping m = {
-					phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : executable(),
-					reinterpret_cast<byte *>(phdr->dlpi_addr),
-				};
-
-				for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)
-					if (segment->p_type == PT_LOAD)
-						m.regions.push_back(mapped_region {
-							m.base + segment->p_vaddr, segment->p_memsz, generic_protection(segment->p_flags)
-						});
-				if (!access(m.path.c_str(), 0))
-					callback(m);
-				return 0;
+				for (auto &i : _mappings)
+					i.second.second = true;
+				::dl_iterate_phdr(&tracker::on_module, this);
+				for (auto i = _mappings.begin(); i != _mappings.end(); )
+					if (i->second.second)
+						_unmapped(i->second.first.base), i = _mappings.erase(i);
+					else
+						i++;
 			}
-		};
+		}));
+	}
 
-		::dl_iterate_phdr(&local::on_phdr, const_cast<mapping_callback_t *>(&callback));
+	module::tracker::~tracker()
+	{
+		_exit.set();
+		_monitor->join();
+	}
+
+	int module::tracker::on_module(dl_phdr_info *phdr, size_t, void *cb)
+	{
+		auto n = phdr->dlpi_phnum;
+		auto &self = *static_cast<tracker *>(cb);
+		auto &m = self._tmp_mapping;
+
+		m.path = phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : module::executable();
+		m.base = reinterpret_cast<byte *>(phdr->dlpi_addr);
+		m.regions.clear();
+		for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)
+			if (segment->p_type == PT_LOAD)
+				m.regions.push_back(mapped_region {
+					m.base + segment->p_vaddr, segment->p_memsz, generic_protection(segment->p_flags)
+				});
+		if (!access(m.path.c_str(), 0))
+			self.on_module(m);
+		return 0;
+	}
+
+	void module::tracker::on_module(const module::mapping &m)
+	{
+		file_id id(m.path);
+		const auto i = _mappings.find(id);
+
+		if (i == _mappings.end())
+		{
+			_mapped(m);
+			_mappings.emplace(id, make_pair(m, false));
+			return;
+		}
+		else if (m.base != i->second.first.base)
+		{
+			_unmapped(i->second.first.base);
+			_mapped(i->second.first = m);
+		}
+		i->second.second = false;
 	}
 }

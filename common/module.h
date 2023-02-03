@@ -51,12 +51,16 @@ namespace micro_profiler
 		};
 
 		typedef std::function<void (const mapping &m)> mapping_callback_t;
+		typedef std::function<void (const void *base)> unmapping_callback_t;
 		typedef std::pair<unsigned int /*instance_id*/, mapping_ex> mapping_instance;
 
 		static std::shared_ptr<dynamic> load(const std::string &path);
 		static std::string executable();
 		static mapping locate(const void *address);
-		static void enumerate_mapped(const mapping_callback_t &callback);
+		static std::shared_ptr<void> notify(mapping_callback_t mapped, unmapping_callback_t unmapped);
+
+	private:
+		class tracker;
 	};
 
 	class module::dynamic

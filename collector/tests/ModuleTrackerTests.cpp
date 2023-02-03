@@ -25,6 +25,18 @@ namespace micro_profiler
 
 			const int dummy = 0;
 
+			struct tracker_event : module_tracker::events
+			{
+				function<void (id_t mapping_id, id_t module_id, const module::mapping &m)> on_mapped;
+				function<void (id_t mapping_id)> on_unmapped;
+
+				virtual void mapped(id_t mapping_id, id_t module_id, const module::mapping &m) override
+				{	if (on_mapped) on_mapped(mapping_id, module_id, m);	}
+
+				virtual void unmapped(id_t mapping_id) override
+				{	if (on_unmapped) on_unmapped(mapping_id);	}
+			};
+
 			shared_ptr<symbol_info> get_function_containing(metadata_t &ii, const char *name_part)
 			{
 				shared_ptr<symbol_info> symbol;
@@ -47,12 +59,13 @@ namespace micro_profiler
 
 		begin_test_suite( ModuleTrackerTests )
 			temporary_directory dir;
-			string module1_path, module2_path;
+			string module1_path, module2_path, module3_path;
 
 			init( Init )
 			{
 				module1_path = dir.copy_file(c_symbol_container_1);
 				module2_path = dir.copy_file(c_symbol_container_2);
+				module3_path = dir.copy_file(c_symbol_container_3_nosymbols);
 			}
 
 
@@ -513,6 +526,34 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_throws(t.lock_mapping(1500), invalid_argument);
+			}
+
+
+			ignored_test( SubscribingToTrackingNotificationListsLoadedModules )
+			{
+				// INIT
+				tracker_event e1, e2, e3;
+				module_tracker t;
+
+				// INIT / ACT
+				auto n1 = t.notify(e1);
+
+				// INIT
+				unique_ptr<image> image1(new image(module1_path));
+
+				// INIT / ACT
+				auto n2 = t.notify(e2);
+
+				// ASSERT
+
+				// INIT
+				unique_ptr<image> image2(new image(module2_path));
+				unique_ptr<image> image3(new image(module3_path));
+
+				// INIT / ACT
+				auto n3 = t.notify(e3);
+
+				// ASSERT
 			}
 		end_test_suite
 	}

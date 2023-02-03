@@ -3,8 +3,11 @@
 #include <common/file_id.h>
 
 #include <iterator>
+#include <mt/event.h>
+#include <mt/mutex.h>
 #include <mt/thread.h>
 #include <test-helpers/constants.h>
+#include <test-helpers/file_helpers.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -25,7 +28,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			struct less_module
+			struct mapping_less
 			{
 				bool operator ()(const module::mapping &lhs, const module::mapping &rhs) const
 				{
@@ -55,9 +58,29 @@ namespace micro_profiler
 					modules.push_back(m);
 				}
 			}
+
+			template <typename ContainerT>
+			const module::mapping *find_module(const ContainerT &modules, const void *base)
+			{
+				auto match = find_if(begin(modules), end(modules), [base] (const module::mapping &m) {
+					return m.base == base;
+				});
+				return match != end(modules) ? &*match : nullptr;
+			}
 		}
 
 		begin_test_suite( ImageUtilitiesTests )
+
+			temporary_directory dir;
+			string module1_path, module2_path, module3_path;
+
+			init( CreateTemporaryModules )
+			{
+				module1_path = dir.copy_file(c_symbol_container_1);
+				module2_path = dir.copy_file(c_symbol_container_2);
+				module3_path = dir.copy_file(c_symbol_container_3_nosymbols);
+			}
+
 
 			test( ImageInfoIsEvaluatedByImageLoadAddress )
 			{
@@ -107,61 +130,78 @@ namespace micro_profiler
 			}
 
 
-			test( EnumeratingModulesListsLoadedModules )
+			test( SubscribingToModuleEventsListsEverythingLoaded )
 			{
 				// INIT
-				vector<module::mapping> modules;
+				auto unmapped = [] (const void *) {};
+				unique_ptr<image> img1(new image(module1_path));
+				auto img1_base = img1->base_ptr();
+				unique_ptr<image> img2(new image(module2_path));
+				auto img2_base = img2->base_ptr();
+				unique_ptr<image> img3(new image(module3_path));
+				auto img3_base = img3->base_ptr();
+				vector<module::mapping> mappings1, mappings2;
+				const module::mapping *match;
 
 				// ACT
-				image img1(c_symbol_container_1);
-				module::enumerate_mapped(bind(&filter_modules< vector<module::mapping> >, ref(modules), _1));
+				auto s1 = module::notify([&] (module::mapping m) {	mappings1.push_back(m);	}, unmapped);
 
 				// ASSERT
-				assert_equal(1u, modules.size());
-				assert_is_true(is_address_inside(modules[0].regions, img1.get_symbol_address("get_function_addresses_1")));
-				assert_equal(file_id(img1.absolute_path()), file_id(modules[0].path));
-				assert_equal((byte *)img1.base(), modules[0].base);
+				assert_not_null(match = find_module(mappings1, img1_base));
+				assert_equal(file_id(module1_path), file_id(match->path));
+				assert_not_null(match = find_module(mappings1, img2_base));
+				assert_equal(file_id(module2_path), file_id(match->path));
+				assert_not_null(match = find_module(mappings1, img3_base));
+				assert_equal(file_id(module3_path), file_id(match->path));
 
 				// INIT
-				modules.clear();
+				img1.reset();
+				img3.reset();
 
 				// ACT
-				image img2(c_symbol_container_2);
-				image img3(c_symbol_container_3_nosymbols);
-				module::enumerate_mapped(bind(&filter_modules< vector<module::mapping> >, ref(modules), _1));
+				auto s2 = module::notify([&] (module::mapping m) {	mappings2.push_back(m);	}, unmapped);
 
 				// ASSERT
-				assert_equal(3u, modules.size());
-
-				sort(modules.begin(), modules.end(), less_module());
-
-				assert_is_true(is_address_inside(modules[1].regions, img2.get_symbol_address("get_function_addresses_2")));
-				assert_equal(file_id(img2.absolute_path()), file_id(modules[1].path));
-				assert_equal((byte *)img2.base(), modules[1].base);
-
-				assert_is_true(is_address_inside(modules[2].regions, img3.get_symbol_address("get_function_addresses_3")));
-				assert_equal(file_id(img3.absolute_path()), file_id(modules[2].path));
-				assert_equal((byte *)img3.base(), modules[2].base);
+				assert_null(find_module(mappings2, img1_base));
+				assert_not_null(match = find_module(mappings2, img2_base));
+				assert_equal(file_id(module2_path), file_id(match->path));
+				assert_null(find_module(mappings2, img3_base));
 			}
 
 
-			test( EnumeratingModulesDropsUnloadedModules )
+			test( LoadedModulesAreNotifiedUponLoad )
 			{
 				// INIT
-				vector<module::mapping> modules;
-
-				image img1(c_symbol_container_1);
-				unique_ptr<image> img2(new image(c_symbol_container_2));
-				image img3(c_symbol_container_3_nosymbols);
-
-				string unloaded = img2->absolute_path();
+				const module::mapping *match;
+				vector<module::mapping> mappings;
+				auto wait_for = -1;
+				mt::event ready;
+				auto s = module::notify([&] (module::mapping m) {
+					mappings.push_back(m);
+					if (!--wait_for)
+						ready.set();
+				}, [] (const void *) {});
 
 				// ACT
-				img2.reset();
-				module::enumerate_mapped(bind(&filter_modules< vector<module::mapping> >, ref(modules), _1));
+				wait_for = 1;
+				image img2(module2_path);
+				ready.wait();
 
 				// ASSERT
-				assert_equal(2u, modules.size());
+				assert_not_null(match = find_module(mappings, img2.base_ptr()));
+				assert_equal(file_id(module2_path), file_id(match->path));
+
+				// ACT
+				wait_for = 2;
+				image img1(module1_path);
+				image img3(module3_path);
+				ready.wait();
+
+				// ASSERT
+				assert_not_null(match = find_module(mappings, img1.base_ptr()));
+				assert_equal(file_id(module1_path), file_id(match->path));
+				assert_not_null(match = find_module(mappings, img3.base_ptr()));
+				assert_equal(file_id(module3_path), file_id(match->path));
 			}
 
 
@@ -179,10 +219,7 @@ namespace micro_profiler
 				});
 				mt::thread t2([&] {
 					while (!exit)
-					{
-						module::enumerate_mapped([] (const module::mapping &/*module*/) {
-						});
-					}
+						module::notify([&] (const module::mapping &) {	}, [] (const void *) {});
 				});
 
 				// ACT / ASSERT (does not crash)
@@ -190,6 +227,96 @@ namespace micro_profiler
 				exit = true;
 				t1.join();
 				t2.join();
+			}
+
+
+			test( UnloadingModulesLeadsToUnmapNotifications )
+			{
+				// INIT
+				vector<const void *> unmapped;
+				unique_ptr<image> img1(new image(module1_path));
+				const void *img1_base = img1->base_ptr();
+				unique_ptr<image> img2(new image(module2_path));
+				const void *img2_base = img2->base_ptr();
+				unique_ptr<image> img3(new image(module3_path));
+				const void *img3_base = img3->base_ptr();
+				auto wait_for = -1;
+				mt::event ready;
+				auto s = module::notify([] (module::mapping) {	}, [&] (const void *base) {
+					unmapped.push_back(base);
+					if (!--wait_for)
+						ready.set();
+				});
+
+				// ACT
+				wait_for = 1;
+				img2.reset();
+				ready.wait();
+
+				// ASSERT
+				assert_equivalent(plural + img2_base, unmapped);
+
+				// ACT
+				wait_for = 2;
+				img1.reset();
+				img3.reset();
+				ready.wait();
+
+				// ASSERT
+				assert_equivalent(plural + img1_base + img2_base + img3_base, unmapped);
+			}
+
+
+			test( NotificationsAreNotSentAfterSubscriptionIsReset )
+			{
+				// INIT
+				vector<module::mapping> mappings;
+				auto s = module::notify([&] (module::mapping m) {	mappings.push_back(m);	}, [] (const void *) {});
+				unique_ptr<image> img1(new image(module1_path));
+
+				mappings.clear();
+
+				// ACT
+				s.reset();
+				image img2(module2_path);
+				image img3(module3_path);
+				img1.reset();
+
+				// ASSERT
+				assert_is_empty(mappings);
+			}
+
+
+			test( MappingMoveGeneratesUnmapMapPairs )
+			{
+				// INIT
+				vector<const void *> addresses;
+				unique_ptr<image> img(new image(module1_path));
+				void *img_base = img->base_ptr();
+				auto wait_for = -1;
+				mt::event ready;
+				auto s = module::notify([&] (module::mapping m) {
+					addresses.push_back(m.base);
+					if (!--wait_for)
+						ready.set();
+				}, [&] (const void *base) {
+					addresses.push_back(base);
+					if (!--wait_for)
+						ready.set();
+				});
+
+				addresses.clear();
+
+				// ACT
+				wait_for = 2;
+				img.reset();
+				auto o = occupy_memory(img_base);
+				img.reset(new image(module1_path));
+				ready.wait();
+
+				// ASSERT
+				assert_equal(plural + static_cast<const void *>(img_base) + static_cast<const void *>(img->base_ptr()),
+					addresses);
 			}
 		end_test_suite
 	}

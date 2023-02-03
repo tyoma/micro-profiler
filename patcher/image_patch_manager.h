@@ -23,6 +23,7 @@
 #include "function_patch.h"
 #include "interface.h"
 
+#include <common/module.h>
 #include <common/noncopyable.h>
 #include <common/range.h>
 #include <functional>
@@ -40,7 +41,10 @@ namespace micro_profiler
 		template <typename InterceptorT>
 		image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator_);
 
-		void detach_all();
+		void unmap_all();
+
+		virtual void map_module(id_t mapping_id, id_t module_id, const module::mapping &mapping) override;
+		virtual void unmap_module(id_t mapping_id) override;
 
 		virtual void query(patch_state &states, unsigned int module_id) override;
 		virtual void apply(apply_results &results, unsigned int module_id, void *base, std::shared_ptr<void> lock,

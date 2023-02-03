@@ -21,6 +21,7 @@
 #include <common/module.h>
 
 #include <dlfcn.h>
+#include <list>
 #include <mach-o/dyld.h>
 #include <mt/mutex.h>
 #include <stdexcept>
@@ -34,15 +35,16 @@ namespace micro_profiler
 	{
 		struct address_hash_eq
 		{
-			size_t operator ()(const module::mapping& item) const
+			size_t operator ()(const module::mapping &item) const
 			{	return reinterpret_cast<size_t>(item.base);	}
 
-			bool operator ()(const module::mapping& lhs, const module::mapping& rhs) const
+			bool operator ()(const module::mapping &lhs, const module::mapping &rhs) const
 			{	return lhs.base == rhs.base;	}
 		};
 
 		mt::mutex g_mapping_mutex;
-		std::unordered_set<module::mapping, address_hash_eq, address_hash_eq> g_mappings;
+		unordered_set<module::mapping, address_hash_eq, address_hash_eq> g_mappings;
+		list< pair<module::mapping_callback_t, module::unmapping_callback_t> > g_callbacks;
 
 		struct notifier_init
 		{
@@ -52,6 +54,20 @@ namespace micro_profiler
 				_dyld_register_func_for_remove_image(&on_remove_image);
 			}
 
+			static shared_ptr<void> notify(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped)
+			{
+				mt::lock_guard<mt::mutex> l(g_mapping_mutex);
+				auto i = g_callbacks.insert(g_callbacks.end(), make_pair(mapped, unmapped));
+				auto handle = shared_ptr<void>(&*i, [i] (void *) {
+					mt::lock_guard<mt::mutex> l(g_mapping_mutex);
+					g_callbacks.erase(i);
+				});
+				
+				for (const auto &m : g_mappings)
+					mapped(m);
+				return handle;
+			}
+			
 			static void on_add_image(const mach_header *, intptr_t base)
 			{
 				mt::lock_guard<mt::mutex> l(g_mapping_mutex);
@@ -60,7 +76,10 @@ namespace micro_profiler
 				dladdr(reinterpret_cast<void *>(base), &dinfo);
 				if (!dinfo.dli_fbase)
 					return;
-				g_mappings.insert(module::mapping {	dinfo.dli_fname, reinterpret_cast<byte *>(base),	});
+				module::mapping m = {	dinfo.dli_fname, reinterpret_cast<byte *>(base),	};
+				g_mappings.insert(m);
+				for (const auto &i : g_callbacks)
+					i.first(m);
 			}
 
 			static void on_remove_image(const mach_header *, intptr_t base)
@@ -68,9 +87,19 @@ namespace micro_profiler
 				mt::lock_guard<mt::mutex> l(g_mapping_mutex);
 
 				g_mappings.erase(module::mapping {	string(), reinterpret_cast<byte *>(base),	});
+				for (const auto &i : g_callbacks)
+					i.second(reinterpret_cast<byte *>(base));
 			}
 		} g_init;
 	}
+
+	class module::tracker
+	{
+	public:
+		tracker(mapping_callback_t mapped, unmapping_callback_t unmapped);
+		~tracker();
+
+	};
 
 	void *module::dynamic::find_function(const char *name) const
 	{	return ::dlsym(_handle.get(), name);	}
@@ -114,11 +143,6 @@ namespace micro_profiler
 		return info;
 	}
 
-	void module::enumerate_mapped(const mapping_callback_t& callback)
-	{
-		mt::lock_guard<mt::mutex> l(g_mapping_mutex);
-
-		for (auto& i : g_mappings)
-			callback(i);
-	}
+	shared_ptr<void> module::notify(mapping_callback_t mapped, unmapping_callback_t unmapped)
+	{	return notifier_init::notify(mapped, unmapped);	}
 }

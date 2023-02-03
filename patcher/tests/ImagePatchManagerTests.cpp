@@ -29,7 +29,7 @@ namespace micro_profiler
 				{	}
 
 				~detacher()
-				{	_manager.detach_all();	}
+				{	_manager.unmap_all();	}
 
 			private:
 				image_patch_manager &_manager;

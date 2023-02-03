@@ -37,6 +37,7 @@ namespace micro_profiler
 	public:
 		typedef image_info metadata_t;
 		typedef std::shared_ptr<const metadata_t> metadata_ptr;
+		struct events;
 
 	public:
 		module_tracker();
@@ -44,6 +45,7 @@ namespace micro_profiler
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 		std::shared_ptr<module::mapping_instance> lock_mapping(unsigned int module_id);
 		metadata_ptr get_metadata(unsigned int module_id) const;
+		std::shared_ptr<void> notify(events &events_);
 
 	private:
 		struct module_info
@@ -68,5 +70,11 @@ namespace micro_profiler
 		loaded_modules _lqueue;
 		unloaded_modules _uqueue;
 		unsigned int _next_instance_id, _next_persistent_id;
+	};
+
+	struct module_tracker::events
+	{
+		virtual void mapped(id_t mapping_id, id_t module_id, const module::mapping &m) = 0;
+		virtual void unmapped(id_t mapping_id) = 0;
 	};
 }

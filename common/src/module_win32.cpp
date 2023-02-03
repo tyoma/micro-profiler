@@ -24,6 +24,7 @@
 #include <common/noncopyable.h>
 #include <common/string.h>
 #include <memory>
+#include <mt/mutex.h>
 #include <windows.h>
 #include <tlhelp32.h>
 
@@ -33,6 +34,34 @@ namespace micro_profiler
 {
 	namespace
 	{
+		struct UNICODE_STRING {
+			USHORT Length;
+			USHORT MaximumLength;
+			PWCH Buffer;
+		};
+
+		struct LDR_DLL_LOADED_NOTIFICATION_DATA {
+			ULONG Flags;
+			const UNICODE_STRING *FullDllName;
+			const UNICODE_STRING *BaseDllName;
+			void *DllBase;
+			ULONG SizeOfImage;
+		};
+
+		struct LDR_DLL_UNLOADED_NOTIFICATION_DATA {
+			ULONG Flags;
+			const UNICODE_STRING *FullDllName;
+			const UNICODE_STRING *BaseDllName;
+			void *DllBase;
+			ULONG SizeOfImage;
+		};
+
+		union LDR_DLL_NOTIFICATION_DATA {
+			LDR_DLL_LOADED_NOTIFICATION_DATA Loaded;
+			LDR_DLL_UNLOADED_NOTIFICATION_DATA Unloaded;
+		};
+
+
 		int generic_protection(DWORD win32_protection)
 		{
 			switch (win32_protection)
@@ -91,6 +120,23 @@ namespace micro_profiler
 		}
 	}
 
+	class module::tracker
+	{
+	public:
+		tracker(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped);
+		~tracker();
+
+	private:
+		static void CALLBACK on_module(ULONG reason, const LDR_DLL_NOTIFICATION_DATA *data, void *context);
+
+	private:
+		shared_ptr<module::dynamic> _ntdll;
+		NTSTATUS (NTAPI *_unregister)(void *cookie);
+		module::mapping_callback_t _mapped;
+		module::unmapping_callback_t _unmapped;
+		void *_cookie;
+	};
+
 
 
 	void *module::dynamic::find_function(const char *name) const
@@ -124,8 +170,44 @@ namespace micro_profiler
 		return info;
 	}
 
-	void module::enumerate_mapped(const mapping_callback_t &callback)
-	{	modules_enumerate_mapped(::GetCurrentProcess(), callback);	}
+	shared_ptr<void> module::notify(mapping_callback_t mapped, module::unmapping_callback_t unmapped)
+	{	return make_shared<tracker>(mapped, unmapped);	}
+
+
+	module::tracker::tracker(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped)
+		: _ntdll(module::load("ntdll")), _unregister(_ntdll / "LdrUnregisterDllNotification"),
+			_mapped(mapped), _unmapped(unmapped)
+	{
+		NTSTATUS (NTAPI *register_)(ULONG flags, decltype(&tracker::on_module) callback, void *context,
+			void **cookie) = _ntdll / "LdrRegisterDllNotification";
+
+		register_(0, on_module, this, &_cookie);
+		modules_enumerate_mapped(::GetCurrentProcess(), mapped);
+	}
+
+	module::tracker::~tracker()
+	{	_unregister(_cookie);	}
+
+	void CALLBACK module::tracker::on_module(ULONG reason, const LDR_DLL_NOTIFICATION_DATA *data, void *context)
+	{
+		auto self = static_cast<tracker *>(context);
+
+		switch (reason)
+		{
+		case 2: // LDR_DLL_NOTIFICATION_REASON_UNLOADED
+			self->_unmapped(data->Unloaded.DllBase);
+			break;
+
+		case 1: // LDR_DLL_NOTIFICATION_REASON_LOADED
+			module::mapping m = {
+				unicode(data->Loaded.FullDllName->Buffer), static_cast<byte *>(data->Loaded.DllBase),
+			};
+
+			self->_mapped(m);
+			break;
+		}
+	}
+
 
 	void modules_enumerate_mapped(HANDLE hprocess, const module::mapping_callback_t &callback)
 	{

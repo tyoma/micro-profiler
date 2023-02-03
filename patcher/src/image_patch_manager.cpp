@@ -30,13 +30,21 @@ namespace micro_profiler
 		: patches_applied(0)
 	{	}
 
-	void image_patch_manager::detach_all()
+	void image_patch_manager::unmap_all()
 	{
 		for (auto i = _patched_images.begin(); i != _patched_images.end(); ++i)
 		{
 			for (auto j = i->second.patched.begin(); j != i->second.patched.end(); ++j)
 				j->second->detach();
 		}
+	}
+
+	void image_patch_manager::map_module(id_t /*mapping_id*/, id_t /*module_id*/, const module::mapping &/*mapping*/)
+	{
+	}
+
+	void image_patch_manager::unmap_module(id_t /*mapping_id*/)
+	{
 	}
 
 	void image_patch_manager::query(patch_state &/*states*/, unsigned int /*module_id*/)

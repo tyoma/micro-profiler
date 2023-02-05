@@ -66,24 +66,24 @@ namespace micro_profiler
 			if (!get())
 				throw runtime_error(("Cannot load module '" + path + "' specified!").c_str());
 
-            Dl_info di = { };
+			Dl_info di = { };
+
 #ifndef __APPLE__
 			void *addr = find_any_mapped_for(*path);
 
 			if (!addr)
 				addr = get();
 #else
-            void *addr = nullptr;
-            
-            for (auto n = ::_dyld_image_count(); !addr && n--; )
-            {
-                if (file_id(::_dyld_get_image_name(n)) == file_id(path))
-                    addr = reinterpret_cast<byte *>(::_dyld_get_image_vmaddr_slide(n));
-            }
+			void *addr = get_symbol_address("track_unload"); // A symbol known to be present.
 #endif
+
 			::dladdr(addr, &di);
 			_base = static_cast<byte *>(di.dli_fbase);
+#ifndef __APPLE__
 			_fullpath = path.front() != '/' ? get_current_dir() & path : path;
+#else
+			_fullpath = di.dli_fname;
+#endif
 		}
 
 		byte *image::base_ptr() const

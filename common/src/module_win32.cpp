@@ -203,6 +203,7 @@ namespace micro_profiler
 				unicode(data->Loaded.FullDllName->Buffer), static_cast<byte *>(data->Loaded.DllBase),
 			};
 
+			enumerate_regions(m.regions, m.base);
 			self->_mapped(m);
 			break;
 		}

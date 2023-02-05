@@ -38,25 +38,10 @@ namespace micro_profiler
 
 			bool is_address_inside(const vector<mapped_region> &regions, const void *executable_address)
 			{
-#ifndef __APPLE__
 				for (auto i = regions.begin(); i != regions.end(); ++i)
 					if (i->address <= executable_address && executable_address < i->address + i->size && (i->protection & mapped_region::execute))
 						return true;
 				return false;
-#else
-				return true;
-#endif
-			}
-
-			template <typename ContainerT>
-			void filter_modules(ContainerT &modules, const module::mapping &m)
-			{
-				if (file_id(m.path) == file_id(c_symbol_container_1)
-					|| file_id(m.path) == file_id(c_symbol_container_2)
-					|| file_id(m.path) == file_id(c_symbol_container_3_nosymbols))
-				{
-					modules.push_back(m);
-				}
 			}
 
 			template <typename ContainerT>
@@ -86,9 +71,9 @@ namespace micro_profiler
 			{
 				// INIT
 				image images[] = {
-					image(c_symbol_container_1),
-					image(c_symbol_container_2),
-					image(c_symbol_container_3_nosymbols),
+					image(module1_path),
+					image(module2_path),
+					image(module3_path),
 				};
 
 				// ACT
@@ -97,11 +82,11 @@ namespace micro_profiler
 				auto info3 = module::locate(reinterpret_cast<const void *>(images[2].base()));
 
 				// ASSERT
-				assert_equal(file_id(c_symbol_container_1), file_id(info1.path));
+				assert_equal(file_id(images[0].absolute_path()), file_id(info1.path));
 				assert_equal(images[0].base_ptr(), info1.base);
-				assert_equal(file_id(c_symbol_container_2), file_id(info2.path));
+				assert_equal(file_id(images[1].absolute_path()), file_id(info2.path));
 				assert_equal(images[1].base_ptr(), info2.base);
-				assert_equal(file_id(c_symbol_container_3_nosymbols), file_id(info3.path));
+				assert_equal(file_id(images[2].absolute_path()), file_id(info3.path));
 				assert_equal(images[2].base_ptr(), info3.base);
 			}
 
@@ -110,9 +95,9 @@ namespace micro_profiler
 			{
 				// INIT
 				image images[] = {
-					image(c_symbol_container_1),
-					image(c_symbol_container_2),
-					image(c_symbol_container_3_nosymbols),
+					image(module1_path),
+					image(module2_path),
+					image(module3_path),
 				};
 
 				// ACT
@@ -121,12 +106,12 @@ namespace micro_profiler
 				auto info3 = module::locate(images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
-				assert_equal(file_id(c_symbol_container_1), file_id(info1.path));
+				assert_equal(file_id(images[0].absolute_path()), file_id(info1.path));
 				assert_equal(images[0].base_ptr(), info1.base);
-				assert_equal(file_id(c_symbol_container_2), file_id(info2.path));
+				assert_equal(file_id(images[1].absolute_path()), file_id(info2.path));
 				assert_equal(images[1].base_ptr(), info2.base);
-				assert_equal(file_id(c_symbol_container_3_nosymbols), file_id(info3.path));
-				assert_equal(images[1].base_ptr(), info2.base);
+				assert_equal(file_id(images[2].absolute_path()), file_id(info3.path));
+				assert_equal(images[2].base_ptr(), info3.base);
 			}
 
 
@@ -148,11 +133,14 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_not_null(match = find_module(mappings1, img1_base));
-				assert_equal(file_id(module1_path), file_id(match->path));
+				assert_equal(file_id(img1->absolute_path()), file_id(match->path));
+				assert_is_true(is_address_inside(match->regions, img1->get_symbol_address("get_function_addresses_1")));
 				assert_not_null(match = find_module(mappings1, img2_base));
-				assert_equal(file_id(module2_path), file_id(match->path));
+				assert_equal(file_id(img2->absolute_path()), file_id(match->path));
+				assert_is_true(is_address_inside(match->regions, img2->get_symbol_address("get_function_addresses_2")));
 				assert_not_null(match = find_module(mappings1, img3_base));
-				assert_equal(file_id(module3_path), file_id(match->path));
+				assert_equal(file_id(img3->absolute_path()), file_id(match->path));
+				assert_is_true(is_address_inside(match->regions, img3->get_symbol_address("get_function_addresses_3")));
 
 				// INIT
 				img1.reset();
@@ -164,7 +152,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_null(find_module(mappings2, img1_base));
 				assert_not_null(match = find_module(mappings2, img2_base));
-				assert_equal(file_id(module2_path), file_id(match->path));
+				assert_equal(file_id(img2->absolute_path()), file_id(match->path));
 				assert_null(find_module(mappings2, img3_base));
 			}
 
@@ -189,7 +177,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_not_null(match = find_module(mappings, img2.base_ptr()));
-				assert_equal(file_id(module2_path), file_id(match->path));
+				assert_equal(file_id(img2.absolute_path()), file_id(match->path));
+				assert_is_true(is_address_inside(match->regions, img2.get_symbol_address("get_function_addresses_2")));
 
 				// ACT
 				wait_for = 2;
@@ -199,9 +188,11 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_not_null(match = find_module(mappings, img1.base_ptr()));
-				assert_equal(file_id(module1_path), file_id(match->path));
+				assert_equal(file_id(img1.absolute_path()), file_id(match->path));
+				assert_is_true(is_address_inside(match->regions, img1.get_symbol_address("get_function_addresses_1")));
 				assert_not_null(match = find_module(mappings, img3.base_ptr()));
-				assert_equal(file_id(module3_path), file_id(match->path));
+				assert_equal(file_id(img3.absolute_path()), file_id(match->path));
+				assert_is_true(is_address_inside(match->regions, img3.get_symbol_address("get_function_addresses_3")));
 			}
 
 
@@ -291,12 +282,14 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<const void *> addresses;
+				vector<module::mapping> mappings;
 				unique_ptr<image> img(new image(module1_path));
 				void *img_base = img->base_ptr();
 				auto wait_for = -1;
 				mt::event ready;
 				auto s = module::notify([&] (module::mapping m) {
 					addresses.push_back(m.base);
+					mappings.push_back(m);
 					if (!--wait_for)
 						ready.set();
 				}, [&] (const void *base) {
@@ -306,17 +299,33 @@ namespace micro_profiler
 				});
 
 				addresses.clear();
+				mappings.clear();
 
 				// ACT
 				wait_for = 2;
 				img.reset();
 				auto o = occupy_memory(img_base);
 				img.reset(new image(module1_path));
+				void *img2_base = img->base_ptr();
 				ready.wait();
 
 				// ASSERT
+				assert_equal(1u, mappings.size());
 				assert_equal(plural + static_cast<const void *>(img_base) + static_cast<const void *>(img->base_ptr()),
 					addresses);
+				assert_is_true(is_address_inside(mappings[0].regions, img->get_symbol_address("get_function_addresses_1")));
+
+				// ACT (new base is reported on unload)
+				wait_for = 1;
+				img.reset();
+				ready.wait();
+
+				// ASSERT
+				assert_equal(1u, mappings.size());
+				assert_equal(plural
+					+ static_cast<const void *>(img_base)
+					+ static_cast<const void *>(img2_base)
+					+ static_cast<const void *>(img2_base), addresses);
 			}
 		end_test_suite
 	}

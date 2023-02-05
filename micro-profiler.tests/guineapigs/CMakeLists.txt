@@ -15,12 +15,12 @@ if (MSVC)
 	set_target_properties(symbol_container_1 symbol_container_2 PROPERTIES LINK_FLAGS "-functionpadmin:24")
 endif()
 
-add_library(symbol_container_2_instrumented SHARED symbol_container_2.cpp symbol_container_2_internal.cpp)
+add_library(symbol_container_2_instrumented SHARED symbol_container_2.cpp symbol_container_2_internal.cpp unload_tracker.cpp)
 target_compile_options(symbol_container_2_instrumented PUBLIC $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-finstrument-functions>)
 target_compile_options(symbol_container_2_instrumented PUBLIC $<$<CXX_COMPILER_ID:MSVC>:-GH;-Gh>)
 target_link_libraries(symbol_container_2_instrumented micro-profiler)
 
-add_library(symbol_container_3_nosymbols SHARED symbol_container_3.cpp)
+add_library(symbol_container_3_nosymbols SHARED symbol_container_3.cpp unload_tracker.cpp)
 target_link_options(symbol_container_3_nosymbols PRIVATE $<$<CXX_COMPILER_ID:MSVC>:-DEBUG:NONE>)
 
 add_executable(guinea_runner guinea_runner.cpp)

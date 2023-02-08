@@ -73,6 +73,22 @@ namespace micro_profiler
 	{	return ::dlsym(_handle.get(), name);	}
 
 
+	module::lock::lock(const void *base, const string &path)
+		: _handle(dlopen(path.c_str(), RTLD_LAZY | RTLD_NOLOAD))
+	{
+		Dl_info di = { };
+
+		if (_handle && !(::dladdr(base, &di) && file_id(di.dli_fname) == file_id(path)))
+			::dlclose(_handle), _handle = nullptr;
+	}
+
+	module::lock::~lock()
+	{
+		if (_handle)
+			::dlclose(_handle);
+	}
+
+
 	shared_ptr<module::dynamic> module::load(const string &path)
 	{
 		shared_ptr<void> handle(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {

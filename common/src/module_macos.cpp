@@ -20,6 +20,7 @@
 
 #include <common/module.h>
 
+#include <common/file_id.h>
 #include <dlfcn.h>
 #include <list>
 #include <mach/vm_map.h>
@@ -114,9 +115,9 @@ namespace micro_profiler
 				Dl_info dinfo = {};
 				
 				for (vm_address_t a = reinterpret_cast<mach_vm_address_t>(address);
-					  dladdr(reinterpret_cast<void *>(a), &dinfo) && dinfo.dli_fbase == address
-							&& KERN_SUCCESS == vm_region_recurse_64(self, &a, &sz, &depth, (vm_region_recurse_info_t)&info, &count);
-					  info.is_submap ? depth++ : (a += sz))
+					dladdr(reinterpret_cast<void *>(a), &dinfo) && dinfo.dli_fbase == address
+						&& KERN_SUCCESS == vm_region_recurse_64(self, &a, &sz, &depth, (vm_region_recurse_info_t)&info, &count);
+					info.is_submap ? depth++ : (a += sz))
 				{
 					regions.push_back(mapped_region {
 						reinterpret_cast<byte *>(a),
@@ -138,6 +139,22 @@ namespace micro_profiler
 
 	void *module::dynamic::find_function(const char *name) const
 	{	return ::dlsym(_handle.get(), name);	}
+
+
+	module::lock::lock(const void *base, const string &path)
+		: _handle(dlopen(path.c_str(), RTLD_LAZY | RTLD_NOLOAD))
+	{
+		Dl_info di = { };
+
+		if (_handle && !(::dladdr(base, &di) && file_id(di.dli_fname) == file_id(path)))
+			::dlclose(_handle), _handle = nullptr;
+	}
+
+	module::lock::~lock()
+	{
+		if (_handle)
+			::dlclose(_handle);
+	}
 
 
 	shared_ptr<module::dynamic> module::load(const string &path)

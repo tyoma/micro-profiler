@@ -21,6 +21,7 @@
 #include <common/module.h>
 #include <common/win32/module.h>
 
+#include <common/file_id.h>
 #include <common/noncopyable.h>
 #include <common/string.h>
 #include <memory>
@@ -141,6 +142,32 @@ namespace micro_profiler
 
 	void *module::dynamic::find_function(const char *name) const
 	{	return GetProcAddress(static_cast<HMODULE>(_handle.get()), name);	}
+
+
+	module::lock::lock(const void *base, const string &path)
+	{
+		HMODULE hmodule = nullptr;
+
+		_handle = nullptr;
+		if (::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(base), &hmodule) && hmodule)
+		{
+			string loaded_path;
+
+			get_module_path(loaded_path, hmodule);
+			if (file_id(path) == file_id(loaded_path))
+			{
+				_handle = hmodule;
+				return;
+			}
+			::FreeLibrary(hmodule);
+		}
+	}
+
+	module::lock::~lock()
+	{
+		if (_handle)
+			::FreeLibrary(static_cast<HMODULE>(_handle));
+	}
 
 
 	shared_ptr<module::dynamic> module::load(const string &path)

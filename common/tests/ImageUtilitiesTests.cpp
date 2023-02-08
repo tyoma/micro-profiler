@@ -327,6 +327,102 @@ namespace micro_profiler
 					+ static_cast<const void *>(img2_base)
 					+ static_cast<const void *>(img2_base), addresses);
 			}
+
+
+			test( ModuleLockIsTrueForLoadedModules )
+			{
+				// INIT
+				image img1(module1_path);
+				image img2(module2_path);
+				image img3(module3_path);
+
+				// ACT
+				module::lock l1(img1.base_ptr(), img1.absolute_path());
+				auto l2 = module::lock(img2.base_ptr(), img2.absolute_path());
+				module::lock l3 = move(module::lock(img3.base_ptr(), img3.absolute_path()));
+
+				// ASSERT
+				assert_is_true(l1);
+				assert_is_true(l2);
+				assert_is_true(l3);
+			}
+
+			test( ModuleLockIsFalseForMismatchingModules )
+			{
+				// INIT
+				image img1(module1_path);
+				image img2(module2_path);
+				image img3(module3_path);
+
+				// ACT
+				module::lock l1(img1.base_ptr(), img2.absolute_path());
+				auto l2 = module::lock(img2.base_ptr(), img3.absolute_path());
+				module::lock l3 = move(module::lock(img3.base_ptr(), img1.absolute_path()));
+
+				// ASSERT
+				assert_is_false(l1);
+				assert_is_false(l2);
+				assert_is_false(l3);
+			}
+
+
+			test( ModuleLockIsFalseForUnloadedModules )
+			{
+				// INIT
+				unique_ptr<image> img1(new image(module1_path));
+				auto img1_base = img1->base_ptr();
+				string img1_path = img1->absolute_path();
+				unique_ptr<image> img2(new image(module2_path));
+				auto img2_base = img2->base_ptr();
+				string img2_path = img2->absolute_path();
+				unique_ptr<image> img3(new image(module3_path));
+				auto img3_base = img3->base_ptr();
+				string img3_path = img3->absolute_path();
+
+				img1.reset();
+				img2.reset();
+				img3.reset();
+
+				// INIT / ACT
+				module::lock l1(img1_base, img1_path);
+				auto l2 = module::lock(img2_base, img2_path);
+				module::lock l3 = move(module::lock(img3_base, img3_path));
+
+				// ASSERT
+				assert_is_false(l1);
+				assert_is_false(l2);
+				assert_is_false(l3);
+			}
+
+
+			test( LockingAnUnloadingModuleLocksAsTrueForNextLock )
+			{
+				// INIT
+				unique_ptr<image> img1(new image(module1_path));
+				auto img1_base = img1->base_ptr();
+				string img1_path = img1->absolute_path();
+				unique_ptr<image> img2(new image(module2_path));
+				auto img2_base = img2->base_ptr();
+				string img2_path = img2->absolute_path();
+				unique_ptr<image> img3(new image(module3_path));
+				auto img3_base = img3->base_ptr();
+				string img3_path = img3->absolute_path();
+
+				// INIT / ACT
+				module::lock l1(img1_base, img1_path);
+				auto l2 = module::lock(img2_base, img2_path);
+				module::lock l3 = move(module::lock(img3_base, img3_path));
+
+				// ACT
+				img1.reset();
+				img2.reset();
+				img3.reset();
+
+				// ACT / ASSERT
+				assert_is_true(module::lock(img1_base, img1_path));
+				assert_is_true(module::lock(img2_base, img2_path));
+				assert_is_true(module::lock(img3_base, img3_path));
+			}
 		end_test_suite
 	}
 }

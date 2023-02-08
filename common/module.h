@@ -34,6 +34,7 @@ namespace micro_profiler
 	struct module
 	{
 		class dynamic;
+		class lock;
 
 		struct mapping
 		{
@@ -81,6 +82,23 @@ namespace micro_profiler
 		friend module;
 	};
 
+	class module::lock
+	{
+	public:
+		lock(const void *base, const std::string &path);
+		lock(lock &&other);
+		~lock();
+
+		operator bool() const;
+
+	private:
+		void operator =(lock &&rhs);
+		void operator ==(const lock &rhs);
+
+	private:
+		void *_handle;
+	};
+
 	struct module::dynamic::unsafe_auto_cast
 	{
 		template <typename T>
@@ -94,6 +112,14 @@ namespace micro_profiler
 	inline module::dynamic::dynamic(std::shared_ptr<void> handle)
 		: _handle(handle)
 	{	}
+
+
+	inline module::lock::lock(lock &&other)
+		: _handle(other._handle)
+	{	other._handle = nullptr;	}
+
+	inline module::lock::operator bool() const
+	{	return !!_handle;	}
 
 
 	inline module::dynamic::unsafe_auto_cast operator /(const std::shared_ptr<module::dynamic> &library,

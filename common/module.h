@@ -24,44 +24,51 @@
 #include "range.h"
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace micro_profiler
 {
+	class module_platform;
+
 	struct module
 	{
 		class dynamic;
+		struct events;
 		class lock;
+		struct mapping;
+		struct mapping_ex;
 
-		struct mapping
-		{
-			std::string path;
-			byte *base;
-			std::vector<mapped_region> regions;
-		};
-
-		struct mapping_ex
-		{
-			unsigned int module_id; // Persistent one-based ID of the image this mapping is for.
-			std::string path;
-			long_address_t base;
-			std::uint32_t hash;
-		};
-
-		typedef std::function<void (const mapping &m)> mapping_callback_t;
-		typedef std::function<void (const void *base)> unmapping_callback_t;
 		typedef std::pair<unsigned int /*instance_id*/, mapping_ex> mapping_instance;
 
-		static std::shared_ptr<dynamic> load(const std::string &path);
-		static std::string executable();
-		static mapping locate(const void *address);
-		static std::shared_ptr<void> notify(mapping_callback_t mapped, unmapping_callback_t unmapped);
+		virtual std::shared_ptr<dynamic> load(const std::string &path) = 0;
+		virtual std::string executable() = 0;
+		virtual mapping locate(const void *address) = 0;
+		virtual std::shared_ptr<void> notify(events &consumer) = 0;
 
-	private:
-		class tracker;
+		static module &platform();
+	};
+
+	struct module::events
+	{
+		virtual void mapped(const mapping &mapping_) = 0;
+		virtual void unmapped(void *base) = 0;
+	};
+
+	struct module::mapping
+	{
+		std::string path;
+		byte *base;
+		std::vector<mapped_region> regions;
+	};
+
+	struct module::mapping_ex
+	{
+		unsigned int module_id; // Persistent one-based ID of the image this mapping is for.
+		std::string path;
+		long_address_t base;
+		std::uint32_t hash;
 	};
 
 	class module::dynamic
@@ -79,7 +86,7 @@ namespace micro_profiler
 		const std::shared_ptr<void> _handle;
 
 	private:
-		friend module;
+		friend module_platform;
 	};
 
 	class module::lock

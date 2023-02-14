@@ -34,6 +34,8 @@ using namespace std;
 
 namespace micro_profiler
 {
+	class module_platform;
+
 	namespace
 	{
 		struct address_hash_eq
@@ -45,10 +47,6 @@ namespace micro_profiler
 			{	return lhs.base == rhs.base;	}
 		};
 
-		mt::mutex g_mapping_mutex;
-		unordered_set<module::mapping, address_hash_eq, address_hash_eq> g_mappings;
-		list< pair<module::mapping_callback_t, module::unmapping_callback_t> > g_callbacks;
-
 		int generic_protection(int protection)
 		{
 			auto value = 0;
@@ -59,85 +57,70 @@ namespace micro_profiler
 			return value;
 		}
 
-		struct notifier_init
+		void read_regions(vector<mapped_region> &regions, void *address)
 		{
-			notifier_init()
+			const auto self = mach_task_self();
+			size_t sz = 0;
+			uint32_t depth = 0;
+			vm_region_submap_info_64 info;
+			mach_msg_type_number_t count = VM_REGION_SUBMAP_INFO_COUNT_64;
+			Dl_info dinfo = {};
+
+			for (vm_address_t a = reinterpret_cast<mach_vm_address_t>(address);
+				dladdr(reinterpret_cast<void *>(a), &dinfo) && dinfo.dli_fbase == address
+					&& KERN_SUCCESS == vm_region_recurse_64(self, &a, &sz, &depth, (vm_region_recurse_info_t)&info, &count);
+				info.is_submap ? depth++ : (a += sz))
 			{
+				regions.push_back(mapped_region {
+					reinterpret_cast<byte *>(a),
+					sz,
+					generic_protection(info.protection)
+				});
+			}
+		}
+
+		struct module_notification_router
+		{
+			module_notification_router(module_platform &consumer)
+			{
+				target = &consumer;
 				_dyld_register_func_for_add_image(&on_add_image);
 				_dyld_register_func_for_remove_image(&on_remove_image);
 			}
 
-			static shared_ptr<void> notify(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped)
-			{
-				mt::lock_guard<mt::mutex> l(g_mapping_mutex);
-				auto i = g_callbacks.insert(g_callbacks.end(), make_pair(mapped, unmapped));
-				auto handle = shared_ptr<void>(&*i, [i] (void *) {
-					mt::lock_guard<mt::mutex> l(g_mapping_mutex);
-					g_callbacks.erase(i);
-				});
-				
-				for (const auto &m : g_mappings)
-					mapped(m);
-				return handle;
-			}
-			
-			static void on_add_image(const mach_header *, intptr_t base)
-			{
-				mt::lock_guard<mt::mutex> l(g_mapping_mutex);
-				Dl_info dinfo = {};
+			~module_notification_router()
+			{	target = nullptr;	}
 
-				dladdr(reinterpret_cast<void *>(base), &dinfo);
-				if (!dinfo.dli_fbase)
-					return;
-				module::mapping m = {	dinfo.dli_fname, reinterpret_cast<byte *>(base),	};
-				read_regions(m.regions, dinfo.dli_fbase);
-				g_mappings.insert(m);
-				for (const auto &i : g_callbacks)
-					i.first(m);
-			}
+			static void on_add_image(const mach_header *header, intptr_t base);
+			static void on_remove_image(const mach_header *header, intptr_t base);
 
-			static void on_remove_image(const mach_header *, intptr_t base)
-			{
-				mt::lock_guard<mt::mutex> l(g_mapping_mutex);
+			static module_platform *target;
+		};
 
-				g_mappings.erase(module::mapping {	string(), reinterpret_cast<byte *>(base),	});
-				for (const auto &i : g_callbacks)
-					i.second(reinterpret_cast<byte *>(base));
-			}
-			
-			static void read_regions(vector<mapped_region> &regions, void *address)
-			{
-				const auto self = mach_task_self();
-				size_t sz = 0;
-				uint32_t depth = 0;
-				vm_region_submap_info_64 info;
-				mach_msg_type_number_t count = VM_REGION_SUBMAP_INFO_COUNT_64;
-				Dl_info dinfo = {};
-				
-				for (vm_address_t a = reinterpret_cast<mach_vm_address_t>(address);
-					dladdr(reinterpret_cast<void *>(a), &dinfo) && dinfo.dli_fbase == address
-						&& KERN_SUCCESS == vm_region_recurse_64(self, &a, &sz, &depth, (vm_region_recurse_info_t)&info, &count);
-					info.is_submap ? depth++ : (a += sz))
-				{
-					regions.push_back(mapped_region {
-						reinterpret_cast<byte *>(a),
-						sz,
-						generic_protection(info.protection)
-					});
-				}
-			}
-		} g_init;
+		module_platform *module_notification_router::target = nullptr;
 	}
 
-	class module::tracker
+	class module_platform : public module
 	{
 	public:
-		tracker(mapping_callback_t mapped, unmapping_callback_t unmapped);
-		~tracker();
+		void on_add_image(const mach_header *header, intptr_t base);
+		void on_remove_image(const mach_header *header, intptr_t base);
 
+	private:
+		virtual shared_ptr<dynamic> load(const string &path) override;
+		virtual string executable() override;
+		virtual mapping locate(const void *address) override;
+		virtual shared_ptr<void> notify(events &consumer) override;
+
+	private:
+		mt::mutex _mutex;
+		unordered_set<module::mapping, address_hash_eq, address_hash_eq> _mappings;
+		list<module::events *> _callbacks;
 	};
 
-	void *module::dynamic::find_function(const char *name) const
+
+
+	void *module_platform::dynamic::find_function(const char *name) const
 	{	return ::dlsym(_handle.get(), name);	}
 
 
@@ -157,7 +140,31 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr<module::dynamic> module::load(const string &path)
+	void module_platform::on_add_image(const mach_header *, intptr_t base)
+	{
+		mt::lock_guard<mt::mutex> l(_mutex);
+		Dl_info dinfo = {};
+
+		dladdr(reinterpret_cast<void *>(base), &dinfo);
+		if (!dinfo.dli_fbase)
+			return;
+		mapping m = {	dinfo.dli_fname, reinterpret_cast<byte *>(base),	};
+		read_regions(m.regions, dinfo.dli_fbase);
+		_mappings.insert(m);
+		for (const auto &i : _callbacks)
+			i->mapped(m);
+	}
+
+	void module_platform::on_remove_image(const mach_header *, intptr_t base)
+	{
+		mt::lock_guard<mt::mutex> l(_mutex);
+
+		_mappings.erase(module::mapping {	string(), reinterpret_cast<byte *>(base),	});
+		for (const auto &i : _callbacks)
+			i->unmapped(reinterpret_cast<void *>(base));
+	}
+
+	shared_ptr<module::dynamic> module_platform::load(const string &path)
 	{
 		shared_ptr<void> handle(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
 			if (h)
@@ -167,7 +174,7 @@ namespace micro_profiler
 		return handle ? shared_ptr<module::dynamic>(new module::dynamic(handle)) : nullptr;
 	}
 
-	string module::executable()
+	string module_platform::executable()
 	{
 		char dummy;
 		uint32_t l = 0;
@@ -181,7 +188,7 @@ namespace micro_profiler
 		return &buffer[0];
 	}
 
-	module::mapping module::locate(const void *address)
+	module::mapping module_platform::locate(const void *address)
 	{
 		Dl_info di = { };
 
@@ -195,6 +202,33 @@ namespace micro_profiler
 		return info;
 	}
 
-	shared_ptr<void> module::notify(mapping_callback_t mapped, unmapping_callback_t unmapped)
-	{	return notifier_init::notify(mapped, unmapped);	}
+	shared_ptr<void> module_platform::notify(events &consumer)
+	{
+		mt::lock_guard<mt::mutex> l(_mutex);
+		auto i = _callbacks.insert(_callbacks.end(), &consumer);
+		auto handle = shared_ptr<void>(&*i, [this, i] (void *) {
+			mt::lock_guard<mt::mutex> l(_mutex);
+			_callbacks.erase(i);
+		});
+		
+		for (const auto &m : _mappings)
+			consumer.mapped(m);
+		return handle;
+	}
+
+
+	module &module::platform()
+	{
+		static module_platform m;
+		static module_notification_router router(m);
+
+		return m;
+	}
+
+
+	void module_notification_router::on_add_image(const mach_header *header, intptr_t base)
+	{	if (target) target->on_add_image(header, base);	}
+
+	void module_notification_router::on_remove_image(const mach_header *header, intptr_t base)
+	{	if (target) target->on_remove_image(header, base);	}
 }

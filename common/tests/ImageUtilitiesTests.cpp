@@ -54,6 +54,27 @@ namespace micro_profiler
 			}
 		}
 
+		namespace mocks
+		{
+			struct module_events : micro_profiler::module::events
+			{
+				module_events(const function<void (const module::mapping &m)> &mapped_ = [] (const module::mapping &) {	},
+						function<void (void *base)> unmapped_ = [] (void *) {	})
+					: _mapped(mapped_), _unmapped(unmapped_)
+				{	}
+
+				virtual void mapped(const module::mapping &m) override
+				{	_mapped(m);	}
+
+				virtual void unmapped(void *base) override
+				{	_unmapped(base);	}
+
+			private:
+				function<void (const module::mapping &m)> _mapped;
+				function<void (void *base)> _unmapped;
+			};
+		}
+
 		begin_test_suite( ImageUtilitiesTests )
 
 			temporary_directory dir;
@@ -77,9 +98,9 @@ namespace micro_profiler
 				};
 
 				// ACT
-				auto info1 = module::locate(reinterpret_cast<const void *>(images[0].base()));
-				auto info2 = module::locate(reinterpret_cast<const void *>(images[1].base()));
-				auto info3 = module::locate(reinterpret_cast<const void *>(images[2].base()));
+				auto info1 = module::platform().locate(reinterpret_cast<const void *>(images[0].base()));
+				auto info2 = module::platform().locate(reinterpret_cast<const void *>(images[1].base()));
+				auto info3 = module::platform().locate(reinterpret_cast<const void *>(images[2].base()));
 
 				// ASSERT
 				assert_equal(file_id(images[0].absolute_path()), file_id(info1.path));
@@ -101,9 +122,9 @@ namespace micro_profiler
 				};
 
 				// ACT
-				auto info1 = module::locate(images[0].get_symbol_address("get_function_addresses_1"));
-				auto info2 = module::locate(images[1].get_symbol_address("get_function_addresses_2"));
-				auto info3 = module::locate(images[2].get_symbol_address("get_function_addresses_3"));
+				auto info1 = module::platform().locate(images[0].get_symbol_address("get_function_addresses_1"));
+				auto info2 = module::platform().locate(images[1].get_symbol_address("get_function_addresses_2"));
+				auto info3 = module::platform().locate(images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
 				assert_equal(file_id(images[0].absolute_path()), file_id(info1.path));
@@ -118,7 +139,6 @@ namespace micro_profiler
 			test( SubscribingToModuleEventsListsEverythingLoaded )
 			{
 				// INIT
-				auto unmapped = [] (const void *) {};
 				unique_ptr<image> img1(new image(module1_path));
 				auto img1_base = img1->base_ptr();
 				unique_ptr<image> img2(new image(module2_path));
@@ -127,9 +147,11 @@ namespace micro_profiler
 				auto img3_base = img3->base_ptr();
 				vector<module::mapping> mappings1, mappings2;
 				const module::mapping *match;
+				mocks::module_events e1([&] (module::mapping m) {	mappings1.push_back(m);	}),
+					e2([&] (module::mapping m) {	mappings2.push_back(m);	});
 
 				// ACT
-				auto s1 = module::notify([&] (module::mapping m) {	mappings1.push_back(m);	}, unmapped);
+				auto s1 = module::platform().notify(e1);
 
 				// ASSERT
 				assert_not_null(match = find_module(mappings1, img1_base));
@@ -147,7 +169,7 @@ namespace micro_profiler
 				img3.reset();
 
 				// ACT
-				auto s2 = module::notify([&] (module::mapping m) {	mappings2.push_back(m);	}, unmapped);
+				auto s2 = module::platform().notify(e2);
 
 				// ASSERT
 				assert_null(find_module(mappings2, img1_base));
@@ -164,11 +186,12 @@ namespace micro_profiler
 				vector<module::mapping> mappings;
 				auto wait_for = -1;
 				mt::event ready;
-				auto s = module::notify([&] (module::mapping m) {
+				mocks::module_events e([&] (module::mapping m) {
 					mappings.push_back(m);
 					if (!--wait_for)
 						ready.set();
-				}, [] (const void *) {});
+				});
+				auto s = module::platform().notify(e);
 
 				// ACT
 				wait_for = 1;
@@ -203,14 +226,14 @@ namespace micro_profiler
 				mt::thread t1([&] {
 					while (!exit)
 					{
-						auto m1 = module::load(c_symbol_container_1);
-						auto m2 = module::load(c_symbol_container_2);
-						auto m3 = module::load(c_symbol_container_3_nosymbols);
+						auto m1 = module::platform().load(c_symbol_container_1);
+						auto m2 = module::platform().load(c_symbol_container_2);
+						auto m3 = module::platform().load(c_symbol_container_3_nosymbols);
 					}
 				});
 				mt::thread t2([&] {
-					while (!exit)
-						module::notify([&] (const module::mapping &) {	}, [] (const void *) {});
+					for (mocks::module_events e; !exit; )
+						module::platform().notify(e);
 				});
 
 				// ACT / ASSERT (does not crash)
@@ -233,11 +256,12 @@ namespace micro_profiler
 				const void *img3_base = img3->base_ptr();
 				auto wait_for = -1;
 				mt::event ready;
-				auto s = module::notify([] (module::mapping) {	}, [&] (const void *base) {
+				mocks::module_events e([] (module::mapping) {	}, [&] (void *base) {
 					unmapped.push_back(base);
 					if (!--wait_for)
 						ready.set();
 				});
+				auto s = module::platform().notify(e);
 
 				// ACT
 				wait_for = 1;
@@ -262,7 +286,8 @@ namespace micro_profiler
 			{
 				// INIT
 				vector<module::mapping> mappings;
-				auto s = module::notify([&] (module::mapping m) {	mappings.push_back(m);	}, [] (const void *) {});
+				mocks::module_events e([&] (module::mapping m) {	mappings.push_back(m);	});
+				auto s = module::platform().notify(e);
 				unique_ptr<image> img1(new image(module1_path));
 
 				mappings.clear();
@@ -287,7 +312,7 @@ namespace micro_profiler
 				void *img_base = img->base_ptr();
 				auto wait_for = -1;
 				mt::event ready;
-				auto s = module::notify([&] (module::mapping m) {
+				mocks::module_events e([&] (module::mapping m) {
 					addresses.push_back(m.base);
 					mappings.push_back(m);
 					if (!--wait_for)
@@ -297,6 +322,7 @@ namespace micro_profiler
 					if (!--wait_for)
 						ready.set();
 				});
+				auto s = module::platform().notify(e);
 
 				addresses.clear();
 				mappings.clear();

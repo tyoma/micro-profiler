@@ -8,6 +8,7 @@
 #include <collector/serialization.h>
 #include <ipc/client_session.h>
 #include <mt/event.h>
+#include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -41,7 +42,9 @@ namespace micro_profiler
 			shared_ptr<ipc::client_session> client;
 			mocks::tracer collector;
 			mocks::thread_monitor tmonitor;
+			mocks::module_helper module_helper;
 			mocks::patch_manager pmanager;
+			unique_ptr<image> img1, img2, img3;
 			mt::event client_ready;
 			vector< shared_ptr<void> > subscriptions;
 
@@ -50,6 +53,9 @@ namespace micro_profiler
 
 			init( Init )
 			{
+				img1.reset(new image(c_symbol_container_1));
+				img2.reset(new image(c_symbol_container_2));
+				img3.reset(new image(c_symbol_container_3_nosymbols));
 				factory = [this] (ipc::channel &outbound_) -> ipc::channel_ptr_t {
 					client = make_shared<ipc::client_session>(outbound_);
 					auto p = client.get();
@@ -57,13 +63,14 @@ namespace micro_profiler
 					client_ready.set();
 					return client;
 				};
+				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
 			}
 
 
 			test( PatchActivationIsMadeOnRequest )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
@@ -72,10 +79,7 @@ namespace micro_profiler
 				mt::event ready;
 
 				app.connect(factory, false);
-
 				client_ready.wait();
-				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
-
 				pmanager.on_apply = [&] (patch_manager::apply_results &, unsigned module_id, void *base,
 					shared_ptr<void> lock, patch_manager::request_range targets) {
 
@@ -87,14 +91,16 @@ namespace micro_profiler
 				};
 
 				// ACT
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_mapped(*img3);
 				const patch_request preq1 = {	3u, mkvector(rva1)	};
 				client->request(rq, request_apply_patches, preq1, response_patched, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
-				unsigned reference1_ids[] = {	3,	};
-
-				assert_equal(reference1_ids, ids_log);
+				assert_equal(plural + (void *)img3->base_ptr(), bases_log);
+				assert_equal(plural + 3u, ids_log);
 				assert_equal(rva1, rva_log.back());
 
 				// INIT
@@ -106,9 +112,8 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				unsigned reference2_ids[] = {	3, 1,	};
-
-				assert_equal(reference2_ids, ids_log);
+				assert_equal(plural + (void *)img3->base_ptr() + (void *)img1->base_ptr(), bases_log);
+				assert_equal(plural + 3u + 1u, ids_log);
 				assert_equal(rva2, rva_log.back());
 			}
 
@@ -116,7 +121,7 @@ namespace micro_profiler
 			test( PatchActivationFailuresAreReturned )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				pair<unsigned, patch_apply> aresults1[] = {
@@ -136,17 +141,15 @@ namespace micro_profiler
 				mt::event ready;
 
 				app.connect(factory, false);
-
 				client_ready.wait();
-				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
-
 				pmanager.on_apply = [&] (patch_manager::apply_results &results, unsigned, void *, shared_ptr<void>,
 					patch_manager::request_range) {
 					results = mkvector(aresults1);
 				};
+				module_helper.emulate_mapped(*img1);
 
 				// ACT
-				const patch_request preq1 = {	3u, mkvector(rva1)	};
+				const patch_request preq1 = {	1u, mkvector(rva1)	};
 				client->request(rq, request_apply_patches, preq1, response_patched, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());
@@ -165,7 +168,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				const patch_request preq2 = {	2u, mkvector(rva2)	};
+				const patch_request preq2 = {	1u, mkvector(rva2)	};
 				client->request(rq, request_apply_patches, preq2, response_patched, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());
@@ -182,18 +185,17 @@ namespace micro_profiler
 			test( PatchRevertIsMadeOnRequest )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
 				vector< vector<unsigned> > rva_log;
 				mt::event ready;
 
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
 				app.connect(factory, false);
-
 				client_ready.wait();
-				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
-
 				pmanager.on_revert = [&] (patch_manager::revert_results &, unsigned module_id,
 					patch_manager::request_range targets) {
 
@@ -208,23 +210,19 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				unsigned reference1_ids[] = {	3,	};
-
-				assert_equal(reference1_ids, ids_log);
+				assert_equal(plural + 3u, ids_log);
 				assert_equal(rva1, rva_log.back());
 
 				// INIT
 				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
 
 				// ACT
-				patch_request preq2 = {	1u, mkvector(rva2)	};
+				patch_request preq2 = {	2u, mkvector(rva2)	};
 				client->request(rq, request_revert_patches, preq2, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
-				unsigned reference2_ids[] = {	3, 1,	};
-
-				assert_equal(reference2_ids, ids_log);
+				assert_equal(plural + 3u + 2u, ids_log);
 				assert_equal(rva2, rva_log.back());
 			}
 
@@ -232,7 +230,7 @@ namespace micro_profiler
 			test( PatchRevertFailuresAreReturned )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				pair<unsigned, patch_result::errors> rresults1[] = {
@@ -252,13 +250,11 @@ namespace micro_profiler
 				mt::event ready;
 
 				app.connect(factory, false);
-
 				client_ready.wait();
-				client->request(rq, request_update, 0u, response_statistics_update, [] (deserializer &) {	});
-
 				pmanager.on_revert = [&] (patch_manager::revert_results &results, unsigned, patch_manager::request_range) {
 					results = mkvector(rresults1);
 				};
+				module_helper.emulate_mapped(*img2);
 
 				// ACT
 				const patch_request preq1 = {	3u, mkvector(rva1)	};

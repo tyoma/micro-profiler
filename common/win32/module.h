@@ -22,9 +22,11 @@
 
 #include "../module.h"
 
+#include <functional>
+
 typedef void *HANDLE;
 
 namespace micro_profiler
 {
-	void modules_enumerate_mapped(HANDLE hprocess, const module::mapping_callback_t &callback);
+	void modules_enumerate_mapped(HANDLE hprocess, const std::function<void (const module::mapping &mapping)> &callback);
 }

@@ -98,8 +98,8 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserve
 			&get_datetime));
 		log::g_logger = g_logger.get();
 
-		const string self = module::locate(&c_logname).path;
-		const string exe = module::executable();
+		const string self = module::platform().locate(&c_logname).path;
+		const string exe = module::platform().executable();
 		const file_version vs = get_file_version(exe);
 
 		profiling_cache_sqlite::create_database(c_preferences_db);

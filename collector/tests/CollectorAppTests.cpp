@@ -9,6 +9,7 @@
 #include <collector/serialization.h>
 #include <common/constants.h>
 #include <common/module.h>
+#include <common/string.h>
 #include <common/time.h>
 #include <ipc/client_session.h>
 #include <mt/event.h>
@@ -45,6 +46,7 @@ namespace micro_profiler
 			function<void (ipc::client_session &client_)> initialize_client;
 			mocks::tracer collector;
 			mocks::thread_monitor tmonitor;
+			mocks::module_helper module_helper;
 			mocks::patch_manager pmanager;
 			mt::event client_ready;
 			vector< shared_ptr<void> > subscriptions;
@@ -81,20 +83,22 @@ namespace micro_profiler
 					d(id);
 					initialized.set();
 				};
+				auto unique_name = to_string(generate_id());
 				shared_ptr<void> subscription;
 
 				initialize_client = [&] (ipc::client_session &c) {
 					c.subscribe(subscription, init, on_init);
 				};
+				module_helper.on_get_executable = [&] {	return unique_name;	};
 
 				// ACT
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 				app.connect(factory, false);
 				initialized.wait();
 
 				// ASERT
 				assert_is_false(!!id.injected);
-				assert_equal(module::executable(), id.executable);
+				assert_equal(unique_name, id.executable);
 				assert_approx_equal(ticks_per_second(), id.ticks_per_second, 0.05);
 			}
 
@@ -115,7 +119,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 				app.connect(factory, true);
 				initialized.wait();
 
@@ -129,7 +133,7 @@ namespace micro_profiler
 				// INIT
 				mt::event stopping;
 				shared_ptr<void> subs;
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper, pmanager));
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto &stopping_ = stopping;
@@ -157,48 +161,43 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event ready;
-				loaded_modules l, lref;
+				loaded_modules l;
 				unloaded_modules u;
 				shared_ptr<void> req;
-				module_tracker tracker;
-
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				module_tracker tracker(module_helper);
+				image img1(c_symbol_container_1);
+				image img2(c_symbol_container_2);
+				image img3(c_symbol_container_3_nosymbols);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
 
-				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &) {
-					ready.set();
-				});
-				ready.wait();
-
-				lref.clear(), tracker.get_changes(lref, u);
-
 				// ACT
-				image image0(c_symbol_container_1);
+				module_helper.emulate_mapped(img1);
 				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
 					d(l);
 					ready.set();
 				});
 				ready.wait();
-				lref.clear(), tracker.get_changes(lref, u);
 
 				// ASSERT
-				assert_equal(1u, l.size());
-				assert_equal(lref[0].second, l[0].second);
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(1, 1, img1.absolute_path(), img1.base()), l, mapping_less());
 
 				// ACT
-				image image1(c_symbol_container_2);
+				module_helper.emulate_mapped(img2);
+				module_helper.emulate_mapped(img3);
 				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
 					d(l);
 					ready.set();
 				});
 				ready.wait();
-				lref.clear(), tracker.get_changes(lref, u);
 
 				// ASSERT
-				assert_equal(1u, l.size());
-				assert_equal(lref[0].second, l[0].second);
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(2, 2, img2.absolute_path(), img2.base())
+					+ make_mapping_instance(3, 3, img3.absolute_path(), img3.base()), l, mapping_less());
 			}
 
 
@@ -209,11 +208,15 @@ namespace micro_profiler
 				shared_ptr<void> req;
 				unordered_map<unsigned, module::mapping_ex> l;
 				unloaded_modules u;
-				unique_ptr<image> image0(new image(c_symbol_container_1));
-				unique_ptr<image> image1(new image(c_symbol_container_2));
-				unique_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
+				image img1(c_symbol_container_1);
+				image img2(c_symbol_container_2);
+				image img3(c_symbol_container_3_nosymbols);
 
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				module_helper.emulate_mapped(img1);
+				module_helper.emulate_mapped(img2);
+				module_helper.emulate_mapped(img3);
+
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -225,7 +228,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ACT
-				image1.reset();
+				module_helper.emulate_unmapped(img2.base_ptr());
 				client->request(req, request_update, 0, response_modules_unloaded, [&] (deserializer &d) {
 					d(u);
 					ready.set();
@@ -233,16 +236,14 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				unsigned reference1[] = { find_module(l, c_symbol_container_2)->first, };
-
-				assert_equivalent(reference1, u);
+				assert_equivalent(plural + 2u, u);
 
 				// INIT
 				u.clear();
 
 				// ACT
-				image0.reset();
-				image2.reset();
+				module_helper.emulate_unmapped(img1.base_ptr());
+				module_helper.emulate_unmapped(img3.base_ptr());
 				client->request(req, request_update, 0, response_modules_unloaded, [&] (deserializer &d) {
 					d(u);
 					ready.set();
@@ -250,12 +251,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				unsigned reference2[] = {
-					find_module(l, c_symbol_container_1)->first,
-					find_module(l, c_symbol_container_3_nosymbols)->first,
-				};
-
-				assert_equivalent(reference2, u);
+				assert_equivalent(plural + 1u + 3u, u);
 			}
 
 
@@ -271,7 +267,7 @@ namespace micro_profiler
 					flushed = true;
 				};
 
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper, pmanager));
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
@@ -318,8 +314,8 @@ namespace micro_profiler
 					trace.clear();
 				};
 
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, pmanager));
-				mt::thread t([&] {	app.reset();	});
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper, pmanager));
+				mt::thread t([&] {	app.reset();	}); // TODO: dangerous - app can get destroyed before the next line executes.
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
@@ -361,7 +357,7 @@ namespace micro_profiler
 						done.set();
 				};
 
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 
 				app.connect(factory, false);
 
@@ -398,7 +394,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -461,7 +457,7 @@ namespace micro_profiler
 
 				collector.on_read_collected = [&] (calls_collector_i::acceptor &) {	ready.set();	};
 
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 
 				app.connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
@@ -508,11 +504,11 @@ namespace micro_profiler
 						a.accept_calls(11710u, trace, 2), ready[1].set();
 				};
 
-				unique_ptr<collector_app> app1(new collector_app(*tracer1, o1, tmonitor, pmanager));
+				unique_ptr<collector_app> app1(new collector_app(*tracer1, o1, tmonitor, module_helper, pmanager));
 				app1->connect(factory, false);
 				client_ready.wait();
 				auto client1 = client;
-				unique_ptr<collector_app> app2(new collector_app(*tracer2, o2, tmonitor, pmanager));
+				unique_ptr<collector_app> app2(new collector_app(*tracer2, o2, tmonitor, module_helper, pmanager));
 				app2->connect(factory, false);
 				client_ready.wait();
 				auto client2 = client;
@@ -555,14 +551,15 @@ namespace micro_profiler
 				mt::event ready;
 				unordered_map<unsigned, module::mapping_ex> l;
 				module_info_metadata md;
-
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				image img1(c_symbol_container_1);
+				image img2(c_symbol_container_2);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
-
-				image image0(c_symbol_container_1);
-				image image1(c_symbol_container_2);
+				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
+				module_helper.emulate_mapped(img1);
+				module_helper.emulate_mapped(img2);
 
 				client->request(req, request_update, 0, response_modules_loaded, [&] (deserializer &d) {
 					d(l);
@@ -570,13 +567,8 @@ namespace micro_profiler
 				});
 				ready.wait();
 
-				const module::mapping_instance mmi[] = {
-					*find_module(l, image0.absolute_path()),
-					*find_module(l, image1.absolute_path()),
-				};
-
 				// ACT
-				client->request(req, request_module_metadata, mmi[1].second.module_id, response_module_metadata,
+				client->request(req, request_module_metadata, 2u, response_module_metadata,
 					[&] (deserializer &d) {
 
 					d(md);
@@ -585,7 +577,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				assert_equal(mmi[1].second.hash, md.hash);
+				assert_equal(l[2].hash, md.hash);
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
@@ -593,7 +585,7 @@ namespace micro_profiler
 				assert_equal((file_id)c_symbol_container_2, (file_id)md.path);
 
 				// ACT
-				client->request(req, request_module_metadata, mmi[0].second.module_id, response_module_metadata,
+				client->request(req, request_module_metadata, 1u, response_module_metadata,
 					[&] (deserializer &d) {
 
 					d(md);
@@ -602,7 +594,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				assert_equal(mmi[0].second.hash, md.hash);
+				assert_equal(l[1].hash, md.hash);
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_1");	}));
 				assert_is_false(any_of(md.symbols.begin(), md.symbols.end(),
@@ -628,7 +620,7 @@ namespace micro_profiler
 				tmonitor.add_info(2 /*thread_id*/, ti[1]);
 				tmonitor.add_info(19 /*thread_id*/, ti[2]);
 
-				collector_app app(collector, c_overhead, tmonitor, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();

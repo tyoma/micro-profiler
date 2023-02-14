@@ -68,13 +68,14 @@ add_custom_target(dbghelp_redist
 	COMMENT "Copying dbghelp.dll redistributables..."
 )
 
-add_library(collector.lib STATIC ${COLLECTOR_LIB_SOURCES})
-target_link_libraries(collector.lib polyq strmd)
+add_library(collector STATIC ${COLLECTOR_LIB_SOURCES})
+target_compile_definitions(collector PUBLIC SDB_NO_SIGNALS)
+target_link_libraries(collector polyq strmd)
 
 add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
 add_dependencies(${micro-profiler} dbghelp_redist)
 
-target_link_libraries(${micro-profiler} collector.lib patcher ipc common logger scheduler $<$<PLATFORM_ID:Windows>:injector>)
+target_link_libraries(${micro-profiler} collector patcher ipc common logger scheduler $<$<PLATFORM_ID:Windows>:injector>)
 target_link_options(${micro-profiler} PRIVATE "-DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def;-IMPLIB:${MP_OUTDIR}/${micro-profiler}.lib")
 
 set_source_files_properties(${CALIBRATION_SOURCES} PROPERTIES

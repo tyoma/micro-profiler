@@ -23,6 +23,7 @@
 #include "constructors.h"
 #include "primitives.h"
 
+#include <common/auto_increment.h>
 #include <common/image_info.h>
 #include <common/module.h>
 #include <common/noncopyable.h>

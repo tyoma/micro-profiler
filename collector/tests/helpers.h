@@ -3,6 +3,7 @@
 #include <collector/types.h>
 #include <common/file_id.h>
 #include <common/module.h>
+#include <tuple>
 #include <vector>
 
 namespace micro_profiler
@@ -38,6 +39,17 @@ namespace micro_profiler
 			const void **_stack_ptr;
 		};
 
+		struct mapping_less
+		{
+			bool operator ()(const module::mapping_instance &lhs, const module::mapping_instance &rhs) const
+			{
+				return std::make_tuple(lhs.first, lhs.second.module_id, lhs.second.base, lhs.second.path)
+					< std::make_tuple(rhs.first, rhs.second.module_id, rhs.second.base, rhs.second.path);
+			}
+		};
+
+
+
 		template <typename T>
 		inline const typename T::value_type *find_module(T &m, const std::string &path)
 		{
@@ -54,6 +66,13 @@ namespace micro_profiler
 				if (i->first == key)
 					return &i->second;
 			return 0;
+		}
+
+		inline module::mapping_instance make_mapping_instance(id_t mapping_id, id_t module_id, std::string path,
+			long_address_t base)
+		{
+			module::mapping_ex m = {	module_id, path, base, };
+			return std::make_pair(mapping_id, m);
 		}
 
 		inline const void *addr(size_t value)

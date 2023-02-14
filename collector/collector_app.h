@@ -26,6 +26,7 @@ namespace micro_profiler
 {
 	class analyzer;
 	struct calls_collector_i;
+	struct module;
 	struct overhead;
 	struct patch_manager;
 	class thread_monitor;
@@ -34,7 +35,7 @@ namespace micro_profiler
 	{
 	public:
 		collector_app(calls_collector_i &collector, const overhead &overhead_, thread_monitor &thread_monitor_,
-			patch_manager &patch_manager_);
+			module &module_helper, patch_manager &patch_manager_);
 		~collector_app();
 
 		void connect(const active_server_app::client_factory_t &factory, bool injected);
@@ -51,6 +52,7 @@ namespace micro_profiler
 		calls_collector_i &_collector;
 		const std::unique_ptr<analyzer> _analyzer;
 		thread_monitor &_thread_monitor;
+		module &_module_helper;
 		patch_manager &_patch_manager;
 		bool _injected;
 		active_server_app _server;

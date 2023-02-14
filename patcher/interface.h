@@ -50,8 +50,8 @@ namespace micro_profiler
 
 		patch_manager() {	}
 
-		virtual void map_module(id_t mapping_id, id_t module_id, const module::mapping &mapping) = 0;
-		virtual void unmap_module(id_t mapping_id) = 0;
+		virtual void map_module(id_t module_id, const module::mapping &mapping) = 0;
+		virtual void unmap_module(id_t module_id) = 0;
 
 		virtual void query(patch_state &states, unsigned int module_id) = 0;
 		virtual void apply(apply_results &results, unsigned int module_id, void *base, std::shared_ptr<void> lock,

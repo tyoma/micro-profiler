@@ -24,6 +24,7 @@
 
 #include <common/file_stream.h>
 #include <common/module.h>
+#include <sdb/integrated_index.h>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -33,8 +34,7 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const auto c_dummy = 1;
-		const auto c_this_module_path = module::locate(&c_dummy).path;
+		const auto local_dummy = 0;
 
 		struct locked_mapping
 		{
@@ -43,11 +43,52 @@ namespace micro_profiler
 		};
 	}
 
-	module_tracker::module_info::module_info(const string &path_)
-		: path(path_), hash(calculate_hash(path_))
-	{	}
+	namespace keyer
+	{
+		struct base
+		{
+			byte *operator ()(const module::mapping &record) const
+			{	return record.base;	}
 
-	uint32_t module_tracker::module_info::calculate_hash(const string &path_)
+			template <typename IndexT>
+			void operator ()(const IndexT &, module::mapping &record, byte *key) const
+			{	record.base = key;	}
+		};
+
+		struct id
+		{
+			template <typename T>
+			id_t operator ()(const T &record) const
+			{	return record.id;	}
+
+			template <typename IndexT, typename T>
+			void operator ()(const IndexT &, T &record, id_t key) const
+			{	record.id = key;	}
+		};
+
+		struct module_id
+		{
+			id_t operator ()(const module_tracker::mapping &record) const
+			{	return record.module_id;	}
+
+			template <typename IndexT>
+			void operator ()(const IndexT &, module_tracker::mapping &record, id_t key) const
+			{	record.module_id = key;	}
+		};
+
+		struct file_id
+		{
+			micro_profiler::file_id operator ()(const module_tracker::module_info &record) const
+			{	return record.file;	}
+
+			template <typename IndexT>
+			void operator ()(const IndexT &, module_tracker::module_info &record, const micro_profiler::file_id &key) const
+			{	record.file = key;	}
+		};
+	}
+
+
+	uint32_t module_tracker::calculate_hash(const string &path_)
 	{
 		enum {	n = 1024	};
 
@@ -63,72 +104,74 @@ namespace micro_profiler
 		return h.hash();
 	}
 
-
-	module_tracker::module_tracker()
-		: _next_instance_id(0u), _next_persistent_id(1u)
+	module_tracker::module_tracker(module &module_helper)
+		: _last_reported_mapping_id(0u), _module_helper(module_helper),
+			_this_module_file(module_helper.locate(&local_dummy).path), _module_notifier(module_helper.notify(*this))
 	{	}
 
 	void module_tracker::get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_)
 	{
-		unordered_set<unsigned> in_snapshot;
-		file_id this_module_file(c_this_module_path);
-
-		module::notify([&] (const module::mapping &mm) {
-			if (this_module_file == file_id(mm.path))
-				return;
-
-			const auto module_id = register_path(mm.path);
-			auto &mi = _modules_registry.find(module_id)->second; // Guaranteed to present after register_path().
-
-			if (!mi.mapping)
-			{
-				module::mapping_ex m = {
-					module_id,
-					mm.path,
-					reinterpret_cast<uintptr_t>(mm.base),
-					mi.hash
-				};
-				const auto mmi = make_shared<module::mapping_instance>(_next_instance_id++, m);
-
-				mi.mapping = mmi;
-				_lqueue.push_back(*mmi);
-			}
-			in_snapshot.insert(module_id);
-		}, [] (const void *) {	});
-
-		for (auto i = _modules_registry.begin(); i != _modules_registry.end(); ++i)
-		{
-			if (i->second.mapping && !in_snapshot.count(i->first))
-			{
-				_uqueue.push_back(i->second.mapping->first);
-				i->second.mapping.reset();
-			}
-		}
+		mt::lock_guard<mt::mutex> l(_mtx);
+		auto last_reported_mapping_id = _last_reported_mapping_id;
+		auto &mappings_idx = sdb::ordered_index_(_mappings, keyer::id());
+		const auto &modules_idx = sdb::unique_index(_modules, keyer::id());
+		auto i = mappings_idx.upper_bound(last_reported_mapping_id);
 
 		loaded_modules_.clear();
+		for (auto end = mappings_idx.end(); i != end; i++)
+		{
+			auto &module = modules_idx[i->module_id];
+			module::mapping_ex m = {	module.id, module.path, reinterpret_cast<uintptr_t>(i->base), module.hash	};
+
+			loaded_modules_.push_back(make_pair(i->id, m));
+			last_reported_mapping_id = i->id;
+		}
 		unloaded_modules_.clear();
-		swap(loaded_modules_, _lqueue);
 		swap(unloaded_modules_, _uqueue);
+		_last_reported_mapping_id = last_reported_mapping_id;
 	}
 
 	shared_ptr<module::mapping_instance> module_tracker::lock_mapping(unsigned int module_id)
 	{
-		const auto i = _modules_registry.find(module_id);
+		auto locked = make_shared<locked_mapping>();
 
-		if (_modules_registry.end() == i)
-			throw invalid_argument("invalid persistent id");
-		auto l = make_shared<locked_mapping>();
+		{
+			mt::lock_guard<mt::mutex> l(_mtx);
 
-		l->module_ = *i->second.mapping;
-		l->lock = module::load(i->second.path);
-		return shared_ptr<module::mapping_instance>(l, &l->module_);
+			if (!sdb::unique_index<keyer::id>(_modules).find(module_id))
+				throw invalid_argument("invalid persistent_id");
+
+			const auto m = sdb::unique_index<keyer::module_id>(_mappings).find(module_id);
+
+			if (!m)
+				return nullptr;
+
+			module::mapping_ex mapping = {
+				m->module_id,
+				m->path,
+				reinterpret_cast<uintptr_t>(m->base),
+				sdb::unique_index<keyer::id>(_modules).find(module_id)->hash
+			};
+
+			locked->module_ = make_pair(m->id, mapping);
+		}
+
+		locked->lock = _module_helper.load(locked->module_.second.path);
+		return shared_ptr<module::mapping_instance>(locked, &locked->module_);
 	}
 
 	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int module_id) const
 	{
-		modules_registry_t::const_iterator i = _modules_registry.find(module_id);
+		string path;
+		{
+			mt::lock_guard<mt::mutex> l(_mtx);
+			const auto m = sdb::unique_index<keyer::id>(_modules).find(module_id);
 
-		return i != _modules_registry.end() ? load_image_info(i->second.path.c_str()) : 0;
+			if (!m)
+				throw invalid_argument("invalid persistent id");
+			path = m->path;
+		}
+		return load_image_info(path);
 	}
 
 	shared_ptr<void> module_tracker::notify(events &/*events_*/)
@@ -136,20 +179,38 @@ namespace micro_profiler
 		throw 0;
 	}
 
-
-
-	unsigned int module_tracker::register_path(const string &path)
+	void module_tracker::mapped(const module::mapping &mapping_)
 	{
-		file_id fid(path);
-		auto i = _files_registry.find(fid);
+		auto &path = mapping_.path;
+		file_id file(path);
 
-		if (_files_registry.end() == i)
+		if (!(_this_module_file == file))
 		{
-			auto module_id = _next_persistent_id++;
+			mt::lock_guard<mt::mutex> l(_mtx);
+			auto r = sdb::unique_index(_mappings, keyer::base())[mapping_.base];
+			auto r_module = sdb::unique_index(_modules, keyer::file_id())[file];
 
-			i = _files_registry.insert(make_pair(fid, module_id)).first;
-			_modules_registry.insert(make_pair(module_id, path));
+			if (r_module.is_new())
+			{
+				(*r_module).path = path;
+				(*r_module).hash = calculate_hash(path);
+				r_module.commit();
+			}
+			static_cast<module::mapping &>(*r) = mapping_;
+			(*r).module_id = (*r_module).id;
+			r.commit();
 		}
-		return i->second;
+	}
+
+	void module_tracker::unmapped(void *base)
+	{
+		mt::lock_guard<mt::mutex> l(_mtx);
+		auto &mappings_by_base = sdb::unique_index(_mappings, keyer::base());
+
+		if (auto r = mappings_by_base.find(static_cast<byte *>(base)))
+		{
+			_uqueue.push_back(r->id);
+			mappings_by_base[static_cast<byte *>(base)].remove();
+		}
 	}
 }

@@ -1,9 +1,11 @@
 #include "mocks.h"
 
+#include <test-helpers/helpers.h>
+#include <ut/assert.h>
+
 #pragma warning(disable: 4355)
 
 using namespace std;
-using namespace std::placeholders;
 
 namespace micro_profiler
 {
@@ -19,6 +21,54 @@ namespace micro_profiler
 					{	}
 				} thread_callbacks_stub;
 			}
+
+
+			module_helper::module_helper()
+				: on_get_executable([] {	return "";	}), on_locate([] (const void *a) {	return platform().locate(a);	})
+			{	}
+
+			void module_helper::emulate_mapped(const image &image_)
+			{	emulate_mapped(module::platform().locate(image_.base_ptr()));	}
+
+			void module_helper::emulate_mapped(const mapping &mapping_)
+			{
+				mt::lock_guard<mt::mutex> l(_mtx);
+
+				_mapped.push_back(mapping_);
+				for (auto i = begin(_listeners); i != end(_listeners); ++i)
+					(*i)->mapped(mapping_);
+			}
+
+			void module_helper::emulate_unmapped(void *base)
+			{
+				mt::lock_guard<mt::mutex> l(_mtx);
+				auto m = find_if(begin(_mapped), end(_mapped), [base] (mapping m) {	return m.base == base;	});
+
+				assert_not_equal(end(_mapped), m);
+				_mapped.erase(m);
+				for (auto i = begin(_listeners); i != end(_listeners); ++i)
+					(*i)->unmapped(base);
+			}
+
+			shared_ptr<module::dynamic> module_helper::load(const string &path)
+			{	return on_load(path);	}
+
+			string module_helper::executable()
+			{	return on_get_executable();	}
+
+			module::mapping module_helper::locate(const void *address)
+			{	return on_locate(address);	}
+
+			shared_ptr<void> module_helper::notify(events &consumer)
+			{
+				mt::lock_guard<mt::mutex> l(_mtx);
+				auto i = _listeners.insert(_listeners.end(), &consumer);
+
+				for (auto m = begin(_mapped); m != end(_mapped); ++m)
+					consumer.mapped(*m);
+				return shared_ptr<void>(*i, [this, i] (void *) {	_listeners.erase(i);	});
+			}
+
 
 			unsigned thread_callbacks::invoke_destructors()
 			{

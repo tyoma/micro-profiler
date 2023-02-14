@@ -20,46 +20,24 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <string>
-#include <utility>
+#ifndef SDB_NO_SIGNALS
+	#include <wpl/signal.h>
 
-#pragma warning(disable:4099) // older versions of VisualStudio define std::hash as class
-
-namespace micro_profiler
-{
-	class file_id : std::pair<unsigned long long, unsigned long long>, std::shared_ptr<void>
+	namespace sdb
 	{
-	public:
-		file_id();
-		file_id(const std::string &path);
+		using wpl::signal;
+		using wpl::slot_connection;
+	}
 
-		bool operator ==(const file_id &rhs) const;
-
-	private:
-		template <typename T>
-		friend struct std::hash;
-	};
-
-
-
-	inline file_id::file_id()
-	{	}
-
-	inline bool file_id::operator ==(const file_id &rhs) const
-	{	return *this == static_cast<const std::pair<unsigned long long, unsigned long long> &>(rhs);	}
-}
-
-namespace std
-{
-	template <>
-	struct hash<micro_profiler::file_id>
+#else
+	namespace sdb
 	{
-		size_t operator ()(const micro_profiler::file_id &fid) const
+		// Headers, using tables will fail to build, as subscription is not defined.
+		template <typename SignatureT>
+		struct signal
 		{
-			return hash<micro_profiler::file_id::first_type>()(fid.first)
-				^ (hash<micro_profiler::file_id::second_type>()(fid.second) << 1);
-		}
-	};
-}
+			void operator ()() {	}
+			template <typename T1> void operator ()(const T1 &) {	}
+		};
+	}
+#endif

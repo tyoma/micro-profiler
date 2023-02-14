@@ -3,6 +3,7 @@
 #include <collector/calls_collector.h>
 #include <collector/thread_monitor.h>
 
+#include <common/module.h>
 #include <common/unordered_map.h>
 #include <mt/mutex.h>
 #include <mt/thread.h>
@@ -12,8 +13,37 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		class image;
+
 		namespace mocks
 		{
+			class module_helper : public module
+			{
+			public:
+				module_helper();
+
+				void emulate_mapped(const image &image_);
+				void emulate_mapped(const mapping &mapping_);
+				void emulate_unmapped(void *base);
+
+			public:
+				std::function<std::shared_ptr<dynamic> (const std::string &path)> on_load;
+				std::function<std::string ()> on_get_executable;
+				std::function<mapping (const void *address)> on_locate;
+
+			private:
+				virtual std::shared_ptr<dynamic> load(const std::string &path) override;
+				virtual std::string executable() override;
+				virtual mapping locate(const void *address) override;
+				virtual std::shared_ptr<void> notify(events &consumer) override;
+
+			private:
+				mt::mutex _mtx;
+				std::list<events *> _listeners;
+				std::vector<mapping> _mapped;
+			};
+
+
 			class thread_callbacks : public mt::thread_callbacks
 			{
 			public:

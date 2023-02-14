@@ -15,7 +15,7 @@ namespace micro_profiler
 			int g_dummy;
 		}
 
-		const string c_this_module = module::locate(&g_dummy).path;
+		const string c_this_module = module::platform().locate(&g_dummy).path;
 		const string c_symbol_container_1 = ~c_this_module & normalize::lib("symbol_container_1");
 		const string c_symbol_container_2 = ~c_this_module & normalize::lib("symbol_container_2");
 		const string c_symbol_container_2_instrumented = ~c_this_module & normalize::lib("symbol_container_2_instrumented");

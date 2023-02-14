@@ -54,7 +54,7 @@ namespace micro_profiler
 		g_instance_singleton = this;
 		g_exit_process_detour = &exit_process_detour;
 
-		const auto kernel32 = module::load("kernel32");
+		const auto kernel32 = module::platform().load("kernel32");
 		const decltype(&ExitProcess) exit_process = kernel32 / "ExitProcess";
 
 		HMODULE hmodule;

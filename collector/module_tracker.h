@@ -20,27 +20,42 @@
 
 #pragma once
 
+#include <common/auto_increment.h>
 #include <common/file_id.h>
 #include <common/module.h>
 #include <common/primitives.h>
 #include <common/protocol.h>
 #include <memory>
+#include <mt/mutex.h>
+#include <sdb/table.h>
 
 namespace micro_profiler
 {
-	struct symbol_info;
-
 	struct image_info;
 
-	class module_tracker
+	class module_tracker : module::events
 	{
 	public:
 		typedef image_info metadata_t;
 		typedef std::shared_ptr<const metadata_t> metadata_ptr;
 		struct events;
 
+		struct mapping : module::mapping
+		{
+			id_t id;
+			id_t module_id;
+		};
+
+		struct module_info
+		{
+			id_t id;
+			file_id file;
+			std::string path;
+			std::uint32_t hash;
+		};
+
 	public:
-		module_tracker();
+		module_tracker(module &module_helper);
 
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
 		std::shared_ptr<module::mapping_instance> lock_mapping(unsigned int module_id);
@@ -48,28 +63,24 @@ namespace micro_profiler
 		std::shared_ptr<void> notify(events &events_);
 
 	private:
-		struct module_info
-		{
-			module_info(const std::string &path_);
-
-			static std::uint32_t calculate_hash(const std::string &path_);
-
-			const std::string path;
-			const std::uint32_t hash;
-			std::shared_ptr<module::mapping_instance> mapping;
-		};
-
 		typedef containers::unordered_map<unsigned int /*module_id*/, module_info> modules_registry_t;
 
 	private:
-		unsigned int /*module_id*/ register_path(const std::string &path);
+		static std::uint32_t calculate_hash(const std::string &path_);
+
+		// module::events methods
+		virtual void mapped(const module::mapping &mapping_) override;
+		virtual void unmapped(void *base) override;
 
 	private:
-		containers::unordered_map<file_id, unsigned int /*module_id*/> _files_registry;
-		modules_registry_t _modules_registry;
-		loaded_modules _lqueue;
+		mutable mt::mutex _mtx;
+		sdb::table< mapping, auto_increment_constructor<mapping> > _mappings;
+		sdb::table< module_info, auto_increment_constructor<module_info> > _modules;
+		id_t _last_reported_mapping_id;
 		unloaded_modules _uqueue;
-		unsigned int _next_instance_id, _next_persistent_id;
+		module &_module_helper;
+		const file_id _this_module_file;
+		const std::shared_ptr<void> _module_notifier;
 	};
 
 	struct module_tracker::events

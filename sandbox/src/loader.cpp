@@ -34,7 +34,7 @@ namespace micro_profiler
 		{
 			typedef tuple<shared_ptr<module::dynamic>, channel_ptr_t> composite_t;
 
-			auto m = module::load(arguments.at(0));
+			auto m = module::platform().load(arguments.at(0));
 			decltype(&ipc_spawn_server) factory = m / "ipc_spawn_server";
 			channel_ptr_t session;
 			vector<string> arguments2(arguments.begin() + 1, arguments.end());

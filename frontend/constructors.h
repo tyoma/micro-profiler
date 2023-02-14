@@ -25,29 +25,6 @@
 
 namespace micro_profiler
 {
-	template <typename T>
-	struct auto_increment_constructor
-	{
-		auto_increment_constructor()
-			: _next_id(1)
-		{	}
-
-		T operator ()()
-		{
-			T record;
-
-			record.id = _next_id++;
-			return record;
-		}
-
-	private:
-		id_t _next_id;
-
-	private:
-		template <typename ArchiveT, typename T2>
-		friend void serialize(ArchiveT &archive, auto_increment_constructor<T2> &data, unsigned int ver);
-	};
-
 	template <typename T, typename U>
 	inline std::shared_ptr<T> make_bound(const std::shared_ptr<U> &underlying)
 	{

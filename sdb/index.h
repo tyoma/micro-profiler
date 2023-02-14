@@ -29,7 +29,6 @@
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
-#include <wpl/signal.h>
 
 namespace sdb
 {

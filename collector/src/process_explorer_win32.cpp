@@ -32,7 +32,7 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const auto c_kernel32 = module::load("kernel32");
+		const auto c_kernel32 = module::platform().load("kernel32");
 		const HRESULT (WINAPI *c_GetThreadDescription)(HANDLE hThread, PWSTR *ppszThreadDescription)
 			= c_kernel32 / "GetThreadDescription";
 

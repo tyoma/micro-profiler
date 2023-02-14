@@ -39,7 +39,7 @@ namespace micro_profiler
 
 				init( SetBasePath )
 				{
-					base_path = ~module::locate(&dummy).path;
+					base_path = ~module::platform().locate(&dummy).path;
 				}
 
 				teardown( RemoveTemporaries )

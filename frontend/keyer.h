@@ -23,6 +23,7 @@
 #include "constructors.h"
 #include "primitives.h"
 
+#include <common/auto_increment.h>
 #include <common/hash.h>
 #include <tuple>
 #include <sdb/integrated_index.h>

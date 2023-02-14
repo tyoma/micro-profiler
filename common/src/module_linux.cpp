@@ -48,10 +48,22 @@ namespace micro_profiler
 		}
 	}
 
-	class module::tracker
+	class module_platform : public module
+	{
+	private:
+		class tracker;
+
+	private:
+		virtual shared_ptr<dynamic> load(const string &path) override;
+		virtual string executable() override;
+		virtual mapping locate(const void *address) override;
+		virtual shared_ptr<void> notify(events &consumer) override;
+	};
+
+	class module_platform::tracker
 	{
 	public:
-		tracker(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped);
+		tracker(module &owner, events &consumer);
 		~tracker();
 
 	private:
@@ -60,8 +72,8 @@ namespace micro_profiler
 
 	private:
 		mt::event _exit;
-		const module::mapping_callback_t _mapped;
-		const module::unmapping_callback_t _unmapped;
+		string _executable;
+		events &_consumer;
 		unordered_map< file_id, pair<module::mapping, bool /*deleted*/> > _mappings;
 		module::mapping _tmp_mapping;
 		unique_ptr<mt::thread> _monitor;
@@ -89,7 +101,7 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr<module::dynamic> module::load(const string &path)
+	shared_ptr<module::dynamic> module_platform::load(const string &path)
 	{
 		shared_ptr<void> handle(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {
 			if (h)
@@ -99,7 +111,7 @@ namespace micro_profiler
 		return handle ? shared_ptr<module::dynamic>(new module::dynamic(handle)) : nullptr;
 	}
 
-	string module::executable()
+	string module_platform::executable()
 	{
 		char path[1000];
 		int result = ::readlink("/proc/self/exe", path, sizeof(path) - 1);
@@ -107,7 +119,7 @@ namespace micro_profiler
 		return path[result >= 0 ? result : 0] = 0, path;
 	}
 
-	module::mapping module::locate(const void *address)
+	module::mapping module_platform::locate(const void *address)
 	{
 		Dl_info di = { };
 
@@ -118,12 +130,12 @@ namespace micro_profiler
 		};
 	}
 
-	shared_ptr<void> module::notify(mapping_callback_t mapped, module::unmapping_callback_t unmapped)
-	{	return make_shared<tracker>(mapped, unmapped);	}
+	shared_ptr<void> module_platform::notify(events &consumer)
+	{	return make_shared<tracker>(*this, consumer);	}
 
 
-	module::tracker::tracker(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped)
-		: _mapped(mapped), _unmapped(unmapped)
+	module_platform::tracker::tracker(module &owner, events &consumer)
+		: _executable(owner.executable()), _consumer(consumer)
 	{
 		::dl_iterate_phdr(&tracker::on_module, this);
 		_monitor.reset(new mt::thread([this] {
@@ -134,26 +146,26 @@ namespace micro_profiler
 				::dl_iterate_phdr(&tracker::on_module, this);
 				for (auto i = _mappings.begin(); i != _mappings.end(); )
 					if (i->second.second)
-						_unmapped(i->second.first.base), i = _mappings.erase(i);
+						_consumer.unmapped(i->second.first.base), i = _mappings.erase(i);
 					else
 						i++;
 			}
 		}));
 	}
 
-	module::tracker::~tracker()
+	module_platform::tracker::~tracker()
 	{
 		_exit.set();
 		_monitor->join();
 	}
 
-	int module::tracker::on_module(dl_phdr_info *phdr, size_t, void *cb)
+	int module_platform::tracker::on_module(dl_phdr_info *phdr, size_t, void *cb)
 	{
 		auto n = phdr->dlpi_phnum;
 		auto &self = *static_cast<tracker *>(cb);
 		auto &m = self._tmp_mapping;
 
-		m.path = phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : module::executable();
+		m.path = phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : self._executable;
 		m.base = reinterpret_cast<byte *>(phdr->dlpi_addr);
 		m.regions.clear();
 		for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)
@@ -166,22 +178,29 @@ namespace micro_profiler
 		return 0;
 	}
 
-	void module::tracker::on_module(const module::mapping &m)
+	void module_platform::tracker::on_module(const module::mapping &m)
 	{
 		file_id id(m.path);
 		const auto i = _mappings.find(id);
 
 		if (i == _mappings.end())
 		{
-			_mapped(m);
+			_consumer.mapped(m);
 			_mappings.emplace(id, make_pair(m, false));
 			return;
 		}
 		else if (m.base != i->second.first.base)
 		{
-			_unmapped(i->second.first.base);
-			_mapped(i->second.first = m);
+			_consumer.unmapped(i->second.first.base);
+			_consumer.mapped(i->second.first = m);
 		}
 		i->second.second = false;
+	}
+
+
+	module &module::platform()
+	{
+		static module_platform m;
+		return m;
 	}
 }

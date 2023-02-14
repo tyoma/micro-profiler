@@ -168,10 +168,11 @@ namespace micro_profiler
 				// ACT
 				controller->request(req, load_module, c_symbol_container_1, 1, [&] (ipc::deserializer &) {	ready.set();	});
 				ready.wait();
-				client->request(req, request_update, 0, response_modules_loaded, [&] (ipc::deserializer &dser) {	dser(l), ready.set();	});
-
-				// ACT / ASSERT
-				ready.wait();
+				do
+				{
+					client->request(req, request_update, 0, response_modules_loaded, [&] (ipc::deserializer &dser) {	dser(l), ready.set();	});
+					ready.wait();
+				} while (l.empty() && (mt::this_thread::sleep_for(mt::milliseconds(20)), true));
 
 				// ASSERT
 				assert_is_false(std::any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
@@ -196,11 +197,11 @@ namespace micro_profiler
 					connection_ready.set();
 				};
 
-				controller->request(req, load_module, c_symbol_container_2_instrumented, 1, [&] (ipc::deserializer &) {	ready.set();	});
-				ready.wait();
 				controller->request(req, load_module, c_symbol_container_1, 1, [&] (ipc::deserializer &) {	ready.set();	});
 				ready.wait();
 				controller->request(req, load_module, c_symbol_container_2, 1, [&] (ipc::deserializer &) {	ready.set();	});
+				ready.wait();
+				controller->request(req, load_module, c_symbol_container_2_instrumented, 1, [&] (ipc::deserializer &) {	ready.set();	});
 				ready.wait();
 				connection_ready.wait();
 				client->request(req, request_update, 0, response_modules_loaded, [&] (ipc::deserializer &dser) {	dser(l), ready.set();	});
@@ -209,8 +210,11 @@ namespace micro_profiler
 				// ACT
 				controller->request(req, unload_module, c_symbol_container_1, 1, [&] (ipc::deserializer &) {	ready.set();	});
 				ready.wait();
-				client->request(req, request_update, 0, response_modules_unloaded, [&] (ipc::deserializer &dser) {	dser(u), ready.set();	});
-				ready.wait();
+				do
+				{
+					client->request(req, request_update, 0, response_modules_unloaded, [&] (ipc::deserializer &dser) {	dser(u), ready.set();	});
+					ready.wait();
+				} while (u.empty() && (mt::this_thread::sleep_for(mt::milliseconds(20)), true));
 
 				// ASSERT
 				assert_equal(1u, u.size());
@@ -219,8 +223,11 @@ namespace micro_profiler
 				// ACT
 				controller->request(req, unload_module, c_symbol_container_2, 1, [&] (ipc::deserializer &) {	ready.set();	});
 				ready.wait();
-				client->request(req, request_update, 0, response_modules_unloaded, [&] (ipc::deserializer &dser) {	dser(u), ready.set();	});
-				ready.wait();
+				do
+				{
+					client->request(req, request_update, 0, response_modules_unloaded, [&] (ipc::deserializer &dser) {	dser(u), ready.set();	});
+					ready.wait();
+				} while (u.empty() && (mt::this_thread::sleep_for(mt::milliseconds(20)), true));
 
 
 				// ASSERT

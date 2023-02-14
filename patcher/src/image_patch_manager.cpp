@@ -39,11 +39,11 @@ namespace micro_profiler
 		}
 	}
 
-	void image_patch_manager::map_module(id_t /*mapping_id*/, id_t /*module_id*/, const module::mapping &/*mapping*/)
+	void image_patch_manager::map_module(id_t /*module_id*/, const module::mapping &/*mapping*/)
 	{
 	}
 
-	void image_patch_manager::unmap_module(id_t /*mapping_id*/)
+	void image_patch_manager::unmap_module(id_t /*module_id*/)
 	{
 	}
 

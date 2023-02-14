@@ -21,6 +21,7 @@
 #pragma once
 
 #include "integrated_index.h"
+#include "signal.h"
 
 #include <tuple>
 
@@ -64,7 +65,7 @@ namespace sdb
 	{
 		typedef table<T, ConstructorT> aggregated_table_t;
 
-		const auto composite = std::make_shared< std::tuple< aggregated_table_t, std::vector<wpl::slot_connection> > >();
+		const auto composite = std::make_shared< std::tuple< aggregated_table_t, std::vector<slot_connection> > >();
 		auto &aggregate = std::get<0>(*composite);
 		auto &connections = std::get<1>(*composite);
 		const auto ukeyer = keyer_factory(underlying, underlying_key_tag());
@@ -107,7 +108,7 @@ namespace sdb
 	template <typename JoinedTableT, typename SideTableT, typename KeyerT, typename IndexT, typename ComposerT,
 		typename JoinedHandleKeyerT, typename HandleKeyerT>
 	inline std::function<void (typename SideTableT::const_iterator record)> maintain_joined(JoinedTableT &joined,
-		std::vector<wpl::slot_connection> &connections, SideTableT &side, const KeyerT &keyer,
+		std::vector<slot_connection> &connections, SideTableT &side, const KeyerT &keyer,
 		const IndexT &opposite_side_index, const ComposerT &composer, const JoinedHandleKeyerT &jhkeyer,
 		const HandleKeyerT &hkeyer)
 	{
@@ -143,7 +144,7 @@ namespace sdb
 		typedef joined_record<LeftT, RightT> value_type;
 		typedef table<value_type> joined_table_t;
 
-		const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<wpl::slot_connection> > >();
+		const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<slot_connection> > >();
 		auto &joined = std::get<0>(*composite);
 		auto &connections = std::get<1>(*composite);
 		auto add_from_left = maintain_joined(joined, connections, left, left_by, multi_index(right, right_by),

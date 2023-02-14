@@ -17,8 +17,8 @@ namespace micro_profiler
 				std::function<void (revert_results &results, unsigned int module_id, request_range targets)> on_revert;
 
 			private:
-				virtual void map_module(id_t mapping_id, id_t module_id, const module::mapping &mapping) override;
-				virtual void unmap_module(id_t mapping_id) override;
+				virtual void map_module(id_t module_id, const module::mapping &mapping) override;
+				virtual void unmap_module(id_t module_id) override;
 
 				virtual void query(patch_state &states, unsigned int module_id) override;
 				virtual void apply(apply_results &results, unsigned int module_id, void *base,
@@ -28,10 +28,10 @@ namespace micro_profiler
 
 
 
-			inline void patch_manager::map_module(id_t /*mapping_id*/, id_t /*module_id*/, const module::mapping &/*mapping*/)
+			inline void patch_manager::map_module(id_t /*module_id*/, const module::mapping &/*mapping*/)
 			{	}
 
-			inline void patch_manager::unmap_module(id_t /*mapping_id*/)
+			inline void patch_manager::unmap_module(id_t /*module_id*/)
 			{	}
 
 			inline void patch_manager::query(patch_state &states, unsigned int module_id)

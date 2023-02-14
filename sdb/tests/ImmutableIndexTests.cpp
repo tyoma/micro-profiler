@@ -106,7 +106,7 @@ namespace sdb
 		end_test_suite
 
 
-		begin_test_suite( AAImmutableIndexBaseTests )
+		begin_test_suite( ImmutableIndexBaseTests )
 			test( IndexIsBuiltOnConstruction )
 			{
 				// INIT

@@ -4,6 +4,7 @@
 #include <common/path.h>
 
 #include "helpers.h"
+#include "mocks.h"
 
 #include <test-helpers/comparisons.h>
 #include <test-helpers/constants.h>
@@ -47,32 +48,26 @@ namespace micro_profiler
 				});
 				return symbol;
 			}
-
-			const module::mapping_instance *get_loaded(const loaded_modules &loaded, const string &path)
-			{
-				for (auto i = loaded.begin(); i != loaded.end(); ++i)
-					if (file_id(path) == file_id(i->second.path))
-						return &*i;
-				return nullptr;
-			}
 		}
 
 		begin_test_suite( ModuleTrackerTests )
 			temporary_directory dir;
 			string module1_path, module2_path, module3_path;
+			unique_ptr<image> img1, img2, img3;
+			mocks::module_helper module_helper;
 
 			init( Init )
 			{
-				module1_path = dir.copy_file(c_symbol_container_1);
-				module2_path = dir.copy_file(c_symbol_container_2);
-				module3_path = dir.copy_file(c_symbol_container_3_nosymbols);
+				img1.reset(new image(module1_path = dir.copy_file(c_symbol_container_1)));
+				img2.reset(new image(module2_path = dir.copy_file(c_symbol_container_2)));
+				img3.reset(new image(module3_path = dir.copy_file(c_symbol_container_3_nosymbols)));
 			}
 
 
 			test( NoChangesIfNoLoadsUnloadsOccured )
 			{
 				// INIT
-				module_tracker t;
+				module_tracker t(module_helper);
 				loaded_modules loaded_images;
 				unloaded_modules unloaded_images;
 
@@ -91,8 +86,8 @@ namespace micro_profiler
 			test( InitialRequestDoesNotIncludeCurrentModule )
 			{
 				// INIT
-				file_id self(module::locate(&dummy).path);
-				module_tracker t;
+				file_id self(module::platform().locate(&dummy).path);
+				module_tracker t(module_helper);
 				loaded_modules loaded_images;
 				unloaded_modules unloaded_images;
 
@@ -107,327 +102,247 @@ namespace micro_profiler
 			}
 
 
-			test( LoadEventAddressIsTranslatedToPathAndBaseAddressInTheResult )
+			test( NewMappingIsGeneratedUponModuleLoadEvent )
 			{
 				// INIT
-				module_tracker t;
+				module_tracker t(module_helper);
 				loaded_modules loaded_images;
 				unloaded_modules unloaded_images;
 
-				t.get_changes(loaded_images, unloaded_images);
-
 				// ACT
-				image image0(c_symbol_container_1);
+				module_helper.emulate_mapped(*img1);
 				t.get_changes(loaded_images, unloaded_images);
 
 				// ASSERT
-				assert_equal(1u, loaded_images.size());
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(1, 1, img1->absolute_path(), img1->base()), loaded_images, mapping_less());
+
+				// ACT
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_mapped(*img3);
+				t.get_changes(loaded_images, unloaded_images);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(2, 2, img2->absolute_path(), img2->base())
+					+ make_mapping_instance(3, 3, img3->absolute_path(), img3->base()), loaded_images, mapping_less());
 				assert_is_empty(unloaded_images);
-
-				assert_equal(image0.base(), loaded_images[0].second.base);
-				assert_equal(file_id(c_symbol_container_1), file_id(loaded_images[0].second.path));
-
-				// ACT
-				image image1(c_symbol_container_2);
-				image image2(c_symbol_container_3_nosymbols);
-				t.get_changes(loaded_images, unloaded_images);
-
-				// ASSERT
-				assert_equal(2u, loaded_images.size());
-				assert_is_empty(unloaded_images);
-
-				const module::mapping_instance *mmi[] ={
-					find_module(loaded_images, c_symbol_container_2),
-					find_module(loaded_images, c_symbol_container_3_nosymbols),
-				};
-
-				assert_null(find_module(loaded_images, c_symbol_container_1));
-				assert_not_null(mmi[0]);
-				assert_equal(image1.base(), mmi[0]->second.base);
-				assert_not_null(mmi[1]);
-				assert_equal(image2.base(), mmi[1]->second.base);
-			}
-
-
-			test( ModulesLoadedGetTheirUniqueInstanceIDs )
-			{
-				// INIT
-				module_tracker t;
-				loaded_modules l[2];
-				unloaded_modules u;
-
-				// ACT
-				image image0(c_symbol_container_1); // To guarantee at least one module - we don't care if it's the first in the list.
-				t.get_changes(l[0], u);
-				image image1(c_symbol_container_2);
-				image image2(c_symbol_container_3_nosymbols);
-				t.get_changes(l[1], u);
-
-				// ASSERT
-				assert_is_true(l[0][0].first < l[1][0].first);
-				assert_is_true(l[0][0].first < l[1][1].first);
-				assert_not_equal(l[1][1].first, l[1][0].first);
 			}
 
 
 			test( ModulesLoadedHaveTheirHashesSet )
 			{
 				// INIT
-				module_tracker t;
-				loaded_modules l[4];
+				module_tracker t(module_helper);
+				loaded_modules l;
 				unloaded_modules u;
-				const auto symbol_container_3_path = dir.copy_file(c_symbol_container_3_nosymbols);
-
-				t.get_changes(l[0], u);
-				l[0].clear();
+				image img4(c_symbol_container_3_nosymbols);
 
 				// ACT
-				image image0(c_symbol_container_1);
-				t.get_changes(l[0], u);
-				image image1(c_symbol_container_2);
-				t.get_changes(l[1], u);
-				image image2(c_symbol_container_3_nosymbols);
-				t.get_changes(l[2], u);
-				image image3(symbol_container_3_path);
-				t.get_changes(l[3], u);
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_mapped(*img3);
+				module_helper.emulate_mapped(img4);
+				t.get_changes(l, u);
 
 				// ASSERT
-				assert_not_equal(l[0][0].second.hash, l[1][0].second.hash);
-				assert_not_equal(l[1][0].second.hash, l[2][0].second.hash);
-				assert_not_equal(l[2][0].second.hash, l[0][0].second.hash);
-				assert_equal(l[2][0].second.hash, l[3][0].second.hash);
+				assert_not_equal(l[0].second.hash, l[1].second.hash);
+				assert_not_equal(l[1].second.hash, l[2].second.hash);
+				assert_not_equal(l[2].second.hash, l[0].second.hash);
+				assert_equal(l[2].second.hash, l[3].second.hash);
 			}
 
 
-			test( ModulesLoadedGetTheirUniquePersistentIDs )
+			test( StableIDsAreAssignedToPreviouslyKnownModules )
 			{
 				// INIT
-				module_tracker t;
-				loaded_modules l[2];
+				module_tracker t(module_helper);
+				loaded_modules l;
 				unloaded_modules u;
+				module::mapping synthetic_mappings[] = {
+					module::platform().locate(img1->base_ptr()),
+					module::platform().locate(img2->base_ptr()),
+					module::platform().locate(img3->base_ptr()),
+				};
 
-				t.get_changes(l[0], u);
+				synthetic_mappings[0].base = (byte *)123; // will not interfere with any valid base due to intentional mis-alignment.
+				synthetic_mappings[1].base = (byte *)124;
+				synthetic_mappings[2].base = (byte *)125;
 
-				// ACT
-				image image0(c_symbol_container_1);
-				t.get_changes(l[0], u);
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_mapped(*img3);
+
+				// ACT (secondary mapping is not possible in real life, but module_tracker must handle it fine)
+				module_helper.emulate_mapped(synthetic_mappings[2]);
+				t.get_changes(l, u);
 
 				// ASSERT
-				assert_equal(1u, l[0].size());
-				assert_is_true(1 <= l[0][0].second.module_id);
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(1, 1, img1->absolute_path(), img1->base())
+					+ make_mapping_instance(2, 2, img2->absolute_path(), img2->base())
+					+ make_mapping_instance(3, 3, img3->absolute_path(), img3->base())
+					+ make_mapping_instance(4, 3, img3->absolute_path(), 125), l, mapping_less());
 
 				// ACT
-				image image1(c_symbol_container_2);
-				image image2(c_symbol_container_3_nosymbols);
-				t.get_changes(l[1], u);
+				module_helper.emulate_mapped(synthetic_mappings[0]);
+				module_helper.emulate_mapped(synthetic_mappings[1]);
+				t.get_changes(l, u);
 
 				// ASSERT
-				assert_is_true(l[0][0].second.module_id < l[1][0].second.module_id);
-				assert_is_true(l[0][0].second.module_id < l[1][1].second.module_id);
-				assert_not_equal(l[1][0].second.module_id, l[1][1].second.module_id);
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(5, 1, img1->absolute_path(), 123)
+					+ make_mapping_instance(6, 2, img2->absolute_path(), 124), l, mapping_less());
 			}
 
 
 			test( InstanceIDsAreReportedForUnloadedModules )
 			{
 				// INIT
-				module_tracker t;
-				loaded_modules l[2];
+				module_tracker t(module_helper);
+				loaded_modules l;
 				unloaded_modules u;
 
-				unique_ptr<image> image0(new image(c_symbol_container_1));
-				unique_ptr<image> image1(new image(c_symbol_container_2));
-				unique_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
-				t.get_changes(l[0], u);
-
-				const module::mapping_instance *mmi[] = {
-					find_module(l[0], c_symbol_container_1),
-					find_module(l[0], c_symbol_container_2),
-					find_module(l[0], c_symbol_container_3_nosymbols),
-				};
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_mapped(*img3);
 
 				// ACT
-				image1.reset();
-				t.get_changes(l[1], u);
+				module_helper.emulate_unmapped(img2->base_ptr());
+				t.get_changes(l, u);
 
 				// ASSERT
-				unsigned reference1[] = { mmi[1]->first, };
-
-				assert_equivalent(reference1, u);
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(1, 1, img1->absolute_path(), img1->base())
+					+ make_mapping_instance(3, 3, img3->absolute_path(), img3->base()), l, mapping_less());
+				assert_equivalent(plural + 2u, u); // Mapping ID comes for a previously 'unknown' mapping.
 
 				// ACT
-				image0.reset();
-				image2.reset();
-				t.get_changes(l[1], u);
+				module_helper.emulate_unmapped(img1->base_ptr());
+				module_helper.emulate_unmapped(img3->base_ptr());
+				t.get_changes(l, u);
 
 				// ASSERT
-				unsigned reference2[] = { mmi[0]->first, mmi[2]->first, };
+				assert_is_empty(l);
+				assert_equivalent(plural + 1u + 3u, u);
 
-				assert_equivalent(reference2, u);
+				// ACT
+				module_helper.emulate_mapped(*img2);
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(4, 2, img2->absolute_path(), img2->base()), l, mapping_less());
+				assert_is_empty(u);
+
+				// ACT
+				module_helper.emulate_unmapped(img2->base_ptr());
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_is_empty(l);
+				assert_equivalent(plural + 4u, u);
 			}
 
 
 			test( MixedEventsAreTranslatedToImageInfoResultPathAndBaseAddressInTheResult )
 			{
 				// INIT
-				module_tracker t;
-				loaded_modules l[2];
-				unloaded_modules u;
-
-				unique_ptr<image> image0(new image(c_symbol_container_1));
-				unique_ptr<image> image1(new image(c_symbol_container_2));
-				t.get_changes(l[0], u);
-
-				const module::mapping_instance *mmi[] = { find_module(l[0], c_symbol_container_1), find_module(l[0], c_symbol_container_2), };
-
-				// ACT
-				image image2(c_symbol_container_3_nosymbols);
-				image0.reset();
-				image1.reset();
-				t.get_changes(l[1], u);
-
-				// ASSERT
-				assert_equal(1u, l[1].size());
-				assert_not_null(find_module(l[1], c_symbol_container_3_nosymbols));
-
-				unsigned reference[] = { mmi[0]->first, mmi[1]->first, };
-
-				assert_equivalent(reference, u);
-			}
-
-
-			test( SameModulesReloadedPreservePersistentIDsAndHaveNewInstanceIDs ) // Run exclusively from others.
-			{
-				// INIT
-				module_tracker t;
-				loaded_modules l[5];
-				unloaded_modules u;
-
-				unique_ptr<image> image0(new image(c_symbol_container_1));
-				unique_ptr<image> image1(new image(c_symbol_container_2));
-				unique_ptr<image> image2(new image(c_symbol_container_3_nosymbols));
-				t.get_changes(l[0], u);
-				image0.reset();
-				image1.reset();
-				image2.reset();
-				t.get_changes(l[1], u);
-
-				const module::mapping_instance *mmi[] = {
-					find_module(l[0], c_symbol_container_1), find_module(l[0], c_symbol_container_2), find_module(l[0], c_symbol_container_3_nosymbols),
-				};
-				const unsigned initial_iid_max = max_element(l[0].begin(), l[0].end(),
-					[] (module::mapping_instance lhs, module::mapping_instance rhs) {
-					return lhs.first < rhs.first;
-				})->first;
-
-				// Trying to guarantee different load addresses.
-				shared_ptr<void> guards[] = {
-					occupy_memory(reinterpret_cast<byte *>(static_cast<size_t>(mmi[0]->second.base))),
-					occupy_memory(reinterpret_cast<byte *>(static_cast<size_t>(mmi[1]->second.base))),
-					occupy_memory(reinterpret_cast<byte *>(static_cast<size_t>(mmi[2]->second.base))),
-				};
-				guards;
-
-				// ACT
-				image1.reset(new image(c_symbol_container_2));
-				t.get_changes(l[2], u);
-
-				// ASSERT
-				assert_equal(1u, l[2].size());
-				
-				assert_equal(mmi[1]->second.module_id, l[2][0].second.module_id);
-				assert_is_true(initial_iid_max < l[2][0].first);
-				assert_not_equal(mmi[1]->second.base, l[2][0].second.base);
-
-				// ACT
-				image0.reset(new image(c_symbol_container_1));
-				t.get_changes(l[3], u);
-
-				// ASSERT
-				assert_equal(mmi[0]->second.module_id, l[3][0].second.module_id);
-				assert_is_true(l[2][0].first < l[3][0].first);
-				assert_not_equal(mmi[0]->second.base, l[3][0].second.base);
-
-				// ACT
-				image2.reset(new image(c_symbol_container_3_nosymbols));
-				t.get_changes(l[4], u);
-
-				// ASSERT
-				assert_equal(mmi[2]->second.module_id, l[4][0].second.module_id);
-				assert_is_true(l[3][0].first < l[4][0].first);
-				assert_not_equal(mmi[2]->second.base, l[4][0].second.base);
-			}
-
-
-			test( ModuleInfoCanBeRetrievedByPersistentID )
-			{
-				// INIT
-				module_tracker t;
+				module_tracker t(module_helper);
 				loaded_modules l;
 				unloaded_modules u;
-				unique_ptr<image> image0(new image(c_symbol_container_1)); // Not necessairly these will be returned...
-				unique_ptr<image> image1(new image(c_symbol_container_2));
+
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
 				t.get_changes(l, u);
-				auto found1 = find_module(l, c_symbol_container_1);
-				auto found2 = find_module(l, c_symbol_container_2);
+
+				// ACT
+				module_helper.emulate_mapped(*img3);
+				module_helper.emulate_unmapped(img2->base_ptr());
+				module_helper.emulate_unmapped(img1->base_ptr());
+				t.get_changes(l, u);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_mapping_instance(3, 3, img3->absolute_path(), img3->base()), l, mapping_less());
+				assert_equivalent(plural + 1u + 2u, u);
+			}
+
+
+			test( MappedModulesCanBeLockedPersistentID )
+			{
+				// INIT
+				module_tracker t(module_helper);
+
+				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img3);
+				module_helper.emulate_mapped(*img2);
 
 				// ACT / ASSERT
-				assert_equal(*found1, *t.lock_mapping(found1->second.module_id));
-				assert_equal(*found2, *t.lock_mapping(found2->second.module_id));
+				assert_not_null(t.lock_mapping(1));
+				assert_equal(make_mapping_instance(1, 1, img1->absolute_path(), img1->base()), *t.lock_mapping(1));
+				assert_not_null(t.lock_mapping(2));
+				assert_equal(make_mapping_instance(2, 2, img3->absolute_path(), img3->base()), *t.lock_mapping(2));
+				assert_not_null(t.lock_mapping(3));
+				assert_equal(make_mapping_instance(3, 3, img2->absolute_path(), img2->base()), *t.lock_mapping(3));
+			}
+
+
+			test( UnmappedModulesCanNotBeLocked )
+			{
+				// INIT
+				module_tracker t(module_helper);
+				loaded_modules l;
+				unloaded_modules u;
+
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img3);
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_unmapped(img1->base_ptr());
+				module_helper.emulate_unmapped(img3->base_ptr());
+
+				// ACT / ASSERT
+				assert_null(t.lock_mapping(1));
+				assert_null(t.lock_mapping(2));
 			}
 
 
 			test( ModuleMetadataCanBeRetrievedByPersistentID )
 			{
 				// INIT
-				module_tracker t;
-				loaded_modules l;
-				unloaded_modules u;
+				module_tracker t(module_helper);
 
-				unique_ptr<image> image0(new image(c_symbol_container_1)); // Not necessairly these will be returned...
-				unique_ptr<image> image1(new image(c_symbol_container_2));
-				t.get_changes(l, u);
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_unmapped(img2->base_ptr());
 
 				// ACT / ASSERT
-				assert_not_null(t.get_metadata(find_module(l, c_symbol_container_1)->second.module_id));
-				assert_not_null(t.get_metadata(find_module(l, c_symbol_container_2)->second.module_id));
+				assert_not_null(t.get_metadata(1));
+				assert_not_null(t.get_metadata(2));
 			}
 
 
 			test( ModuleInformationIsNotRetrievedForWrongID )
 			{
 				// INIT
-				module_tracker t;
-				loaded_modules l;
-				unloaded_modules u;
+				module_tracker t(module_helper);
 
-				// ACT / ASSERT (calls are made prior to first get_changes())
-				assert_null(t.get_metadata(0));
-				assert_null(t.get_metadata(1));
-
-				// INIT
-				t.get_changes(l, u);
-
-				// ACT / ASSERT (we expect there're no that many modules loaded)
-				assert_null(t.get_metadata(3000));
+				// ACT / ASSERT
+				assert_throws(t.get_metadata(3000), invalid_argument);
+				assert_throws(t.get_metadata(0), invalid_argument);
 			}
 
 
 			test( ImageInfoIsAccessibleFromTrackedModule )
 			{
 				// INIT
-				module_tracker t;
-				loaded_modules l;
-				unloaded_modules u;
+				module_tracker t(module_helper);
 
-				image image0(c_symbol_container_1);
-				image image1(c_symbol_container_2);
-				t.get_changes(l, u);
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
 
-				metadata_ptr md[] = {
-					t.get_metadata(find_module(l, c_symbol_container_1)->second.module_id),
-					t.get_metadata(find_module(l, c_symbol_container_2)->second.module_id),
-				};
+				metadata_ptr md[] = {	t.get_metadata(1), t.get_metadata(2),	};
 
 				// ACT
 				shared_ptr<symbol_info> s1 = get_function_containing(*md[0], "get_function_addresses_1");
@@ -436,31 +351,11 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_not_null(s1);
-				assert_equal(image0.get_symbol_rva("get_function_addresses_1"), s1->rva);
+				assert_equal(img1->get_symbol_rva("get_function_addresses_1"), s1->rva);
 				assert_not_null(s2);
-				assert_equal(image1.get_symbol_rva("get_function_addresses_2"), s2->rva);
+				assert_equal(img2->get_symbol_rva("get_function_addresses_2"), s2->rva);
 				assert_not_null(s3);
-				assert_equal(image1.get_symbol_rva("guinea_snprintf"), s3->rva);
-			}
-
-
-			test( ImageInfoIsAccessibleEvenAfterTheModuleIsUnloaded )
-			{
-				// INIT
-				module_tracker t;
-				loaded_modules l;
-				unloaded_modules u;
-
-				unique_ptr<image> image0(new image(c_symbol_container_1));
-				t.get_changes(l, u);
-				const module::mapping_instance mmi = *find_module(l, c_symbol_container_1);
-
-				//ACT
-				image0.reset();
-				t.get_changes(l, u);
-
-				// ACT / ASSERT
-				assert_not_null(t.get_metadata(mmi.second.module_id));
+				assert_equal(img2->get_symbol_rva("guinea_snprintf"), s3->rva);
 			}
 
 
@@ -469,23 +364,20 @@ namespace micro_profiler
 				// INIT
 				auto unloaded1 = false;
 				auto unloaded2 = false;
-				module_tracker t;
+				module_tracker t(module_helper);
 				loaded_modules l;
 				unloaded_modules u;
-				unique_ptr<image> image1(new image(module1_path));
-				unique_ptr<image> image2(new image(module2_path));
 
-				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
-				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
+				img1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
+				img2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
 
-				t.get_changes(l, u);
-
-				const auto lm1 = *get_loaded(l, module1_path);
-				const auto lm2 = *get_loaded(l, module2_path);
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
 
 				// ACT
-				auto lock1 = t.lock_mapping(lm1.second.module_id);
-				auto lock2 = t.lock_mapping(lm2.second.module_id);
+				auto lock1 = t.lock_mapping(1);
+				auto lock2 = t.lock_mapping(2);
 
 				// ASSERT
 				assert_not_null(lock1);
@@ -493,8 +385,8 @@ namespace micro_profiler
 				assert_not_equal(lock1, lock2);
 
 				// ACT
-				image1.reset();
-				image2.reset();
+				img1.reset();
+				img2.reset();
 
 				// ASSERT
 				assert_is_false(unloaded1);
@@ -518,43 +410,74 @@ namespace micro_profiler
 			test( AttemptToLockWithInvalidIDFails )
 			{
 				// INIT
-				module_tracker t;
-				loaded_modules l;
-				unloaded_modules u;
-
-				t.get_changes(l, u);
+				module_tracker t(module_helper);
 
 				// ACT / ASSERT
-				assert_throws(t.lock_mapping(1500), invalid_argument);
+				assert_throws(t.lock_mapping(1), invalid_argument);
+				assert_throws(t.lock_mapping(3), invalid_argument);
+
+				// INIT
+				module_helper.emulate_mapped(*img3);
+
+				// ACT / ASSERT
+				assert_throws(t.lock_mapping(2), invalid_argument);
+				assert_throws(t.lock_mapping(3), invalid_argument);
 			}
 
 
-			ignored_test( SubscribingToTrackingNotificationListsLoadedModules )
-			{
-				// INIT
-				tracker_event e1, e2, e3;
-				module_tracker t;
+			//test( SubscribingToTrackingNotificationListsLoadedModules )
+			//{
+			//	// INIT
+			//	unique_ptr<image> img1(new image(module1_path));
+			//	auto img1_base = img1->base_ptr();
+			//	unique_ptr<image> img2(new image(module2_path));
+			//	auto img2_base = img2->base_ptr();
+			//	unique_ptr<image> img3(new image(module3_path));
+			//	auto img3_base = img3->base_ptr();
+			//	vector<module::mapping> mappings1, mappings2;
+			//	set<id_t> mapping_ids1, module_ids1, mapping_ids2, module_ids2;
+			//	const module::mapping *match;
+			//	tracker_event e1, e2;
+			//	module_tracker t(module_helper);
+			//	bool valid = true;
 
-				// INIT / ACT
-				auto n1 = t.notify(e1);
+			//	e1.on_mapped = [&] (id_t mapping_id, id_t module_id, const module::mapping &m) {
+			//		valid &= mapping_ids1.insert(mapping_id).second && module_ids1.insert(module_id).second;
+			//		mappings1.push_back(m);
+			//	};
+			//	e1.on_unmapped = [&] (id_t /*mapping_id*/) {	valid = false;	};
+			//	e2.on_mapped = [&] (id_t mapping_id, id_t module_id, const module::mapping &m) {
+			//		valid &= mapping_ids2.insert(mapping_id).second && module_ids2.insert(module_id).second;
+			//		mappings2.push_back(m);
+			//	};
+			//	e2.on_unmapped = [&] (id_t /*mapping_id*/) {	valid = false;	};
 
-				// INIT
-				unique_ptr<image> image1(new image(module1_path));
+			//	// ACT
+			//	t.notify(e1);
 
-				// INIT / ACT
-				auto n2 = t.notify(e2);
+			//	// ASSERT
+			//	assert_not_null(match = find_module(mappings1, img1_base));
+			//	assert_equal(file_id(img1->absolute_path()), file_id(match->path));
+			//	assert_not_null(match = find_module(mappings1, img2_base));
+			//	assert_equal(file_id(img2->absolute_path()), file_id(match->path));
+			//	assert_not_null(match = find_module(mappings1, img3_base));
+			//	assert_equal(file_id(img3->absolute_path()), file_id(match->path));
 
-				// ASSERT
+			//	// INIT
+			//	img1.reset();
+			//	img3.reset();
 
-				// INIT
-				unique_ptr<image> image2(new image(module2_path));
-				unique_ptr<image> image3(new image(module3_path));
+			//	// ACT
+			//	t.notify(e2);
 
-				// INIT / ACT
-				auto n3 = t.notify(e3);
+			//	// ASSERT
+			//	assert_is_true(valid);
+			//	assert_null(find_module(mappings2, img1_base));
+			//	assert_not_null(match = find_module(mappings2, img2_base));
+			//	assert_equal(file_id(img2->absolute_path()), file_id(match->path));
+			//	assert_null(find_module(mappings2, img3_base));
+			//}
 
-				// ASSERT
-			}
 		end_test_suite
 	}
 }

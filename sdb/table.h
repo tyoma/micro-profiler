@@ -20,12 +20,12 @@
 
 #pragma once
 
+#include "signal.h"
 #include "table_component.h"
 
 #include <common/compiler.h>
 #include <unordered_map>
 #include <vector>
-#include <wpl/signal.h>
 
 namespace sdb
 {
@@ -84,11 +84,11 @@ namespace sdb
 		typename component_type<CompConstructorT>::type &component(const CompConstructorT &constructor);
 
 	public:
-		mutable wpl::signal<void (const_iterator record)> created;
-		mutable wpl::signal<void (const_iterator record)> modified;
-		mutable wpl::signal<void (const_iterator record)> removed;
-		mutable wpl::signal<void ()> cleared;
-		mutable wpl::signal<void ()> invalidate;
+		mutable signal<void (const_iterator record)> created;
+		mutable signal<void (const_iterator record)> modified;
+		mutable signal<void (const_iterator record)> removed;
+		mutable signal<void ()> cleared;
+		mutable signal<void ()> invalidate;
 
 	private:
 		table(const table &other);

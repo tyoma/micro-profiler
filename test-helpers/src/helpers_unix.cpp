@@ -21,30 +21,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			void *find_any_mapped_for(const string &name)
-			{
-				if (shared_ptr<FILE> f = shared_ptr<FILE>(fopen("/proc/self/maps", "r"), &fclose))
-				{
-					char line[1000] = { 0 };
-
-					while (fgets(line, sizeof(line) - 1, f.get()))
-					{
-						uintptr_t from, to, offset;
-						char rights[10], path[1000] = { 0 };
-						unsigned dummy;
-						int dummy_int;
-
-						if (sscanf(line, "%" SCNxPTR "-%" SCNxPTR " %s %" SCNxPTR " %x:%x %d %s\n",
-							&from, &to, rights, &offset, &dummy, &dummy, &dummy_int, path) > 0 && path[0])
-						{
-							if (string(path).find(name) != string::npos)
-								return reinterpret_cast<void *>(from);
-						}
-					}
-				}
-				return 0;
-			}
-
 			string get_current_dir()
 			{
 				char path[4096] = { 0 };
@@ -54,7 +30,6 @@ namespace micro_profiler
 				return p;
 			}
 		}
-
 
 
 		image::image(string path)
@@ -67,23 +42,11 @@ namespace micro_profiler
 				throw runtime_error(("Cannot load module '" + path + "' specified!").c_str());
 
 			Dl_info di = { };
-
-#ifndef __APPLE__
-			void *addr = find_any_mapped_for(*path);
-
-			if (!addr)
-				addr = get();
-#else
-			void *addr = get_symbol_address("track_unload"); // A symbol known to be present.
-#endif
+			auto addr = get_symbol_address("track_unload"); // A symbol known to be present.
 
 			::dladdr(addr, &di);
 			_base = static_cast<byte *>(di.dli_fbase);
-#ifndef __APPLE__
-			_fullpath = path.front() != '/' ? get_current_dir() & path : path;
-#else
 			_fullpath = di.dli_fname;
-#endif
 		}
 
 		byte *image::base_ptr() const

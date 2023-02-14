@@ -43,8 +43,8 @@ namespace micro_profiler
 
 		void unmap_all();
 
-		virtual void map_module(id_t mapping_id, id_t module_id, const module::mapping &mapping) override;
-		virtual void unmap_module(id_t mapping_id) override;
+		virtual void map_module(id_t module_id, const module::mapping &mapping) override;
+		virtual void unmap_module(id_t module_id) override;
 
 		virtual void query(patch_state &states, unsigned int module_id) override;
 		virtual void apply(apply_results &results, unsigned int module_id, void *base, std::shared_ptr<void> lock,

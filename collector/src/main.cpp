@@ -57,7 +57,7 @@ const mt::milliseconds c_auto_connect_delay(50);
 #endif
 	micro_profiler::calls_collector *g_collector_ptr = nullptr;
 micro_profiler::collector_app_instance g_instance(&micro_profiler::collector_app_instance::probe_create_channel,
-	mt::get_thread_callbacks(), c_trace_limit, g_collector_ptr);
+	mt::get_thread_callbacks(), micro_profiler::module::platform(), c_trace_limit, g_collector_ptr);
 
 namespace micro_profiler
 {
@@ -111,17 +111,18 @@ namespace micro_profiler
 		return make_shared<null_channel>(inbound);
 	}
 
-	log::writer_t collector_app_instance::create_writer()
+	log::writer_t collector_app_instance::create_writer(module &module_helper)
 	{
-		const auto logname = (string)"micro-profiler." + *module::executable() + ".log";
+		const auto logname = (string)"micro-profiler." + *module_helper.executable() + ".log";
 
 		mkdir(constants::data_directory().c_str(), 0777);
 		return log::create_writer(constants::data_directory() & logname);
 	}
 
 	collector_app_instance::collector_app_instance(const active_server_app::client_factory_t &auto_frontend_factory,
-			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr)
-		: _logger(create_writer(), (log::g_logger = &_logger, &get_datetime)),
+			mt::thread_callbacks &thread_callbacks, module &module_helper, size_t trace_limit,
+			calls_collector *&collector_ptr)
+		: _logger(create_writer(module_helper), (log::g_logger = &_logger, &get_datetime)),
 			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
 			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks),
 			_patch_manager(_collector, _eallocator), _auto_connect(true)
@@ -134,14 +135,14 @@ namespace micro_profiler
 		const auto total_ns = static_cast<int>((oh.inner + oh.outer) * period);
 
 		LOG(PREAMBLE "overhead calibrated...") % A(inner_ns) % A(total_ns);
-		_app.reset(new collector_app(_collector, oh, *_thread_monitor, _patch_manager));
+		_app.reset(new collector_app(_collector, oh, *_thread_monitor, module_helper, _patch_manager));
 		_app->get_queue().schedule([this, auto_frontend_factory] {
 			if (_auto_connect)
 				_app->connect(auto_frontend_factory, false);
 		}, c_auto_connect_delay);
 		platform_specific_init();
 		LOG(PREAMBLE "initialized...")
-			% A(module::executable()) % A(getpid()) % A(module::locate(&g_collector_ptr).path);
+			% A(module_helper.executable()) % A(getpid()) % A(module_helper.locate(&g_collector_ptr).path);
 	}
 
 	collector_app_instance::~collector_app_instance()

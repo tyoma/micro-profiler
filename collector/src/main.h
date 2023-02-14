@@ -35,7 +35,8 @@ namespace micro_profiler
 	{
 	public:
 		collector_app_instance(const active_server_app::client_factory_t &auto_frontend_factory,
-			mt::thread_callbacks &thread_callbacks, size_t trace_limit, calls_collector *&collector_ptr);
+			mt::thread_callbacks &thread_callbacks, module &module_helper, size_t trace_limit,
+			calls_collector *&collector_ptr);
 		~collector_app_instance();
 
 		void terminate() throw();
@@ -46,7 +47,7 @@ namespace micro_profiler
 
 	private:
 		void platform_specific_init();
-		static log::writer_t create_writer();
+		static log::writer_t create_writer(module &module_helper);
 
 	private:
 		log::multithreaded_logger _logger;

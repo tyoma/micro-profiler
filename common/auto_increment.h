@@ -20,46 +20,30 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <string>
-#include <utility>
-
-#pragma warning(disable:4099) // older versions of VisualStudio define std::hash as class
+#include "types.h"
 
 namespace micro_profiler
 {
-	class file_id : std::pair<unsigned long long, unsigned long long>, std::shared_ptr<void>
+	template <typename T>
+	struct auto_increment_constructor
 	{
-	public:
-		file_id();
-		file_id(const std::string &path);
+		auto_increment_constructor()
+			: _next_id(1)
+		{	}
 
-		bool operator ==(const file_id &rhs) const;
+		T operator ()()
+		{
+			T record;
+
+			record.id = _next_id++;
+			return record;
+		}
 
 	private:
-		template <typename T>
-		friend struct std::hash;
-	};
+		id_t _next_id;
 
-
-
-	inline file_id::file_id()
-	{	}
-
-	inline bool file_id::operator ==(const file_id &rhs) const
-	{	return *this == static_cast<const std::pair<unsigned long long, unsigned long long> &>(rhs);	}
-}
-
-namespace std
-{
-	template <>
-	struct hash<micro_profiler::file_id>
-	{
-		size_t operator ()(const micro_profiler::file_id &fid) const
-		{
-			return hash<micro_profiler::file_id::first_type>()(fid.first)
-				^ (hash<micro_profiler::file_id::second_type>()(fid.second) << 1);
-		}
+	private:
+		template <typename ArchiveT, typename T2>
+		friend void serialize(ArchiveT &archive, auto_increment_constructor<T2> &data, unsigned int ver);
 	};
 }

@@ -24,6 +24,7 @@
 #include "serialization_context.h"
 #include "database.h"
 
+#include <common/auto_increment.h>
 #include <common/serialization.h>
 #include <math/serialization.h>
 #include <sdb/indexed_serialization.h>
@@ -98,10 +99,6 @@ namespace micro_profiler
 	};
 
 
-
-	template <typename ArchiveT, typename T>
-	inline void serialize(ArchiveT &archive, auto_increment_constructor<T> &data, unsigned int /*ver*/)
-	{	archive(data._next_id);	}
 
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, call_statistics &data, unsigned int /*ver*/)

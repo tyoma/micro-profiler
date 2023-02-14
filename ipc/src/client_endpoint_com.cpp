@@ -137,7 +137,7 @@ namespace micro_profiler
 			shared_ptr<void> client_session::create_activation_context()
 			{
 				ACTCTX ctx = { sizeof(ACTCTX), };
-				HMODULE hmodule = (HMODULE)module::locate((void *)&create_activation_context).base;
+				HMODULE hmodule = (HMODULE)module::platform().locate((void *)&create_activation_context).base;
 
 				ctx.hModule = hmodule;
 				ctx.lpResourceName = ISOLATIONAWARE_MANIFEST_RESOURCE_ID;

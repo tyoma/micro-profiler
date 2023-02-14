@@ -39,9 +39,9 @@ using namespace std;
 namespace micro_profiler
 {
 	collector_app::collector_app(calls_collector_i &collector, const overhead &overhead_,
-			thread_monitor &thread_monitor_, patch_manager &patch_manager_)
+			thread_monitor &thread_monitor_, module &module_helper, patch_manager &patch_manager_)
 		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(thread_monitor_),
-			_patch_manager(patch_manager_), _server(*this)
+			_module_helper(module_helper), _patch_manager(patch_manager_), _server(*this)
 	{	}
 
 	collector_app::~collector_app()
@@ -60,7 +60,7 @@ namespace micro_profiler
 	{
 		typedef ipc::server_session::response response;
 
-		auto module_tracker_ = make_shared<module_tracker>();
+		auto module_tracker_ = make_shared<module_tracker>(_module_helper);
 		auto loaded = make_shared<loaded_modules>();
 		auto unloaded = make_shared<unloaded_modules>();
 		auto metadata = make_shared<module_info_metadata>();
@@ -70,11 +70,9 @@ namespace micro_profiler
 
 		session.add_handler(request_update, [this, module_tracker_, loaded, unloaded] (response &resp) {
 			module_tracker_->get_changes(*loaded, *unloaded);
-			if (!loaded->empty())
-				resp(response_modules_loaded, *loaded);
+			resp(response_modules_loaded, *loaded);
 			resp(response_statistics_update, *_analyzer);
-			if (!unloaded->empty())
-				resp(response_modules_unloaded, *unloaded);
+			resp(response_modules_unloaded, *unloaded);
 			_analyzer->clear();
 		});
 
@@ -130,7 +128,7 @@ namespace micro_profiler
 
 		session.message(init, [this] (ipc::serializer &ser) {
 			initialization_data idata = {
-				module::executable(),
+				_module_helper.executable(),
 				ticks_per_second(),
 				_injected,
 			};

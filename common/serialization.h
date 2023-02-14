@@ -25,6 +25,7 @@
 #include "protocol.h"
 #include "range.h"
 
+#include <common/auto_increment.h>
 #include <patcher/interface.h>
 #include <strmd/container_ex.h>
 #include <strmd/packer.h>
@@ -46,6 +47,10 @@ namespace micro_profiler
 {
 	typedef strmd::varint packer;
 
+	template <typename ArchiveT, typename T>
+	inline void serialize(ArchiveT &archive, auto_increment_constructor<T> &data, unsigned int /*ver*/)
+	{	archive(data._next_id);	}
+	
 	template <typename ArchiveT>
 	inline void serialize(ArchiveT &archive, initialization_data &data, unsigned int ver)
 	{

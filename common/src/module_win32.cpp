@@ -121,10 +121,22 @@ namespace micro_profiler
 		}
 	}
 
-	class module::tracker
+	class module_platform : public module
+	{
+	private:
+		class tracker;
+
+	private:
+		virtual shared_ptr<dynamic> load(const string &path) override;
+		virtual string executable() override;
+		virtual mapping locate(const void *address) override;
+		virtual shared_ptr<void> notify(events &consumer) override;
+	};
+
+	class module_platform::tracker
 	{
 	public:
-		tracker(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped);
+		tracker(module &owner, events &consumer);
 		~tracker();
 
 	private:
@@ -133,8 +145,7 @@ namespace micro_profiler
 	private:
 		shared_ptr<module::dynamic> _ntdll;
 		NTSTATUS (NTAPI *_unregister)(void *cookie);
-		module::mapping_callback_t _mapped;
-		module::unmapping_callback_t _unmapped;
+		events &_consumer;
 		void *_cookie;
 	};
 
@@ -151,13 +162,17 @@ namespace micro_profiler
 		_handle = nullptr;
 		if (::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(base), &hmodule) && hmodule)
 		{
-			string loaded_path;
-
-			get_module_path(loaded_path, hmodule);
-			if (file_id(path) == file_id(loaded_path))
+			// TODO: try to test and uncomment below...
+			//if (hmodule == base)
 			{
-				_handle = hmodule;
-				return;
+				string loaded_path;
+
+				get_module_path(loaded_path, hmodule);
+				if (file_id(path) == file_id(loaded_path))
+				{
+					_handle = hmodule;
+					return;
+				}
 			}
 			::FreeLibrary(hmodule);
 		}
@@ -170,13 +185,13 @@ namespace micro_profiler
 	}
 
 
-	shared_ptr<module::dynamic> module::load(const string &path)
+	shared_ptr<module::dynamic> module_platform::load(const string &path)
 	{
 		shared_ptr<void> handle(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);
-		return handle ? shared_ptr<dynamic>(new dynamic(handle)) : nullptr;
+		return handle ? shared_ptr<module::dynamic>(new module::dynamic(handle)) : nullptr;
 	}
 
-	string module::executable()
+	string module_platform::executable()
 	{
 		string path;
 
@@ -184,7 +199,7 @@ namespace micro_profiler
 		return path;
 	}
 
-	module::mapping module::locate(const void *address)
+	module::mapping module_platform::locate(const void *address)
 	{
 		mapping info = {};
 		module_lock h(address);
@@ -197,32 +212,33 @@ namespace micro_profiler
 		return info;
 	}
 
-	shared_ptr<void> module::notify(mapping_callback_t mapped, module::unmapping_callback_t unmapped)
-	{	return make_shared<tracker>(mapped, unmapped);	}
+	shared_ptr<void> module_platform::notify(events &consumer)
+	{	return make_shared<tracker>(*this, consumer);	}
 
 
-	module::tracker::tracker(module::mapping_callback_t mapped, module::unmapping_callback_t unmapped)
-		: _ntdll(module::load("ntdll")), _unregister(_ntdll / "LdrUnregisterDllNotification"),
-			_mapped(mapped), _unmapped(unmapped)
+	module_platform::tracker::tracker(module &owner, events &consumer)
+		: _ntdll(owner.load("ntdll")), _unregister(_ntdll / "LdrUnregisterDllNotification"), _consumer(consumer)
 	{
 		NTSTATUS (NTAPI *register_)(ULONG flags, decltype(&tracker::on_module) callback, void *context,
 			void **cookie) = _ntdll / "LdrRegisterDllNotification";
 
 		register_(0, on_module, this, &_cookie);
-		modules_enumerate_mapped(::GetCurrentProcess(), mapped);
+		modules_enumerate_mapped(::GetCurrentProcess(), [this] (const module::mapping &m) {
+			_consumer.mapped(m);
+		});
 	}
 
-	module::tracker::~tracker()
+	module_platform::tracker::~tracker()
 	{	_unregister(_cookie);	}
 
-	void CALLBACK module::tracker::on_module(ULONG reason, const LDR_DLL_NOTIFICATION_DATA *data, void *context)
+	void CALLBACK module_platform::tracker::on_module(ULONG reason, const LDR_DLL_NOTIFICATION_DATA *data, void *context)
 	{
 		auto self = static_cast<tracker *>(context);
 
 		switch (reason)
 		{
 		case 2: // LDR_DLL_NOTIFICATION_REASON_UNLOADED
-			self->_unmapped(data->Unloaded.DllBase);
+			self->_consumer.unmapped(data->Unloaded.DllBase);
 			break;
 
 		case 1: // LDR_DLL_NOTIFICATION_REASON_LOADED
@@ -231,13 +247,13 @@ namespace micro_profiler
 			};
 
 			enumerate_regions(m.regions, m.base);
-			self->_mapped(m);
+			self->_consumer.mapped(m);
 			break;
 		}
 	}
 
 
-	void modules_enumerate_mapped(HANDLE hprocess, const module::mapping_callback_t &callback)
+	void modules_enumerate_mapped(HANDLE hprocess, const function<void (const module::mapping &mapping)> &callback)
 	{
 		module::mapping module;
 		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ::GetProcessId(hprocess)), &::CloseHandle);
@@ -255,5 +271,12 @@ namespace micro_profiler
 			callback(module);
 			module.regions.clear();
 		}
+	}
+
+
+	module &module::platform()
+	{
+		static module_platform m;
+		return m;
 	}
 }

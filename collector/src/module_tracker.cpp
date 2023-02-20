@@ -35,12 +35,6 @@ namespace micro_profiler
 	namespace
 	{
 		const auto local_dummy = 0;
-
-		struct locked_mapping
-		{
-			module::mapping_instance module_;
-			shared_ptr<void> lock;
-		};
 	}
 
 	namespace keyer
@@ -131,33 +125,29 @@ namespace micro_profiler
 		_last_reported_mapping_id = last_reported_mapping_id;
 	}
 
-	shared_ptr<module::mapping_instance> module_tracker::lock_mapping(unsigned int module_id)
+	shared_ptr<module::mapping> module_tracker::lock_mapping(unsigned int module_id, uint32_t &hash)
 	{
-		auto locked = make_shared<locked_mapping>();
+		typedef pair<shared_ptr<void>, mapping> composite_t;
+
+		auto locked = make_shared<composite_t>();
 
 		{
 			mt::lock_guard<mt::mutex> l(_mtx);
+			const auto mod = sdb::unique_index<keyer::id>(_modules).find(module_id);
 
-			if (!sdb::unique_index<keyer::id>(_modules).find(module_id))
+			if (!mod)
 				throw invalid_argument("invalid persistent_id");
 
 			const auto m = sdb::unique_index<keyer::module_id>(_mappings).find(module_id);
 
 			if (!m)
 				return nullptr;
-
-			module::mapping_ex mapping = {
-				m->module_id,
-				m->path,
-				reinterpret_cast<uintptr_t>(m->base),
-				sdb::unique_index<keyer::id>(_modules).find(module_id)->hash
-			};
-
-			locked->module_ = make_pair(m->id, mapping);
+			locked->second = *m;
+			hash = mod->hash;
 		}
 
-		locked->lock = _module_helper.load(locked->module_.second.path);
-		return shared_ptr<module::mapping_instance>(locked, &locked->module_);
+		locked->first = _module_helper.load(locked->second.path);
+		return shared_ptr<module::mapping>(locked, &locked->second);
 	}
 
 	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int module_id) const

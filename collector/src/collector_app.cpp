@@ -79,12 +79,13 @@ namespace micro_profiler
 		session.add_handler(request_module_metadata,
 			[module_tracker_, metadata] (response &resp, unsigned int module_id) {
 
-			const auto l = module_tracker_->lock_mapping(module_id);
+			uint32_t hash;
+			const auto l = module_tracker_->lock_mapping(module_id, hash);
 			const auto metadata_ = module_tracker_->get_metadata(module_id);
 			auto &md = *metadata;
 
-			metadata->path = l->second.path;
-			metadata->hash = l->second.hash;
+			metadata->path = l->path;
+			metadata->hash = hash;
 			metadata->symbols.clear();
 			metadata->source_files.clear();
 			metadata_->enumerate_functions([&] (const symbol_info &symbol) {
@@ -107,11 +108,11 @@ namespace micro_profiler
 		session.add_handler(request_apply_patches,
 			[this, module_tracker_, apply_results] (response &resp, const patch_request &payload) {
 
-			const auto l = module_tracker_->lock_mapping(payload.image_persistent_id);
+			uint32_t hash;
+			const auto l = module_tracker_->lock_mapping(payload.image_persistent_id, hash);
 
 			apply_results->clear();
-			_patch_manager.apply(*apply_results, payload.image_persistent_id,
-				reinterpret_cast<void *>(static_cast<size_t>(l->second.base)), l,
+			_patch_manager.apply(*apply_results, payload.image_persistent_id, l->base, l,
 				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
 			resp(response_patched, *apply_results);
 		});

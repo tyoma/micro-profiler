@@ -68,6 +68,13 @@ namespace micro_profiler
 			return 0;
 		}
 
+		inline module::mapping make_mapping(void *base, std::string path,
+			std::vector<mapped_region> regions = std::vector<mapped_region>())
+		{
+			module::mapping m = {	path, static_cast<byte *>(base), regions };
+			return m;
+		}
+
 		inline module::mapping_instance make_mapping_instance(id_t mapping_id, id_t module_id, std::string path,
 			long_address_t base)
 		{

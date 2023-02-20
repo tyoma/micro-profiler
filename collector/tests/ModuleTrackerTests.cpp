@@ -272,6 +272,7 @@ namespace micro_profiler
 			test( MappedModulesCanBeLockedPersistentID )
 			{
 				// INIT
+				uint32_t hash;
 				module_tracker t(module_helper);
 
 				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
@@ -280,18 +281,19 @@ namespace micro_profiler
 				module_helper.emulate_mapped(*img2);
 
 				// ACT / ASSERT
-				assert_not_null(t.lock_mapping(1));
-				assert_equal(make_mapping_instance(1, 1, img1->absolute_path(), img1->base()), *t.lock_mapping(1));
-				assert_not_null(t.lock_mapping(2));
-				assert_equal(make_mapping_instance(2, 2, img3->absolute_path(), img3->base()), *t.lock_mapping(2));
-				assert_not_null(t.lock_mapping(3));
-				assert_equal(make_mapping_instance(3, 3, img2->absolute_path(), img2->base()), *t.lock_mapping(3));
+				assert_not_null(t.lock_mapping(1, hash));
+				assert_equal(make_mapping(img1->base_ptr(), img1->absolute_path()), *t.lock_mapping(1, hash));
+				assert_not_null(t.lock_mapping(2, hash));
+				assert_equal(make_mapping(img3->base_ptr(), img3->absolute_path()), *t.lock_mapping(2, hash));
+				assert_not_null(t.lock_mapping(3, hash));
+				assert_equal(make_mapping(img2->base_ptr(), img2->absolute_path()), *t.lock_mapping(3, hash));
 			}
 
 
 			test( UnmappedModulesCanNotBeLocked )
 			{
 				// INIT
+				uint32_t hash;
 				module_tracker t(module_helper);
 				loaded_modules l;
 				unloaded_modules u;
@@ -303,8 +305,8 @@ namespace micro_profiler
 				module_helper.emulate_unmapped(img3->base_ptr());
 
 				// ACT / ASSERT
-				assert_null(t.lock_mapping(1));
-				assert_null(t.lock_mapping(2));
+				assert_null(t.lock_mapping(1, hash));
+				assert_null(t.lock_mapping(2, hash));
 			}
 
 
@@ -362,6 +364,7 @@ namespace micro_profiler
 			test( LockingImagePreventsItFromUnloading )
 			{
 				// INIT
+				uint32_t hash;
 				auto unloaded1 = false;
 				auto unloaded2 = false;
 				module_tracker t(module_helper);
@@ -376,8 +379,8 @@ namespace micro_profiler
 				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
 
 				// ACT
-				auto lock1 = t.lock_mapping(1);
-				auto lock2 = t.lock_mapping(2);
+				auto lock1 = t.lock_mapping(1, hash);
+				auto lock2 = t.lock_mapping(2, hash);
 
 				// ASSERT
 				assert_not_null(lock1);
@@ -410,18 +413,19 @@ namespace micro_profiler
 			test( AttemptToLockWithInvalidIDFails )
 			{
 				// INIT
+				uint32_t hash;
 				module_tracker t(module_helper);
 
 				// ACT / ASSERT
-				assert_throws(t.lock_mapping(1), invalid_argument);
-				assert_throws(t.lock_mapping(3), invalid_argument);
+				assert_throws(t.lock_mapping(1, hash), invalid_argument);
+				assert_throws(t.lock_mapping(3, hash), invalid_argument);
 
 				// INIT
 				module_helper.emulate_mapped(*img3);
 
 				// ACT / ASSERT
-				assert_throws(t.lock_mapping(2), invalid_argument);
-				assert_throws(t.lock_mapping(3), invalid_argument);
+				assert_throws(t.lock_mapping(2, hash), invalid_argument);
+				assert_throws(t.lock_mapping(3, hash), invalid_argument);
 			}
 
 

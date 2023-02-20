@@ -58,7 +58,7 @@ namespace micro_profiler
 		module_tracker(module &module_helper);
 
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-		std::shared_ptr<module::mapping_instance> lock_mapping(unsigned int module_id);
+		std::shared_ptr<module::mapping> lock_mapping(unsigned int module_id, std::uint32_t &hash);
 		metadata_ptr get_metadata(unsigned int module_id) const;
 		std::shared_ptr<void> notify(events &events_);
 

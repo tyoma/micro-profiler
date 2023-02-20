@@ -79,9 +79,11 @@ namespace micro_profiler
 
 			temporary_directory dir;
 			string module1_path, module2_path, module3_path;
+			module *module_helper;
 
 			init( CreateTemporaryModules )
 			{
+				module_helper = &module::platform();
 				module1_path = dir.copy_file(c_symbol_container_1);
 				module2_path = dir.copy_file(c_symbol_container_2);
 				module3_path = dir.copy_file(c_symbol_container_3_nosymbols);
@@ -98,9 +100,9 @@ namespace micro_profiler
 				};
 
 				// ACT
-				auto info1 = module::platform().locate(reinterpret_cast<const void *>(images[0].base()));
-				auto info2 = module::platform().locate(reinterpret_cast<const void *>(images[1].base()));
-				auto info3 = module::platform().locate(reinterpret_cast<const void *>(images[2].base()));
+				auto info1 = module_helper->locate(reinterpret_cast<const void *>(images[0].base()));
+				auto info2 = module_helper->locate(reinterpret_cast<const void *>(images[1].base()));
+				auto info3 = module_helper->locate(reinterpret_cast<const void *>(images[2].base()));
 
 				// ASSERT
 				assert_equal(file_id(images[0].absolute_path()), file_id(info1.path));
@@ -122,9 +124,9 @@ namespace micro_profiler
 				};
 
 				// ACT
-				auto info1 = module::platform().locate(images[0].get_symbol_address("get_function_addresses_1"));
-				auto info2 = module::platform().locate(images[1].get_symbol_address("get_function_addresses_2"));
-				auto info3 = module::platform().locate(images[2].get_symbol_address("get_function_addresses_3"));
+				auto info1 = module_helper->locate(images[0].get_symbol_address("get_function_addresses_1"));
+				auto info2 = module_helper->locate(images[1].get_symbol_address("get_function_addresses_2"));
+				auto info3 = module_helper->locate(images[2].get_symbol_address("get_function_addresses_3"));
 
 				// ASSERT
 				assert_equal(file_id(images[0].absolute_path()), file_id(info1.path));
@@ -151,7 +153,7 @@ namespace micro_profiler
 					e2([&] (module::mapping m) {	mappings2.push_back(m);	});
 
 				// ACT
-				auto s1 = module::platform().notify(e1);
+				auto s1 = module_helper->notify(e1);
 
 				// ASSERT
 				assert_not_null(match = find_module(mappings1, img1_base));
@@ -169,7 +171,7 @@ namespace micro_profiler
 				img3.reset();
 
 				// ACT
-				auto s2 = module::platform().notify(e2);
+				auto s2 = module_helper->notify(e2);
 
 				// ASSERT
 				assert_null(find_module(mappings2, img1_base));
@@ -191,7 +193,7 @@ namespace micro_profiler
 					if (!--wait_for)
 						ready.set();
 				});
-				auto s = module::platform().notify(e);
+				auto s = module_helper->notify(e);
 
 				// ACT
 				wait_for = 1;
@@ -226,14 +228,14 @@ namespace micro_profiler
 				mt::thread t1([&] {
 					while (!exit)
 					{
-						auto m1 = module::platform().load(c_symbol_container_1);
-						auto m2 = module::platform().load(c_symbol_container_2);
-						auto m3 = module::platform().load(c_symbol_container_3_nosymbols);
+						auto m1 = module_helper->load(c_symbol_container_1);
+						auto m2 = module_helper->load(c_symbol_container_2);
+						auto m3 = module_helper->load(c_symbol_container_3_nosymbols);
 					}
 				});
 				mt::thread t2([&] {
 					for (mocks::module_events e; !exit; )
-						module::platform().notify(e);
+						module_helper->notify(e);
 				});
 
 				// ACT / ASSERT (does not crash)
@@ -261,7 +263,7 @@ namespace micro_profiler
 					if (!--wait_for)
 						ready.set();
 				});
-				auto s = module::platform().notify(e);
+				auto s = module_helper->notify(e);
 
 				// ACT
 				wait_for = 1;
@@ -287,7 +289,7 @@ namespace micro_profiler
 				// INIT
 				vector<module::mapping> mappings;
 				mocks::module_events e([&] (module::mapping m) {	mappings.push_back(m);	});
-				auto s = module::platform().notify(e);
+				auto s = module_helper->notify(e);
 				unique_ptr<image> img1(new image(module1_path));
 
 				mappings.clear();
@@ -322,7 +324,7 @@ namespace micro_profiler
 					if (!--wait_for)
 						ready.set();
 				});
-				auto s = module::platform().notify(e);
+				auto s = module_helper->notify(e);
 
 				addresses.clear();
 				mappings.clear();
@@ -355,7 +357,7 @@ namespace micro_profiler
 			}
 
 
-			test( ModuleLockIsTrueForLoadedModules )
+			test( ModuleLockIsNonNullForLoadedModules )
 			{
 				// INIT
 				image img1(module1_path);
@@ -363,61 +365,51 @@ namespace micro_profiler
 				image img3(module3_path);
 
 				// ACT
-				module::lock l1(img1.base_ptr(), img1.absolute_path());
-				auto l2 = module::lock(img2.base_ptr(), img2.absolute_path());
-				module::lock l3 = move(module::lock(img3.base_ptr(), img3.absolute_path()));
+				auto l1 = module_helper->lock_at(img1.base_ptr());
+				auto l2 = module_helper->lock_at(img2.base_ptr());
+				auto l3 = module_helper->lock_at(img3.base_ptr());
 
 				// ASSERT
-				assert_is_true(l1);
-				assert_is_true(l2);
-				assert_is_true(l3);
+				assert_not_null(l1);
+				assert_equal(file_id(module1_path), file_id(l1->path));
+				assert_equal(img1.base_ptr(), l1->base);
+				assert_is_true(is_address_inside(l1->regions, img1.get_symbol_address("get_function_addresses_1")));
+				assert_is_false(is_address_inside(l1->regions, img2.get_symbol_address("get_function_addresses_2")));
+				assert_is_false(is_address_inside(l1->regions, img3.get_symbol_address("get_function_addresses_3")));
+				assert_not_null(l2);
+				assert_equal(file_id(module2_path), file_id(l2->path));
+				assert_equal(img2.base_ptr(), l2->base);
+				assert_is_true(is_address_inside(l2->regions, img2.get_symbol_address("get_function_addresses_2")));
+				assert_not_null(l3);
+				assert_equal(file_id(module3_path), file_id(l3->path));
+				assert_equal(img3.base_ptr(), l3->base);
+				assert_is_true(is_address_inside(l3->regions, img3.get_symbol_address("get_function_addresses_3")));
 			}
-
-			test( ModuleLockIsFalseForMismatchingModules )
-			{
-				// INIT
-				image img1(module1_path);
-				image img2(module2_path);
-				image img3(module3_path);
-
-				// ACT
-				module::lock l1(img1.base_ptr(), img2.absolute_path());
-				auto l2 = module::lock(img2.base_ptr(), img3.absolute_path());
-				module::lock l3 = move(module::lock(img3.base_ptr(), img1.absolute_path()));
-
-				// ASSERT
-				assert_is_false(l1);
-				assert_is_false(l2);
-				assert_is_false(l3);
-			}
-
+ 
 
 			test( ModuleLockIsFalseForUnloadedModules )
 			{
 				// INIT
 				unique_ptr<image> img1(new image(module1_path));
 				auto img1_base = img1->base_ptr();
-				string img1_path = img1->absolute_path();
 				unique_ptr<image> img2(new image(module2_path));
 				auto img2_base = img2->base_ptr();
-				string img2_path = img2->absolute_path();
 				unique_ptr<image> img3(new image(module3_path));
 				auto img3_base = img3->base_ptr();
-				string img3_path = img3->absolute_path();
 
 				img1.reset();
 				img2.reset();
 				img3.reset();
 
 				// INIT / ACT
-				module::lock l1(img1_base, img1_path);
-				auto l2 = module::lock(img2_base, img2_path);
-				module::lock l3 = move(module::lock(img3_base, img3_path));
+				auto l1 = module_helper->lock_at(img1_base);
+				auto l2 = module_helper->lock_at(img2_base);
+				auto l3 = module_helper->lock_at(img3_base);
 
 				// ASSERT
-				assert_is_false(l1);
-				assert_is_false(l2);
-				assert_is_false(l3);
+				assert_null(l1);
+				assert_null(l2);
+				assert_null(l3);
 			}
 
 
@@ -426,18 +418,15 @@ namespace micro_profiler
 				// INIT
 				unique_ptr<image> img1(new image(module1_path));
 				auto img1_base = img1->base_ptr();
-				string img1_path = img1->absolute_path();
 				unique_ptr<image> img2(new image(module2_path));
 				auto img2_base = img2->base_ptr();
-				string img2_path = img2->absolute_path();
 				unique_ptr<image> img3(new image(module3_path));
 				auto img3_base = img3->base_ptr();
-				string img3_path = img3->absolute_path();
 
 				// INIT / ACT
-				module::lock l1(img1_base, img1_path);
-				auto l2 = module::lock(img2_base, img2_path);
-				module::lock l3 = move(module::lock(img3_base, img3_path));
+				auto l1 = module_helper->lock_at(img1_base);
+				auto l2 = module_helper->lock_at(img2_base);
+				auto l3 = module_helper->lock_at(img3_base);
 
 				// ACT
 				img1.reset();
@@ -445,9 +434,9 @@ namespace micro_profiler
 				img3.reset();
 
 				// ACT / ASSERT
-				assert_is_true(module::lock(img1_base, img1_path));
-				assert_is_true(module::lock(img2_base, img2_path));
-				assert_is_true(module::lock(img3_base, img3_path));
+				assert_not_null(module_helper->lock_at(img1_base));
+				assert_not_null(module_helper->lock_at(img2_base));
+				assert_not_null(module_helper->lock_at(img3_base));
 			}
 		end_test_suite
 	}

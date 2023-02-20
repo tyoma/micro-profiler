@@ -110,6 +110,7 @@ namespace micro_profiler
 		virtual shared_ptr<dynamic> load(const string &path) override;
 		virtual string executable() override;
 		virtual mapping locate(const void *address) override;
+		virtual shared_ptr<mapping> lock_at(void *address) override;
 		virtual shared_ptr<void> notify(events &consumer) override;
 
 	private:
@@ -122,22 +123,6 @@ namespace micro_profiler
 
 	void *module_platform::dynamic::find_function(const char *name) const
 	{	return ::dlsym(_handle.get(), name);	}
-
-
-	module::lock::lock(const void *base, const string &path)
-		: _handle(dlopen(path.c_str(), RTLD_LAZY | RTLD_NOLOAD))
-	{
-		Dl_info di = { };
-
-		if (_handle && !(::dladdr(base, &di) && file_id(di.dli_fname) == file_id(path)))
-			::dlclose(_handle), _handle = nullptr;
-	}
-
-	module::lock::~lock()
-	{
-		if (_handle)
-			::dlclose(_handle);
-	}
 
 
 	void module_platform::on_add_image(const mach_header *, intptr_t base)
@@ -200,6 +185,30 @@ namespace micro_profiler
 		};
 
 		return info;
+	}
+
+	shared_ptr<module::mapping> module_platform::lock_at(void *address)
+	{
+		typedef pair<shared_ptr<void>, mapping> composite_t;
+
+		Dl_info dinfo = {};
+
+		if (dladdr(address, &dinfo))
+		{
+			if (auto handle = shared_ptr<void>(::dlopen(dinfo.dli_fname, RTLD_LAZY | RTLD_NOLOAD), [] (void *h) {
+				if (h)
+					::dlclose(h);
+			}))
+			{
+				auto l = make_shared<composite_t>(handle, mapping {
+					dinfo.dli_fname, reinterpret_cast<byte *>(dinfo.dli_fbase),
+				});
+
+				read_regions(l->second.regions, dinfo.dli_fbase);
+				return shared_ptr<mapping>(l, &l->second);
+			}
+		}
+		return nullptr;
 	}
 
 	shared_ptr<void> module_platform::notify(events &consumer)

@@ -76,23 +76,6 @@ namespace micro_profiler
 			}
 		}
 
-		class module_lock : noncopyable
-		{
-		public:
-			explicit module_lock(const void *address)
-				: _handle(0)
-			{	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(address), &_handle);	}
-
-			~module_lock()
-			{	::FreeLibrary(_handle);	}
-
-			operator HMODULE() const
-			{	return _handle;	}
-
-		private:
-			HMODULE _handle;
-		};
-
 		void get_module_path(string &path, HMODULE hmodule)
 		{
 			enum {	length = 32768,	};
@@ -119,6 +102,41 @@ namespace micro_profiler
 				regions.push_back(region);
 			}
 		}
+
+		template <typename T>
+		void enumerate_process_modules(HANDLE hprocess, const T &callback)
+		{
+			shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ::GetProcessId(hprocess)), &::CloseHandle);
+			MODULEENTRY32 entry = {	sizeof(MODULEENTRY32),	};
+
+			for (auto lister = &::Module32First; lister(snapshot.get(), &entry); lister = &::Module32Next)
+				callback(entry);
+		}
+
+		class module_lock : public module::mapping, noncopyable
+		{
+		public:
+			explicit module_lock(const void *address)
+				: _handle(0)
+			{
+				if (::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(address), &_handle)
+					&& _handle)
+				{
+					base = static_cast<byte *>(static_cast<void *>(_handle));
+					get_module_path(path, _handle);
+					enumerate_regions(regions, address);
+				}
+			}
+
+			~module_lock()
+			{	::FreeLibrary(_handle);	}
+
+			operator HMODULE() const
+			{	return _handle;	}
+
+		private:
+			HMODULE _handle;
+		};
 	}
 
 	class module_platform : public module
@@ -130,6 +148,7 @@ namespace micro_profiler
 		virtual shared_ptr<dynamic> load(const string &path) override;
 		virtual string executable() override;
 		virtual mapping locate(const void *address) override;
+		virtual shared_ptr<mapping> lock_at(void *address) override;
 		virtual shared_ptr<void> notify(events &consumer) override;
 	};
 
@@ -155,36 +174,6 @@ namespace micro_profiler
 	{	return GetProcAddress(static_cast<HMODULE>(_handle.get()), name);	}
 
 
-	module::lock::lock(const void *base, const string &path)
-	{
-		HMODULE hmodule = nullptr;
-
-		_handle = nullptr;
-		if (::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(base), &hmodule) && hmodule)
-		{
-			// TODO: try to test and uncomment below...
-			//if (hmodule == base)
-			{
-				string loaded_path;
-
-				get_module_path(loaded_path, hmodule);
-				if (file_id(path) == file_id(loaded_path))
-				{
-					_handle = hmodule;
-					return;
-				}
-			}
-			::FreeLibrary(hmodule);
-		}
-	}
-
-	module::lock::~lock()
-	{
-		if (_handle)
-			::FreeLibrary(static_cast<HMODULE>(_handle));
-	}
-
-
 	shared_ptr<module::dynamic> module_platform::load(const string &path)
 	{
 		shared_ptr<void> handle(LoadLibraryW(unicode(path).c_str()), &::FreeLibrary);
@@ -200,16 +189,12 @@ namespace micro_profiler
 	}
 
 	module::mapping module_platform::locate(const void *address)
-	{
-		mapping info = {};
-		module_lock h(address);
+	{	return module_lock(address);	}
 
-		if (h)
-		{
-			info.base = static_cast<byte *>(static_cast<void *>(h));
-			get_module_path(info.path, h);
-		}
-		return info;
+	shared_ptr<module::mapping> module_platform::lock_at(void *address)
+	{
+		unique_ptr<module_lock> m(new module_lock(address));
+		return *m ? shared_ptr<module_lock>(m.release()) : nullptr;
 	}
 
 	shared_ptr<void> module_platform::notify(events &consumer)
@@ -223,8 +208,11 @@ namespace micro_profiler
 			void **cookie) = _ntdll / "LdrRegisterDllNotification";
 
 		register_(0, on_module, this, &_cookie);
-		modules_enumerate_mapped(::GetCurrentProcess(), [this] (const module::mapping &m) {
-			_consumer.mapped(m);
+		enumerate_process_modules(::GetCurrentProcess(), [this] (const MODULEENTRY32 &entry) {
+			module_lock m(entry.modBaseAddr);
+
+			if (!!m)
+				_consumer.mapped(m);
 		});
 	}
 
@@ -255,22 +243,13 @@ namespace micro_profiler
 
 	void modules_enumerate_mapped(HANDLE hprocess, const function<void (const module::mapping &mapping)> &callback)
 	{
-		module::mapping module;
-		shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ::GetProcessId(hprocess)), &::CloseHandle);
-		MODULEENTRY32 entry = {	sizeof(MODULEENTRY32),	};
+		module::mapping m;
 
-		for (auto lister = &::Module32First; lister(snapshot.get(), &entry); lister = &::Module32Next)
-		{
-			module_lock h(entry.modBaseAddr);
-
-			if (entry.hModule != h)
-				continue;
-			unicode(module.path, entry.szExePath);
-			module.base = entry.modBaseAddr;
-			enumerate_regions(module.regions, entry.modBaseAddr);
-			callback(module);
-			module.regions.clear();
-		}
+		enumerate_process_modules(hprocess, [&callback, &m] (const MODULEENTRY32 &entry) {
+			m.base = entry.modBaseAddr;
+			unicode(m.path, entry.szModule);
+			callback(m);
+		});
 	}
 
 

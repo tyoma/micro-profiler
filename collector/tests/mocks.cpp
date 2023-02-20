@@ -59,6 +59,9 @@ namespace micro_profiler
 			module::mapping module_helper::locate(const void *address)
 			{	return on_locate(address);	}
 
+			shared_ptr<module::mapping> module_helper::lock_at(void * /*address*/)
+			{	throw 0;	}
+
 			shared_ptr<void> module_helper::notify(events &consumer)
 			{
 				mt::lock_guard<mt::mutex> l(_mtx);

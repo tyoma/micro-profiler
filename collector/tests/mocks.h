@@ -35,6 +35,7 @@ namespace micro_profiler
 				virtual std::shared_ptr<dynamic> load(const std::string &path) override;
 				virtual std::string executable() override;
 				virtual mapping locate(const void *address) override;
+				virtual std::shared_ptr<mapping> lock_at(void *address) override;
 				virtual std::shared_ptr<void> notify(events &consumer) override;
 
 			private:

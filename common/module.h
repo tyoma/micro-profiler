@@ -36,7 +36,6 @@ namespace micro_profiler
 	{
 		class dynamic;
 		struct events;
-		class lock;
 		struct mapping;
 		struct mapping_ex;
 
@@ -45,6 +44,7 @@ namespace micro_profiler
 		virtual std::shared_ptr<dynamic> load(const std::string &path) = 0;
 		virtual std::string executable() = 0;
 		virtual mapping locate(const void *address) = 0;
+		virtual std::shared_ptr<mapping> lock_at(void *address) = 0;
 		virtual std::shared_ptr<void> notify(events &consumer) = 0;
 
 		static module &platform();
@@ -89,23 +89,6 @@ namespace micro_profiler
 		friend module_platform;
 	};
 
-	class module::lock
-	{
-	public:
-		lock(const void *base, const std::string &path);
-		lock(lock &&other);
-		~lock();
-
-		operator bool() const;
-
-	private:
-		void operator =(lock &&rhs);
-		void operator ==(const lock &rhs);
-
-	private:
-		void *_handle;
-	};
-
 	struct module::dynamic::unsafe_auto_cast
 	{
 		template <typename T>
@@ -119,14 +102,6 @@ namespace micro_profiler
 	inline module::dynamic::dynamic(std::shared_ptr<void> handle)
 		: _handle(handle)
 	{	}
-
-
-	inline module::lock::lock(lock &&other)
-		: _handle(other._handle)
-	{	other._handle = nullptr;	}
-
-	inline module::lock::operator bool() const
-	{	return !!_handle;	}
 
 
 	inline module::dynamic::unsafe_auto_cast operator /(const std::shared_ptr<module::dynamic> &library,

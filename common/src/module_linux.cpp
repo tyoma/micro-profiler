@@ -46,6 +46,33 @@ namespace micro_profiler
 			value |= (segment_access & PF_R) ? mapped_region::read : 0;
 			return value;
 		}
+
+		template <typename T>
+		void enumerate_headers(T callback)
+		{
+			struct local
+			{
+				static int on_module(dl_phdr_info *header, size_t, void *callback_)
+				{	return (*(T *)callback_)(*header), 0;	}
+			};
+
+			::dl_iterate_phdr(&local::on_module, &callback);
+		}
+
+		template <typename ExeNameT>
+		void update_mapping(module::mapping &mapping, const dl_phdr_info &header, const ExeNameT &get_executable_name)
+		{
+			auto n = header.dlpi_phnum;
+
+			mapping.path = header.dlpi_name && *header.dlpi_name ? header.dlpi_name : get_executable_name();
+			mapping.base = reinterpret_cast<byte *>(header.dlpi_addr);
+			mapping.regions.clear();
+			for (const ElfW(Phdr) *segment = header.dlpi_phdr; n; --n, ++segment)
+				if (segment->p_type == PT_LOAD)
+					mapping.regions.push_back(mapped_region {
+						mapping.base + segment->p_vaddr, segment->p_memsz, generic_protection(segment->p_flags)
+					});
+		}
 	}
 
 	class module_platform : public module
@@ -57,6 +84,7 @@ namespace micro_profiler
 		virtual shared_ptr<dynamic> load(const string &path) override;
 		virtual string executable() override;
 		virtual mapping locate(const void *address) override;
+		virtual shared_ptr<mapping> lock_at(void *address) override;
 		virtual shared_ptr<void> notify(events &consumer) override;
 	};
 
@@ -67,7 +95,7 @@ namespace micro_profiler
 		~tracker();
 
 	private:
-		static int on_module(dl_phdr_info *phdr, size_t, void *cb);
+		int on_module(const dl_phdr_info &header);
 		void on_module(const module::mapping &m);
 
 	private:
@@ -83,22 +111,6 @@ namespace micro_profiler
 
 	void *module::dynamic::find_function(const char *name) const
 	{	return ::dlsym(_handle.get(), name);	}
-
-
-	module::lock::lock(const void *base, const string &path)
-		: _handle(dlopen(path.c_str(), RTLD_LAZY | RTLD_NOLOAD))
-	{
-		Dl_info di = { };
-
-		if (_handle && !(::dladdr(base, &di) && file_id(di.dli_fname) == file_id(path)))
-			::dlclose(_handle), _handle = nullptr;
-	}
-
-	module::lock::~lock()
-	{
-		if (_handle)
-			::dlclose(_handle);
-	}
 
 
 	shared_ptr<module::dynamic> module_platform::load(const string &path)
@@ -130,6 +142,31 @@ namespace micro_profiler
 		};
 	}
 
+	shared_ptr<module::mapping> module_platform::lock_at(void *address_)
+	{
+		typedef pair<shared_ptr<void>, mapping> composite_t;
+
+		const auto address = static_cast<byte *>(address_);
+		shared_ptr<composite_t> m;
+
+		enumerate_headers([&] (const dl_phdr_info &header) {
+			auto n = header.dlpi_phnum;
+			auto base = reinterpret_cast<byte *>(header.dlpi_addr);
+
+			for (const auto *segment = header.dlpi_phdr; n; --n, ++segment)
+				if (base + segment->p_vaddr <= address && address < base + segment->p_vaddr + segment->p_memsz)
+				{
+					m = make_shared<composite_t>();
+					update_mapping(m->second, header, [] {	return string();	});
+					m->first.reset(::dlopen(m->second.path.c_str(), RTLD_LAZY | RTLD_NOLOAD), [] (void *h) {
+						if (h)
+							::dlclose(h);
+					});
+				}
+		});
+		return m && m->first ? shared_ptr<mapping>(m, &m->second) : nullptr;
+	}
+
 	shared_ptr<void> module_platform::notify(events &consumer)
 	{	return make_shared<tracker>(*this, consumer);	}
 
@@ -137,13 +174,13 @@ namespace micro_profiler
 	module_platform::tracker::tracker(module &owner, events &consumer)
 		: _executable(owner.executable()), _consumer(consumer)
 	{
-		::dl_iterate_phdr(&tracker::on_module, this);
+		enumerate_headers([this] (const dl_phdr_info &header) {	on_module(header);	});
 		_monitor.reset(new mt::thread([this] {
 			while (!_exit.wait(c_mapping_monitor_interval))
 			{
 				for (auto &i : _mappings)
 					i.second.second = true;
-				::dl_iterate_phdr(&tracker::on_module, this);
+				enumerate_headers([this] (const dl_phdr_info &header) {	on_module(header);	});
 				for (auto i = _mappings.begin(); i != _mappings.end(); )
 					if (i->second.second)
 						_consumer.unmapped(i->second.first.base), i = _mappings.erase(i);
@@ -159,22 +196,11 @@ namespace micro_profiler
 		_monitor->join();
 	}
 
-	int module_platform::tracker::on_module(dl_phdr_info *phdr, size_t, void *cb)
+	int module_platform::tracker::on_module(const dl_phdr_info &header)
 	{
-		auto n = phdr->dlpi_phnum;
-		auto &self = *static_cast<tracker *>(cb);
-		auto &m = self._tmp_mapping;
-
-		m.path = phdr->dlpi_name && *phdr->dlpi_name ? phdr->dlpi_name : self._executable;
-		m.base = reinterpret_cast<byte *>(phdr->dlpi_addr);
-		m.regions.clear();
-		for (const ElfW(Phdr) *segment = phdr->dlpi_phdr; n; --n, ++segment)
-			if (segment->p_type == PT_LOAD)
-				m.regions.push_back(mapped_region {
-					m.base + segment->p_vaddr, segment->p_memsz, generic_protection(segment->p_flags)
-				});
-		if (!access(m.path.c_str(), 0))
-			self.on_module(m);
+		update_mapping(_tmp_mapping, header, [this] {	return _executable;	});
+		if (!access(_tmp_mapping.path.c_str(), 0))
+			on_module(_tmp_mapping);
 		return 0;
 	}
 

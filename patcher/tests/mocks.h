@@ -1,7 +1,10 @@
 #pragma once
 
 #include <common/compiler.h>
-#include <common/types.h>
+#include <functional>
+#include <list>
+#include <patcher/interface.h>
+#include <tuple>
 #include <vector>
 
 namespace micro_profiler
@@ -18,6 +21,7 @@ namespace micro_profiler
 				bool operator ==(const call_record &rhs) const;
 			};
 
+
 			struct trace_events
 			{
 				static void CC_(fastcall) on_enter(trace_events *self, const void **stack_ptr,
@@ -33,32 +37,60 @@ namespace micro_profiler
 			};
 
 
+			class mapping_access : public micro_profiler::mapping_access
+			{
+			public:
+				mapping_access();
+
+			public:
+				std::function<std::shared_ptr<module::mapping> (id_t mapping_id)> on_lock_mapping;
+				events *subscription;
+
+			private:
+				virtual std::shared_ptr<module::mapping> lock_mapping(id_t mapping_id) override;
+				virtual std::shared_ptr<void> notify(events &events_) override;
+			};
+
+
+			class memory_manager : public micro_profiler::memory_manager
+			{
+			public:
+				typedef std::tuple<byte_range, int /*scoped*/, int /*released*/> lock_info;
+
+			public:
+				std::vector<lock_info> locks() const;
+
+			public:
+				std::vector< std::shared_ptr<executable_memory_allocator> > allocators;
+
+			private:
+				virtual std::shared_ptr<executable_memory_allocator> create_executable_allocator(const_byte_range,
+					std::ptrdiff_t) override;
+
+				virtual std::shared_ptr<void> scoped_protect(byte_range region, int scoped_protection,
+					int released_protection) override;
+
+			private:
+				std::list<lock_info> _locks;
+			};
+
+
+			class patch : public micro_profiler::patch
+			{
+			public:
+				virtual ~patch();
+
+				virtual bool revert() override;
+
+			public:
+				std::function<void ()> on_destroy;
+				std::function<void ()> on_revert;
+			};
+
+
 
 			inline bool call_record::operator ==(const call_record &rhs) const
 			{	return callee == rhs.callee;	}
-
-
-			inline void CC_(fastcall) trace_events::on_enter(trace_events *self, const void **stack_ptr,
-				timestamp_t timestamp, const void *callee)
-			{
-				call_record call = { timestamp, callee };
-
-				self->return_stack.push_back(std::make_pair(*stack_ptr, stack_ptr));
-				self->call_log.push_back(call);
-				self->enter_stack_addresses.push_back(stack_ptr);
-			}
-
-			inline const void *CC_(fastcall) trace_events::on_exit(trace_events *self, const void **stack_ptr,
-				timestamp_t timestamp)
-			{
-				call_record call = { timestamp, 0 };
-				const void *return_address = self->return_stack.back().first;
-
-				self->return_stack.pop_back();
-				self->call_log.push_back(call);
-				self->exit_stack_addresses.push_back(stack_ptr);
-				return return_address;
-			}
 		}
 	}
 }

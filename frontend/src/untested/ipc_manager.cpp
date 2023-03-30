@@ -67,7 +67,7 @@ namespace micro_profiler
 		}
 	}
 
-	ipc_manager::ipc_manager(std::shared_ptr<ipc::server> server, scheduler::queue &apartment_queue, port_range range_,
+	ipc_manager::ipc_manager(shared_ptr<ipc::server> server, scheduler::queue &apartment_queue, port_range range_,
 			const guid_t *com_server_id)
 		: _server(new ipc::marshalled_server(server, apartment_queue)), _range(range_), _remote_enabled(false), _port(0)
 	{

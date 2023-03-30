@@ -24,6 +24,7 @@
 #include "table_component.h"
 
 #include <common/compiler.h>
+#include <list>
 #include <unordered_map>
 #include <vector>
 

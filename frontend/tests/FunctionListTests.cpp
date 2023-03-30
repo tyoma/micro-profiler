@@ -100,9 +100,9 @@ namespace micro_profiler
 
 
 		begin_test_suite( FunctionListTests )
-			std::shared_ptr<tables::statistics> statistics;
-			std::shared_ptr<tables::modules> modules;
-			std::shared_ptr<tables::module_mappings> mappings;
+			shared_ptr<tables::statistics> statistics;
+			shared_ptr<tables::modules> modules;
+			shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<symbol_resolver> resolver;
 			shared_ptr<tables::threads> threads;
 

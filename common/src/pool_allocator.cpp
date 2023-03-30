@@ -62,7 +62,7 @@ namespace micro_profiler
 		bin.push_back(e);
 	}
 
-	void *pool_allocator::allocate_slow(free_bins_t::iterator bin, std::size_t length)
+	void *pool_allocator::allocate_slow(free_bins_t::iterator bin, size_t length)
 	{
 		if (bin == _free.end())
 			bin = _free.insert(make_pair(length, free_bin_t())).first;

@@ -83,8 +83,8 @@ namespace micro_profiler
 	};
 
 	// response_patched
-	typedef patch_manager::apply_results response_patched_data;
+	typedef std::vector<patch_change_result> response_patched_data;
 
 	// response_reverted
-	typedef patch_manager::revert_results response_reverted_data;
+	typedef std::vector<patch_change_result> response_reverted_data;
 }

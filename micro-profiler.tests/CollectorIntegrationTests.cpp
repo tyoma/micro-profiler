@@ -161,7 +161,7 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				assert_is_true(std::any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
+				assert_is_true(any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
 					return file_id(m.second.path) == file_id(c_symbol_container_2_instrumented);
 				}));
 
@@ -175,10 +175,10 @@ namespace micro_profiler
 				} while (l.empty() && (mt::this_thread::sleep_for(mt::milliseconds(20)), true));
 
 				// ASSERT
-				assert_is_false(std::any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
+				assert_is_false(any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
 					return file_id(m.second.path) == file_id(c_symbol_container_2_instrumented);
 				}));
-				assert_is_true(std::any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
+				assert_is_true(any_of(l.begin(), l.end(), [] (const module::mapping_instance &m) {
 					return file_id(m.second.path) == file_id(c_symbol_container_1);
 				}));
 			}

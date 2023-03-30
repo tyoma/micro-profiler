@@ -40,7 +40,7 @@ namespace strmd
 	template <> struct version<micro_profiler::module_info_metadata> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::thread_info> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
-	template <> struct version<micro_profiler::patch_apply> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::patch_change_result> {	enum {	value = 5	};	};
 }
 
 namespace micro_profiler
@@ -135,14 +135,16 @@ namespace micro_profiler
 	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, patch_result::errors &data)
+	inline void serialize(ArchiveT &archive, patch_change_result::errors &data)
 	{	archive(reinterpret_cast<int &>(data));	}
 
 	template <typename ArchiveT>
-	inline void serialize(ArchiveT &archive, patch_apply &data, unsigned int /*ver*/)
+	inline void serialize(ArchiveT &archive, patch_change_result &data, unsigned int ver)
 	{
 		archive(data.result);
 		archive(data.id);
+		if (ver >= 5)
+			archive(data.rva);
 	}
 }
 

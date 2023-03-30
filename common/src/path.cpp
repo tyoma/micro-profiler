@@ -20,9 +20,11 @@
 
 #include <common/path.h>
 
+using namespace std;
+
 namespace micro_profiler
 {
-	std::string operator &(const std::string &lhs, const std::string &rhs)
+	string operator &(const string &lhs, const string &rhs)
 	{
 		if (lhs.empty())
 			return rhs;
@@ -31,26 +33,26 @@ namespace micro_profiler
 		return lhs + '/' + rhs;
 	}
 
-	std::string operator ~(const std::string &value)
+	string operator ~(const string &value)
 	{
 		const char separators[] = {	'\\', '/', '\0'	};
 		const auto pos = value.find_last_of(separators);
 
-		if (pos != std::string::npos)
+		if (pos != string::npos)
 			return value.substr(0, pos);
-		return std::string();
+		return string();
 	}
 
-	const char *operator *(const std::string &value)
+	const char *operator *(const string &value)
 	{
 		const char separators[] = {	'\\', '/', '\0'	};
 		const auto pos = value.find_last_of(separators);
 
-		return value.c_str() + (pos != std::string::npos ? pos + 1 : 0u);
+		return value.c_str() + (pos != string::npos ? pos + 1 : 0u);
 	}
 
 
-	std::string normalize::exe(const std::string &path)
+	string normalize::exe(const string &path)
 	{
 #if defined(_WIN32)
 		return path + ".exe";
@@ -59,14 +61,14 @@ namespace micro_profiler
 #endif
 	}
 
-	std::string normalize::lib(const std::string &path)
+	string normalize::lib(const string &path)
 	{
 #if defined(_WIN32)
 		return path + ".dll";
 #elif defined(__APPLE__)
-		return ~path & (std::string("lib") + *path + ".dylib");
+		return ~path & (string("lib") + *path + ".dylib");
 #else
-		return ~path & (std::string("lib") + *path + ".so");
+		return ~path & (string("lib") + *path + ".so");
 #endif
 	}
 }

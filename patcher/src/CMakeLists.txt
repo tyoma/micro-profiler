@@ -13,3 +13,4 @@ set(PATCHER_SOURCES
 )
 
 add_library(patcher STATIC ${PATCHER_SOURCES})
+target_compile_definitions(patcher PUBLIC SDB_NO_SIGNALS)

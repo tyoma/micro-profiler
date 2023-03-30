@@ -87,7 +87,7 @@ namespace micro_profiler
 					for (auto i = selection_->begin(); i != selection_->end(); ++i)
 						s[get<0>(*i)].push_back(get<1>(*i));
 					for (auto i = s.begin(); i != s.end(); ++i)
-						patches->apply(i->first, range<unsigned int, size_t>(i->second.data(), i->second.size()));
+						patches->apply(i->first, make_range(i->second));
 					selection_->clear();
 				});
 
@@ -99,7 +99,7 @@ namespace micro_profiler
 						for (auto i = selection_->begin(); i != selection_->end(); ++i)
 							s[get<0>(*i)].push_back(get<1>(*i));
 						for (auto i = s.begin(); i != s.end(); ++i)
-							patches->revert(i->first, range<unsigned int, size_t>(i->second.data(), i->second.size()));
+							patches->revert(i->first, make_range(i->second));
 						selection_->clear();
 					});
 

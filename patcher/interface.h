@@ -24,38 +24,60 @@
 
 namespace micro_profiler
 {
-	struct patch_result
-	{
-		enum errors {	ok, error, unchanged,	};
-	};
-
 	struct patch_state
 	{
-		enum states {	active, dormant, orphaned,	} state;
-		unsigned int id;
+		id_t id;
+		unsigned int rva;
+		enum states {
+			pending,	// Will be applied when module is mapped;
+			active,	// Patch is applied;
+			dormant,	// Patch was once requested, but is now reverted and not required on load;
+			errored,	// Patch was once requested, but failed to apply. Sticks forever.
+		} state;
 	};
 
-	struct patch_apply
+	struct patch_change_result
 	{
-		patch_result::errors result;
-		unsigned int id; // Identifier assigned or existed before for a dormant patch.
+		enum errors {	ok, error, unchanged,	};
+
+		id_t id; // Identifier assigned or existed before for a pending patch.
+		unsigned int rva;
+		errors result;
+	};
+
+	struct mapping_access
+	{
+		struct events;
+
+		virtual std::shared_ptr<module::mapping> lock_mapping(id_t mapping_id) = 0;
+		virtual std::shared_ptr<void> notify(events &events_) = 0;
+	};
+
+	struct mapping_access::events
+	{
+		// Events are guaranteed to come in causal order, i.e. an unmapped() is called for a module always before
+		// it gets mapped() again. No more than one mapping_id is allowed to exist for any particular module_id at any
+		// given moment in time.
+		virtual void mapped(id_t module_id, id_t mapping_id, const module::mapping &mapping) = 0;
+		virtual void unmapped(id_t mapping_id) = 0;
 	};
 
 	struct patch_manager
 	{
-		typedef std::vector< std::pair<unsigned int /*rva*/, patch_apply> > apply_results;
-		typedef std::vector< std::pair<unsigned int /*rva*/, patch_result::errors> > revert_results;
-		typedef std::vector< std::pair<unsigned int /*rva*/, patch_state> > patch_states;
+		typedef std::vector<patch_change_result> patch_change_results;
+		typedef std::vector<patch_state> patch_states;
 		typedef range<const unsigned int /*rva*/, size_t> request_range;
 
 		patch_manager() {	}
 
-		virtual void map_module(id_t module_id, const module::mapping &mapping) = 0;
-		virtual void unmap_module(id_t module_id) = 0;
+		virtual void query(patch_states &states, id_t module_id) = 0;
+		virtual void apply(patch_change_results &results, id_t module_id, request_range targets) = 0;
+		virtual void revert(patch_change_results &results, id_t module_id, request_range targets) = 0;
+	};
 
-		virtual void query(patch_state &states, unsigned int module_id) = 0;
-		virtual void apply(apply_results &results, unsigned int module_id, void *base, std::shared_ptr<void> lock,
-			request_range targets) = 0;
-		virtual void revert(revert_results &results, unsigned int module_id, request_range targets) = 0;
+	struct patch
+	{
+		virtual ~patch() {	}
+		virtual bool revert() = 0;
 	};
 }

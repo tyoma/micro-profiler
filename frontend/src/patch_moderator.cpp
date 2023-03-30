@@ -105,7 +105,7 @@ namespace micro_profiler
 					(*r).state = patch_moderator::patch_saved;
 					r.commit();
 				}
-				patches->apply(mapping.module_id, range<const unsigned int, size_t>(rva.data(), rva.size()));
+				patches->apply(mapping.module_id, make_range(rva));
 			}, _apartment);
 	}
 

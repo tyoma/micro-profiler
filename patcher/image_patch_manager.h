@@ -21,63 +21,83 @@
 #pragma once
 
 #include "function_patch.h"
-#include "interface.h"
 
-#include <common/module.h>
-#include <common/noncopyable.h>
-#include <common/range.h>
+#include <common/auto_increment.h>
 #include <functional>
-#include <memory>
-#include <unordered_map>
-#include <vector>
+#include <mt/mutex.h>
+#include <sdb/table.h>
 
 namespace micro_profiler
 {
 	class executable_memory_allocator;
 
-	class image_patch_manager : public patch_manager, noncopyable
+	class image_patch_manager : public patch_manager, mapping_access::events, noncopyable
 	{
 	public:
-		template <typename InterceptorT>
-		image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator_);
+		typedef std::function<std::unique_ptr<patch> (void *target, id_t id, executable_memory_allocator &allocator)>
+			patch_factory;
+		struct mapping;
 
-		void unmap_all();
+	public:
+		image_patch_manager(patch_factory patch_factory_, mapping_access &mappings, memory_manager &memory_manager_);
+		~image_patch_manager();
 
-		virtual void map_module(id_t module_id, const module::mapping &mapping) override;
-		virtual void unmap_module(id_t module_id) override;
+		virtual std::shared_ptr<mapping> lock_module(id_t module_id);
 
-		virtual void query(patch_state &states, unsigned int module_id) override;
-		virtual void apply(apply_results &results, unsigned int module_id, void *base, std::shared_ptr<void> lock,
-			request_range targets) override;
-		virtual void revert(revert_results &results, unsigned int module_id, request_range targets) override;
+		virtual void query(patch_states &states, id_t module_id) override;
+		virtual void apply(patch_change_results &results, id_t module_id, request_range targets) override;
+		virtual void revert(patch_change_results &results, id_t module_id, request_range targets) override;
 
 	private:
-		struct image_patch
+		struct mapping_record
 		{
-			image_patch();
-
-			std::shared_ptr<void> lock;
-			std::unordered_map< unsigned int /*rva*/, std::shared_ptr<function_patch> > patched;
-			unsigned int patches_applied;
+			id_t module_id;
+			id_t mapping_id;
+			std::shared_ptr<executable_memory_allocator> allocator;
 		};
 
-		typedef std::unordered_map<unsigned int /*module_id*/, image_patch> patched_images_t;
+		struct patch_record
+		{
+			id_t id;
+			id_t module_id;
+			unsigned int rva;
+			bool active;
+			std::shared_ptr<patch> patch_; // TODO: fix savant_db to support unique_ptr here.
+		};
 
 	private:
-		patched_images_t _patched_images;
-		std::function<std::shared_ptr<function_patch> (void *target)> _create_patch;
+		virtual void mapped(id_t module_id, id_t mapping_id, const module::mapping &mapping) override;
+		virtual void unmapped(id_t mapping_id) override;
+
+	private:
+		const patch_factory _patch_factory;
+		mapping_access &_mapping_access;
+		memory_manager &_memory_manager;
+		mt::mutex _mtx;
+		sdb::table< patch_record, auto_increment_constructor<patch_record> > _patches;
+		sdb::table<mapping_record> _mappings;
+		id_t _next_id;
+
+		std::shared_ptr<void> _mapping_subscription;
+	};
+
+	struct image_patch_manager::mapping : module::mapping
+	{
+		mapping(const module::mapping &from, std::shared_ptr<executable_memory_allocator> allocator_)
+			: module::mapping(from), allocator(allocator_)
+		{	}
+
+		std::shared_ptr<executable_memory_allocator> allocator;
 	};
 
 
 
 	template <typename InterceptorT>
-	inline std::shared_ptr<function_patch> construct_function_patch(void *target, InterceptorT &interceptor, executable_memory_allocator &allocator_)
-	{	return std::make_shared<function_patch>(target, &interceptor, allocator_);	}
-
-	template <typename InterceptorT>
-	inline image_patch_manager::image_patch_manager(InterceptorT &interceptor, executable_memory_allocator &allocator_)
-		: _create_patch([&interceptor, &allocator_] (void *target) {
-			return construct_function_patch(target, interceptor, allocator_);
-		})
-	{	}
+	inline std::function<std::shared_ptr<patch> (void *target)> default_patch_factory(InterceptorT &interceptor,
+		executable_memory_allocator &allocator_)
+	{
+		return [&interceptor, &allocator_] (void *target) {
+			return std::make_shared<function_patch>(target, &interceptor, allocator_);
+		};
+	}
 }

@@ -39,7 +39,7 @@ namespace micro_profiler
 			bool is_address_inside(const vector<mapped_region> &regions, const void *executable_address)
 			{
 				for (auto i = regions.begin(); i != regions.end(); ++i)
-					if (i->address <= executable_address && executable_address < i->address + i->size && (i->protection & mapped_region::execute))
+					if (i->address <= executable_address && executable_address < i->address + i->size && (i->protection & protection::execute))
 						return true;
 				return false;
 			}

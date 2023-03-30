@@ -125,32 +125,16 @@ namespace micro_profiler
 		_last_reported_mapping_id = last_reported_mapping_id;
 	}
 
-	shared_ptr<module::mapping> module_tracker::lock_mapping(unsigned int module_id, uint32_t &hash)
+	bool module_tracker::get_module(module_info& info, id_t module_id) const
 	{
-		typedef pair<shared_ptr<void>, mapping> composite_t;
+		mt::lock_guard<mt::mutex> l(_mtx);
+		const auto m = sdb::unique_index<keyer::id>(_modules).find(module_id);
 
-		auto locked = make_shared<composite_t>();
-
-		{
-			mt::lock_guard<mt::mutex> l(_mtx);
-			const auto mod = sdb::unique_index<keyer::id>(_modules).find(module_id);
-
-			if (!mod)
-				throw invalid_argument("invalid persistent_id");
-
-			const auto m = sdb::unique_index<keyer::module_id>(_mappings).find(module_id);
-
-			if (!m)
-				return nullptr;
-			locked->second = *m;
-			hash = mod->hash;
-		}
-
-		locked->first = _module_helper.load(locked->second.path);
-		return shared_ptr<module::mapping>(locked, &locked->second);
+		return m ? info = *m, true : false;
 	}
 
-	module_tracker::metadata_ptr module_tracker::get_metadata(unsigned int module_id) const
+
+	module_tracker::metadata_ptr module_tracker::get_metadata(id_t module_id) const
 	{
 		string path;
 		{
@@ -164,9 +148,34 @@ namespace micro_profiler
 		return load_image_info(path);
 	}
 
-	shared_ptr<void> module_tracker::notify(events &/*events_*/)
+	shared_ptr<module::mapping> module_tracker::lock_mapping(id_t mapping_id)
 	{
-		throw 0;
+		void *expected_base;
+		file_id file;
+
+		{
+			mt::lock_guard<mt::mutex> l(_mtx);
+			const auto m = sdb::unique_index<keyer::id>(_mappings).find(mapping_id);
+
+			if (!m)
+				return nullptr;
+			expected_base = m->base;
+			file = sdb::unique_index<keyer::id>(_modules).find(m->module_id)->file; // Module is guaranteed to present.
+		}
+
+		if (const auto candidate = _module_helper.lock_at(expected_base))
+			if (candidate->base == expected_base && file_id(candidate->path) == file)
+				return candidate;
+		return nullptr;
+	}
+
+	shared_ptr<void> module_tracker::notify(mapping_access::events &events_)
+	{
+		mt::lock_guard<mt::mutex> l(_mtx);
+
+		for (auto i = begin(_mappings); i != end(_mappings); ++i)
+			events_.mapped(i->module_id, i->id, *i);
+		return make_shared<bool>();
 	}
 
 	void module_tracker::mapped(const module::mapping &mapping_)

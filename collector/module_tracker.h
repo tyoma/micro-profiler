@@ -27,18 +27,18 @@
 #include <common/protocol.h>
 #include <memory>
 #include <mt/mutex.h>
+#include <patcher/interface.h>
 #include <sdb/table.h>
 
 namespace micro_profiler
 {
 	struct image_info;
 
-	class module_tracker : module::events
+	class module_tracker : public mapping_access, module::events
 	{
 	public:
 		typedef image_info metadata_t;
 		typedef std::shared_ptr<const metadata_t> metadata_ptr;
-		struct events;
 
 		struct mapping : module::mapping
 		{
@@ -58,12 +58,12 @@ namespace micro_profiler
 		module_tracker(module &module_helper);
 
 		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
-		std::shared_ptr<module::mapping> lock_mapping(unsigned int module_id, std::uint32_t &hash);
-		metadata_ptr get_metadata(unsigned int module_id) const;
-		std::shared_ptr<void> notify(events &events_);
+		bool get_module(module_info& info, id_t module_id) const;
+		metadata_ptr get_metadata(id_t module_id) const;
 
-	private:
-		typedef containers::unordered_map<unsigned int /*module_id*/, module_info> modules_registry_t;
+		// mapping_access methods
+		virtual std::shared_ptr<module::mapping> lock_mapping(id_t mapping_id) override;
+		virtual std::shared_ptr<void> notify(mapping_access::events &events_) override;
 
 	private:
 		static std::uint32_t calculate_hash(const std::string &path_);
@@ -81,11 +81,5 @@ namespace micro_profiler
 		module &_module_helper;
 		const file_id _this_module_file;
 		const std::shared_ptr<void> _module_notifier;
-	};
-
-	struct module_tracker::events
-	{
-		virtual void mapped(id_t mapping_id, id_t module_id, const module::mapping &m) = 0;
-		virtual void unmapped(id_t mapping_id) = 0;
 	};
 }

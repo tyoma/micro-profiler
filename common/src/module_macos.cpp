@@ -47,13 +47,13 @@ namespace micro_profiler
 			{	return lhs.base == rhs.base;	}
 		};
 
-		int generic_protection(int protection)
+		int generic_protection(int protection_)
 		{
 			auto value = 0;
 
-			value |= (protection & VM_PROT_EXECUTE) ? mapped_region::execute : 0;
-			value |= (protection & VM_PROT_WRITE) ? mapped_region::write : 0;
-			value |= (protection & VM_PROT_READ) ? mapped_region::read : 0;
+			value |= (protection_ & VM_PROT_EXECUTE) ? protection::execute : 0;
+			value |= (protection_ & VM_PROT_WRITE) ? protection::write : 0;
+			value |= (protection_ & VM_PROT_READ) ? protection::read : 0;
 			return value;
 		}
 

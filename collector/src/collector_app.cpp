@@ -38,10 +38,10 @@ using namespace std;
 
 namespace micro_profiler
 {
-	collector_app::collector_app(calls_collector_i &collector, const overhead &overhead_,
-			thread_monitor &thread_monitor_, module &module_helper, patch_manager &patch_manager_)
-		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(thread_monitor_),
-			_module_helper(module_helper), _patch_manager(patch_manager_), _server(*this)
+	collector_app::collector_app(calls_collector_i &collector, const overhead &overhead_, thread_monitor &threads,
+			module &module_helper, patch_manager_factory patch_manager_factory_)
+		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(threads),
+			_module_helper(module_helper), _patch_manager_factory(patch_manager_factory_), _server(*this)
 	{	}
 
 	collector_app::~collector_app()
@@ -61,12 +61,15 @@ namespace micro_profiler
 		typedef ipc::server_session::response response;
 
 		auto module_tracker_ = make_shared<module_tracker>(_module_helper);
+		auto patch_manager = _patch_manager_factory(*module_tracker_);
+
+		// Keep buffer objects to avoid excessive allocations.
 		auto loaded = make_shared<loaded_modules>();
 		auto unloaded = make_shared<unloaded_modules>();
 		auto metadata = make_shared<module_info_metadata>();
+		auto module_info = make_shared<module_tracker::module_info>();
 		auto threads_buffer = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
-		auto apply_results = make_shared<response_patched_data>();
-		auto revert_results = make_shared<response_reverted_data>();
+		auto patch_results = make_shared<response_patched_data>();
 
 		session.add_handler(request_update, [this, module_tracker_, loaded, unloaded] (response &resp) {
 			module_tracker_->get_changes(*loaded, *unloaded);
@@ -77,24 +80,23 @@ namespace micro_profiler
 		});
 
 		session.add_handler(request_module_metadata,
-			[module_tracker_, metadata] (response &resp, unsigned int module_id) {
+			[module_tracker_, metadata, module_info] (response &resp, unsigned int module_id) {
 
-			uint32_t hash;
-			const auto l = module_tracker_->lock_mapping(module_id, hash);
-			const auto metadata_ = module_tracker_->get_metadata(module_id);
 			auto &md = *metadata;
+			auto metadata_ = module_tracker_->get_metadata(module_id);
 
-			metadata->path = l->path;
-			metadata->hash = hash;
-			metadata->symbols.clear();
-			metadata->source_files.clear();
+			module_tracker_->get_module(*module_info, module_id); // TODO: check the result.
+			md.path = module_info->path;
+			md.hash = module_info->hash;
+			md.symbols.clear();
+			md.source_files.clear();
 			metadata_->enumerate_functions([&] (const symbol_info &symbol) {
 				md.symbols.push_back(symbol);
 			});
 			metadata_->enumerate_files([&] (const pair<unsigned, string> &file) {
 				md.source_files.insert(file);
 			});
-			resp(response_module_metadata, *metadata);
+			resp(response_module_metadata, md);
 		});
 
 		session.add_handler(request_threads_info,
@@ -106,24 +108,19 @@ namespace micro_profiler
 		});
 
 		session.add_handler(request_apply_patches,
-			[this, module_tracker_, apply_results] (response &resp, const patch_request &payload) {
+			[this, module_tracker_, patch_manager, patch_results] (response &resp, const patch_request &payload) {
 
-			uint32_t hash;
-			const auto l = module_tracker_->lock_mapping(payload.image_persistent_id, hash);
-
-			apply_results->clear();
-			_patch_manager.apply(*apply_results, payload.image_persistent_id, l->base, l,
-				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
-			resp(response_patched, *apply_results);
+			patch_results->clear();
+			patch_manager->apply(*patch_results, payload.image_persistent_id, make_range(payload.functions_rva));
+			resp(response_patched, *patch_results);
 		});
 
 		session.add_handler(request_revert_patches,
-			[this, revert_results] (response &resp, const patch_request &payload) {
+			[this, module_tracker_, patch_manager, patch_results] (response &resp, const patch_request &payload) {
 
-			revert_results->clear();
-			_patch_manager.revert(*revert_results, payload.image_persistent_id,
-				range<const unsigned int, size_t>(payload.functions_rva.data(), payload.functions_rva.size()));
-			resp(response_reverted, *revert_results);
+			patch_results->clear();
+			patch_manager->revert(*patch_results, payload.image_persistent_id, make_range(payload.functions_rva));
+			resp(response_reverted, *patch_results);
 		});
 
 

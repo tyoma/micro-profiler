@@ -21,13 +21,14 @@
 #pragma once
 
 #include "dynamic_hooking.h"
+#include "interface.h"
 #include "jumper.h"
 
 #include <common/memory.h>
 
 namespace micro_profiler
 {
-	class function_patch : noncopyable
+	class function_patch : public patch, noncopyable
 	{
 	public:
 		template <typename T>
@@ -36,7 +37,7 @@ namespace micro_profiler
 		const void *target() const;
 		bool active() const;
 		bool activate(bool atomic);
-		bool revert();
+		virtual bool revert() override;
 		void detach();
 
 	private:

@@ -94,7 +94,7 @@ namespace micro_profiler
 					{
 						wchar_t *gtext_memory = static_cast<wchar_t *>(::GlobalLock(gtext));
 
-						std::copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
+						copy(result.c_str(), result.c_str() + result.size() + 1, gtext_memory);
 						::GlobalUnlock(gtext_memory);
 						::EmptyClipboard();
 						::SetClipboardData(CF_UNICODETEXT, gtext);

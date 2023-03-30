@@ -41,9 +41,9 @@ namespace micro_profiler
 		{
 			int value = 0;
 
-			value |= (segment_access & PF_X) ? mapped_region::execute : 0;
-			value |= (segment_access & PF_W) ? mapped_region::write : 0;
-			value |= (segment_access & PF_R) ? mapped_region::read : 0;
+			value |= (segment_access & PF_X) ? protection::execute : 0;
+			value |= (segment_access & PF_W) ? protection::write : 0;
+			value |= (segment_access & PF_R) ? protection::read : 0;
 			return value;
 		}
 

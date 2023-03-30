@@ -35,7 +35,7 @@ namespace micro_profiler
 			< std::make_pair(rhs.id, std::make_pair(rhs.native_id, rhs.description));
 	}
 
-	inline bool operator <(const patch &lhs, const patch &rhs)
+	inline bool operator <(const patch_state2 &lhs, const patch_state2 &rhs)
 	{
 		return lhs.id < rhs.id ? true : rhs.id < lhs.id ? false :
 			lhs.module_id < rhs.module_id ? true : rhs.module_id < lhs.module_id ? false :

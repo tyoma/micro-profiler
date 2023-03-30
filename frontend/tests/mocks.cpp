@@ -12,7 +12,7 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			symbol_resolver::symbol_resolver(std::shared_ptr<tables::modules> modules, std::shared_ptr<tables::module_mappings> mappings)
+			symbol_resolver::symbol_resolver(shared_ptr<tables::modules> modules, shared_ptr<tables::module_mappings> mappings)
 				: micro_profiler::symbol_resolver(modules, mappings)
 			{	}
 

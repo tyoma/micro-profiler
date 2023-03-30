@@ -31,13 +31,13 @@ namespace micro_profiler
 {
 	namespace
 	{
-		int posix_protection(int protection)
+		int posix_protection(int protection_)
 		{
 			auto value = 0;
 
-			value |= mapped_region::execute & protection ? PROT_EXEC : 0;
-			value |= mapped_region::write & protection ? PROT_WRITE : 0;
-			value |= mapped_region::read & protection ? PROT_READ : 0;
+			value |= protection::execute & protection_ ? PROT_EXEC : 0;
+			value |= protection::write & protection_ ? PROT_WRITE : 0;
+			value |= protection::read & protection_ ? PROT_READ : 0;
 			return value;
 		}
 	}

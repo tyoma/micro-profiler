@@ -17,6 +17,9 @@ using namespace std;
 
 namespace micro_profiler
 {
+	inline bool operator ==(const module_tracker::module_info &lhs, const module_tracker::module_info &rhs)
+	{	return lhs.id == rhs.id && lhs.file == rhs.file && lhs.path == rhs.path && lhs.hash == rhs.hash;	}
+
 	namespace tests
 	{
 		namespace
@@ -26,13 +29,13 @@ namespace micro_profiler
 
 			const int dummy = 0;
 
-			struct tracker_event : module_tracker::events
+			struct tracker_event : mapping_access::events
 			{
-				function<void (id_t mapping_id, id_t module_id, const module::mapping &m)> on_mapped;
+				function<void (id_t module_id, id_t mapping_id, const module::mapping &m)> on_mapped;
 				function<void (id_t mapping_id)> on_unmapped;
 
-				virtual void mapped(id_t mapping_id, id_t module_id, const module::mapping &m) override
-				{	if (on_mapped) on_mapped(mapping_id, module_id, m);	}
+				virtual void mapped(id_t module_id, id_t mapping_id, const module::mapping &m) override
+				{	if (on_mapped) on_mapped(module_id, mapping_id, m);	}
 
 				virtual void unmapped(id_t mapping_id) override
 				{	if (on_unmapped) on_unmapped(mapping_id);	}
@@ -47,6 +50,12 @@ namespace micro_profiler
 						symbol.reset(new symbol_info(s));
 				});
 				return symbol;
+			}
+
+			module_tracker::module_info make_module_info(id_t id, string path, unsigned hash)
+			{
+				module_tracker::module_info r = {	id, file_id(path), path, hash	};
+				return r;
 			}
 		}
 
@@ -196,6 +205,39 @@ namespace micro_profiler
 			}
 
 
+			test( ObservedModulesCanBeAccessed )
+			{
+				// INIT
+				module_tracker t(module_helper);
+				loaded_modules l;
+				unloaded_modules u;
+				module_tracker::module_info infos[3];
+
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+
+				// ACT / ASSERT
+				assert_is_false(t.get_module(infos[0], 0));
+				assert_is_false(t.get_module(infos[0], 3));
+
+				// INIT
+				module_helper.emulate_mapped(*img3);
+				t.get_changes(l, u);
+				module_helper.emulate_unmapped(img2->base_ptr());
+
+				// ACT / ASSERT
+				assert_is_true(t.get_module(infos[0], 1));
+				assert_is_true(t.get_module(infos[1], 2));
+				assert_is_true(t.get_module(infos[2], 3));
+				assert_is_false(t.get_module(infos[2], 4));
+
+				// ASSERT
+				assert_equal(make_module_info(1, img1->absolute_path(), l[0].second.hash), infos[0]);
+				assert_equal(make_module_info(2, img2->absolute_path(), l[1].second.hash), infos[1]);
+				assert_equal(make_module_info(3, img3->absolute_path(), l[2].second.hash), infos[2]);
+			}
+
+
 			test( InstanceIDsAreReportedForUnloadedModules )
 			{
 				// INIT
@@ -269,44 +311,108 @@ namespace micro_profiler
 			}
 
 
-			test( MappedModulesCanBeLockedPersistentID )
+			test( MappedModulesCanBeLockedByMappingID )
 			{
 				// INIT
-				uint32_t hash;
 				module_tracker t(module_helper);
+				vector<void *> lock_addresses;
+				shared_ptr<module::mapping> result;
 
-				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
+				module_helper.on_lock_at = [&] (void *address) {	return lock_addresses.push_back(address), result;	};
 				module_helper.emulate_mapped(*img1);
 				module_helper.emulate_mapped(*img3);
-				module_helper.emulate_mapped(*img2);
+				result = make_shared<module::mapping>(module::platform().locate(img3->base_ptr()));
+
+				// ACT
+				auto l = t.lock_mapping(2);
 
 				// ACT / ASSERT
-				assert_not_null(t.lock_mapping(1, hash));
-				assert_equal(make_mapping(img1->base_ptr(), img1->absolute_path()), *t.lock_mapping(1, hash));
-				assert_not_null(t.lock_mapping(2, hash));
-				assert_equal(make_mapping(img3->base_ptr(), img3->absolute_path()), *t.lock_mapping(2, hash));
-				assert_not_null(t.lock_mapping(3, hash));
-				assert_equal(make_mapping(img2->base_ptr(), img2->absolute_path()), *t.lock_mapping(3, hash));
+				assert_equal(plural + (void *)img3->base_ptr(), lock_addresses);
+				assert_equal(result, l);
+
+				// INIT
+				result = make_shared<module::mapping>(module::platform().locate(img1->base_ptr()));
+
+				// ACT
+				l = t.lock_mapping(1);
+
+				// ACT / ASSERT
+				assert_equal(plural + (void *)img3->base_ptr() + (void *)img1->base_ptr(), lock_addresses);
+				assert_equal(result, l);
+				assert_is_true(1 < result.use_count());
+
+				// ACT
+				l.reset();
+
+				// ASSERT
+				assert_equal(1, result.use_count());
 			}
 
 
-			test( UnmappedModulesCanNotBeLocked )
+			test( UnmappedOrDynamicallyMissingModulesCanNotBeLocked )
 			{
-				// INIT
-				uint32_t hash;
-				module_tracker t(module_helper);
-				loaded_modules l;
-				unloaded_modules u;
+				// 'Dynamically missing' are those modules, that were once observed, but disappeared at the time of request.
 
+				// INIT
+				module_tracker t(module_helper);
+				vector<void *> lock_addresses;
+
+				module_helper.on_lock_at = [&] (void *address) {
+					return lock_addresses.push_back(address), shared_ptr<module::mapping>();
+				};
 				module_helper.emulate_mapped(*img1);
-				module_helper.emulate_mapped(*img3);
 				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_mapped(*img3);
 				module_helper.emulate_unmapped(img1->base_ptr());
 				module_helper.emulate_unmapped(img3->base_ptr());
+				module_helper.emulate_mapped(*img3);
+				module_helper.emulate_mapped(*img1);
 
 				// ACT / ASSERT
-				assert_null(t.lock_mapping(1, hash));
-				assert_null(t.lock_mapping(2, hash));
+				assert_null(t.lock_mapping(1));
+				assert_null(t.lock_mapping(3));
+				assert_is_empty(lock_addresses);
+
+				// ACT / ASSERT
+				assert_null(t.lock_mapping(2));
+				assert_null(t.lock_mapping(4));
+
+				// ASSERT
+				assert_equal(plural + (void *)img2->base_ptr() + (void *)img3->base_ptr(), lock_addresses);
+
+				// ACT / ASSERT
+				assert_null(t.lock_mapping(5));
+
+				// ASSERT
+				assert_equal(plural + (void *)img2->base_ptr() + (void *)img3->base_ptr() + (void *)img1->base_ptr(),
+					lock_addresses);
+			}
+
+
+			test( MappingCannotBeLockedIfUnderlyingDiffersFromRecorded )
+			{
+				// INIT
+				module_tracker t(module_helper);
+				auto m1 = module::platform().locate(img1->base_ptr());
+				auto m2 = module::platform().locate(img2->base_ptr());
+				shared_ptr<module::mapping> result;
+
+				module_helper.on_lock_at = [&] (void * /*address*/) {	return result;	};
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+
+				result = make_shared_copy(m1);
+				result->base += 1;
+
+				// ACT / ASSERT
+				assert_null(t.lock_mapping(1));
+
+				// INIT
+				result = make_shared_copy(m2);
+				result->path = m1.path;
+
+				// ACT / ASSERT
+				assert_null(t.lock_mapping(2));
 			}
 
 
@@ -361,126 +467,61 @@ namespace micro_profiler
 			}
 
 
-			test( LockingImagePreventsItFromUnloading )
+			test( SubscribingToTrackingNotificationListsLoadedModules )
 			{
 				// INIT
-				uint32_t hash;
-				auto unloaded1 = false;
-				auto unloaded2 = false;
-				module_tracker t(module_helper);
-				loaded_modules l;
-				unloaded_modules u;
+				auto prohibited_calls = 0;
+				vector< tuple<id_t, id_t, module::mapping> > mappings;
+				tracker_event e;
 
-				img1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
-				img2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
+				e.on_mapped = [&] (id_t module_id, id_t mapping_id, const module::mapping &m) {
+					mappings.push_back(make_tuple(module_id, mapping_id, m));
+				};
+				e.on_unmapped = [&] (id_t /*mapping_id*/) {	prohibited_calls++;	};
 
 				module_helper.emulate_mapped(*img1);
 				module_helper.emulate_mapped(*img2);
-				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
 
-				// ACT
-				auto lock1 = t.lock_mapping(1, hash);
-				auto lock2 = t.lock_mapping(2, hash);
-
-				// ASSERT
-				assert_not_null(lock1);
-				assert_not_null(lock2);
-				assert_not_equal(lock1, lock2);
-
-				// ACT
-				img1.reset();
-				img2.reset();
-
-				// ASSERT
-				assert_is_false(unloaded1);
-				assert_is_false(unloaded2);
-
-				// ACT
-				lock1.reset();
-
-				// ASSERT
-				assert_is_true(unloaded1);
-				assert_is_false(unloaded2);
-
-				// ACT
-				lock2.reset();
-
-				// ASSERT
-				assert_is_true(unloaded2);
-			}
-
-
-			test( AttemptToLockWithInvalidIDFails )
-			{
-				// INIT
-				uint32_t hash;
 				module_tracker t(module_helper);
 
-				// ACT / ASSERT
-				assert_throws(t.lock_mapping(1, hash), invalid_argument);
-				assert_throws(t.lock_mapping(3, hash), invalid_argument);
+				// INIT / ACT / ASSERT
+				assert_not_null(t.notify(e));
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img2->base_ptr())), mappings);
 
 				// INIT
+				mappings.clear();
 				module_helper.emulate_mapped(*img3);
 
-				// ACT / ASSERT
-				assert_throws(t.lock_mapping(2, hash), invalid_argument);
-				assert_throws(t.lock_mapping(3, hash), invalid_argument);
+				// INIT / ACT / ASSERT
+				assert_not_null(t.notify(e));
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img2->base_ptr()))
+					+ make_tuple(3u, 3u, module::platform().locate(img3->base_ptr())), mappings);
+
+				// INIT
+				mappings.clear();
+
+				// INIT / ACT
+				module_helper.emulate_unmapped(img2->base_ptr());
+				module_helper.emulate_mapped(*img2);
+
+				// INIT / ACT / ASSERT
+				assert_not_null(t.notify(e));
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(3u, 3u, module::platform().locate(img3->base_ptr()))
+					+ make_tuple(2u, 4u, module::platform().locate(img2->base_ptr())), mappings);
+				assert_equal(0, prohibited_calls);
 			}
-
-
-			//test( SubscribingToTrackingNotificationListsLoadedModules )
-			//{
-			//	// INIT
-			//	unique_ptr<image> img1(new image(module1_path));
-			//	auto img1_base = img1->base_ptr();
-			//	unique_ptr<image> img2(new image(module2_path));
-			//	auto img2_base = img2->base_ptr();
-			//	unique_ptr<image> img3(new image(module3_path));
-			//	auto img3_base = img3->base_ptr();
-			//	vector<module::mapping> mappings1, mappings2;
-			//	set<id_t> mapping_ids1, module_ids1, mapping_ids2, module_ids2;
-			//	const module::mapping *match;
-			//	tracker_event e1, e2;
-			//	module_tracker t(module_helper);
-			//	bool valid = true;
-
-			//	e1.on_mapped = [&] (id_t mapping_id, id_t module_id, const module::mapping &m) {
-			//		valid &= mapping_ids1.insert(mapping_id).second && module_ids1.insert(module_id).second;
-			//		mappings1.push_back(m);
-			//	};
-			//	e1.on_unmapped = [&] (id_t /*mapping_id*/) {	valid = false;	};
-			//	e2.on_mapped = [&] (id_t mapping_id, id_t module_id, const module::mapping &m) {
-			//		valid &= mapping_ids2.insert(mapping_id).second && module_ids2.insert(module_id).second;
-			//		mappings2.push_back(m);
-			//	};
-			//	e2.on_unmapped = [&] (id_t /*mapping_id*/) {	valid = false;	};
-
-			//	// ACT
-			//	t.notify(e1);
-
-			//	// ASSERT
-			//	assert_not_null(match = find_module(mappings1, img1_base));
-			//	assert_equal(file_id(img1->absolute_path()), file_id(match->path));
-			//	assert_not_null(match = find_module(mappings1, img2_base));
-			//	assert_equal(file_id(img2->absolute_path()), file_id(match->path));
-			//	assert_not_null(match = find_module(mappings1, img3_base));
-			//	assert_equal(file_id(img3->absolute_path()), file_id(match->path));
-
-			//	// INIT
-			//	img1.reset();
-			//	img3.reset();
-
-			//	// ACT
-			//	t.notify(e2);
-
-			//	// ASSERT
-			//	assert_is_true(valid);
-			//	assert_null(find_module(mappings2, img1_base));
-			//	assert_not_null(match = find_module(mappings2, img2_base));
-			//	assert_equal(file_id(img2->absolute_path()), file_id(match->path));
-			//	assert_null(find_module(mappings2, img3_base));
-			//}
 
 		end_test_suite
 	}

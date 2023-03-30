@@ -18,7 +18,7 @@ using namespace std::placeholders;
 namespace strmd
 {
 	template <typename K>
-	struct type_traits< std::map<K, micro_profiler::function_statistics> >
+	struct type_traits< map<K, micro_profiler::function_statistics> >
 	{
 		typedef container_type_tag category;
 		struct item_reader_type : strmd::indexed_associative_container_reader
@@ -37,7 +37,7 @@ namespace micro_profiler
 		begin_test_suite( AdditiveDeSerializationTests )
 			test( DeserializationIntoExistingValuesAddsValuesBase )
 			{
-				typedef std::pair<unsigned, function_statistics> addressed_statistics2;
+				typedef pair<unsigned, function_statistics> addressed_statistics2;
 
 				// INIT
 				vector_adapter buffer;

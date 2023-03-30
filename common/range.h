@@ -22,6 +22,8 @@
 
 #include "types.h"
 
+#include <vector>
+
 namespace micro_profiler
 {
 #pragma pack(push, 1)
@@ -34,7 +36,7 @@ namespace micro_profiler
 	public:
 		template <typename U>
 		range(const range<U, SizeT> &u);
-		range(T *start, size_t length);
+		range(T *start, SizeT length);
 
 		T *begin() const;
 		T *end() const;
@@ -59,7 +61,7 @@ namespace micro_profiler
 	{	}
 
 	template <typename T, typename SizeT>
-	inline range<T, SizeT>::range(T *start, size_t length)
+	inline range<T, SizeT>::range(T *start, SizeT length)
 		: _start(start), _length(static_cast<SizeT>(length))
 	{	}
 
@@ -78,4 +80,13 @@ namespace micro_profiler
 	template <typename T, typename SizeT>
 	inline bool range<T, SizeT>::inside(const T *ptr) const
 	{	return (begin() <= ptr) & (ptr < end());	}
+
+
+	template <typename T>
+	inline range<const T, std::size_t> make_range(const std::vector<T> &from)
+	{	return range<const T, std::size_t>(from.data(), from.size());	}
+
+	template <typename T>
+	inline range<T, std::size_t> make_range(std::vector<T> &from)
+	{	return range<T, std::size_t>(from.data(), from.size());	}
 }

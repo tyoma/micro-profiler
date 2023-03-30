@@ -8,6 +8,7 @@
 #include <collector/serialization.h>
 #include <ipc/client_session.h>
 #include <mt/event.h>
+#include <test-helpers/comparisons.h>
 #include <test-helpers/constants.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
@@ -18,7 +19,7 @@ using namespace placeholders;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const patch_apply &lhs, const patch_apply &rhs)
+	inline bool operator ==(const patch_change_result &lhs, const patch_change_result &rhs)
 	{	return lhs.id == rhs.id && lhs.result == rhs.result;	}
 
 	namespace tests
@@ -27,12 +28,14 @@ namespace micro_profiler
 		{
 			using ipc::deserializer;
 
+			typedef vector<patch_change_result> patch_change_results;
+
 			const overhead c_overhead(0, 0);
 
-			pair<unsigned /*rva*/, patch_apply> mkpatch_apply(unsigned rva, patch_result::errors status, unsigned id)
+			patch_change_result mkpatch_change(unsigned rva, patch_change_result::errors status, id_t id)
 			{
-				patch_apply pa = {	status, id	};
-				return make_pair(rva, pa);
+				patch_change_result r = {	id, rva, status	};
+				return r;
 			}
 		}
 
@@ -42,11 +45,13 @@ namespace micro_profiler
 			shared_ptr<ipc::client_session> client;
 			mocks::tracer collector;
 			mocks::thread_monitor tmonitor;
-			mocks::module_helper module_helper;
-			mocks::patch_manager pmanager;
+			shared_ptr<mocks::patch_manager> pmanager;
+			collector_app::patch_manager_factory patch_manager_factory;
 			unique_ptr<image> img1, img2, img3;
 			mt::event client_ready;
 			vector< shared_ptr<void> > subscriptions;
+
+			mocks::module_helper module_helper;
 
 			shared_ptr<void> &new_subscription()
 			{	return *subscriptions.insert(subscriptions.end(), shared_ptr<void>());	}
@@ -56,11 +61,15 @@ namespace micro_profiler
 				img1.reset(new image(c_symbol_container_1));
 				img2.reset(new image(c_symbol_container_2));
 				img3.reset(new image(c_symbol_container_3_nosymbols));
+				patch_manager_factory = [&] (mapping_access &/*mapping_access_*/) -> shared_ptr<patch_manager> {
+					pmanager = make_shared<mocks::patch_manager>();
+					client_ready.set();
+					return pmanager;
+				};
 				factory = [this] (ipc::channel &outbound_) -> ipc::channel_ptr_t {
 					client = make_shared<ipc::client_session>(outbound_);
 					auto p = client.get();
 					client->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
-					client_ready.set();
 					return client;
 				};
 				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
@@ -70,36 +79,27 @@ namespace micro_profiler
 			test( PatchActivationIsMadeOnRequest )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
-				vector<void *> bases_log;
 				vector< vector<unsigned> > rva_log;
 				mt::event ready;
 
 				app.connect(factory, false);
 				client_ready.wait();
-				pmanager.on_apply = [&] (patch_manager::apply_results &, unsigned module_id, void *base,
-					shared_ptr<void> lock, patch_manager::request_range targets) {
-
+				pmanager->on_apply = [&] (patch_change_results &, unsigned module_id, patch_manager::request_range targets) {
 					ids_log.push_back(module_id);
-					bases_log.push_back(base);
-					assert_not_null(lock);
 					rva_log.push_back(vector<unsigned>(targets.begin(), targets.end()));
 					ready.set();
 				};
 
 				// ACT
-				module_helper.emulate_mapped(*img1);
-				module_helper.emulate_mapped(*img2);
-				module_helper.emulate_mapped(*img3);
 				const patch_request preq1 = {	3u, mkvector(rva1)	};
 				client->request(rq, request_apply_patches, preq1, response_patched, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
-				assert_equal(plural + (void *)img3->base_ptr(), bases_log);
 				assert_equal(plural + 3u, ids_log);
 				assert_equal(rva1, rva_log.back());
 
@@ -112,7 +112,6 @@ namespace micro_profiler
 				ready.wait();
 
 				// ASSERT
-				assert_equal(plural + (void *)img3->base_ptr() + (void *)img1->base_ptr(), bases_log);
 				assert_equal(plural + 3u + 1u, ids_log);
 				assert_equal(rva2, rva_log.back());
 			}
@@ -121,30 +120,27 @@ namespace micro_profiler
 			test( PatchActivationFailuresAreReturned )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
-				pair<unsigned, patch_apply> aresults1[] = {
-					mkpatch_apply(rva1[0], patch_result::ok, 0),
-					mkpatch_apply(rva1[1], patch_result::ok, 0),
-					mkpatch_apply(rva1[2], patch_result::ok, 0),
-				};
+				auto aresults1 = plural
+					+ mkpatch_change(rva1[0], patch_change_result::ok, 0)
+					+ mkpatch_change(rva1[1], patch_change_result::ok, 0)
+					+ mkpatch_change(rva1[2], patch_change_result::ok, 0);
 				unsigned rva2[] = {	1001u, 310u, 3211u, 1000001u, 13u,	};
-				pair<unsigned, patch_apply> aresults2[] = {
-					mkpatch_apply(rva2[0], patch_result::ok, 0),
-					mkpatch_apply(rva2[1], patch_result::ok, 100),
-					mkpatch_apply(rva2[2], patch_result::unchanged, 1901),
-					mkpatch_apply(rva2[3], patch_result::ok, 100000),
-					mkpatch_apply(rva2[4], patch_result::error, 0),
-				};
-				vector<patch_manager::apply_results> log;
+				auto aresults2 = plural
+					+ mkpatch_change(rva2[0], patch_change_result::ok, 0)
+					+ mkpatch_change(rva2[1], patch_change_result::ok, 100)
+					+ mkpatch_change(rva2[2], patch_change_result::unchanged, 1901)
+					+ mkpatch_change(rva2[3], patch_change_result::ok, 100000)
+					+ mkpatch_change(rva2[4], patch_change_result::error, 0);
+				vector<patch_change_results> log;
 				mt::event ready;
 
 				app.connect(factory, false);
 				client_ready.wait();
-				pmanager.on_apply = [&] (patch_manager::apply_results &results, unsigned, void *, shared_ptr<void>,
-					patch_manager::request_range) {
-					results = mkvector(aresults1);
+				pmanager->on_apply = [&] (patch_change_results &results, id_t, patch_manager::request_range) {
+					results = aresults1;
 				};
 				module_helper.emulate_mapped(*img1);
 
@@ -162,9 +158,8 @@ namespace micro_profiler
 				assert_equal(aresults1, log.back());
 
 				// INIT
-				pmanager.on_apply = [&] (patch_manager::apply_results &results, unsigned, void *, shared_ptr<void>,
-					patch_manager::request_range) {
-					results = mkvector(aresults2);
+				pmanager->on_apply = [&] (patch_change_results &results, id_t, patch_manager::request_range) {
+					results = aresults2;
 				};
 
 				// ACT
@@ -185,7 +180,7 @@ namespace micro_profiler
 			test( PatchRevertIsMadeOnRequest )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
@@ -196,33 +191,31 @@ namespace micro_profiler
 				module_helper.emulate_mapped(*img2);
 				app.connect(factory, false);
 				client_ready.wait();
-				pmanager.on_revert = [&] (patch_manager::revert_results &, unsigned module_id,
-					patch_manager::request_range targets) {
-
+				pmanager->on_revert = [&] (patch_change_results &, unsigned module_id, patch_manager::request_range tgts) {
 					ids_log.push_back(module_id);
-					rva_log.push_back(vector<unsigned>(targets.begin(), targets.end()));
+					rva_log.push_back(vector<unsigned>(tgts.begin(), tgts.end()));
 					ready.set();
 				};
 
 				// ACT
-				patch_request preq1 = {	3u, mkvector(rva1)	};
+				patch_request preq1 = {	2u, mkvector(rva1)	};
 				client->request(rq, request_revert_patches, preq1, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
-				assert_equal(plural + 3u, ids_log);
+				assert_equal(plural + 2u, ids_log);
 				assert_equal(rva1, rva_log.back());
 
 				// INIT
 				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
 
 				// ACT
-				patch_request preq2 = {	2u, mkvector(rva2)	};
+				patch_request preq2 = {	1u, mkvector(rva2)	};
 				client->request(rq, request_revert_patches, preq2, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
 				// ASSERT
-				assert_equal(plural + 3u + 2u, ids_log);
+				assert_equal(plural + 2u + 1u, ids_log);
 				assert_equal(rva2, rva_log.back());
 			}
 
@@ -230,34 +223,32 @@ namespace micro_profiler
 			test( PatchRevertFailuresAreReturned )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
-				pair<unsigned, patch_result::errors> rresults1[] = {
-					make_pair(rva1[0], patch_result::ok),
-					make_pair(rva1[1], patch_result::unchanged),
-					make_pair(rva1[2], patch_result::error),
-				};
+				auto rresults1 = plural
+					+ mkpatch_change(rva1[0], patch_change_result::ok, 1)
+					+ mkpatch_change(rva1[1], patch_change_result::unchanged, 2)
+					+ mkpatch_change(rva1[2], patch_change_result::error, 3);
 				unsigned rva2[] = {	1001u, 310u, 3211u, 1000001u, 13u,	};
-				pair<unsigned, patch_result::errors> rresults2[] = {
-					make_pair(rva2[0], patch_result::ok),
-					make_pair(rva2[1], patch_result::unchanged),
-					make_pair(rva2[2], patch_result::ok),
-					make_pair(rva2[3], patch_result::error),
-					make_pair(rva2[4], patch_result::ok),
-				};
-				vector<patch_manager::revert_results> log;
+				auto rresults2 = plural
+					+ mkpatch_change(rva2[0], patch_change_result::ok, 4)
+					+ mkpatch_change(rva2[1], patch_change_result::unchanged, 5)
+					+ mkpatch_change(rva2[2], patch_change_result::ok, 6)
+					+ mkpatch_change(rva2[3], patch_change_result::error, 7)
+					+ mkpatch_change(rva2[4], patch_change_result::ok, 8);
+				vector<patch_change_results> log;
 				mt::event ready;
 
 				app.connect(factory, false);
 				client_ready.wait();
-				pmanager.on_revert = [&] (patch_manager::revert_results &results, unsigned, patch_manager::request_range) {
-					results = mkvector(rresults1);
+				pmanager->on_revert = [&] (patch_change_results &results, id_t, patch_manager::request_range) {
+					results = rresults1;
 				};
 				module_helper.emulate_mapped(*img2);
 
 				// ACT
-				const patch_request preq1 = {	3u, mkvector(rva1)	};
+				const patch_request preq1 = {	1u, mkvector(rva1)	};
 				client->request(rq, request_revert_patches, preq1, response_reverted, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());
@@ -270,8 +261,8 @@ namespace micro_profiler
 				assert_equal(rresults1, log.back());
 
 				// INIT
-				pmanager.on_revert = [&] (patch_manager::revert_results &results, unsigned, patch_manager::request_range) {
-					results = mkvector(rresults2);
+				pmanager->on_revert = [&] (patch_change_results &results, id_t, patch_manager::request_range) {
+					results = rresults2;
 				};
 
 				// ACT

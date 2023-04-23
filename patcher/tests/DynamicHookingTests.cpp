@@ -162,7 +162,7 @@ namespace micro_profiler
 					timestamp_t timestamp) _CC(fastcall);
 
 				const void *return_address;
-				std::vector<const void **> entry_queue, exit_queue;
+				vector<const void **> entry_queue, exit_queue;
 			};
 
 			void CC_(fastcall) exception_call_tracer::on_enter(exception_call_tracer *self, const void **stack_ptr,

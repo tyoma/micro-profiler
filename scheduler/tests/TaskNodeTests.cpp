@@ -30,7 +30,7 @@ namespace scheduler
 					: F(from)
 				{	}
 
-				virtual void begin(const std::shared_ptr< const async_result<T> > &antecedant) override
+				virtual void begin(const shared_ptr< const async_result<T> > &antecedant) override
 				{	(*this)(*antecedant);	}
 			};
 

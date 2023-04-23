@@ -14,10 +14,10 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		std::string one();
-		std::string two();
-		std::string three();	// expected not to be modified
-		std::string four();	// expected not to be modified
+		string one();
+		string two();
+		string three();	// expected not to be modified
+		string four();	// expected not to be modified
 
 		begin_test_suite( JumperIntelTests )
 			shared_ptr<byte> edge;

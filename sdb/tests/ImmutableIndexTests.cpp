@@ -17,9 +17,9 @@ namespace sdb
 		{
 			template <typename U, typename K>
 			struct index_base : sdb::index_base<U, K,
-				std::unordered_multimap<typename result<K, typename U::value_type>::type, typename U::const_iterator> >
+				unordered_multimap<typename result<K, typename U::value_type>::type, typename U::const_iterator> >
 			{
-				typedef sdb::index_base<U, K, std::unordered_multimap<typename result<K, typename U::value_type>::type, typename U::const_iterator> > base_t;
+				typedef sdb::index_base<U, K, unordered_multimap<typename result<K, typename U::value_type>::type, typename U::const_iterator> > base_t;
 
 				index_base(const U &underlying, const K &keyer)
 					: base_t(underlying, keyer)

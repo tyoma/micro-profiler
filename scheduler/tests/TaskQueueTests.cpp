@@ -18,7 +18,7 @@ namespace scheduler
 	{
 		namespace
 		{
-			typedef std::unique_ptr<task_queue> queue_ptr;
+			typedef unique_ptr<task_queue> queue_ptr;
 
 
 			template <typename T>

@@ -13,13 +13,13 @@ namespace ut
 	template <typename T1, typename T2>
 	inline void content_equal(const T1 &expected, const T2 &actual, const LocationInfo &location)
 	{
-		auto e = std::begin(expected);
-		auto a = std::begin(actual);
+		auto e = begin(expected);
+		auto a = begin(actual);
 
-		for (; e != std::end(expected) && a != std::end(actual); ++e, ++a)
+		for (; e != end(expected) && a != end(actual); ++e, ++a)
 			are_equal(*e, *a, location);
-		are_equal(e, std::end(expected), location);
-		are_equal(a, std::end(actual), location);
+		are_equal(e, end(expected), location);
+		are_equal(a, end(actual), location);
 	}
 }
 
@@ -48,7 +48,7 @@ namespace sdb
 
 			template <typename T, typename K>
 			ordered_index<T, K> make_ordered_index(T &table, const K &keyer)
-			{	return std::move(ordered_index<T, K>(table, keyer));	}
+			{	return move(ordered_index<T, K>(table, keyer));	}
 		}
 
 		begin_test_suite( OrderedIndexTests )

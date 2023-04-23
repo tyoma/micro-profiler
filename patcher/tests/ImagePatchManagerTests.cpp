@@ -34,11 +34,11 @@ namespace micro_profiler
 					: image_patch_manager(patch_factory_, mappings, memory_manager_)
 				{	}
 
-				virtual std::shared_ptr<mapping> lock_module(id_t module_id) override
+				virtual shared_ptr<mapping> lock_module(id_t module_id) override
 				{	return on_lock_module(module_id);	}
 
 			public:
-				std::function<std::shared_ptr<mapping> (id_t module_id)> on_lock_module;
+				function<shared_ptr<mapping> (id_t module_id)> on_lock_module;
 			};
 
 			patch_change_result make_patch_apply(unsigned rva, patch_change_result::errors status, id_t id)

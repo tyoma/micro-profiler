@@ -9,6 +9,7 @@
 #include <collector/serialization.h>
 #include <common/constants.h>
 #include <common/module.h>
+#include <common/smart_ptr.h>
 #include <common/string.h>
 #include <common/time.h>
 #include <ipc/client_session.h>

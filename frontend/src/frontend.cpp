@@ -168,7 +168,7 @@ namespace micro_profiler
 			auto &statistics = _db->statistics;
 			auto &idx = sdb::ordered_index_(_db->mappings, keyer::base());
 
-			for (tables::statistics::const_iterator i = statistics.begin(); i != statistics.end(); ++i)
+			for (auto i = statistics.begin(); i != statistics.end(); ++i)
 			{
 				const auto m = find_range(idx, (*i).address);
 

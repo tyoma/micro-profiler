@@ -87,7 +87,7 @@ namespace micro_profiler
 
 				e2->outbound = f.get();
 				f->initialized = [this] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
-				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
+				emulator = make_shared_aspect(e2, &e2->server_session);
 				return f;
 			}
 

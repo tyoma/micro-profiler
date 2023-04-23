@@ -182,10 +182,10 @@ namespace micro_profiler
 
 	template <typename BaseT, typename U, typename CtxT, typename T>
 	inline std::shared_ptr< wpl::list_model<double> > table_model_impl<BaseT, U, CtxT, T>::get_column_series()
-	{	return std::shared_ptr< wpl::list_model<double> >(this->shared_from_this(), &_projection);	}
+	{	return make_shared_aspect(this->shared_from_this(), &_projection);	}
 
 
 	template <typename BaseT, typename U, typename CtxT, typename T>
 	inline std::shared_ptr< const views::ordered<U> > get_ordered(std::shared_ptr< table_model_impl<BaseT, U, CtxT, T> > model)
-	{	return std::shared_ptr< const views::ordered<U> >(model, &model->ordered());	}
+	{	return make_shared_aspect(model, &model->ordered());	}
 }

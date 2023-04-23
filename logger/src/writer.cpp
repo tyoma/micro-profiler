@@ -44,7 +44,7 @@ namespace micro_profiler
 
 			if (string::npos != dot)
 				filename.resize(dot);
-			for (string candidate = base_path; file = fopen_exclusive(candidate, "at"), !file; ++u)
+			for (auto candidate = base_path; file = fopen_exclusive(candidate, "at"), !file; ++u)
 			{
 				candidate = path & filename;
 				candidate += '-';

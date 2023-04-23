@@ -188,7 +188,7 @@ namespace micro_profiler
 	}
 	catch (...)
 	{
-		for (revert_buffer::const_iterator i = rbuffer.begin(); i != rbuffer.end(); ++i)
+		for (auto i = rbuffer.begin(); i != rbuffer.end(); ++i)
 			i->restore();
 		rbuffer.clear();
 		throw;

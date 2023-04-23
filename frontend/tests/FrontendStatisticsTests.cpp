@@ -69,13 +69,13 @@ namespace micro_profiler
 				auto e2 = make_shared<emulator_>(queue);
 				auto c = make_shared<complex_t>(e2, make_shared<frontend>(e2->server_session,
 					make_shared<mocks::profiling_cache>(), worker, apartment));
-				auto f = shared_ptr<frontend>(c, c->second.get());
+				auto f = make_shared_aspect(c, c->second.get());
 
 				e2->outbound = f.get();
 				f->initialized = [this] (shared_ptr<profiling_session> ctx) {
 					session = ctx;
 				};
-				emulator = shared_ptr<ipc::server_session>(e2, &e2->server_session);
+				emulator = make_shared_aspect(e2, &e2->server_session);
 				return f;
 			}
 

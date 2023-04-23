@@ -20,17 +20,16 @@
 
 #pragma once
 
+#include <common/smart_ptr.h>
 #include <common/types.h>
-#include <memory>
 
 namespace micro_profiler
 {
 	template <typename T, typename U>
 	inline std::shared_ptr<T> make_bound(const std::shared_ptr<U> &underlying)
 	{
-		typedef std::pair<std::shared_ptr<U>, T> pair_t;
-		const auto p = std::make_shared<pair_t>(underlying, T(*underlying));
-		return std::shared_ptr<T>(p, &p->second);
+		const auto p = make_shared_copy(std::make_pair(underlying, T(*underlying)));
+		return make_shared_aspect(p, &p->second);
 	}
 
 	template <typename T>

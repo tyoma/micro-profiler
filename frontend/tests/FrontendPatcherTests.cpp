@@ -66,7 +66,7 @@ namespace micro_profiler
 					worker_queue, queue);
 				e->outbound = frontend_.get();
 				frontend_->initialized = [&] (shared_ptr<profiling_session> ctx) {	context = ctx;	};
-				emulator = shared_ptr<ipc::server_session>(e, &e->server_session);
+				emulator = make_shared_aspect(e, &e->server_session);
 
 				frontend_->initialized = [&] (shared_ptr<profiling_session> context_) {
 					context = context_;
@@ -76,7 +76,7 @@ namespace micro_profiler
 					s(idata);
 				});
 
-				patches = shared_ptr<tables::patches>(context, &context->patches);
+				patches = micro_profiler::patches(context);
 
 				// ASSERT
 				assert_not_null(patches);

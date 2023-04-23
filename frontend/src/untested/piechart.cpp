@@ -68,7 +68,7 @@ namespace micro_profiler
 
 		real_t start = -pi * 0.5f;
 
-		for (segments_t::const_iterator i = _segments.begin(); i != _segments.end(); ++i)
+		for (auto i = _segments.begin(); i != _segments.end(); ++i)
 		{
 			real_t end = start + i->share_angle;
 			real_t outer_r = _outer_r * (is_selected(i->index) ? _selection_emphasis_k + 1.0f : 1.0f);
@@ -191,7 +191,7 @@ namespace micro_profiler
 		{
 			real_t start = -pi * 0.5f;
 
-			for (segments_t::const_iterator i = _segments.begin(); i != _segments.end(); ++i)
+			for (auto i = _segments.begin(); i != _segments.end(); ++i)
 			{
 				real_t end = start + i->share_angle;
 

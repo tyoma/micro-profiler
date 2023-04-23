@@ -54,7 +54,7 @@ namespace micro_profiler
 				order.value = 0xFF;
 				if (order.bytes[0])
 				{
-					for (size_t i = 0; i < sizeof(T) / 2; ++i)
+					for (auto i = 0u; i < sizeof(T) / 2; ++i)
 						std::swap(bytes[i], bytes[sizeof(T) - 1 - i]);
 				}
 			}

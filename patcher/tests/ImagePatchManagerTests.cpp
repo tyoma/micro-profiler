@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include "mocks.h"
 
+#include <common/smart_ptr.h>
 #include <test-helpers/comparisons.h>
 #include <test-helpers/helpers.h>
 #include <tuple>

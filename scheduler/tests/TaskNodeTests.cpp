@@ -197,6 +197,31 @@ namespace scheduler
 				// ASSERT
 				assert_equal(3, faults);
 			}
+
+
+			test( ContinuationsAreReleasedUponSettingTheResult )
+			{
+				struct dummy : continuation<void>
+				{
+					virtual void begin(const shared_ptr< const async_result<void> > &/*antecedant*/) override
+					{	}
+				};
+
+				// INIT
+				auto parent = make_shared< task_node<void> >();
+				auto child1 = make_shared<dummy>();
+				auto child2 = make_shared<dummy>();
+
+				parent->continue_with(child1);
+				parent->continue_with(child2);
+
+				// ACT
+				parent->set();
+
+				// ASSERT
+				assert_equal(1, child1.use_count());
+				assert_equal(1, child2.use_count());
+			}
 		end_test_suite
 	}
 }

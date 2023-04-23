@@ -101,11 +101,11 @@ namespace micro_profiler
 					fd_set fds;
 
 					FD_ZERO(&fds);
-					for (typename ContainerT::const_iterator i = handlers.begin(); i != handlers.end(); ++i)
+					for (auto i = handlers.begin(); i != handlers.end(); ++i)
 						FD_SET((*i)->_socket, &fds);
 					if (::select(FD_SETSIZE, &fds, NULL, NULL, NULL) < 0)
 						return;
-					for (typename ContainerT::iterator i = handlers.begin(); i != handlers.end(); )
+					for (auto i = handlers.begin(); i != handlers.end(); )
 					{
 						switch(FD_ISSET((*i)->_socket, &fds) ? (*i)->handler(**i, (*i)->_socket) : proceed)
 						{
@@ -177,7 +177,7 @@ namespace micro_profiler
 				if (sizeof(magic) == recv_scalar(s, magic, MSG_PEEK) && magic == init_magic)
 				{
 					recv_scalar(s, magic, MSG_WAITALL);
-					for (handlers_t::const_iterator i = _handlers.begin() ; i != _handlers.end(); ++i)
+					for (auto i = _handlers.begin(); i != _handlers.end(); ++i)
 					{
 						socket_handler::handler_t &handler = (*i)->handler;
 
@@ -238,7 +238,7 @@ namespace micro_profiler
 				unsigned id;
 
 				if (recv_scalar(s, id, MSG_WAITALL) > 0)
-					for (handlers_t::iterator i = _handlers.begin(); i != _handlers.end(); ++i)
+					for (auto i = _handlers.begin(); i != _handlers.end(); ++i)
 						if ((*i)->id == id)
 						{
 							_handlers.erase(i);

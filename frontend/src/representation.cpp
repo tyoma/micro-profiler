@@ -20,7 +20,7 @@
 
 #include <frontend/representation.h>
 
-#include <common/memory.h>
+#include <common/smart_ptr.h>
 #include <frontend/aggregators.h>
 #include <frontend/derived_statistics.h>
 #include <frontend/key.h>

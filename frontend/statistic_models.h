@@ -99,17 +99,14 @@ namespace micro_profiler
 	inline std::shared_ptr< table_model_impl<BaseT, U, statistics_model_context, call_statistics> > make_table(
 		std::shared_ptr<U> underlying, const statistics_model_context &context, const ColumnsT &columns)
 	{
-		typedef table_model_impl<BaseT, U, statistics_model_context, call_statistics> model_type;
-		typedef std::tuple<std::shared_ptr<model_type>, wpl::slot_connection, wpl::slot_connection> composite_t;
-
-		const auto m = std::make_shared<model_type>(underlying, context);
-		const auto c = std::make_shared<composite_t>(m, underlying->invalidate += [m] {
-			m->fetch();
-		}, context.resolver->invalidate += [m] {
-			m->invalidate(m->npos());
-		});
+		const auto m = std::make_shared<table_model_impl<BaseT, U, statistics_model_context, call_statistics>>(underlying,
+			context);
 
 		m->add_columns(columns);
-		return std::shared_ptr<model_type>(c, std::get<0>(*c).get());
+		return make_shared_aspect(make_shared_copy(make_tuple(m, underlying->invalidate += [m] {
+			m->fetch();
+		}, context.resolver->invalidate += [m] {
+				m->invalidate(m->npos());
+		})), m.get());
 	}
 }

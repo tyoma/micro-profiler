@@ -75,18 +75,6 @@ namespace micro_profiler
 
 	const vector<string> application::c_configuration_path(begin(c_configuration_path_), end(c_configuration_path_));
 
-	struct ui_composite
-	{
-		shared_ptr<standalone_ui> ui;
-		vector< shared_ptr<void> > connections;
-	};
-
-	struct child_composite
-	{
-		shared_ptr<form> form_;
-		vector<slot_connection> connections;
-	};
-
 	void main(application &app)
 	{
 		mkdir(constants::data_directory().c_str(), 0777);
@@ -96,10 +84,10 @@ namespace micro_profiler
 
 		LOG("MicroProfiler standalone frontend started...");
 
-		child_composite about_composite_, patcher_composite_;
+		shared_ptr<void> about_display, patcher_display;
 		auto &factory = app.get_factory();
 		const auto show_about = [&] (agge::point<int> center, shared_ptr<form> new_form) {
-			auto on_close = [&] {	about_composite_.form_.reset();	};
+			auto on_close = [&] {	about_display.reset();	};
 			const auto root = make_shared<overlay>();
 				root->add(factory.create_control<control>("background"));
 				auto about = make_shared<about_ui>(factory);
@@ -108,18 +96,15 @@ namespace micro_profiler
 			new_form->set_root(root);
 			new_form->set_location(create_rect(center.x - 200, center.y - 150, center.x + 200, center.y + 150));
 			new_form->set_visible(true);
-			about_composite_.connections.clear();
-			about_composite_.connections.push_back(new_form->close += on_close);
-			about_composite_.connections.push_back(about->link += [&] (const string &address) {
-				app.open_link(address);
-			});
-			about_composite_.connections.push_back(about->close += on_close);
-			about_composite_.form_ = new_form;
+			about_display = make_shared_copy(make_tuple(
+				new_form,
+				new_form->close += on_close,
+				about->close += on_close,
+				about->link += [&] (const string &address) {	app.open_link(address);	}
+			));
 		};
 		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, shared_ptr<profiling_session> session) {
 			auto model = make_shared<image_patch_model>(patches(session), modules(session), mappings(session));
-			auto on_close = [&] {	patcher_composite_.form_.reset();	};
-
 			const auto root = make_shared<overlay>();
 				root->add(factory.create_control<control>("background"));
 				auto patcher = make_shared<image_patch_ui>(factory, model, patches(session));
@@ -128,27 +113,27 @@ namespace micro_profiler
 			new_form->set_root(root);
 			new_form->set_location(create_rect(center.x - 300, center.y - 200, center.x + 300, center.y + 200));
 			new_form->set_visible(true);
-			patcher_composite_.connections.push_back(new_form->close += on_close);
-			patcher_composite_.form_ = new_form;
+			patcher_display = make_shared_copy(make_tuple(
+				new_form,
+				new_form->close += [&] {	patcher_display.reset();	}
+			));
 		};
 		auto ui_factory = [&app, &factory, show_about, show_patcher] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
 			auto &app2 = app;
 			auto show_patcher2 = show_patcher;
-			auto composite = make_shared<ui_composite>();
+			auto ui = make_shared<standalone_ui>(app.get_configuration(), factory, session);
 			auto poller = make_shared<statistics_poll>(statistics(session), app.get_ui_queue());
 
-			composite->ui = make_shared<standalone_ui>(app.get_configuration(), factory, session);
-			composite->connections.push_back(composite->ui->copy_to_buffer += [&app2] (const string &text_utf8) {
-				app2.clipboard_copy(text_utf8);
-			});
-			composite->connections.push_back(composite->ui->show_about += show_about);
-			composite->connections.push_back(composite->ui->show_patcher += [show_patcher2, session] (agge::point<int> center, shared_ptr<form> new_form) {
-				show_patcher2(center, new_form, session);
-			});
-			composite->connections.push_back(poller);
-
 			poller->enable(true);
-			return shared_ptr<frontend_ui>(composite, composite->ui.get());
+			return make_shared_aspect(make_shared_copy(make_tuple(
+				ui,
+				ui->copy_to_buffer += [&app2] (const string &text_utf8) {	app2.clipboard_copy(text_utf8);	},
+				ui->show_about += show_about,
+				ui->show_patcher += [show_patcher2, session] (agge::point<int> center, shared_ptr<form> new_form) {
+					show_patcher2(center, new_form, session);
+				},
+				poller
+			)), ui.get());
 		};
 		auto main_form = factory.create_form();
 		auto cancellation = main_form->close += [&app] {	app.stop();	};

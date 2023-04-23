@@ -1,11 +1,11 @@
 #include <collector/module_tracker.h>
 
-#include <common/file_id.h>
-#include <common/path.h>
-
 #include "helpers.h"
 #include "mocks.h"
 
+#include <common/file_id.h>
+#include <common/path.h>
+#include <common/smart_ptr.h>
 #include <test-helpers/comparisons.h>
 #include <test-helpers/constants.h>
 #include <test-helpers/file_helpers.h>

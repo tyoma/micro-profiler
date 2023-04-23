@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <common/memory.h>
+#include <common/range.h>
 #include <common/noncopyable.h>
 #include <stdexcept>
 
@@ -28,9 +28,9 @@ namespace micro_profiler
 {
 	struct insufficient_buffer_error : std::runtime_error
 	{
-		insufficient_buffer_error(size_t requested_, size_t available_);
+		insufficient_buffer_error(std::size_t requested_, std::size_t available_);
 
-		size_t requested, available;
+		std::size_t requested, available;
 	};
 
 	class buffer_reader : noncopyable
@@ -38,15 +38,15 @@ namespace micro_profiler
 	public:
 		buffer_reader(const_byte_range payload);
 
-		void read(void *data, size_t size);
-		void skip(size_t size);
+		void read(void *data, std::size_t size);
+		void skip(std::size_t size);
 
 	private:
-		void raise(size_t size);
+		void raise(std::size_t size);
 
 	private:
 		const byte *_ptr;
-		size_t _remaining;
+		std::size_t _remaining;
 	};
 
 	template <typename BufferT>
@@ -55,7 +55,7 @@ namespace micro_profiler
 	public:
 		buffer_writer(BufferT &buffer);
 
-		void write(const void *data, size_t size);
+		void write(const void *data, std::size_t size);
 
 	private:
 		BufferT &_buffer;
@@ -69,7 +69,7 @@ namespace micro_profiler
 	{	_buffer.clear();	}
 
 	template <typename BufferT>
-	inline void buffer_writer<BufferT>::write(const void *data, size_t size)
+	inline void buffer_writer<BufferT>::write(const void *data, std::size_t size)
 	{
 		const auto data_ = static_cast<const byte *>(data);
 

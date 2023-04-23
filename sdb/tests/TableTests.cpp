@@ -149,11 +149,11 @@ namespace sdb
 				// ACT
 				auto r1 = t.create();
 				(*r1).value = "lorem";
-				for (int a = 300; a; a--)
+				for (auto a = 300; a; a--)
 					l.push_back(t.create());
 				auto r2 = t.create();
 				(*r2).value = "ipsum";
-				for (int a = 5; a; a--)
+				for (auto a = 5; a; a--)
 					l.push_back(t.create());
 				auto r3 = t.create();
 				(*r3).value = "dolor";

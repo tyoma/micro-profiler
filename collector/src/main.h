@@ -23,7 +23,6 @@
 #include <collector/calls_collector.h>
 #include <collector/collector_app.h>
 #include <common/allocator.h>
-#include <common/memory.h>
 #include <common/noncopyable.h>
 #include <logger/multithreaded_logger.h>
 #include <logger/writer.h>

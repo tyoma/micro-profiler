@@ -40,14 +40,14 @@ namespace micro_profiler
 		inline const FactoryT &select(constructor<FactoryT> (&constructors)[n], const std::string &typed_endpoint_id,
 			std::string &endpoint_id)
 		{
-			const size_t delim = typed_endpoint_id.find('|');
+			const auto delim = typed_endpoint_id.find('|');
 			if (delim == std::string::npos)
 				throw std::invalid_argument(typed_endpoint_id);
-			const std::string protocol = typed_endpoint_id.substr(0, delim);
+			const auto protocol = typed_endpoint_id.substr(0, delim);
 
 			endpoint_id = typed_endpoint_id.substr(delim + 1);
 
-			for (size_t i = 0; i != n; ++i)
+			for (auto i = 0u; i != n; ++i)
 			{
 				if (protocol == constructors[i].protocol)
 					return constructors[i].constructor_method;

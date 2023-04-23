@@ -26,6 +26,7 @@
 
 #include <common/constants.h>
 #include <common/path.h>
+#include <common/smart_ptr.h>
 #include <common/string.h>
 #include <common/time.h>
 #include <common/win32/configuration_registry.h>
@@ -169,7 +170,7 @@ namespace micro_profiler
 				const auto complex = make_shared_copy(make_pair(moderator, ui));
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
-				return shared_ptr<frontend_ui>(complex, ui.get());
+				return make_shared_aspect(complex, ui.get());
 			}));
 			_ipc_manager.reset(new ipc_manager(_frontend_manager,
 				*_ui_queue,

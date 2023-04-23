@@ -41,6 +41,7 @@ namespace scheduler
 	{
 	public:
 		typedef typename continuation<T>::ptr continuation_ptr;
+		typedef async_result<T> result_type;
 
 	public:
 		void continue_with(const continuation_ptr &continuation_);
@@ -53,7 +54,7 @@ namespace scheduler
 
 	private:
 		mt::mutex _mtx;
-		async_result<T> _result;
+		result_type _result;
 		std::vector<continuation_ptr> _continuations;
 	};
 
@@ -76,37 +77,36 @@ namespace scheduler
 	{
 		for (mt::lock_guard<mt::mutex> l(_mtx); _result.state() == async_in_progress; )
 			return _continuations.push_back(continuation_);
-		continuation_->begin(std::shared_ptr< async_result<T> >(this->shared_from_this(), &_result));
+		continuation_->begin(std::shared_ptr<const result_type>(this->shared_from_this(), &_result));
 	}
 
 	template <typename T>
 	inline void task_node_base<T>::fail(std::exception_ptr &&exception)
-	{	set_result([&] (async_result<T> &r) {	r.fail(std::forward<std::exception_ptr>(exception));	});	}
+	{	set_result([&] (result_type &r) {	r.fail(std::forward<std::exception_ptr>(exception));	});	}
 
 	template <typename T>
 	template <typename F>
 	inline void task_node_base<T>::set_result(F &&result_setter)
 	{
-		std::vector<continuation_ptr> continuations;
-		auto presult = std::shared_ptr< async_result<T> >(this->shared_from_this(), &_result);
-
 		{
 			mt::lock_guard<mt::mutex> l(_mtx);
 
-			result_setter(_result);
-			continuations.swap(_continuations);
+			result_setter(_result); // State: async_in_progress -> async_completed/async_faulted.
 		}
 
-		for (auto i = std::begin(continuations); i != std::end(continuations); ++i)
-			(*i)->begin(presult);
+		auto result = std::shared_ptr<const result_type>(this->shared_from_this(), &_result);
+
+		for (auto i = std::begin(_continuations); i != std::end(_continuations); ++i)
+			(*i)->begin(result);
+		_continuations.clear();
 	}
 
 
 	template <typename T>
 	inline void task_node<T>::set(T &&result)
-	{	this->set_result([&] (async_result<T> &r) {	r.set(std::forward<T>(result));	});	}
+	{	this->set_result([&] (typename task_node<T>::result_type &r) {	r.set(std::forward<T>(result));	});	}
 
 
 	inline void task_node<void>::set()
-	{	this->set_result([] (async_result<void> &r) {	r.set();	});	}
+	{	this->set_result([] (result_type &r) {	r.set();	});	}
 }

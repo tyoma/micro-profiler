@@ -122,7 +122,7 @@ namespace micro_profiler
 				shared_ptr<richtext_table_model> fl1 = make_table<richtext_table_model>(statistics,
 					create_context(statistics, 1.0, resolver, threads, false), c_statistics_columns);
 				shared_ptr<table_model> fl2 = make_table<table_model>(statistics,
-					create_context(statistics, 1.0 , resolver, threads, false), c_statistics_columns);
+					create_context(statistics, 1.0, resolver, threads, false), c_statistics_columns);
 
 				// ACT / ASSERT
 				assert_equal(0u, fl1->get_count());

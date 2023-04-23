@@ -33,7 +33,7 @@ namespace micro_profiler
 				{
 					if (!_attributes.empty())
 						buffer += " (";
-					for (vector< pair<string, string> >::const_iterator i = _attributes.begin(); i != _attributes.end(); ++i)
+					for (auto i = _attributes.begin(); i != _attributes.end(); ++i)
 					{
 						if (i != _attributes.begin())
 							buffer += ",";

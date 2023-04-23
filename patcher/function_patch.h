@@ -24,8 +24,6 @@
 #include "interface.h"
 #include "jumper.h"
 
-#include <common/memory.h>
-
 namespace micro_profiler
 {
 	class function_patch : public patch, noncopyable

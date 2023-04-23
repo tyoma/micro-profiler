@@ -28,6 +28,7 @@
 #include <common/module.h>
 #include <common/noncopyable.h>
 #include <common/protocol.h>
+#include <common/smart_ptr.h>
 #include <sdb/table.h>
 
 namespace micro_profiler
@@ -111,17 +112,17 @@ namespace micro_profiler
 	{	return session->process_info.executable;	}
 
 	inline std::shared_ptr<tables::statistics> statistics(std::shared_ptr<profiling_session> session)
-	{	return std::shared_ptr<tables::statistics>(session, &session->statistics);	}
+	{	return make_shared_aspect(session, &session->statistics);	}
 
 	inline std::shared_ptr<tables::module_mappings> mappings(std::shared_ptr<profiling_session> session)
-	{	return std::shared_ptr<tables::module_mappings>(session, &session->mappings);	}
+	{	return make_shared_aspect(session, &session->mappings);	}
 
 	inline std::shared_ptr<tables::modules> modules(std::shared_ptr<profiling_session> session)
-	{	return std::shared_ptr<tables::modules>(session, &session->modules);	}
+	{	return make_shared_aspect(session, &session->modules);	}
 
 	inline std::shared_ptr<tables::threads> threads(std::shared_ptr<profiling_session> session)
-	{	return std::shared_ptr<tables::threads>(session, &session->threads);	}
+	{	return make_shared_aspect(session, &session->threads);	}
 
 	inline std::shared_ptr<tables::patches> patches(std::shared_ptr<profiling_session> session)
-	{	return std::shared_ptr<tables::patches>(session, &session->patches);	}
+	{	return make_shared_aspect(session, &session->patches);	}
 }

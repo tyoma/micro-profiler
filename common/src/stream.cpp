@@ -21,6 +21,7 @@
 #include <common/stream.h>
 
 #include <common/compiler.h>
+#include <common/memory.h>
 
 namespace micro_profiler
 {

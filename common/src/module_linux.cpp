@@ -21,6 +21,7 @@
 #include <common/module.h>
 
 #include <common/file_id.h>
+#include <common/smart_ptr.h>
 #include <dlfcn.h>
 #include <link.h>
 #include <mt/event.h>
@@ -164,7 +165,7 @@ namespace micro_profiler
 					});
 				}
 		});
-		return m && m->first ? shared_ptr<mapping>(m, &m->second) : nullptr;
+		return m && m->first ? make_shared_aspect(m, &m->second) : nullptr;
 	}
 
 	shared_ptr<void> module_platform::notify(events &consumer)

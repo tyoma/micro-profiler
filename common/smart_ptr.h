@@ -20,34 +20,15 @@
 
 #pragma once
 
-#include "constructors.h"
-#include "model_context.h"
-#include "table_model_impl.h"
-
-#include <explorer/process.h>
-#include <wpl/models.h>
+#include <memory>
 
 namespace micro_profiler
 {
-	template <>
-	struct key_traits<process_info>
-	{
-		typedef id_t key_type;
+	template <typename T>
+	inline std::shared_ptr<T> make_shared_copy(const T &from)
+	{	return std::make_shared<T>(from);	}
 
-		static key_type get_key(const process_info &item)
-		{	return item.pid;	}
-	};
-
-	template <typename U, typename ColumnsT>
-	inline std::shared_ptr< table_model_impl<wpl::richtext_table_model, U, process_model_context, process_info> > process_list(
-		std::shared_ptr<U> underlying, const ColumnsT &columns)
-	{
-		auto m = std::make_shared< table_model_impl<wpl::richtext_table_model, U, process_model_context, process_info> >(
-			underlying, initialize<process_model_context>()
-		);
-
-		m->add_columns(columns);
-		return make_shared_aspect(make_shared_copy(std::make_tuple(m, underlying->invalidate += [m] {	m->fetch();	})),
-			m.get());
-	}
+	template <typename T, typename U>
+	inline std::shared_ptr<T> make_shared_aspect(const std::shared_ptr<U> &composite, T *aspect)
+	{	return std::shared_ptr<T>(composite, aspect);	}
 }

@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <frontend/constructors.h>
+
 #include <list>
 #include <memory>
 #include <vector>
@@ -48,22 +50,22 @@ namespace micro_profiler
 		using namespace std;
 		using namespace wpl;
 
-		rect_i l = {	0, 0, static_cast<int>(width), static_cast<int>(height)	};
-		const auto o = make_shared< pair< shared_ptr<form>, vector<slot_connection> > >();
-		const auto i = running_objects.insert(running_objects.end(), shared_ptr<void>());
-		const auto onclose = [&running_objects, i] {	running_objects.erase(i);	};
+		const auto modal = factory.create_modal();
 		const auto root = make_shared<overlay>();
 			root->add(factory.create_control<control>("background"));
 			root->add(pad_control(root_control, 5, 5));
 
-		o->first = factory.create_modal();
-		o->second.push_back(o->first->close += onclose);
-		attach_signals(o->second, onclose);
-		o->first->set_root(root);
-		o->first->set_location(l);
-		o->first->set_caption(caption);
-		o->first->center_parent();
-		o->first->set_visible(true);
-		*i = o;
+		modal->set_root(root);
+		modal->set_location(initialize<rect_i>(0, 0, static_cast<int>(width), static_cast<int>(height)));
+		modal->set_caption(caption);
+		modal->center_parent();
+		modal->set_visible(true);
+
+		vector<slot_connection> aux_connections;
+		const auto i = running_objects.insert(running_objects.end(), shared_ptr<void>());
+		const auto onclose = [&running_objects, i] {	running_objects.erase(i);	};
+
+		attach_signals(aux_connections, onclose);
+		*i = make_shared_copy(make_tuple(modal, modal->close += onclose, aux_connections));
 	}
 }

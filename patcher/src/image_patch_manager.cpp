@@ -20,6 +20,7 @@
 
 #include <patcher/image_patch_manager.h>
 
+#include <common/smart_ptr.h>
 #include <patcher/exceptions.h>
 #include <sdb/integrated_index.h>
 
@@ -112,13 +113,9 @@ namespace micro_profiler
 		if (find_mapping(m))
 			if (const auto l = _mapping_access.lock_mapping(m.mapping_id))
 			{
-				auto c = make_shared_copy(make_tuple(
-					mapping(*l, m.allocator),
-					l,
-					protect(_memory_manager, l->regions)
-				));
+				auto c = make_shared_copy(make_tuple(mapping(*l, m.allocator), l, protect(_memory_manager, l->regions)));
 
-				return shared_ptr<mapping>(c, &get<0>(*c));
+				return make_shared_aspect(c, &get<0>(*c));
 			}
 		return nullptr;
 	}

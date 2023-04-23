@@ -165,13 +165,13 @@ namespace micro_profiler
 					// ACT
 						ready.set();
 						go.wait();
-						for (int i = 0; i != n; ++i)
+						for (auto i = 0; i != n; ++i)
 							w(reference.c_str());
 					});
 
 					ready.wait();
 					go.set();
-					for (int i = 0; i != n; ++i)
+					for (auto i = 0; i != n; ++i)
 						w(reference.c_str());
 					t.join();
 					w = writer_t();

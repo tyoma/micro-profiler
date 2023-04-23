@@ -1,5 +1,6 @@
 #include <test-helpers/helpers.h>
 
+#include <common/smart_ptr.h>
 #include <ut/assert.h>
 #include <windows.h>
 
@@ -59,7 +60,7 @@ namespace micro_profiler
 			auto address = static_cast<byte *>(m.get()) + page_size;
 
 			::VirtualAlloc(address, page_size, MEM_COMMIT, PAGE_EXECUTE);
-			return shared_ptr<void>(m, static_cast<byte *>(m.get()) + page_size);
+			return make_shared_aspect(m, static_cast<byte *>(m.get()) + page_size);
 		}
 	}
 }

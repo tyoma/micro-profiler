@@ -21,6 +21,7 @@
 #include <common/module.h>
 
 #include <common/file_id.h>
+#include <common/smart_ptr.h>
 #include <dlfcn.h>
 #include <list>
 #include <mach/vm_map.h>
@@ -205,7 +206,7 @@ namespace micro_profiler
 				});
 
 				read_regions(l->second.regions, dinfo.dli_fbase);
-				return shared_ptr<mapping>(l, &l->second);
+				return make_shared_aspect(l, &l->second);
 			}
 		}
 		return nullptr;

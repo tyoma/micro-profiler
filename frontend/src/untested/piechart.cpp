@@ -54,7 +54,7 @@ namespace micro_profiler
 		on_invalidated();
 	}
 
-	void piechart::set_selection_model(std::shared_ptr<wpl::dynamic_set_model> m)
+	void piechart::set_selection_model(shared_ptr<wpl::dynamic_set_model> m)
 	{
 		_selection = m;
 		_selection_invalidate_connection = _selection

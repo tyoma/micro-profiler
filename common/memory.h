@@ -7,9 +7,23 @@
 
 namespace micro_profiler
 {
+	class executable_memory_allocator;
+
 	void mem_copy(void *dest, const void *src, std::size_t length);
 	void mem_set(void *dest, byte value, std::size_t length);
 
+	struct protection
+	{
+		enum flags {	read = (1 << 0), write = (1 << 1), execute = (1 << 2),	};
+	};
+
+	struct memory_manager
+	{
+		virtual std::shared_ptr<executable_memory_allocator> create_executable_allocator(const_byte_range reference_region,
+			std::ptrdiff_t max_distance) = 0;
+		virtual std::shared_ptr<void> scoped_protect(byte_range region, int /*protection::flags*/ scoped_protection,
+			int /*protection::flags*/ released_protection) = 0;
+	};
 
 	class scoped_unprotect : noncopyable
 	{
@@ -24,11 +38,9 @@ namespace micro_profiler
 
 	struct mapped_region
 	{
-		enum protection_flags {	read = (1 << 0), write = (1 << 1), execute = (1 << 2),	};
-
-		const byte *address;
+		byte *address;
 		std::size_t size;
-		int protection;
+		int /*protection::flags*/ protection;
 	};
 
 	struct virtual_memory

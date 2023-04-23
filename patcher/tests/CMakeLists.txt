@@ -7,6 +7,7 @@ set(PATCHER_TEST_SOURCES
 	guineapigs.cpp
 	ImagePatchManagerTests.cpp
 	JumperIntelTests.cpp
+	mocks.cpp
 	OffsetDisplacedReferencesTestsX86.cpp
 )
 

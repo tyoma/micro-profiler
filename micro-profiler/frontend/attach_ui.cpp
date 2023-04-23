@@ -116,7 +116,7 @@ namespace micro_profiler
 			const string _dir;
 			const string _frontend_endpoint_id;
 			shared_ptr<ipc::client_session> _injector_32, _injector_64;
-			std::vector< std::shared_ptr<void> > _requests;
+			vector< shared_ptr<void> > _requests;
 		};
 	}
 

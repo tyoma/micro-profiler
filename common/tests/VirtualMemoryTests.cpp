@@ -15,7 +15,7 @@ namespace micro_profiler
 			{	return shared_ptr<void>(address, [size] (void *p) {	virtual_memory::free(p, size);	});	}
 
 			shared_ptr<void> linear_blocks(size_t size)
-			{	return autorelease(virtual_memory::allocate(size, mapped_region::read), size);	}
+			{	return autorelease(virtual_memory::allocate(size, protection::read), size);	}
 		}
 
 		begin_test_suite( VirtualMemoryTests )
@@ -37,7 +37,7 @@ namespace micro_profiler
 			{
 				// INIT / ACT / ASSERT
 				assert_throws(virtual_memory::allocate(numeric_limits<size_t>::max(),
-					mapped_region::read | mapped_region::write), bad_alloc);
+					protection::read | protection::write), bad_alloc);
 			}
 
 
@@ -49,13 +49,13 @@ namespace micro_profiler
 				const auto occupied = static_cast<byte *>(voccupied.get());
 
 				// ACT / ASSERT
-				assert_throws(virtual_memory::allocate(occupied, 10 * g, mapped_region::read),
+				assert_throws(virtual_memory::allocate(occupied, 10 * g, protection::read),
 					virtual_memory::bad_fixed_alloc);
-				assert_throws(virtual_memory::allocate(occupied, g, mapped_region::read | mapped_region::write),
+				assert_throws(virtual_memory::allocate(occupied, g, protection::read | protection::write),
 					virtual_memory::bad_fixed_alloc);
-				assert_throws(virtual_memory::allocate(occupied + 9 * g, g, mapped_region::read),
+				assert_throws(virtual_memory::allocate(occupied + 9 * g, g, protection::read),
 					virtual_memory::bad_fixed_alloc);
-				assert_throws(virtual_memory::allocate(occupied + g, 8 * g, mapped_region::read),
+				assert_throws(virtual_memory::allocate(occupied + g, 8 * g, protection::read),
 					virtual_memory::bad_fixed_alloc);
 			}
 
@@ -71,11 +71,11 @@ namespace micro_profiler
 				voccupied.reset();
 
 				// INIT / ACT
-				auto p1 = autorelease(virtual_memory::allocate(occupied, g, mapped_region::read), g);
+				auto p1 = autorelease(virtual_memory::allocate(occupied, g, protection::read), g);
 				auto p2 = autorelease(virtual_memory::allocate(occupied + 8 * g, 2 * g,
-					mapped_region::read | mapped_region::execute), 2 * g);
+					protection::read | protection::execute), 2 * g);
 				auto p3 = autorelease(virtual_memory::allocate(occupied + g, 7 * g,
-					mapped_region::read | mapped_region::write), 7 * g);
+					protection::read | protection::write), 7 * g);
 
 				// ASSERT
 				assert_equal(occupied, p1.get());

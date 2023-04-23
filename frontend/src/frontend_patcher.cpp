@@ -29,16 +29,16 @@ namespace micro_profiler
 {
 	namespace
 	{
-		bool set_requested(patch &p, bool for_active)
+		bool set_requested(patch_state2 &p, bool for_active)
 		{
 			return !!p.state.active == for_active && !p.state.error && !p.state.requested
 				? p.state.requested = true, true : false;
 		}
 
-		void set_complete(patch &p, patch_result::errors error, bool active)
+		void set_complete(patch_state2 &p, patch_change_result::errors error, bool active)
 		{
 			p.state.requested = false;
-			if (error != patch_result::ok)
+			if (error != patch_change_result::ok)
 				p.state.error = true;
 			else
 				p.state.active = active;
@@ -80,10 +80,10 @@ namespace micro_profiler
 			d(_patched_buffer);
 			for (auto i = _patched_buffer.begin(); i != _patched_buffer.end(); ++i)
 			{
-				auto rec = idx[make_tuple(module_id, i->first)];
+				auto rec = idx[make_tuple(module_id, i->rva)];
 
-				(*rec).id = i->second.id;
-				set_complete(*rec, i->second.result, true);
+				(*rec).id = i->id;
+				set_complete(*rec, i->result, true);
 				rec.commit();
 			}
 			_db->patches.invalidate();
@@ -121,9 +121,9 @@ namespace micro_profiler
 			d(_reverted_buffer);
 			for (auto i = _reverted_buffer.begin(); i != _reverted_buffer.end(); ++i)
 			{
-				auto rec = idx[make_tuple(module_id, i->first)];
+				auto rec = idx[make_tuple(module_id, i->rva)];
 
-				set_complete(*rec, i->second, false);
+				set_complete(*rec, i->result, false);
 				rec.commit();
 			}
 			_db->patches.invalidate();

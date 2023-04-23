@@ -17,9 +17,9 @@ namespace micro_profiler
 			return s;
 		}
 
-		inline patch make_patch(id_t module_id, unsigned rva, id_t id, bool requested, bool error, bool active)
+		inline patch_state2 make_patch(id_t module_id, unsigned rva, id_t id, bool requested, bool error, bool active)
 		{
-			patch p;
+			patch_state2 p;
 
 			p.id = id;
 			p.module_id = module_id;

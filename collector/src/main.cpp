@@ -30,6 +30,7 @@
 #include <ipc/misc.h>
 #include <logger/writer.h>
 #include <mt/thread_callbacks.h>
+#include <patcher/image_patch_manager.h>
 
 #ifdef _WIN32
 	#include <process.h>
@@ -61,6 +62,27 @@ micro_profiler::collector_app_instance g_instance(&micro_profiler::collector_app
 
 namespace micro_profiler
 {
+	class collector_app_instance::default_memory_manager : public memory_manager
+	{
+		virtual shared_ptr<executable_memory_allocator> create_executable_allocator(const_byte_range /*reference_region*/,
+			ptrdiff_t /*max_distance*/) override
+		{	return make_shared<executable_memory_allocator>();	}
+
+		virtual shared_ptr<void> scoped_protect(byte_range region, int /*scoped_protection*/, int /*released_protection*/)
+		{
+			try
+			{
+				return make_shared<scoped_unprotect>(region); // For a while forgive protection change exceptions.
+			} 
+			catch (exception &e)
+			{
+				LOGE("Failed to scope-protect memory region!") % A(e.what()) % A(region.begin()) % A(region.length());
+				return nullptr;
+			}
+		}
+	};
+
+
 	namespace
 	{
 		struct null_channel : ipc::channel
@@ -78,6 +100,7 @@ namespace micro_profiler
 			ipc::channel &_inbound;
 		};
 	}
+
 
 	ipc::channel_ptr_t collector_app_instance::probe_create_channel(ipc::channel &inbound)
 	{
@@ -123,9 +146,8 @@ namespace micro_profiler
 			mt::thread_callbacks &thread_callbacks, module &module_helper, size_t trace_limit,
 			calls_collector *&collector_ptr)
 		: _logger(create_writer(module_helper), (log::g_logger = &_logger, &get_datetime)),
-			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
-			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks),
-			_patch_manager(_collector, _eallocator), _auto_connect(true)
+			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)), _memory_manager(new default_memory_manager),
+			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks), _auto_connect(true)
 	{
 		collector_ptr = &_collector;
 
@@ -135,7 +157,13 @@ namespace micro_profiler
 		const auto total_ns = static_cast<int>((oh.inner + oh.outer) * period);
 
 		LOG(PREAMBLE "overhead calibrated...") % A(inner_ns) % A(total_ns);
-		_app.reset(new collector_app(_collector, oh, *_thread_monitor, module_helper, _patch_manager));
+		_app.reset(new collector_app(_collector, oh, *_thread_monitor, module_helper, [this] (mapping_access &ma) -> shared_ptr<patch_manager> {
+			auto &c = _collector;
+
+			return make_shared<image_patch_manager>([&c] (void *target, id_t /*id*/, executable_memory_allocator &allocator) {
+				return unique_ptr<patch>(new function_patch(target, &c, allocator));
+			}, ma, *_memory_manager);
+		}));
 		_app->get_queue().schedule([this, auto_frontend_factory] {
 			if (_auto_connect)
 				_app->connect(auto_frontend_factory, false);

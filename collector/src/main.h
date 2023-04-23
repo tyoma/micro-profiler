@@ -27,7 +27,6 @@
 #include <common/noncopyable.h>
 #include <logger/multithreaded_logger.h>
 #include <logger/writer.h>
-#include <patcher/image_patch_manager.h>
 
 namespace micro_profiler
 {
@@ -46,6 +45,9 @@ namespace micro_profiler
 		static ipc::channel_ptr_t probe_create_channel(ipc::channel &inbound);
 
 	private:
+		class default_memory_manager;
+
+	private:
 		void platform_specific_init();
 		static log::writer_t create_writer(module &module_helper);
 
@@ -53,9 +55,8 @@ namespace micro_profiler
 		log::multithreaded_logger _logger;
 		std::shared_ptr<thread_monitor> _thread_monitor;
 		default_allocator _allocator;
-		executable_memory_allocator _eallocator;
+		std::unique_ptr<default_memory_manager> _memory_manager;
 		calls_collector _collector;
-		image_patch_manager _patch_manager;
 		std::unique_ptr<collector_app> _app;
 		bool _auto_connect;
 	};

@@ -33,7 +33,7 @@ namespace micro_profiler
 	template <>
 	struct key_traits<image_patch_model::record_type>
 	{
-		typedef std::tuple<id_t, unsigned int> key_type;
+		typedef tuple<id_t, unsigned int> key_type;
 
 		template <typename T>
 		static key_type get_key(const T &item)
@@ -51,7 +51,7 @@ namespace micro_profiler
 			{	return toupper(lhs) < toupper(rhs);	}
 		};
 
-		unsigned int encode_state(const patch &p)
+		unsigned int encode_state(const patch_state2 &p)
 		{	return (p.state.error << 2) + (p.state.active << 1) + (p.state.requested << 0);	}
 
 		const char *c_patch_states[8] = {
@@ -176,7 +176,7 @@ namespace micro_profiler
 
 	shared_ptr< selection<symbol_key> > image_patch_model::create_selection() const
 	{
-		return make_shared< selection<symbol_key> >(std::make_shared< sdb::table<symbol_key> >(),
+		return make_shared< selection<symbol_key> >(make_shared< sdb::table<symbol_key> >(),
 			[this] (index_type item) {	return _ordered_view[item].first;	});
 	}
 

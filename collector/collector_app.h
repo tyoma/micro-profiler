@@ -26,6 +26,7 @@ namespace micro_profiler
 {
 	class analyzer;
 	struct calls_collector_i;
+	struct mapping_access;
 	struct module;
 	struct overhead;
 	struct patch_manager;
@@ -34,8 +35,11 @@ namespace micro_profiler
 	class collector_app : active_server_app::events
 	{
 	public:
-		collector_app(calls_collector_i &collector, const overhead &overhead_, thread_monitor &thread_monitor_,
-			module &module_helper, patch_manager &patch_manager_);
+		typedef std::function<std::shared_ptr<patch_manager> (mapping_access &mapping_access_)> patch_manager_factory;
+
+	public:
+		collector_app(calls_collector_i &collector, const overhead &overhead_, thread_monitor &threads,
+			module &module_helper, patch_manager_factory patch_manager_factory);
 		~collector_app();
 
 		void connect(const active_server_app::client_factory_t &factory, bool injected);
@@ -53,7 +57,7 @@ namespace micro_profiler
 		const std::unique_ptr<analyzer> _analyzer;
 		thread_monitor &_thread_monitor;
 		module &_module_helper;
-		patch_manager &_patch_manager;
+		patch_manager_factory _patch_manager_factory;
 		bool _injected;
 		active_server_app _server;
 	};

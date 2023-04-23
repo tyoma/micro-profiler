@@ -30,6 +30,7 @@ namespace micro_profiler
 				std::function<std::shared_ptr<dynamic> (const std::string &path)> on_load;
 				std::function<std::string ()> on_get_executable;
 				std::function<mapping (const void *address)> on_locate;
+				std::function<std::shared_ptr<mapping> (void *address)> on_lock_at;
 
 			private:
 				virtual std::shared_ptr<dynamic> load(const std::string &path) override;

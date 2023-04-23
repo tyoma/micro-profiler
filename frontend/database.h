@@ -81,7 +81,7 @@ namespace micro_profiler
 		};
 
 
-		struct patches : sdb::table<patch>
+		struct patches : sdb::table<patch_state2>
 		{
 			std::function<void (unsigned int module_id, range<const unsigned int, size_t> rva)> apply;
 			std::function<void (unsigned int module_id, range<const unsigned int, size_t> rva)> revert;

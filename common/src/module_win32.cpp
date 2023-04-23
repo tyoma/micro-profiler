@@ -67,11 +67,11 @@ namespace micro_profiler
 		{
 			switch (win32_protection)
 			{
-			case PAGE_READONLY: return mapped_region::read;
-			case PAGE_READWRITE: return mapped_region::read | mapped_region::write;
-			case PAGE_EXECUTE: return mapped_region::execute;
-			case PAGE_EXECUTE_READ: return mapped_region::execute | mapped_region::read;
-			case PAGE_EXECUTE_READWRITE: return mapped_region::execute | mapped_region::read | mapped_region::write;
+			case PAGE_READONLY: return protection::read;
+			case PAGE_READWRITE: return protection::read | protection::write;
+			case PAGE_EXECUTE: return protection::execute;
+			case PAGE_EXECUTE_READ: return protection::execute | protection::read;
+			case PAGE_EXECUTE_READWRITE: return protection::execute | protection::read | protection::write;
 			default: return 0;
 			}
 		}
@@ -96,7 +96,7 @@ namespace micro_profiler
 				ptr += mi.RegionSize)
 			{
 				mapped_region region = {
-					static_cast<const byte *>(mi.BaseAddress), mi.RegionSize, generic_protection(mi.Protect)
+					static_cast<byte *>(mi.BaseAddress), mi.RegionSize, generic_protection(mi.Protect)
 				};
 
 				regions.push_back(region);
@@ -106,7 +106,8 @@ namespace micro_profiler
 		template <typename T>
 		void enumerate_process_modules(HANDLE hprocess, const T &callback)
 		{
-			shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ::GetProcessId(hprocess)), &::CloseHandle);
+			shared_ptr<void> snapshot(::CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, ::GetProcessId(hprocess)),
+				&::CloseHandle);
 			MODULEENTRY32 entry = {	sizeof(MODULEENTRY32),	};
 
 			for (auto lister = &::Module32First; lister(snapshot.get(), &entry); lister = &::Module32Next)
@@ -117,7 +118,7 @@ namespace micro_profiler
 		{
 		public:
 			explicit module_lock(const void *address)
-				: _handle(0)
+				: _handle(nullptr)
 			{
 				if (::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast<LPCTSTR>(address), &_handle)
 					&& _handle)
@@ -247,7 +248,7 @@ namespace micro_profiler
 
 		enumerate_process_modules(hprocess, [&callback, &m] (const MODULEENTRY32 &entry) {
 			m.base = entry.modBaseAddr;
-			unicode(m.path, entry.szModule);
+			unicode(m.path, entry.szExePath);
 			callback(m);
 		});
 	}

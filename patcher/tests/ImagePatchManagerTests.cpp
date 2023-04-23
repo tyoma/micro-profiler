@@ -1,12 +1,11 @@
 #include <patcher/image_patch_manager.h>
 
+#include "helpers.h"
 #include "mocks.h"
 
-#include <common/memory.h>
-#include <common/module.h>
-#include <test-helpers/constants.h>
-#include <test-helpers/file_helpers.h>
+#include <test-helpers/comparisons.h>
 #include <test-helpers/helpers.h>
+#include <tuple>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -14,571 +13,943 @@ using namespace std;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const patch_apply &lhs, const patch_apply &rhs)
-	{	return lhs.id == rhs.id && lhs.result == rhs.result;	}
+	inline bool operator ==(const patch_change_result &lhs, const patch_change_result &rhs)
+	{	return lhs.id == rhs.id && lhs.rva == rhs.rva && lhs.result == rhs.result;	}
+
+	inline bool operator ==(const patch_state &lhs, const patch_state &rhs)
+	{	return lhs.id == rhs.id && lhs.state == rhs.state;	}
 
 	namespace tests
 	{
 		namespace
 		{
-			class detacher : noncopyable
+			typedef shared_ptr<image_patch_manager::mapping> mapping_ptr;
+			typedef unique_ptr<patch> patch_ptr;
+
+			class image_patch_manager_overriden : public image_patch_manager
 			{
 			public:
-				detacher(image_patch_manager &m)
-					: _manager(m)
+				image_patch_manager_overriden(const patch_factory &patch_factory_, mapping_access &mappings,
+						memory_manager &memory_manager_)
+					: image_patch_manager(patch_factory_, mappings, memory_manager_)
 				{	}
 
-				~detacher()
-				{	_manager.unmap_all();	}
+				virtual std::shared_ptr<mapping> lock_module(id_t module_id) override
+				{	return on_lock_module(module_id);	}
 
-			private:
-				image_patch_manager &_manager;
+			public:
+				std::function<std::shared_ptr<mapping> (id_t module_id)> on_lock_module;
 			};
 
-			pair<unsigned /*rva*/, patch_apply> mkpatch_apply(unsigned rva, patch_result::errors status, unsigned id)
+			patch_change_result make_patch_apply(unsigned rva, patch_change_result::errors status, id_t id)
 			{
-				patch_apply pa = {	status, id	};
-				return make_pair(rva, pa);
+				patch_change_result r = {	id, rva, status	};
+				return r;
 			}
-		}
 
-		namespace mocks
-		{
-			class executable_memory_allocator : public micro_profiler::executable_memory_allocator
+			patch_state make_patch_state(unsigned rva, patch_state::states state, id_t id)
 			{
-			public:
-				executable_memory_allocator()
-					: allocated(0)
-				{	}
+				patch_state r = {	id, rva, state	};
+				return r;
+			}
 
-				virtual shared_ptr<void> allocate(size_t size) override
-				{
-					auto real_ptr = micro_profiler::executable_memory_allocator::allocate(size);
+			image_patch_manager::mapping make_mapping(void *base, string path,
+				vector<mapped_region> regions = vector<mapped_region>(),
+				shared_ptr<executable_memory_allocator> allocator = nullptr)
+			{
+				module::mapping m = {	path, static_cast<byte *>(base), regions};
 
-					allocated++;
-					return shared_ptr<void>(real_ptr.get(), [this, real_ptr] (void *) {
-						allocated--;
-					});
-				}
-
-			public:
-				unsigned int allocated;
-			};
+				return image_patch_manager::mapping(m, allocator);
+			}
 		}
 
 		begin_test_suite( ImagePatchManagerTests )
-			mocks::executable_memory_allocator allocator;
-			mocks::trace_events trace;
-			temporary_directory dir;
-			string module1_path, module2_path;
+			id_t locked_module; // Zero for no lock
+			mocks::mapping_access mappings;
+			mocks::memory_manager memory_manager_;
 
-			patch_manager::apply_results aresult;
-			patch_manager::revert_results rresult;
-
-			init( PrepareGuinies )
+			struct eq
 			{
-				module1_path = dir.copy_file(c_symbol_container_1);
-				module2_path = dir.copy_file(c_symbol_container_2);
+				bool operator ()(const mocks::memory_manager::lock_info &lhs,
+					const mocks::memory_manager::lock_info &rhs) const
+				{
+					return get<0>(lhs).begin() == get<0>(rhs).begin() && get<0>(lhs).end() == get<0>(rhs).end()
+						&& get<1>(lhs) == get<1>(rhs)	&& get<2>(lhs) == get<2>(rhs);
+				}
+
+				template <typename T1, typename T2>
+				bool operator ()(const T1 &lhs, const T2 &rhs) const
+				{	return lhs.size() == rhs.size() && equal(lhs.begin(), lhs.end(), rhs.begin(), *this);	}
+			};
+
+			struct less
+			{
+				bool operator ()(const patch_state &lhs, const patch_state &rhs) const
+				{	return make_tuple(lhs.id, lhs.rva, lhs.state) < make_tuple(rhs.id, rhs.rva, rhs.state);	}
+			};
+
+
+			init( Init )
+			{
+				mappings.on_lock_mapping = [] (id_t /*mapping_id*/) -> mapping_ptr {	return nullptr;	};
 			}
 
 
-			test( ApplyingAPatchRetainsModule )
+			test( PatchManagerSubscribesToMappingNotifications )
 			{
 				// INIT / ACT
-				auto unloaded1 = false;
-				auto unloaded2 = false;
-				image_patch_manager m_(trace, allocator);
-				detacher dd(m_);
-				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image1(new image(module1_path));
-				unique_ptr<image> image2(new image(module2_path));
-
-				unsigned int functions1[] = {
-					image1->get_symbol_rva("get_function_addresses_1"),
-				};
-				unsigned int functions2[] = {
-					image2->get_symbol_rva("bubble_sort_expose"),
-					image2->get_symbol_rva("bubble_sort2"),
-				};
-
-				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
-				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
-
-				// ACT
-				m.apply(aresult, 13, image1->base_ptr(), module::platform().load(module1_path), mkrange(functions1));
-				m.apply(aresult, 17, image2->base_ptr(), module::platform().load(module2_path), mkrange(functions2));
-				image1.reset();
+				auto pm = make_shared<image_patch_manager_overriden>([] (void *, id_t, executable_memory_allocator &)
+						-> patch_ptr {
+					return assert_is_false(true), nullptr;
+				}, mappings, memory_manager_);
 
 				// ASSERT
-				assert_is_false(unloaded1);
-				assert_is_false(unloaded2);
-				assert_equal(3u, allocator.allocated);
-
-				pair<unsigned, patch_apply> reference[] = {
-					mkpatch_apply(functions1[0], patch_result::ok, 0),
-					mkpatch_apply(functions2[0], patch_result::ok, 0),
-					mkpatch_apply(functions2[1], patch_result::ok, 0),
-				};
-
-				assert_equal(reference, aresult);
+				assert_not_null(mappings.subscription);
 
 				// ACT
-				image2.reset();
+				pm.reset();
 
 				// ASSERT
-				assert_is_false(unloaded1);
-				assert_is_false(unloaded2);
+				assert_null(mappings.subscription);
 			}
 
 
-			test( ApplyingAnEmptyPatchDoesNotRetainModule )
+			test( PatchCreationIsRequestedAtOffsetLockedBaseOnApply )
 			{
-				// INIT / ACT
-				auto unloaded = false;
-				image_patch_manager m_(trace, allocator);
-				detacher dd(m_);
-				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image1(new image(module1_path));
+				// INIT
+				auto ea1 = make_shared<executable_memory_allocator>();
+				auto ea2 = make_shared<executable_memory_allocator>();
+				vector< tuple<void *, id_t, executable_memory_allocator *> > targets;
+				patch_manager::patch_change_results results;
+				auto locked = false;
+				image_patch_manager_overriden pm([&] (void *target, id_t id, executable_memory_allocator &a) -> patch_ptr {
+					assert_is_true(locked);
+					targets.push_back(make_tuple(target, id, &a));
+					return patch_ptr(new mocks::patch());
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x10010, 0x100210, 0x9910,	};
 
-				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
+				pm.on_lock_module = [&] (id_t module_id) -> mapping_ptr {
+					auto &locked_ = locked;
+
+					assert_equal(1311u, module_id);
+					assert_is_false(locked);
+					auto m = new image_patch_manager::mapping(make_mapping((byte*)0x1910221, ""));
+					m->allocator = ea1;
+					locked = true;
+					return mapping_ptr(m, [&locked_] (module::mapping *p) {
+						delete p;
+						locked_ = false;
+					});
+				};
 
 				// ACT
-				m.apply(aresult, 13, image1->base_ptr(), module::platform().load(module1_path), range<unsigned, size_t>(0, 0));
-				image1.reset();
+				pm.apply(results, 1311u, mkrange(functions1));
 
 				// ASSERT
-				assert_is_true(unloaded);
-				assert_equal(0u, allocator.allocated);
+				assert_equal(plural
+					+ make_tuple((void*)(0x1910221 + 0x10010), 1u, ea1.get())
+					+ make_tuple((void*)(0x1910221 + 0x100210), 2u, ea1.get())
+					+ make_tuple((void*)(0x1910221 + 0x9910), 3u, ea1.get()), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10010, patch_change_result::ok, 1)
+					+ make_patch_apply(0x100210, patch_change_result::ok, 2)
+					+ make_patch_apply(0x9910, patch_change_result::ok, 3), results);
+				assert_is_false(locked);
+
+				// INIT
+				unsigned functions2[] = {	0x13, 0x02,	};
+
+				targets.clear();
+				results.clear();
+				pm.on_lock_module = [&] (id_t module_id) -> mapping_ptr {
+					assert_equal(1u, module_id);
+					auto m = make_shared_copy(make_mapping((void*)0x1000, ""));
+					m->allocator = ea2;
+					return m;
+				};
+				locked = true; // To make the factory happy.
+
+				// ACT
+				pm.apply(results, 1u, mkrange(functions2));
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple((void*)(0x1000 + 0x13), 4u, ea2.get())
+					+ make_tuple((void*)(0x1000 + 0x02), 5u, ea2.get()), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x13, patch_change_result::ok, 4)
+					+ make_patch_apply(0x02, patch_change_result::ok, 5), results);
 			}
 
 
-			test( RevertingAllPatchesReleasesAModule )
+			test( AppliedPatchesAreListedWhenQueried )
 			{
 				// INIT
-				auto unloaded1 = false;
-				auto unloaded2 = false;
-				image_patch_manager m_(trace, allocator);
-				detacher dd(m_);
-				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image1(new image(module1_path));
-				unique_ptr<image> image2(new image(module2_path));
+				patch_manager::patch_states states;
+				patch_manager::patch_change_results results;
+				image_patch_manager_overriden pm([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
+					return patch_ptr(new mocks::patch());
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x10010, 0x100210, 0x9910,	};
+				unsigned functions12[] = {	0x20010,	};
+				unsigned functions2[] = {	0x010, 0x210,	};
+				byte *current_base;
 
-				unsigned int functions1[] = {
-					image1->get_symbol_rva("get_function_addresses_1"),
-					image1->get_symbol_rva("format_decimal"),
+				pm.on_lock_module = [&] (id_t /*module_id*/) {
+					return make_shared_copy(make_mapping(current_base, ""));
 				};
-				unsigned int functions2[] = {
-					image2->get_symbol_rva("get_function_addresses_2"),
-					image2->get_symbol_rva("guinea_snprintf"),
-					image2->get_symbol_rva("function_with_a_nested_call_2"),
-					image2->get_symbol_rva("bubble_sort_expose"),
-					image2->get_symbol_rva("bubble_sort2"),
-				};
-
-				image1->get_symbol<void (bool &unloaded)>("track_unload")(unloaded1);
-				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded2);
-
-				m.apply(aresult, 13, image1->base_ptr(), module::platform().load(module1_path), mkrange(functions1));
-				m.apply(aresult, 19, image2->base_ptr(), module::platform().load(module2_path), mkrange(functions2));
-				image1.reset();
-				image2.reset();
-
-				unsigned int remove21[] = {
-					functions2[0], functions2[3],
-				};
+				current_base = (byte *)0x10000000;
+				pm.apply(results, 11u, mkrange(functions1));
+				current_base = (byte *)0x20000000;
+				pm.apply(results, 17u, mkrange(functions2));
+				current_base = (byte *)0x10000000;
+				pm.apply(results, 11u, mkrange(functions12));
 
 				// ACT
-				m.revert(rresult, 19, mkrange(remove21));
+				pm.query(states, 11);
 
 				// ASSERT
-				assert_is_false(unloaded1);
-				assert_is_false(unloaded2);
-				assert_equal(7u, allocator.allocated);
-
-				pair<unsigned, patch_result::errors> reference1[] = {
-					make_pair(functions2[0], patch_result::ok),
-					make_pair(functions2[3], patch_result::ok),
-				};
-
-				assert_equal(reference1, rresult);
+				assert_equivalent_pred(plural
+					+ make_patch_state(0x10010, patch_state::active, 1)
+					+ make_patch_state(0x100210, patch_state::active, 2)
+					+ make_patch_state(0x9910, patch_state::active, 3)
+					+ make_patch_state(0x20010, patch_state::active, 6), states, less());
 
 				// INIT
-				unsigned int remove11[] = {
-					functions1[1],
-				};
-				unsigned int remove22[] = {
-					functions2[1], functions2[2], functions2[4],
-				};
+				states.clear();
 
 				// ACT
-				m.revert(rresult, 13, mkrange(remove11));
-				m.revert(rresult, 19, mkrange(remove22));
+				pm.query(states, 17);
 
 				// ASSERT
-				assert_is_false(unloaded1);
-				assert_is_true(unloaded2);
-
-				pair<unsigned, patch_result::errors> reference2[] = {
-					make_pair(functions2[0], patch_result::ok),
-					make_pair(functions2[3], patch_result::ok),
-
-					make_pair(functions1[1], patch_result::ok),
-					make_pair(functions2[1], patch_result::ok),
-					make_pair(functions2[2], patch_result::ok),
-					make_pair(functions2[4], patch_result::ok),
-				};
-
-				assert_equal(reference2, rresult);
-
-				// INIT
-				unsigned int remove12[] = {
-					functions1[0],
-				};
-
-				// ACT
-				m.revert(rresult, 13, mkrange(remove12));
-
-				// ASSERT
-				assert_is_true(unloaded1);
-				assert_equal(7u, allocator.allocated);
-
-				pair<unsigned, patch_result::errors> reference3[] = {
-					make_pair(functions2[0], patch_result::ok),
-					make_pair(functions2[3], patch_result::ok),
-
-					make_pair(functions1[1], patch_result::ok),
-					make_pair(functions2[1], patch_result::ok),
-					make_pair(functions2[2], patch_result::ok),
-					make_pair(functions2[4], patch_result::ok),
-
-					make_pair(functions1[0], patch_result::ok),
-				};
-
-				assert_equal(reference3, rresult);
+				assert_equivalent_pred(plural
+					+ make_patch_state(0x010, patch_state::active, 4)
+					+ make_patch_state(0x210, patch_state::active, 5), states, less());
 			}
 
 
-			test( ApplyingNewPatchRetainsAModule )
+			test( PatchesAreStoredForDeferredApplicationIfModuleCannotBeLocked )
 			{
 				// INIT
-				auto unloaded = false;
-				image_patch_manager m_(trace, allocator);
-				detacher dd(m_);
-				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image2(new image(module2_path));
-				auto image2_ptr = image2->base_ptr();
-				unsigned int functions1[] = {
-					image2->get_symbol_rva("get_function_addresses_2"),
-					image2->get_symbol_rva("guinea_snprintf"),
-					image2->get_symbol_rva("function_with_a_nested_call_2"),
-				};
-				unsigned int functions2[] = {
-					image2->get_symbol_rva("bubble_sort_expose"),
-				};
-				unsigned int remove1[] = {
-					functions1[0], functions1[2],
-				};
-				unsigned int remove2[] = {
-					functions1[1],
-				};
-
-				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
-
-				m.apply(aresult, 190, image2_ptr, module::platform().load(module2_path), mkrange(functions1));
-				image2.reset();
-				m.revert(rresult, 190, mkrange(remove1));
-
-				// ACT
-				m.apply(aresult, 190, image2_ptr, module::platform().load(module2_path), mkrange(functions2));
-				m.revert(rresult, 190, mkrange(remove2));
+				patch_manager::patch_states states;
+				patch_manager::patch_change_results results;
+				image_patch_manager_overriden pm([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
 
 				// ASSERT
-				assert_is_false(unloaded);
+					assert_is_false(true);
+					return nullptr;
+				}, mappings, memory_manager_);
+				unsigned functions[] = {	10u, 20u, 30u,	};
+
+				pm.on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
+					return nullptr;
+				};
+
+				// ACT
+				pm.apply(results, 13u, mkrange(functions));
+
+				// ASSERT
+				assert_equal(plural
+					+ make_patch_apply(10u, patch_change_result::ok, 1)
+					+ make_patch_apply(20u, patch_change_result::ok, 2)
+					+ make_patch_apply(30u, patch_change_result::ok, 3), results);
+
+				// ACT
+				pm.query(states, 13u);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_patch_state(10u, patch_state::pending, 1)
+					+ make_patch_state(20u, patch_state::pending, 2)
+					+ make_patch_state(30u, patch_state::pending, 3), states, less());
 			}
 
 
-			test( RevertingTheSamePatchTwiceDoesNotDereferenceAModule )
+			test( RevertingNotYetAppliedPatchMakesItDormant )
 			{
 				// INIT
-				auto unloaded = false;
-				image_patch_manager m_(trace, allocator);
-				detacher dd(m_);
-				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image2(new image(module2_path));
-				auto image2_ptr = image2->base_ptr();
-				unsigned int functions1[] = {
-					image2->get_symbol_rva("get_function_addresses_2"),
-					image2->get_symbol_rva("guinea_snprintf"),
-					image2->get_symbol_rva("function_with_a_nested_call_2"),
-					image2->get_symbol_rva("bubble_sort2"),
-				};
-				unsigned int remove1[] = {
-					functions1[0], functions1[1],
-				};
+				patch_manager::patch_states states;
+				patch_manager::patch_change_results results, results2;
+				image_patch_manager_overriden pm([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
 
-				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
+					// ASSERT
+					assert_is_false(true);
+					return nullptr;
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	10u, 20u, 30u, 50u, 90u,	};
+				unsigned functions2[] = {	20u, 50u,	};
+				unsigned functions3[] = {	30u,	};
 
-				m.apply(aresult, 190, image2_ptr, module::platform().load(module2_path), mkrange(functions1));
-				image2.reset();
-				m.revert(rresult, 190, mkrange(remove1));
-				rresult.clear();
+				pm.on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
+					return nullptr;
+				};
+				pm.apply(results, 13u, mkrange(functions1));
+				results.clear();
 
 				// ACT
-				m.revert(rresult, 190, mkrange(remove1));
+				pm.revert(results, 13u, mkrange(functions2));
+				pm.revert(results2, 14u, mkrange(functions3)); // will not affect anything
 
 				// ASSERT
-				assert_is_false(unloaded);
-
-				pair<unsigned, patch_result::errors> reference1[] = {
-					make_pair(functions1[0], patch_result::unchanged),
-					make_pair(functions1[1], patch_result::unchanged),
-				};
-
-				assert_equal(reference1, rresult);
-
-				// INIT
-				unsigned int remove2[] = {
-					functions1[1], functions1[3],
-				};
+				assert_equal(plural
+					+ make_patch_apply(20u, patch_change_result::ok, 2)
+					+ make_patch_apply(50u, patch_change_result::ok, 4), results);
+				assert_equal(plural
+					+ make_patch_apply(30u, patch_change_result::unchanged, 0 /* no id? */), results2);
 
 				// ACT
-				m.revert(rresult, 190, mkrange(remove2));
+				pm.query(states, 13u);
 
 				// ASSERT
-				pair<unsigned, patch_result::errors> reference2[] = {
-					make_pair(functions1[0], patch_result::unchanged),
-					make_pair(functions1[1], patch_result::unchanged),
-
-					make_pair(functions1[1], patch_result::unchanged),
-					make_pair(functions1[3], patch_result::ok),
-				};
-
-				assert_is_false(unloaded);
-				assert_equal(reference2, rresult);
-
-				// ACT
-				m.revert(rresult, 190, mkrange(functions1));
-
-				// ASSERT
-				pair<unsigned, patch_result::errors> reference3[] = {
-					make_pair(functions1[0], patch_result::unchanged),
-					make_pair(functions1[1], patch_result::unchanged),
-
-					make_pair(functions1[1], patch_result::unchanged),
-					make_pair(functions1[3], patch_result::ok),
-
-					make_pair(functions1[0], patch_result::unchanged),
-					make_pair(functions1[1], patch_result::unchanged),
-					make_pair(functions1[2], patch_result::ok),
-					make_pair(functions1[3], patch_result::unchanged),
-				};
-
-				assert_is_true(unloaded);
-				assert_equal(reference3, rresult);
+				assert_equivalent_pred(plural
+					+ make_patch_state(10u, patch_state::pending, 1)
+					+ make_patch_state(20u, patch_state::dormant, 2)
+					+ make_patch_state(30u, patch_state::pending, 3)
+					+ make_patch_state(50u, patch_state::dormant, 4)
+					+ make_patch_state(90u, patch_state::pending, 5), states, less());
 			}
 
 
-			test( ApplyTheSamePatchTwiceIncrementsAReferenceOnce )
+			test( RevertingAppliedButUnableToLockPatchOnlyDestroysThePatch )
 			{
 				// INIT
-				auto unloaded = false;
-				image_patch_manager m_(trace, allocator);
-				detacher dd(m_);
-				auto &m = static_cast<patch_manager &>(m_);
-				unique_ptr<image> image2(new image(module2_path));
-				auto image2_ptr = image2->base_ptr();
-				unsigned int functions1[] = {
-					image2->get_symbol_rva("get_function_addresses_2"),
-					image2->get_symbol_rva("guinea_snprintf"),
-					image2->get_symbol_rva("function_with_a_nested_call_2"),
-					image2->get_symbol_rva("bubble_sort2"),
-				};
-				unsigned int functions2[] = {
-					image2->get_symbol_rva("get_function_addresses_2"),
-					image2->get_symbol_rva("bubble_sort_expose"),
-					image2->get_symbol_rva("bubble_sort2"),
-					image2->get_symbol_rva("function_with_a_nested_call_2"),
-				};
-				unsigned int remove1[] = {
-					functions1[0], functions1[1], functions1[2], functions1[3], functions2[1],
-				};
+				vector< pair<void *, int /*act*/> > targets;
+				patch_manager::patch_states states;
+				patch_manager::patch_change_results results, results2;
+				auto pm = make_shared<image_patch_manager_overriden>([&] (void *target, id_t, executable_memory_allocator &)
+						-> patch_ptr {
+					unique_ptr<mocks::patch> p(new mocks::patch());
+					auto &targets_ = targets;
 
-				image2->get_symbol<void (bool &unloaded)>("track_unload")(unloaded);
-				m.apply(aresult, 179, image2->base_ptr(), module::platform().load(module2_path), mkrange(functions1));
-				image2.reset();
-				aresult.clear();
+					targets.push_back(make_pair(target, 0));
+					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
+					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
+					return patch_ptr(move(p));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	10u, 20u, 30u, 50u, 90u,	};
+				unsigned functions2[] = {	20u, 50u,	};
+				unsigned functions3[] = {	30u,	};
+
+				pm->on_lock_module = [&] (id_t /*module_id*/) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+				pm->apply(results, 13u, mkrange(functions1));
+				results.clear();
+				targets.clear();
+				pm->on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
+					return nullptr;
+				};
 
 				// ACT
-				m.apply(aresult, 179, image2_ptr, module::platform().load(module2_path), mkrange(functions2));
+				pm->revert(results, 13u, mkrange(functions2));
+				pm->revert(results2, 14u, mkrange(functions3)); // will not affect anything
 
 				// ASSERT
-				pair<unsigned, patch_apply> reference1[] = {
-					mkpatch_apply(functions2[0], patch_result::unchanged, 0),
-					mkpatch_apply(functions2[1], patch_result::ok, 0),
-					mkpatch_apply(functions2[2], patch_result::unchanged, 0),
-					mkpatch_apply(functions2[3], patch_result::unchanged, 0),
-				};
-
-				assert_equal(reference1, aresult);
-				assert_is_false(unloaded);
+				assert_equal(plural
+					+ make_pair((void*)(0x10000000 + 20u), 3)
+					+ make_pair((void*)(0x10000000 + 50u), 3), targets);
+				assert_equal(plural
+					+ make_patch_apply(20u, patch_change_result::ok, 2)
+					+ make_patch_apply(50u, patch_change_result::ok, 4), results);
+				assert_equal(plural
+					+ make_patch_apply(30u, patch_change_result::unchanged, 0 /* no id? */), results2);
 
 				// ACT
-				m.revert(rresult, 179, mkrange(remove1));
+				pm->query(states, 13u);
 
 				// ASSERT
-				pair<unsigned, patch_result::errors> reference2[] = {
-					make_pair(functions1[0], patch_result::ok),
-					make_pair(functions1[1], patch_result::ok),
-					make_pair(functions1[2], patch_result::ok),
-					make_pair(functions1[3], patch_result::ok),
-					make_pair(functions2[1], patch_result::ok),
-				};
-
-				assert_equal(reference2, rresult);
-				assert_is_true(unloaded);
+				assert_equivalent_pred(plural
+					+ make_patch_state(10u, patch_state::active, 1) // Remains active until the reception of unmapped().
+					+ make_patch_state(20u, patch_state::dormant, 2)
+					+ make_patch_state(30u, patch_state::active, 3)
+					+ make_patch_state(50u, patch_state::dormant, 4)
+					+ make_patch_state(90u, patch_state::active, 5), states, less());
 			}
 
 
-			test( CallsToPatchedFunctionsLeaveTrace )
+			test( ApplyRevertAndDestroyCauseCorrespondingCallsOnRespectfulPatches )
 			{
 				// INIT
-				image image2(module2_path);
-				image_patch_manager m_(trace, allocator);
-				detacher dd(m_);
-				auto &m = static_cast<patch_manager &>(m_);
-				void (*ff[3])();
-				char buffer[100];
-				int digits[] = {	14, 3233, 1, 19,	};
-				auto get_function_addresses_2 = image2.get_symbol<void (void (*&)(), void (*&)(), void (*&)())>("get_function_addresses_2");
-				auto guinea_snprintf = image2.get_symbol<int (char *buffer, size_t count, const char *format, ...)>("guinea_snprintf");
-				auto function_with_a_nested_call_2 = image2.get_symbol<void ()>("function_with_a_nested_call_2");
-				auto bubble_sort2 = image2.get_symbol<void (int * volatile begin, int * volatile end)>("bubble_sort2");
-				unsigned int functions1[] = {
-					image2.get_symbol_rva("get_function_addresses_2"),
-					image2.get_symbol_rva("guinea_snprintf"),
-					image2.get_symbol_rva("bubble_sort2"),
+				vector< pair<void *, int /*act*/> > targets;
+				patch_manager::patch_change_results results;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &)
+						-> patch_ptr {
+					unique_ptr<mocks::patch> p(new mocks::patch());
+					auto &targets_ = targets;
+
+					targets.push_back(make_pair(target, 0));
+					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
+					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
+					return patch_ptr(move(p));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x10001, 0x10002, 0x10003, 0x10004,	};
+
+				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) {
+					return make_shared_copy(make_mapping((void*)0x1910221, ""));
 				};
-
-				m.apply(aresult, 11, image2.base_ptr(), module::platform().load(module2_path), mkrange(functions1));
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x91010000, ""));
 
 				// ACT
-				get_function_addresses_2(ff[0], ff[1], ff[2]);
+				pm->apply(results, 1u, mkrange(functions1));
 
 				// ASSERT
-				assert_is_true(2u <= trace.call_log.size());
+				assert_equal(plural
+					+ make_pair((void*)(0x1910221 + 0x10001), 0)
+					+ make_pair((void*)(0x1910221 + 0x10002), 0)
+					+ make_pair((void*)(0x1910221 + 0x10003), 0)
+					+ make_pair((void*)(0x1910221 + 0x10004), 0), targets);
 
 				// INIT
-				trace.call_log.clear();
+				unsigned functions2[] = {	0x10001, 0x10003,	};
+				patch_manager::patch_change_results rresults;
+
+				targets.clear();
 
 				// ACT
-				guinea_snprintf(buffer, sizeof(buffer), "%d", 1318);
+				pm->revert(rresults, 1u, mkrange(functions2));
 
 				// ASSERT
-				assert_is_true(2u <= trace.call_log.size());
+				assert_equal(plural
+					+ make_pair((void*)(0x1910221 + 0x10001), 2)
+					+ make_pair((void*)(0x1910221 + 0x10001), 3)
+					+ make_pair((void*)(0x1910221 + 0x10003), 2)
+					+ make_pair((void*)(0x1910221 + 0x10003), 3), targets);
 
 				// INIT
-				trace.call_log.clear();
-
-				// ACT
-				function_with_a_nested_call_2();
-
-				// ASSERT
-				assert_is_empty(trace.call_log);
+				targets.clear();
+				rresults.clear();
 
 				// INIT
-				trace.call_log.clear();
+				unsigned functions3[] = {	0x10003,	};
+
+				targets.clear();
+				results.clear();
 
 				// ACT
-				bubble_sort2(begin(digits), end(digits));
+				pm->apply(results, 1u, mkrange(functions3));
 
 				// ASSERT
-				assert_is_true(2u <= trace.call_log.size());
+				assert_equal(plural
+					+ make_pair((void*)(0x1910221 + 0x10003), 0), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10003, patch_change_result::ok, 3), results);
 
 				// INIT
-				unsigned int functions2[] = {
-					image2.get_symbol_rva("function_with_a_nested_call_2"),
-				};
-
-				trace.call_log.clear();
-				m.apply(aresult, 11, image2.base_ptr(), module::platform().load(module2_path), mkrange(functions2));
+				targets.clear();
 
 				// ACT
-				function_with_a_nested_call_2();
+				pm.reset();
 
 				// ASSERT
-				assert_is_true(2u <= trace.call_log.size());
-
-				// INIT
-				unsigned int remove1[] = {
-					functions1[1], functions1[2],
-				};
-
-				trace.call_log.clear();
-
-				// ACT
-				m.revert(rresult, 11, mkrange(remove1));
-
-				// ACT
-				guinea_snprintf(buffer, sizeof(buffer), "%d", 1318);
-				bubble_sort2(begin(digits), end(digits));
-
-				// ASSERT
-				assert_is_empty(trace.call_log);
+				assert_equivalent(plural
+					+ make_pair((void*)(0x1910221 + 0x10002), 2)
+					+ make_pair((void*)(0x1910221 + 0x10003), 2)
+					+ make_pair((void*)(0x1910221 + 0x10004), 2)
+					+ make_pair((void*)(0x1910221 + 0x10002), 3)
+					+ make_pair((void*)(0x1910221 + 0x10003), 3)
+					+ make_pair((void*)(0x1910221 + 0x10004), 3), targets);
 			}
 
 
-			test( FailureToActivateAPatchIsReported )
+			test( PatchApplicationIsRequestedIfModuleIsUnloaded )
 			{
 				// INIT
-				image image2(module2_path);
-				mocks::trace_events trace2;
-				image_patch_manager m1(trace, allocator), m2(trace2, allocator);
-				detacher dd1(m1), dd2(m2);
-				unsigned int functions1[] = {
-					image2.get_symbol_rva("guinea_snprintf"),
-					image2.get_symbol_rva("bubble_sort2"),
-				};
-				unsigned int functions2[] = {
-					image2.get_symbol_rva("get_function_addresses_2"),
-					image2.get_symbol_rva("guinea_snprintf"),
-					image2.get_symbol_rva("function_with_a_nested_call_2"),
-					image2.get_symbol_rva("bubble_sort_expose"),
-					image2.get_symbol_rva("bubble_sort2"),
-				};
+				vector< pair<id_t, executable_memory_allocator *> > targets_ex;
+				vector< pair<void *, int /*act*/> > targets;
+				patch_manager::patch_change_results results;
+				size_t expected_protections = 0u;
+				auto pm = make_shared<image_patch_manager_overriden>([&] (void *target, id_t id, executable_memory_allocator &e)
+						-> patch_ptr {
+					unique_ptr<mocks::patch> p(new mocks::patch());
+					auto &targets_ = targets;
 
-				m1.apply(aresult, 11, image2.base_ptr(), module::platform().load(module2_path), mkrange(functions1));
-				aresult.clear();
+					targets.push_back(make_pair(target, 0));
+					targets_ex.push_back(make_pair(id, &e));
+					assert_equal(expected_protections, memory_manager_.locks().size());
+					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
+					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
+					return patch_ptr(move(p));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x10001, 0x10002, 0x10004,	};
+				unsigned functions2[] = {	0x10001, 0x10090,	};
+
+				pm->on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
+					return nullptr;
+				};
+				pm->apply(results, 1u, mkrange(functions1));
+				pm->apply(results, 100u, mkrange(functions2));
+				pm->on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
+					assert_is_false(true);
+					return nullptr;
+				};
 
 				// ACT
-				m2.apply(aresult, 11, image2.base_ptr(), module::platform().load(module2_path), mkrange(functions2));
+				expected_protections = 3u;
+				mappings.subscription->mapped(1u, 171u, make_mapping((void*)0x1010F000, "", plural
+					+ make_mapped_region((byte*)0x19010000, 100, protection::read)
+					+ make_mapped_region((byte*)0x11010000, 300, protection::read | protection::execute)
+					+ make_mapped_region((byte*)0x12010000, 200, protection::write | protection::execute)
+					+ make_mapped_region((byte*)0x14010000, 700, protection::read | protection::write)
+					+ make_mapped_region((byte*)0x15010000, 600, protection::execute)
+					+ make_mapped_region((byte*)0x16010000, 500, protection::read)));
 
 				// ASSERT
-				pair<unsigned, patch_apply> reference1[] = {
-					mkpatch_apply(functions2[0], patch_result::ok, 0),
-					mkpatch_apply(functions2[1], patch_result::error, 0),
-					mkpatch_apply(functions2[2], patch_result::ok, 0),
-					mkpatch_apply(functions2[3], patch_result::ok, 0),
-					mkpatch_apply(functions2[4], patch_result::error, 0),
-				};
-
-				assert_equal(reference1, aresult);
+				assert_equivalent(plural
+					+ make_pair(1u, memory_manager_.allocators[0].get())
+					+ make_pair(2u, memory_manager_.allocators[0].get())
+					+ make_pair(3u, memory_manager_.allocators[0].get()), targets_ex);
+				assert_equivalent(plural
+					+ make_pair((void*)(0x1010F000 + 0x10001), 0)
+					+ make_pair((void*)(0x1010F000 + 0x10002), 0)
+					+ make_pair((void*)(0x1010F000 + 0x10004), 0), targets);
 
 				// INIT
-				unsigned int functions3[] = {
-					image2.get_symbol_rva("get_function_addresses_2"),
-				};
-
-				aresult.clear();
+				targets.clear();
+				targets_ex.clear();
 
 				// ACT
-				m1.apply(aresult, 11, image2.base_ptr(), module::platform().load(module2_path), mkrange(functions3));
+				expected_protections = 1u;
+				mappings.subscription->mapped(100u, 175u, make_mapping((void*)0x100000, "", plural
+					+ make_mapped_region((byte*)0x19010000, 100, protection::read)
+					+ make_mapped_region((byte*)0x11010000, 300, protection::read | protection::execute)));
 
 				// ASSERT
-				pair<unsigned, patch_apply> reference2[] = {
-					mkpatch_apply(functions3[0], patch_result::error, 0),
+				assert_equivalent(plural
+					+ make_pair(4u, memory_manager_.allocators[1].get())
+					+ make_pair(5u, memory_manager_.allocators[1].get()), targets_ex);
+				assert_equivalent(plural
+					+ make_pair((void*)(0x100000 + 0x10001), 0)
+					+ make_pair((void*)(0x100000 + 0x10090), 0), targets);
+			}
+
+
+			test( OnlyUnrevertedPatchesAreAppliedOnMapping )
+			{
+				// INIT
+				vector< pair<void *, int /*act*/> > targets;
+				patch_manager::patch_change_results results;
+				image_patch_manager_overriden pm([&] (void *target, id_t, executable_memory_allocator &) -> patch_ptr {
+					unique_ptr<mocks::patch> p(new mocks::patch());
+					auto &targets_ = targets;
+
+					targets.push_back(make_pair(target, 0));
+					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
+					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
+					return patch_ptr(move(p));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x10001, 0x10002, 0x10004, 0x10007,	};
+				unsigned functions2[] = {	0x10002, 0x10004,	};
+
+				pm.on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
+					return nullptr;
+				};
+				pm.apply(results, 1u, mkrange(functions1));
+				pm.revert(results, 1u, mkrange(functions2));
+				pm.on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
+					assert_is_false(true);
+					return nullptr;
 				};
 
-				assert_equal(reference2, aresult);
+				// ACT
+				mappings.subscription->mapped(1u, 11u, make_mapping((void*)0x10000000, ""));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10000000 + 0x10001), 0)
+					+ make_pair((void*)(0x10000000 + 0x10007), 0), targets);
+			}
+
+
+			test( ActivePatchesAreDeletedWithoutRevertingOnUnmap )
+			{
+				// INIT
+				vector< pair<void *, int /*act*/> > targets;
+				patch_manager::patch_change_results results;
+				image_patch_manager_overriden m([&] (void *target, id_t, executable_memory_allocator &) -> patch_ptr {
+					unique_ptr<mocks::patch> p(new mocks::patch());
+					auto &targets_ = targets;
+
+					targets.push_back(make_pair(target, 0));
+					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
+					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
+					return patch_ptr(move(p));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x10001, 0x10002, 0x10003, 0x10004, 0x10007,	};
+				unsigned functions2[] = {	0x10002, 0x10004,	};
+				unsigned functions3[] = {	0x10004,	};
+
+				mappings.subscription->mapped(1u, 29u, make_mapping((void*)0x10300000, ""));
+				mappings.subscription->mapped(7u, 17u, make_mapping((void*)0x7A300000, ""));
+				m.on_lock_module = [&] (id_t /*module_id*/) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+				m.apply(results, 1u, mkrange(functions1));
+				m.revert(results, 1u, mkrange(functions2));
+				m.on_lock_module = [&] (id_t /*module_id*/) {
+					return make_shared_copy(make_mapping((void*)0x10300000, ""));
+				};
+				m.apply(results, 7u, mkrange(functions2));
+				m.revert(results, 7u, mkrange(functions3));
+
+				targets.clear();
+				m.on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
+					assert_is_false(true);
+					return nullptr;
+				};
+
+				// ACT
+				mappings.subscription->unmapped(1u);
+
+				// ASSERT
+				assert_is_empty(targets);
+
+				// ACT
+				mappings.subscription->unmapped(17u);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10300000 + 0x10002), 3), targets);
+
+				// INIT
+				targets.clear();
+
+				// ACT
+				mappings.subscription->unmapped(29u);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10000000 + 0x10001), 3)
+					+ make_pair((void*)(0x10000000 + 0x10003), 3)
+					+ make_pair((void*)(0x10000000 + 0x10007), 3), targets);
+			}
+
+
+			test( LockingAnUnmappedModuleReturnsZeroAndRequestsNothing )
+			{
+				// INIT
+				image_patch_manager m([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
+					throw 0;
+				}, mappings, memory_manager_);
+
+				mappings.on_lock_mapping = [] (id_t /*mapping_id*/) -> shared_ptr<module::mapping> {
+
+				// ASSERT
+					assert_is_false(true);
+					return nullptr;
+				};
+
+				// ACT / ASSERT
+				assert_null(m.lock_module(11u));
+				assert_null(m.lock_module(0u));
+				assert_null(m.lock_module(100u));
+			}
+
+
+			test( LockingAMappedModuleTriesToLockCorrespondingMapping )
+			{
+				// INIT
+				vector<id_t> mappings_requested;
+				image_patch_manager m([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
+					throw 0;
+				}, mappings, memory_manager_);
+
+				mappings.on_lock_mapping = [&] (id_t mapping_id) -> shared_ptr<module::mapping> {
+					mappings_requested.push_back(mapping_id);
+					return nullptr;
+				};
+
+				// ACT
+				mappings.subscription->mapped(11u, 11011u, make_mapping((void*)0x10300000, ""));
+				mappings.subscription->mapped(13u, 1131u, make_mapping((void*)0x7A300000, ""));
+
+				// ASSERT
+				assert_is_empty(mappings_requested);
+
+				// ACT / ASSERT
+				assert_null(m.lock_module(11u));
+				assert_null(m.lock_module(13u));
+				assert_null(m.lock_module(13u));
+
+				// ASSERT
+				assert_equal(plural + 11011u + 1131u + 1131u, mappings_requested);
+
+				// ACT / ASSERT
+				assert_null(m.lock_module(11u));
+
+				// ASSERT
+				assert_equal(plural + 11011u + 1131u + 1131u + 11011u, mappings_requested);
+			}
+
+
+			test( LockingAnUnmappingModuleDoesNotAttemptToLockMapping )
+			{
+				// INIT
+				vector<id_t> mappings_requested;
+				image_patch_manager m([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
+					throw 0;
+				}, mappings, memory_manager_);
+
+				mappings.on_lock_mapping = [&] (id_t mapping_id) -> shared_ptr<module::mapping> {
+					mappings_requested.push_back(mapping_id);
+					return nullptr;
+				};
+
+				mappings.subscription->mapped(11u, 11011u, make_mapping((void*)0x10300000, ""));
+				mappings.subscription->mapped(13u, 1131u, make_mapping((void*)0x7A300000, ""));
+				mappings.subscription->mapped(191u, 100u, make_mapping((void*)0x7C000000, ""));
+
+				// ACT
+				mappings.subscription->unmapped(11011u);
+				mappings.subscription->unmapped(100u);
+
+				// ASSERT
+				assert_is_empty(mappings_requested);
+
+				// ACT / ASSERT
+				assert_null(m.lock_module(11u));
+				assert_null(m.lock_module(13u));
+				assert_null(m.lock_module(191u));
+
+				// ASSERT
+				assert_equal(plural + 1131u, mappings_requested);
+
+				// ACT
+				mappings.subscription->unmapped(1131u);
+
+				// ASSERT
+				assert_equal(plural + 1131u, mappings_requested);
+			}
+
+
+			test( MappingAModuleCreatesRangeAllocatorFromMemoryManager )
+			{
+				// INIT
+				image_patch_manager m([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
+					throw 0;
+				}, mappings, memory_manager_);
+
+				// ACT
+				mappings.subscription->mapped(11u, 1u, make_mapping((void*)0x10300000, ""));
+				mappings.subscription->mapped(12u, 3u, make_mapping((void*)0x10300000, ""));
+
+				// ASSERT
+				assert_equal(2u, memory_manager_.allocators.size());
+				assert_is_true(memory_manager_.allocators[0].use_count() > 1);
+				assert_is_true(memory_manager_.allocators[1].use_count() > 1);
+
+				// ACT
+				mappings.subscription->mapped(13u, 5u, make_mapping((void*)0x10300000, ""));
+				mappings.subscription->unmapped(1u);
+
+				// ASSERT
+				assert_equal(3u, memory_manager_.allocators.size());
+				assert_equal(1, memory_manager_.allocators[0].use_count());
+				assert_is_true(memory_manager_.allocators[1].use_count() > 1);
+
+				// ACT
+				mappings.subscription->unmapped(3u);
+
+				// ASSERT
+				assert_equal(1, memory_manager_.allocators[1].use_count());
+			}
+
+
+			test( LockingAMappedModuleReturnsExtendedLockInfo )
+			{
+				// INIT
+				image_patch_manager m([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
+					throw 0;
+				}, mappings, memory_manager_);
+
+				mappings.subscription->mapped(11u, 11011u, make_mapping((void*)0x10300000, ""));
+				mappings.subscription->mapped(13u, 1131u, make_mapping((void*)0x7A300000, ""));
+				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) {
+					return make_shared_copy(make_mapping((void*)0x15300000, "abcd"));
+				};
+
+				// ACT
+				auto l = m.lock_module(11);
+
+				// ASSERT
+				assert_not_null(l);
+				assert_equal(make_mapping((void*)0x15300000, "abcd"), *l);
+				assert_equal(memory_manager_.allocators[0], l->allocator);
+
+				// INIT
+				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) {
+					return make_shared_copy(make_mapping((void*)0x25309000, "abcd zmzala"));
+				};
+
+				// ACT
+				l = m.lock_module(13);
+
+				// ASSERT
+				assert_equal(make_mapping((void*)0x25309000, "abcd zmzala"), *l);
+				assert_equal(memory_manager_.allocators[1], l->allocator);
+
+				// INIT
+				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) -> shared_ptr<module::mapping> {	return nullptr;	};
+
+				// ACT / ASSERT
+				assert_null(m.lock_module(13));
+			}
+
+
+			test( LockingAMappedModuleEnableWritesToExecutableRegions )
+			{
+				// INIT
+				const auto rwx = protection::read | protection::write | protection::execute;
+				image_patch_manager m([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
+					throw 0;
+				}, mappings, memory_manager_);
+
+				mappings.subscription->mapped(11u, 11011u, make_mapping((void*)0x10300000, ""));
+				mappings.subscription->mapped(13u, 1131u, make_mapping((void*)0x7A300000, ""));
+
+				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) {
+					return make_shared_copy(make_mapping((void*)0x25309000, "abcd zmzala", plural
+						+ make_mapped_region((byte*)0x19010000, 100, protection::read)
+						+ make_mapped_region((byte*)0x11010000, 300, protection::read | protection::execute)
+						+ make_mapped_region((byte*)0x12010000, 200, protection::write | protection::execute)
+						+ make_mapped_region((byte*)0x13010000, 400, rwx)
+						+ make_mapped_region((byte*)0x14010000, 700, protection::read | protection::write)
+						+ make_mapped_region((byte*)0x15010000, 600, protection::execute)
+						+ make_mapped_region((byte*)0x16010000, 500, protection::read)));
+				};
+
+				// ACT
+				auto l = m.lock_module(11);
+
+				// ASSERT
+				assert_not_null(l);
+				assert_equal_pred(plural
+					+ mocks::memory_manager::lock_info(byte_range((byte*)0x11010000, 300), rwx,
+						protection::read | protection::execute)
+					+ mocks::memory_manager::lock_info(byte_range((byte*)0x12010000, 200), rwx,
+						protection::write | protection::execute)
+					+ mocks::memory_manager::lock_info(byte_range((byte*)0x15010000, 600), rwx,
+						protection::execute),
+					memory_manager_.locks(), eq());
+
+				// ACT
+				l.reset();
+
+				// ASSERT
+				assert_is_empty(memory_manager_.locks());
+
+				// INIT
+				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) {
+					return make_shared_copy(make_mapping((void*)0x00309000, "abcd zmzala", plural
+						+ make_mapped_region((byte*)0x19010000, 100, protection::execute)
+						+ make_mapped_region((byte*)0x16010000, 500, protection::read)));
+				};
+
+				// ACT
+				l = m.lock_module(13);
+
+				// ASSERT
+				assert_not_null(l);
+				assert_equal_pred(plural
+					+ mocks::memory_manager::lock_info(byte_range((byte*)0x19010000, 100), rwx, protection::execute),
+					memory_manager_.locks(), eq());
+			}
+
+
+			test( LockingAMappedModuleHoldsUnderlyingLock )
+			{
+				// INIT
+				const auto ptr = make_shared_copy(make_mapping((void*)0x15300000, "abcd"));
+				image_patch_manager m([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
+					throw 0;
+				}, mappings, memory_manager_);
+
+				mappings.subscription->mapped(11u, 11011u, make_mapping((void*)0x10300000, ""));
+				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) {	return ptr;	};
+
+				// ACT
+				auto l = m.lock_module(11);
+
+				// ASSERT
+				assert_is_true(ptr.use_count() > 1);
+
+				// ACT
+				l.reset();
+
+				// ASSERT
+				assert_equal(1, ptr.use_count());
+			}
+
+
+			test( OnlyPatchesForLockableModulesAreRevertedOnDestruction )
+			{
+				// INIT
+				auto valid = true;
+				vector< pair<void *, int /*act*/> > targets;
+				patch_manager::patch_change_results results;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &)
+						-> patch_ptr {
+					unique_ptr<mocks::patch> p(new mocks::patch());
+					auto &targets_ = targets;
+
+					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
+					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
+					return patch_ptr(move(p));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x10001, 0x10002, 0x10003, 0x10004,	};
+				unsigned functions2[] = {	0x20001, 0x30002,	};
+
+				mappings.on_lock_mapping = [&] (id_t mapping_id) -> mapping_ptr {
+					switch (mapping_id)
+					{
+					case 100: return make_shared_copy(make_mapping((void*)0x90000000, ""));
+					case 101: return make_shared_copy(make_mapping((void*)0xA0000000, ""));
+					case 102: return make_shared_copy(make_mapping((void*)0xB0000000, ""));
+					case 103: return make_shared_copy(make_mapping((void*)0xC0000000, ""));
+					default: throw 0;
+					}
+				};
+
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x90000000, ""));
+				mappings.subscription->mapped(2u, 101u, make_mapping((void *)0xA0000000, ""));
+				mappings.subscription->mapped(3u, 102u, make_mapping((void *)0xB0000000, ""));
+				mappings.subscription->mapped(4u, 103u, make_mapping((void *)0xC0000000, ""));
+
+				pm->apply(results, 1u, mkrange(functions1));
+				pm->apply(results, 2u, mkrange(functions1));
+				pm->apply(results, 3u, mkrange(functions1));
+				pm->apply(results, 4u, mkrange(functions2));
+				mappings.subscription->unmapped(102u);
+				targets.clear();
+				mappings.on_lock_mapping = [&] (id_t mapping_id) -> mapping_ptr {
+					valid &= (mapping_id == 100u || mapping_id == 101u || mapping_id == 103u) && !mappings.subscription;
+					return mapping_id != 101u
+						? make_shared_copy(make_mapping(mapping_id == 100u ? (void*)0x90000000 : (void*)0xC0000000, ""))
+						: nullptr;
+				};
+
+				// ACT
+				pm.reset();
+
+				// ASSERT
+				assert_is_true(valid);
+				assert_equivalent(plural
+					+ make_pair((void*)(0x90000000 + 0x10001), 2)
+					+ make_pair((void*)(0x90000000 + 0x10002), 2)
+					+ make_pair((void*)(0x90000000 + 0x10003), 2)
+					+ make_pair((void*)(0x90000000 + 0x10004), 2)
+					+ make_pair((void*)(0xC0000000 + 0x20001), 2)
+					+ make_pair((void*)(0xC0000000 + 0x30002), 2)
+					+ make_pair((void*)(0x90000000 + 0x10001), 3)
+					+ make_pair((void*)(0x90000000 + 0x10002), 3)
+					+ make_pair((void*)(0x90000000 + 0x10003), 3)
+					+ make_pair((void*)(0x90000000 + 0x10004), 3)
+					+ make_pair((void*)(0xA0000000 + 0x10001), 3)
+					+ make_pair((void*)(0xA0000000 + 0x10002), 3)
+					+ make_pair((void*)(0xA0000000 + 0x10003), 3)
+					+ make_pair((void*)(0xA0000000 + 0x10004), 3)
+					+ make_pair((void*)(0xC0000000 + 0x20001), 3)
+					+ make_pair((void*)(0xC0000000 + 0x30002), 3), targets);
 			}
 		end_test_suite
 	}

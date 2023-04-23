@@ -59,9 +59,10 @@ namespace micro_profiler
 		mutable unsigned int _reentrance;
 	};
 
-	struct patch : /*external*/ identity
+	// TODO: combine with patch_state returned by the patch_manager::query
+	struct patch_state2 : /*external*/ identity
 	{
-		patch()
+		patch_state2()
 		{	id = 0, state.requested = state.error = state.active = 0;	}
 
 		unsigned int module_id;

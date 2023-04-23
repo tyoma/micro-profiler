@@ -21,7 +21,7 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const patch &lhs, const patch &rhs)
+	inline bool operator ==(const patch_state2 &lhs, const patch_state2 &rhs)
 	{	return !(lhs < rhs) && !(rhs < lhs);	}
 
 	namespace tests
@@ -44,14 +44,11 @@ namespace micro_profiler
 				ipc::channel *outbound;
 			};
 
-			pair<unsigned /*rva*/, patch_apply> mkpatch_apply(unsigned rva, patch_result::errors status, unsigned id)
+			patch_change_result mkpatch_change(unsigned rva, patch_change_result::errors status, id_t id = 0u)
 			{
-				patch_apply pa = {	status, id	};
-				return make_pair(rva, pa);
+				patch_change_result r = {	id, rva, status	};
+				return r;
 			}
-
-			pair<unsigned /*rva*/, patch_result::errors> mkpatch_revert(unsigned rva, patch_result::errors status)
-			{	return make_pair(rva, status);	}
 		}
 
 		begin_test_suite( FrontendPatcherTests )
@@ -169,11 +166,11 @@ namespace micro_profiler
 						resp.defer([] (ipc::server_session::response &resp) {
 							resp(response_patched, plural
 								// Succeeded...
-								+ mkpatch_apply(1, patch_result::ok, 1)
+								+ mkpatch_change(1, patch_change_result::ok, 1)
 
 								// Failed...
-								+ mkpatch_apply(3, patch_result::error, 0)
-								+ mkpatch_apply(2, patch_result::error, 0));
+								+ mkpatch_change(3, patch_change_result::error, 2)
+								+ mkpatch_change(2, patch_change_result::error, 3));
 						});
 						break;
 
@@ -181,14 +178,14 @@ namespace micro_profiler
 						resp.defer([] (ipc::server_session::response &resp) {
 							resp(response_patched, plural
 								// Succeeded...
-								+ mkpatch_apply(2, patch_result::ok, 2)
-								+ mkpatch_apply(6, patch_result::ok, 3)
-								+ mkpatch_apply(100, patch_result::ok, 4)
+								+ mkpatch_change(2, patch_change_result::ok, 11)
+								+ mkpatch_change(6, patch_change_result::ok, 12)
+								+ mkpatch_change(100, patch_change_result::ok, 13)
 
 								// Failed...
-								+ mkpatch_apply(7, patch_result::error, 0)
-								+ mkpatch_apply(4, patch_result::error, 0)
-								+ mkpatch_apply(5, patch_result::error, 0));
+								+ mkpatch_change(7, patch_change_result::error, 14)
+								+ mkpatch_change(4, patch_change_result::error, 15)
+								+ mkpatch_change(5, patch_change_result::error, 16));
 						});
 						break;
 					}
@@ -204,8 +201,8 @@ namespace micro_profiler
 				assert_equal(1u, queue.tasks.size());
 				assert_equivalent(plural
 					+ make_patch(19, 1, 1, false, false, true)
-					+ make_patch(19, 2, 0, false, true, false)
-					+ make_patch(19, 3, 0, false, true, false)
+					+ make_patch(19, 2, 3, false, true, false)
+					+ make_patch(19, 3, 2, false, true, false)
 					+ make_patch(31, 2, 0, true, false, false)
 					+ make_patch(31, 4, 0, true, false, false)
 					+ make_patch(31, 5, 0, true, false, false)
@@ -220,14 +217,14 @@ namespace micro_profiler
 				assert_is_empty(queue.tasks);
 				assert_equivalent(plural
 					+ make_patch(19, 1, 1, false, false, true)
-					+ make_patch(19, 2, 0, false, true, false)
-					+ make_patch(19, 3, 0, false, true, false)
-					+ make_patch(31, 2, 2, false, false, true)
-					+ make_patch(31, 4, 0, false, true, false)
-					+ make_patch(31, 5, 0, false, true, false)
-					+ make_patch(31, 6, 3, false, false, true)
-					+ make_patch(31, 7, 0, false, true, false)
-					+ make_patch(31, 100, 4, false, false, true), *patches);
+					+ make_patch(19, 2, 3, false, true, false)
+					+ make_patch(19, 3, 2, false, true, false)
+					+ make_patch(31, 2, 11, false, false, true)
+					+ make_patch(31, 4, 15, false, true, false)
+					+ make_patch(31, 5, 16, false, true, false)
+					+ make_patch(31, 6, 12, false, false, true)
+					+ make_patch(31, 7, 14, false, true, false)
+					+ make_patch(31, 100, 13, false, false, true), *patches);
 			}
 
 
@@ -244,11 +241,15 @@ namespace micro_profiler
 					switch (payload.image_persistent_id)
 					{
 					case 19:
-						resp(response_patched, plural + mkpatch_apply(3, patch_result::error, 0) + mkpatch_apply(2, patch_result::error, 0));
+						resp(response_patched, plural
+							+ mkpatch_change(3, patch_change_result::error, 0)
+							+ mkpatch_change(2, patch_change_result::error, 0));
 						break;
 
 					case 20:
-						resp(response_patched, plural + mkpatch_apply(2, patch_result::error, 0) + mkpatch_apply(5, patch_result::error, 0));
+						resp(response_patched, plural
+							+ mkpatch_change(2, patch_change_result::error, 0)
+							+ mkpatch_change(5, patch_change_result::error, 0));
 						break;
 					}
 				});
@@ -291,9 +292,15 @@ namespace micro_profiler
 				unsigned rva[] = {	1, 2, 3,	};
 
 				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_request &/*payload*/) {
-					resp(response_patched, plural + mkpatch_apply(1, patch_result::ok, 1) + mkpatch_apply(2, patch_result::error, 0) + mkpatch_apply(3, patch_result::ok, 2));
+					resp(response_patched, plural
+						+ mkpatch_change(1, patch_change_result::ok, 1)
+						+ mkpatch_change(2, patch_change_result::error, 0)
+						+ mkpatch_change(3, patch_change_result::ok, 2));
 					resp.defer([] (ipc::server_session::response &resp) {
-						resp(response_patched, plural + mkpatch_apply(1, patch_result::error, 0) + mkpatch_apply(2, patch_result::ok, 1) + mkpatch_apply(3, patch_result::error, 0));
+						resp(response_patched, plural
+							+ mkpatch_change(1, patch_change_result::error, 0)
+							+ mkpatch_change(2, patch_change_result::ok, 1)
+							+ mkpatch_change(3, patch_change_result::error, 0));
 					});
 				});
 
@@ -313,9 +320,9 @@ namespace micro_profiler
 			test( TableIsInvalidatedOnApplyRequestSendingAndOnReceival )
 			{
 				// INIT
-				vector< vector<patch> > log;
+				vector< vector<patch_state2> > log;
 				auto conn = patches->invalidate += [&] {
-					log.push_back(vector<patch>(this->patches->begin(), this->patches->end()));
+					log.push_back(vector<patch_state2>(this->patches->begin(), this->patches->end()));
 				};
 				unsigned rva[] = {	1, 2, 3,	};
 
@@ -325,9 +332,9 @@ namespace micro_profiler
 
 					resp.defer([] (ipc::server_session::response &resp) {
 						resp(response_patched, plural
-							+ mkpatch_apply(1, patch_result::error, 0)
-							+ mkpatch_apply(2, patch_result::ok, 1)
-							+ mkpatch_apply(3, patch_result::error, 3));
+							+ mkpatch_change(1, patch_change_result::error, 0)
+							+ mkpatch_change(2, patch_change_result::ok, 1)
+							+ mkpatch_change(3, patch_change_result::error, 3));
 					});
 				});
 
@@ -388,7 +395,7 @@ namespace micro_profiler
 
 
 			unsigned next_id;
-			unordered_map<unsigned, patch_result::errors> apply_results;
+			unordered_map<unsigned, patch_change_result::errors> apply_results;
 
 			init( SetNextID )
 			{	next_id = 1;	}
@@ -396,13 +403,13 @@ namespace micro_profiler
 			function<void (ipc::server_session::response &resp, const patch_request &payload)> emulate_apply_fn()
 			{
 				return [this] (ipc::server_session::response &resp, const patch_request &payload) {
-					vector< pair<unsigned, patch_apply> > aresults;
+					vector<patch_change_result> aresults;
 
 					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
 					{
 						auto j = apply_results.find(*i);
 
-						aresults.push_back(mkpatch_apply(*i, j != apply_results.end() ? j->second : patch_result::ok, next_id++));
+						aresults.push_back(mkpatch_change(*i, j != apply_results.end() ? j->second : patch_change_result::ok, next_id++));
 					}
 					resp(response_patched, aresults);
 				};
@@ -416,7 +423,7 @@ namespace micro_profiler
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva20[] = {	3u, 13u, 1000u, 0x10000u, 100u, 0x8000091u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
-				vector< vector<patch> > log;
+				vector< vector<patch_state2> > log;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
@@ -477,11 +484,11 @@ namespace micro_profiler
 						resp.defer([] (ipc::server_session::response &resp) {
 							resp(response_reverted, plural
 								// Succeeded...
-								+ mkpatch_revert(1, patch_result::ok)
+								+ mkpatch_change(1, patch_change_result::ok)
 
 								// Failed...
-								+ mkpatch_revert(3, patch_result::error)
-								+ mkpatch_revert(2, patch_result::error));
+								+ mkpatch_change(3, patch_change_result::error)
+								+ mkpatch_change(2, patch_change_result::error));
 						});
 						break;
 
@@ -489,14 +496,14 @@ namespace micro_profiler
 						resp.defer([] (ipc::server_session::response &resp) {
 							resp(response_reverted, plural
 								// Succeeded...
-								+ mkpatch_revert(2, patch_result::ok)
-								+ mkpatch_revert(6, patch_result::ok)
-								+ mkpatch_revert(100, patch_result::ok)
+								+ mkpatch_change(2, patch_change_result::ok)
+								+ mkpatch_change(6, patch_change_result::ok)
+								+ mkpatch_change(100, patch_change_result::ok)
 								
 								// Failed...
-								+ mkpatch_revert(7, patch_result::error)
-								+ mkpatch_revert(4, patch_result::error)
-								+ mkpatch_revert(5, patch_result::error));
+								+ mkpatch_change(7, patch_change_result::error)
+								+ mkpatch_change(4, patch_change_result::error)
+								+ mkpatch_change(5, patch_change_result::error));
 						});
 						break;
 					}
@@ -557,11 +564,11 @@ namespace micro_profiler
 				vector<patch_request> log;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
-				apply_results[100] = patch_result::error;
+				apply_results[100] = patch_change_result::error;
 				patches->apply(99, mkrange(rva0));
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
-					resp(response_reverted, plural + mkpatch_revert(2, patch_result::ok));
+					resp(response_reverted, plural + mkpatch_change(2, patch_change_result::ok));
 				});
 				patches->revert(99, mkrange(rva_initial_revert));
 
@@ -611,9 +618,9 @@ namespace micro_profiler
 				patches->apply(99, mkrange(rva));
 
 				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &resp, const patch_request &) {
-					resp(response_reverted, plural + mkpatch_revert(1, patch_result::ok));
+					resp(response_reverted, plural + mkpatch_change(1, patch_change_result::ok));
 					resp.defer([] (ipc::server_session::response &resp) {
-						resp(response_reverted, plural + mkpatch_revert(1, patch_result::error));
+						resp(response_reverted, plural + mkpatch_change(1, patch_change_result::error));
 					});
 				});
 
@@ -632,14 +639,14 @@ namespace micro_profiler
 			test( TableIsInvalidatedOnRevertRequestSendingAndOnReceival )
 			{
 				// INIT
-				vector< vector<patch> > log;
+				vector< vector<patch_state2> > log;
 				unsigned rva[] = {	1, 2, 3,	};
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 				patches->apply(19, mkrange(rva));
 
 				auto conn = patches->invalidate += [&] {
-					log.push_back(vector<patch>(this->patches->begin(), this->patches->end()));
+					log.push_back(vector<patch_state2>(this->patches->begin(), this->patches->end()));
 				};
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
@@ -647,7 +654,10 @@ namespace micro_profiler
 					assert_is_false(log.empty());
 
 					resp.defer([] (ipc::server_session::response &resp) {
-						resp(response_reverted, plural + mkpatch_revert(1, patch_result::error) + mkpatch_revert(2, patch_result::ok) + mkpatch_revert(3, patch_result::error));
+						resp(response_reverted, plural
+							+ mkpatch_change(1, patch_change_result::error)
+							+ mkpatch_change(2, patch_change_result::ok)
+							+ mkpatch_change(3, patch_change_result::error));
 					});
 				});
 

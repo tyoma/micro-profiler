@@ -30,14 +30,14 @@ namespace micro_profiler
 {
 	namespace
 	{
-		DWORD win32_protection(int protection)
+		DWORD win32_protection(int protection_)
 		{
-			return (mapped_region::execute & protection)
-				? (mapped_region::write & protection)
-					? PAGE_EXECUTE_READWRITE : (mapped_region::read & protection)
+			return (protection::execute & protection_)
+				? (protection::write & protection_)
+					? PAGE_EXECUTE_READWRITE : (protection::read & protection_)
 						? PAGE_EXECUTE_READ : PAGE_EXECUTE
-				: (mapped_region::write & protection)
-					? PAGE_READWRITE : (mapped_region::read & protection)
+				: (protection::write & protection_)
+					? PAGE_READWRITE : (protection::read & protection_)
 						? PAGE_READONLY : PAGE_NOACCESS;
 		}
 	}
@@ -48,7 +48,7 @@ namespace micro_profiler
 		DWORD previous_access;
 
 		if (!::VirtualProtect(_region.begin(), _region.length(), PAGE_EXECUTE_READWRITE, &previous_access))
-			throw std::runtime_error("Cannot change protection mode!");
+			throw runtime_error("Cannot change protection mode!");
 		_previous_access = previous_access;
 	}
 
@@ -95,7 +95,7 @@ namespace micro_profiler
 			_occupied(0)
 	{
 		if (!_region.begin())
-			throw std::bad_alloc();
+			throw bad_alloc();
 	}
 
 	executable_memory_allocator::block::~block()

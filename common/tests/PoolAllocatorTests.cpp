@@ -16,11 +16,11 @@ namespace micro_profiler
 			class allocation_monitor : public allocator
 			{
 			public:
-				std::function<void (size_t length, void *memory)> allocated;
-				std::function<void (void *memory)> freeing;
+				function<void (size_t length, void *memory)> allocated;
+				function<void (void *memory)> freeing;
 
 			private:
-				virtual void *allocate(std::size_t length) override
+				virtual void *allocate(size_t length) override
 				{
 					auto memory = malloc(length);
 

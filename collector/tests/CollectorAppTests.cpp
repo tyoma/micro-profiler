@@ -47,7 +47,7 @@ namespace micro_profiler
 			mocks::tracer collector;
 			mocks::thread_monitor tmonitor;
 			mocks::module_helper module_helper;
-			mocks::patch_manager pmanager;
+			collector_app::patch_manager_factory patch_manager_factory;
 			mt::event client_ready;
 			vector< shared_ptr<void> > subscriptions;
 
@@ -56,6 +56,9 @@ namespace micro_profiler
 
 			init( Init )
 			{
+				patch_manager_factory = [&] (mapping_access &/*mapping_access_*/) {
+					return make_shared<mocks::patch_manager>();
+				};
 				factory = [this] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					client = make_shared<ipc::client_session>(outbound);
 					auto p = client.get();
@@ -65,6 +68,7 @@ namespace micro_profiler
 					client_ready.set();
 					return client;
 				};
+				module_helper.on_lock_at = [] (void * /*address*/) {	return nullptr;	};
 			}
 
 			teardown( Term )
@@ -92,7 +96,7 @@ namespace micro_profiler
 				module_helper.on_get_executable = [&] {	return unique_name;	};
 
 				// ACT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 				app.connect(factory, false);
 				initialized.wait();
 
@@ -119,7 +123,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 				app.connect(factory, true);
 				initialized.wait();
 
@@ -133,7 +137,7 @@ namespace micro_profiler
 				// INIT
 				mt::event stopping;
 				shared_ptr<void> subs;
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper, pmanager));
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory));
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto &stopping_ = stopping;
@@ -168,7 +172,7 @@ namespace micro_profiler
 				image img1(c_symbol_container_1);
 				image img2(c_symbol_container_2);
 				image img3(c_symbol_container_3_nosymbols);
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -216,7 +220,7 @@ namespace micro_profiler
 				module_helper.emulate_mapped(img2);
 				module_helper.emulate_mapped(img3);
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -267,7 +271,8 @@ namespace micro_profiler
 					flushed = true;
 				};
 
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper, pmanager));
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper,
+					patch_manager_factory));
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
@@ -314,7 +319,8 @@ namespace micro_profiler
 					trace.clear();
 				};
 
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper, pmanager));
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper,
+					patch_manager_factory));
 				mt::thread t([&] {	app.reset();	}); // TODO: dangerous - app can get destroyed before the next line executes.
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
@@ -357,7 +363,7 @@ namespace micro_profiler
 						done.set();
 				};
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 
 				app.connect(factory, false);
 
@@ -394,7 +400,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -457,7 +463,7 @@ namespace micro_profiler
 
 				collector.on_read_collected = [&] (calls_collector_i::acceptor &) {	ready.set();	};
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 
 				app.connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
@@ -504,11 +510,13 @@ namespace micro_profiler
 						a.accept_calls(11710u, trace, 2), ready[1].set();
 				};
 
-				unique_ptr<collector_app> app1(new collector_app(*tracer1, o1, tmonitor, module_helper, pmanager));
+				unique_ptr<collector_app> app1(new collector_app(*tracer1, o1, tmonitor, module_helper,
+					patch_manager_factory));
 				app1->connect(factory, false);
 				client_ready.wait();
 				auto client1 = client;
-				unique_ptr<collector_app> app2(new collector_app(*tracer2, o2, tmonitor, module_helper, pmanager));
+				unique_ptr<collector_app> app2(new collector_app(*tracer2, o2, tmonitor, module_helper,
+					patch_manager_factory));
 				app2->connect(factory, false);
 				client_ready.wait();
 				auto client2 = client;
@@ -553,7 +561,7 @@ namespace micro_profiler
 				module_info_metadata md;
 				image img1(c_symbol_container_1);
 				image img2(c_symbol_container_2);
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -566,6 +574,7 @@ namespace micro_profiler
 					ready.set();
 				});
 				ready.wait();
+				module_helper.on_lock_at = [&] (void *) {	return make_shared_copy(module::platform().locate(img2.base_ptr()));	};
 
 				// ACT
 				client->request(req, request_module_metadata, 2u, response_module_metadata,
@@ -583,6 +592,9 @@ namespace micro_profiler
 				assert_is_true(any_of(md.symbols.begin(), md.symbols.end(),
 					[] (symbol_info si) { return string::npos != si.name.find("get_function_addresses_2");	}));
 				assert_equal((file_id)c_symbol_container_2, (file_id)md.path);
+
+				// INIT
+				module_helper.on_lock_at = [&] (void *) {	return make_shared_copy(module::platform().locate(img1.base_ptr()));	};
 
 				// ACT
 				client->request(req, request_module_metadata, 1u, response_module_metadata,
@@ -620,7 +632,7 @@ namespace micro_profiler
 				tmonitor.add_info(2 /*thread_id*/, ti[1]);
 				tmonitor.add_info(19 /*thread_id*/, ti[2]);
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, pmanager);
+				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
 
 				app.connect(factory, false);
 				client_ready.wait();

@@ -78,6 +78,7 @@ namespace micro_profiler
 	struct patch
 	{
 		virtual ~patch() {	}
+		virtual bool activate() = 0;
 		virtual bool revert() = 0;
 	};
 }

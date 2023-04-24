@@ -95,7 +95,7 @@ namespace micro_profiler
 		for (auto m = _mappings.begin(); m != _mappings.end(); ++m)
 			if (const auto locked = lock_module(m->module_id))
 				for (auto r = patch_idx.equal_range(m->module_id); r.first != r.second; r.first++)
-					if (r.first->patch_)
+					if (r.first->patch_ && r.first->active)
 						r.first->patch_->revert();
 	}
 
@@ -149,9 +149,12 @@ namespace micro_profiler
 			auto &p = *patch_record;
 			patch_change_result result = {	p.id, p.rva, patch_change_result::error,	};
 
-			// TODO: leave unchanged, if patch is already set.
 			if (locked)
-				p.patch_ = move(_patch_factory(locked->base + *i, p.id, *locked->allocator));
+			{
+				if (!p.patch_)
+					p.patch_ = move(_patch_factory(locked->base + *i, p.id, *locked->allocator));
+				p.patch_->activate();
+			}
 			p.active = true;
 			result.result = patch_change_result::ok;
 			patch_record.commit();
@@ -179,7 +182,6 @@ namespace micro_profiler
 
 				if (p.patch_ && locked)
 					p.patch_->revert();
-				p.patch_.reset();
 				p.active = false;
 				result.id = p.id;
 				result.result = patch_change_result::ok;
@@ -206,7 +208,10 @@ namespace micro_profiler
 			auto &p = *patch_record;
 
 			if (p.active)
+			{
 				p.patch_ = move(_patch_factory(mapping.base + p.rva, p.id, *allocator));
+				p.patch_->activate();
+			}
 			patch_record.commit();
 		}
 	}

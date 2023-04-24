@@ -68,6 +68,7 @@ namespace micro_profiler
 			id_t locked_module; // Zero for no lock
 			mocks::mapping_access mappings;
 			mocks::memory_manager memory_manager_;
+			patch_manager::patch_change_results results;
 
 			struct eq
 			{
@@ -120,13 +121,15 @@ namespace micro_profiler
 				// INIT
 				auto ea1 = make_shared<executable_memory_allocator>();
 				auto ea2 = make_shared<executable_memory_allocator>();
-				vector< tuple<void *, id_t, executable_memory_allocator *> > targets;
-				patch_manager::patch_change_results results;
+				vector< tuple<id_t, executable_memory_allocator *> > targets;
+				vector< pair<void *, int> > targets2;
 				auto locked = false;
 				image_patch_manager_overriden pm([&] (void *target, id_t id, executable_memory_allocator &a) -> patch_ptr {
 					assert_is_true(locked);
-					targets.push_back(make_tuple(target, id, &a));
-					return patch_ptr(new mocks::patch());
+					targets.push_back(make_tuple(id, &a));
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets2.push_back(make_pair(target, act));
+					}, target));
 				}, mappings, memory_manager_);
 				unsigned functions1[] = {	0x10010, 0x100210, 0x9910,	};
 
@@ -149,9 +152,16 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(plural
-					+ make_tuple((void*)(0x1910221 + 0x10010), 1u, ea1.get())
-					+ make_tuple((void*)(0x1910221 + 0x100210), 2u, ea1.get())
-					+ make_tuple((void*)(0x1910221 + 0x9910), 3u, ea1.get()), targets);
+					+ make_tuple(1u, ea1.get())
+					+ make_tuple(2u, ea1.get())
+					+ make_tuple(3u, ea1.get()), targets);
+				assert_equal(plural
+					+ make_pair((void*)(0x1910221 + 0x10010), 0)
+					+ make_pair((void*)(0x1910221 + 0x10010), 1)
+					+ make_pair((void*)(0x1910221 + 0x100210), 0)
+					+ make_pair((void*)(0x1910221 + 0x100210), 1)
+					+ make_pair((void*)(0x1910221 + 0x9910), 0)
+					+ make_pair((void*)(0x1910221 + 0x9910), 1), targets2);
 				assert_equal(plural
 					+ make_patch_apply(0x10010, patch_change_result::ok, 1)
 					+ make_patch_apply(0x100210, patch_change_result::ok, 2)
@@ -162,6 +172,7 @@ namespace micro_profiler
 				unsigned functions2[] = {	0x13, 0x02,	};
 
 				targets.clear();
+				targets2.clear();
 				results.clear();
 				pm.on_lock_module = [&] (id_t module_id) -> mapping_ptr {
 					assert_equal(1u, module_id);
@@ -176,8 +187,13 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(plural
-					+ make_tuple((void*)(0x1000 + 0x13), 4u, ea2.get())
-					+ make_tuple((void*)(0x1000 + 0x02), 5u, ea2.get()), targets);
+					+ make_tuple(4u, ea2.get())
+					+ make_tuple(5u, ea2.get()), targets);
+				assert_equal(plural
+					+ make_pair((void*)(0x1000 + 0x13), 0)
+					+ make_pair((void*)(0x1000 + 0x13), 1)
+					+ make_pair((void*)(0x1000 + 0x02), 0)
+					+ make_pair((void*)(0x1000 + 0x02), 1), targets2);
 				assert_equal(plural
 					+ make_patch_apply(0x13, patch_change_result::ok, 4)
 					+ make_patch_apply(0x02, patch_change_result::ok, 5), results);
@@ -188,9 +204,8 @@ namespace micro_profiler
 			{
 				// INIT
 				patch_manager::patch_states states;
-				patch_manager::patch_change_results results;
-				image_patch_manager_overriden pm([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
-					return patch_ptr(new mocks::patch());
+				image_patch_manager_overriden pm([&] (void *t, id_t, executable_memory_allocator &) -> patch_ptr {
+					return patch_ptr(new mocks::patch([] (void*, int) {}, t));
 				}, mappings, memory_manager_);
 				unsigned functions1[] = {	0x10010, 0x100210, 0x9910,	};
 				unsigned functions12[] = {	0x20010,	};
@@ -234,7 +249,6 @@ namespace micro_profiler
 			{
 				// INIT
 				patch_manager::patch_states states;
-				patch_manager::patch_change_results results;
 				image_patch_manager_overriden pm([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
 
 				// ASSERT
@@ -271,7 +285,7 @@ namespace micro_profiler
 			{
 				// INIT
 				patch_manager::patch_states states;
-				patch_manager::patch_change_results results, results2;
+				patch_manager::patch_change_results results2;
 				image_patch_manager_overriden pm([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
 
 					// ASSERT
@@ -317,16 +331,11 @@ namespace micro_profiler
 				// INIT
 				vector< pair<void *, int /*act*/> > targets;
 				patch_manager::patch_states states;
-				patch_manager::patch_change_results results, results2;
-				auto pm = make_shared<image_patch_manager_overriden>([&] (void *target, id_t, executable_memory_allocator &)
-						-> patch_ptr {
-					unique_ptr<mocks::patch> p(new mocks::patch());
-					auto &targets_ = targets;
-
-					targets.push_back(make_pair(target, 0));
-					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
-					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
-					return patch_ptr(move(p));
+				patch_manager::patch_change_results results2;
+				auto pm = make_shared<image_patch_manager_overriden>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
 				}, mappings, memory_manager_);
 				unsigned functions1[] = {	10u, 20u, 30u, 50u, 90u,	};
 				unsigned functions2[] = {	20u, 50u,	};
@@ -347,9 +356,7 @@ namespace micro_profiler
 				pm->revert(results2, 14u, mkrange(functions3)); // will not affect anything
 
 				// ASSERT
-				assert_equal(plural
-					+ make_pair((void*)(0x10000000 + 20u), 3)
-					+ make_pair((void*)(0x10000000 + 50u), 3), targets);
+				assert_is_empty(targets);
 				assert_equal(plural
 					+ make_patch_apply(20u, patch_change_result::ok, 2)
 					+ make_patch_apply(50u, patch_change_result::ok, 4), results);
@@ -373,16 +380,10 @@ namespace micro_profiler
 			{
 				// INIT
 				vector< pair<void *, int /*act*/> > targets;
-				patch_manager::patch_change_results results;
-				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &)
-						-> patch_ptr {
-					unique_ptr<mocks::patch> p(new mocks::patch());
-					auto &targets_ = targets;
-
-					targets.push_back(make_pair(target, 0));
-					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
-					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
-					return patch_ptr(move(p));
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
 				}, mappings, memory_manager_);
 				unsigned functions1[] = {	0x10001, 0x10002, 0x10003, 0x10004,	};
 
@@ -397,29 +398,39 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(plural
 					+ make_pair((void*)(0x1910221 + 0x10001), 0)
+					+ make_pair((void*)(0x1910221 + 0x10001), 1)
 					+ make_pair((void*)(0x1910221 + 0x10002), 0)
+					+ make_pair((void*)(0x1910221 + 0x10002), 1)
 					+ make_pair((void*)(0x1910221 + 0x10003), 0)
-					+ make_pair((void*)(0x1910221 + 0x10004), 0), targets);
+					+ make_pair((void*)(0x1910221 + 0x10003), 1)
+					+ make_pair((void*)(0x1910221 + 0x10004), 0)
+					+ make_pair((void*)(0x1910221 + 0x10004), 1), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10001, patch_change_result::ok, 1)
+					+ make_patch_apply(0x10002, patch_change_result::ok, 2)
+					+ make_patch_apply(0x10003, patch_change_result::ok, 3)
+					+ make_patch_apply(0x10004, patch_change_result::ok, 4), results);
 
 				// INIT
 				unsigned functions2[] = {	0x10001, 0x10003,	};
-				patch_manager::patch_change_results rresults;
 
 				targets.clear();
+				results.clear();
 
 				// ACT
-				pm->revert(rresults, 1u, mkrange(functions2));
+				pm->revert(results, 1u, mkrange(functions2));
 
 				// ASSERT
 				assert_equal(plural
 					+ make_pair((void*)(0x1910221 + 0x10001), 2)
-					+ make_pair((void*)(0x1910221 + 0x10001), 3)
-					+ make_pair((void*)(0x1910221 + 0x10003), 2)
-					+ make_pair((void*)(0x1910221 + 0x10003), 3), targets);
+					+ make_pair((void*)(0x1910221 + 0x10003), 2), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10001, patch_change_result::ok, 1)
+					+ make_patch_apply(0x10003, patch_change_result::ok, 3), results);
 
 				// INIT
 				targets.clear();
-				rresults.clear();
+				results.clear();
 
 				// INIT
 				unsigned functions3[] = {	0x10003,	};
@@ -432,7 +443,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(plural
-					+ make_pair((void*)(0x1910221 + 0x10003), 0), targets);
+					+ make_pair((void*)(0x1910221 + 0x10003), 1), targets);
 				assert_equal(plural
 					+ make_patch_apply(0x10003, patch_change_result::ok, 3), results);
 
@@ -447,6 +458,7 @@ namespace micro_profiler
 					+ make_pair((void*)(0x1910221 + 0x10002), 2)
 					+ make_pair((void*)(0x1910221 + 0x10003), 2)
 					+ make_pair((void*)(0x1910221 + 0x10004), 2)
+					+ make_pair((void*)(0x1910221 + 0x10001), 3)
 					+ make_pair((void*)(0x1910221 + 0x10002), 3)
 					+ make_pair((void*)(0x1910221 + 0x10003), 3)
 					+ make_pair((void*)(0x1910221 + 0x10004), 3), targets);
@@ -458,19 +470,11 @@ namespace micro_profiler
 				// INIT
 				vector< pair<id_t, executable_memory_allocator *> > targets_ex;
 				vector< pair<void *, int /*act*/> > targets;
-				patch_manager::patch_change_results results;
 				size_t expected_protections = 0u;
-				auto pm = make_shared<image_patch_manager_overriden>([&] (void *target, id_t id, executable_memory_allocator &e)
-						-> patch_ptr {
-					unique_ptr<mocks::patch> p(new mocks::patch());
-					auto &targets_ = targets;
-
-					targets.push_back(make_pair(target, 0));
-					targets_ex.push_back(make_pair(id, &e));
-					assert_equal(expected_protections, memory_manager_.locks().size());
-					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
-					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
-					return patch_ptr(move(p));
+				auto pm = make_shared<image_patch_manager_overriden>([&] (void *target, id_t id, executable_memory_allocator &e) {
+					return targets_ex.push_back(make_pair(id, &e)), unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
 				}, mappings, memory_manager_);
 				unsigned functions1[] = {	0x10001, 0x10002, 0x10004,	};
 				unsigned functions2[] = {	0x10001, 0x10090,	};
@@ -503,7 +507,10 @@ namespace micro_profiler
 				assert_equivalent(plural
 					+ make_pair((void*)(0x1010F000 + 0x10001), 0)
 					+ make_pair((void*)(0x1010F000 + 0x10002), 0)
-					+ make_pair((void*)(0x1010F000 + 0x10004), 0), targets);
+					+ make_pair((void*)(0x1010F000 + 0x10004), 0)
+					+ make_pair((void*)(0x1010F000 + 0x10001), 1)
+					+ make_pair((void*)(0x1010F000 + 0x10002), 1)
+					+ make_pair((void*)(0x1010F000 + 0x10004), 1), targets);
 
 				// INIT
 				targets.clear();
@@ -521,7 +528,9 @@ namespace micro_profiler
 					+ make_pair(5u, memory_manager_.allocators[1].get()), targets_ex);
 				assert_equivalent(plural
 					+ make_pair((void*)(0x100000 + 0x10001), 0)
-					+ make_pair((void*)(0x100000 + 0x10090), 0), targets);
+					+ make_pair((void*)(0x100000 + 0x10090), 0)
+					+ make_pair((void*)(0x100000 + 0x10001), 1)
+					+ make_pair((void*)(0x100000 + 0x10090), 1), targets);
 			}
 
 
@@ -529,15 +538,10 @@ namespace micro_profiler
 			{
 				// INIT
 				vector< pair<void *, int /*act*/> > targets;
-				patch_manager::patch_change_results results;
-				image_patch_manager_overriden pm([&] (void *target, id_t, executable_memory_allocator &) -> patch_ptr {
-					unique_ptr<mocks::patch> p(new mocks::patch());
-					auto &targets_ = targets;
-
-					targets.push_back(make_pair(target, 0));
-					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
-					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
-					return patch_ptr(move(p));
+				image_patch_manager_overriden pm([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
 				}, mappings, memory_manager_);
 				unsigned functions1[] = {	0x10001, 0x10002, 0x10004, 0x10007,	};
 				unsigned functions2[] = {	0x10002, 0x10004,	};
@@ -558,7 +562,9 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_pair((void*)(0x10000000 + 0x10001), 0)
-					+ make_pair((void*)(0x10000000 + 0x10007), 0), targets);
+					+ make_pair((void*)(0x10000000 + 0x10007), 0)
+					+ make_pair((void*)(0x10000000 + 0x10001), 1)
+					+ make_pair((void*)(0x10000000 + 0x10007), 1), targets);
 			}
 
 
@@ -566,15 +572,10 @@ namespace micro_profiler
 			{
 				// INIT
 				vector< pair<void *, int /*act*/> > targets;
-				patch_manager::patch_change_results results;
-				image_patch_manager_overriden m([&] (void *target, id_t, executable_memory_allocator &) -> patch_ptr {
-					unique_ptr<mocks::patch> p(new mocks::patch());
-					auto &targets_ = targets;
-
-					targets.push_back(make_pair(target, 0));
-					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
-					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
-					return patch_ptr(move(p));
+				image_patch_manager_overriden m([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
 				}, mappings, memory_manager_);
 				unsigned functions1[] = {	0x10001, 0x10002, 0x10003, 0x10004, 0x10007,	};
 				unsigned functions2[] = {	0x10002, 0x10004,	};
@@ -610,7 +611,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_pair((void*)(0x10300000 + 0x10002), 3), targets);
+					+ make_pair((void*)(0x10300000 + 0x10002), 3)
+					+ make_pair((void*)(0x10300000 + 0x10004), 3), targets);
 
 				// INIT
 				targets.clear();
@@ -621,7 +623,9 @@ namespace micro_profiler
 				// ASSERT
 				assert_equivalent(plural
 					+ make_pair((void*)(0x10000000 + 0x10001), 3)
+					+ make_pair((void*)(0x10000000 + 0x10002), 3)
 					+ make_pair((void*)(0x10000000 + 0x10003), 3)
+					+ make_pair((void*)(0x10000000 + 0x10004), 3)
 					+ make_pair((void*)(0x10000000 + 0x10007), 3), targets);
 			}
 
@@ -887,15 +891,10 @@ namespace micro_profiler
 				// INIT
 				auto valid = true;
 				vector< pair<void *, int /*act*/> > targets;
-				patch_manager::patch_change_results results;
-				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &)
-						-> patch_ptr {
-					unique_ptr<mocks::patch> p(new mocks::patch());
-					auto &targets_ = targets;
-
-					p->on_revert = [target, &targets_] {	targets_.push_back(make_pair(target, 2));	};
-					p->on_destroy = [target, &targets_] {	targets_.push_back(make_pair(target, 3));	};
-					return patch_ptr(move(p));
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
 				}, mappings, memory_manager_);
 				unsigned functions1[] = {	0x10001, 0x10002, 0x10003, 0x10004,	};
 				unsigned functions2[] = {	0x20001, 0x30002,	};

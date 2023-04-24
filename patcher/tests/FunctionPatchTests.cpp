@@ -40,7 +40,7 @@ namespace micro_profiler
 				assert_is_empty(trace.call_log);
 
 				// ACT / ASSERT
-				assert_is_true(patch.activate(false));
+				assert_is_true(patch.activate());
 
 				// ACT
 				recursive_factorial(2);
@@ -52,7 +52,7 @@ namespace micro_profiler
 				assert_is_false(trace.call_log.empty());
 
 				// ACT / ASSERT
-				assert_is_false(patch.activate(false)); // repeated activation
+				assert_is_false(patch.activate()); // repeated activation
 			}
 
 
@@ -61,7 +61,7 @@ namespace micro_profiler
 				// INIT / ACT
 				function_patch patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator);
 
-				patch.activate(false);
+				patch.activate();
 
 				// ACT / ASSERT
 				assert_is_true(patch.revert());
@@ -97,7 +97,7 @@ namespace micro_profiler
 				// INIT / ACT
 				function_patch patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator);
 
-				patch.activate(true);
+				patch.activate();
 
 				// ACT
 				assert_equal(6, recursive_factorial(3));
@@ -158,7 +158,7 @@ namespace micro_profiler
 				// INIT / ACT
 				function_patch patch(address_cast_hack<void *>(f), &trace, allocator);
 
-				patch.activate(true);
+				patch.activate();
 
 				// ACT
 				f(buffer, 10, "%X", 132214);
@@ -179,7 +179,7 @@ namespace micro_profiler
 				// INIT
 				unique_ptr<function_patch> patch(new function_patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator));
 
-				patch->activate(true);
+				patch->activate();
 
 				// ACT / ASSERT
 				patch.reset();

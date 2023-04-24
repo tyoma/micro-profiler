@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "function_patch.h"
+#include "interface.h"
 
 #include <common/auto_increment.h>
 #include <functional>
@@ -89,15 +89,4 @@ namespace micro_profiler
 
 		std::shared_ptr<executable_memory_allocator> allocator;
 	};
-
-
-
-	template <typename InterceptorT>
-	inline std::function<std::shared_ptr<patch> (void *target)> default_patch_factory(InterceptorT &interceptor,
-		executable_memory_allocator &allocator_)
-	{
-		return [&interceptor, &allocator_] (void *target) {
-			return std::make_shared<function_patch>(target, &interceptor, allocator_);
-		};
-	}
 }

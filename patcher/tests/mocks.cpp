@@ -67,18 +67,18 @@ namespace micro_profiler
 			}
 
 
+			patch::patch(function<void (void *target, int act)> on_patch_action, void *target)
+				: _on_patch_action(on_patch_action), _target(target)
+			{	_on_patch_action(_target, 0);	}
+
 			patch::~patch()
-			{
-				if (on_destroy)
-					on_destroy();
-			}
+			{	_on_patch_action(_target, 3);	}
+
+			bool patch::activate()
+			{	return _on_patch_action(_target, 1), true;	}
 
 			bool patch::revert()
-			{
-				if (on_revert)
-					on_revert();
-				return true;
-			}
+			{	return _on_patch_action(_target, 2), true;	}
 		}
 	}
 }

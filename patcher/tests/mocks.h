@@ -78,13 +78,15 @@ namespace micro_profiler
 			class patch : public micro_profiler::patch
 			{
 			public:
+				patch(std::function<void (void *target, int act)> on_patch_action, void *target);
 				virtual ~patch();
 
+				virtual bool activate() override;
 				virtual bool revert() override;
 
-			public:
-				std::function<void ()> on_destroy;
-				std::function<void ()> on_revert;
+			private:
+				const std::function<void (void *target, int act)> _on_patch_action;
+				void *_target;
 			};
 
 

@@ -127,7 +127,7 @@ namespace micro_profiler
 		fill_n(prologue(), prologue_size(), _fill);
 	}
 
-	bool jumper::activate(bool /*atomic*/)
+	bool jumper::activate()
 	{
 		if (_detached)
 			throw logic_error("jumper detached");

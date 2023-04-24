@@ -30,6 +30,7 @@
 #include <ipc/misc.h>
 #include <logger/writer.h>
 #include <mt/thread_callbacks.h>
+#include <patcher/function_patch.h>
 #include <patcher/image_patch_manager.h>
 
 #ifdef _WIN32

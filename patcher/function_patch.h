@@ -34,7 +34,7 @@ namespace micro_profiler
 
 		const void *target() const;
 		bool active() const;
-		bool activate(bool atomic);
+		bool activate();
 		virtual bool revert() override;
 		void detach();
 
@@ -56,8 +56,8 @@ namespace micro_profiler
 	inline bool function_patch::active() const
 	{	return _jumper.active();	}
 
-	inline bool function_patch::activate(bool atomic)
-	{	return _jumper.activate(atomic);	}
+	inline bool function_patch::activate()
+	{	return _jumper.activate();	}
 
 	inline bool function_patch::revert()
 	{	return _jumper.revert();	}

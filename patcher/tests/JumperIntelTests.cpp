@@ -333,8 +333,8 @@ namespace micro_profiler
 				jumper j2(address_cast_hack<void *>(&two), address_cast_hack<void *>(&four));
 
 				// ACT / ASSERT
-				assert_is_true(j1.activate(true));
-				assert_is_true(j2.activate(true));
+				assert_is_true(j1.activate());
+				assert_is_true(j2.activate());
 
 				// ACT / ASSERT
 				assert_equal("three", one());
@@ -352,8 +352,8 @@ namespace micro_profiler
 				jumper j1(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
 				jumper j2(address_cast_hack<void *>(&two), address_cast_hack<void *>(&four));
 
-				j1.activate(true);
-				j2.activate(true);
+				j1.activate();
+				j2.activate();
 
 				// ACT
 				assert_is_true(j1.revert());
@@ -375,7 +375,7 @@ namespace micro_profiler
 				{
 					jumper j(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
 
-					j.activate(true);
+					j.activate();
 
 				// ACT
 				}
@@ -391,10 +391,10 @@ namespace micro_profiler
 				{
 					jumper j(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
 
-					j.activate(true);
+					j.activate();
 
 				// ACT / ASSERT
-					assert_is_false(j.activate(true));
+					assert_is_false(j.activate());
 
 				// ACT
 				}
@@ -446,7 +446,7 @@ namespace micro_profiler
 				}
 				unique_ptr<jumper> j(new jumper(target, 0));
 
-				j->activate(false);
+				j->activate();
 				copy(target - c_jumper_size - 5, target + 2, back_inserter(before_detach));
 
 				// ACT
@@ -474,7 +474,7 @@ namespace micro_profiler
 				}
 				unique_ptr<jumper> j(new jumper(target, 0));
 
-				j->activate(false);
+				j->activate();
 				j->detach();
 
 				// ACT
@@ -499,7 +499,7 @@ namespace micro_profiler
 				j.detach();
 
 				// ACT / ASSERT
-				assert_throws(j.activate(false), logic_error);
+				assert_throws(j.activate(), logic_error);
 				assert_throws(j.revert(), logic_error);
 			}
 

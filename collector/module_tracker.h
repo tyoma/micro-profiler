@@ -46,6 +46,12 @@ namespace micro_profiler
 			id_t module_id;
 		};
 
+		struct mapping_history_key
+		{
+			id_t last_mapping_id;
+			id_t last_unmapped_id;
+		};
+
 		struct module_info
 		{
 			id_t id;
@@ -57,13 +63,20 @@ namespace micro_profiler
 	public:
 		module_tracker(module &module_helper);
 
-		void get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_);
+		void get_changes(mapping_history_key &key, loaded_modules &mapped_, unloaded_modules &unmapped_) const;
 		bool get_module(module_info& info, id_t module_id) const;
 		metadata_ptr get_metadata(id_t module_id) const;
 
 		// mapping_access methods
 		virtual std::shared_ptr<module::mapping> lock_mapping(id_t mapping_id) override;
 		virtual std::shared_ptr<void> notify(mapping_access::events &events_) override;
+
+	private:
+		struct unmapped_entry
+		{
+			id_t id;
+			id_t mapping_id;
+		};
 
 	private:
 		static std::uint32_t calculate_hash(const std::string &path_);
@@ -74,10 +87,9 @@ namespace micro_profiler
 
 	private:
 		mutable mt::mutex _mtx;
-		sdb::table< mapping, auto_increment_constructor<mapping> > _mappings;
 		sdb::table< module_info, auto_increment_constructor<module_info> > _modules;
-		id_t _last_reported_mapping_id;
-		unloaded_modules _uqueue;
+		sdb::table< mapping, auto_increment_constructor<mapping> > _mappings;
+		sdb::table< unmapped_entry, auto_increment_constructor<unmapped_entry> > _unmapped;
 		module &_module_helper;
 		const file_id _this_module_file;
 		const std::shared_ptr<void> _module_notifier;

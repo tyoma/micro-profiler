@@ -60,22 +60,25 @@ namespace micro_profiler
 	{
 		typedef ipc::server_session::response response;
 
+		const module_tracker::mapping_history_key history_key_zero = {};
+
 		auto module_tracker_ = make_shared<module_tracker>(_module_helper);
 		auto patch_manager = _patch_manager_factory(*module_tracker_);
 
 		// Keep buffer objects to avoid excessive allocations.
-		auto loaded = make_shared<loaded_modules>();
-		auto unloaded = make_shared<unloaded_modules>();
+		auto history_key = make_shared<module_tracker::mapping_history_key>(history_key_zero);
+		auto mapped_ = make_shared<loaded_modules>();
+		auto unmapped_ = make_shared<unloaded_modules>();
 		auto metadata = make_shared<module_info_metadata>();
 		auto module_info = make_shared<module_tracker::module_info>();
 		auto threads_buffer = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
 		auto patch_results = make_shared<response_patched_data>();
 
-		session.add_handler(request_update, [this, module_tracker_, loaded, unloaded] (response &resp) {
-			module_tracker_->get_changes(*loaded, *unloaded);
-			resp(response_modules_loaded, *loaded);
+		session.add_handler(request_update, [this, module_tracker_, history_key, mapped_, unmapped_] (response &resp) {
+			module_tracker_->get_changes(*history_key, *mapped_, *unmapped_);
+			resp(response_modules_loaded, *mapped_);
 			resp(response_statistics_update, *_analyzer);
-			resp(response_modules_unloaded, *unloaded);
+			resp(response_modules_unloaded, *unmapped_);
 			_analyzer->clear();
 		});
 

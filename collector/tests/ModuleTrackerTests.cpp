@@ -77,18 +77,19 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				loaded_modules loaded_images;
-				unloaded_modules unloaded_images;
+				module_tracker::mapping_history_key hk = {};
+				loaded_modules mapped_;
+				unloaded_modules unmapped_;
 
-				t.get_changes(loaded_images, unloaded_images);
-				loaded_images.resize(10), unloaded_images.resize(10);
+				t.get_changes(hk, mapped_, unmapped_);
+				mapped_.resize(10), unmapped_.resize(10);
 
 				// ACT
-				t.get_changes(loaded_images, unloaded_images);
+				t.get_changes(hk, mapped_, unmapped_);
 
 				// ASSERT
-				assert_is_empty(loaded_images);
-				assert_is_empty(unloaded_images);
+				assert_is_empty(mapped_);
+				assert_is_empty(unmapped_);
 			}
 
 
@@ -96,15 +97,16 @@ namespace micro_profiler
 			{
 				// INIT
 				file_id self(module::platform().locate(&dummy).path);
+				module_tracker::mapping_history_key hk = {};
 				module_tracker t(module_helper);
-				loaded_modules loaded_images;
-				unloaded_modules unloaded_images;
+				loaded_modules mapped_;
+				unloaded_modules unmapped_;
 
 				// ACT
-				t.get_changes(loaded_images, unloaded_images);
+				t.get_changes(hk, mapped_, unmapped_);
 
 				// ASSERT
-				assert_is_false(any_of(loaded_images.begin(), loaded_images.end(),
+				assert_is_false(any_of(mapped_.begin(), mapped_.end(),
 					[&] (const module::mapping_instance &instance) {
 					return file_id(instance.second.path) == self;
 				}));
@@ -115,27 +117,28 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				loaded_modules loaded_images;
-				unloaded_modules unloaded_images;
+				module_tracker::mapping_history_key hk = {};
+				loaded_modules mapped_;
+				unloaded_modules unmapped_;
 
 				// ACT
 				module_helper.emulate_mapped(*img1);
-				t.get_changes(loaded_images, unloaded_images);
+				t.get_changes(hk, mapped_, unmapped_);
 
 				// ASSERT
 				assert_equivalent_pred(plural
-					+ make_mapping_instance(1, 1, img1->absolute_path(), img1->base()), loaded_images, mapping_less());
+					+ make_mapping_instance(1, 1, img1->absolute_path(), img1->base()), mapped_, mapping_less());
 
 				// ACT
 				module_helper.emulate_mapped(*img2);
 				module_helper.emulate_mapped(*img3);
-				t.get_changes(loaded_images, unloaded_images);
+				t.get_changes(hk, mapped_, unmapped_);
 
 				// ASSERT
 				assert_equivalent_pred(plural
 					+ make_mapping_instance(2, 2, img2->absolute_path(), img2->base())
-					+ make_mapping_instance(3, 3, img3->absolute_path(), img3->base()), loaded_images, mapping_less());
-				assert_is_empty(unloaded_images);
+					+ make_mapping_instance(3, 3, img3->absolute_path(), img3->base()), mapped_, mapping_less());
+				assert_is_empty(unmapped_);
 			}
 
 
@@ -143,6 +146,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
+				module_tracker::mapping_history_key hk = {};
 				loaded_modules l;
 				unloaded_modules u;
 				image img4(c_symbol_container_3_nosymbols);
@@ -152,7 +156,7 @@ namespace micro_profiler
 				module_helper.emulate_mapped(*img2);
 				module_helper.emulate_mapped(*img3);
 				module_helper.emulate_mapped(img4);
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ASSERT
 				assert_not_equal(l[0].second.hash, l[1].second.hash);
@@ -166,6 +170,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
+				module_tracker::mapping_history_key hk = {};
 				loaded_modules l;
 				unloaded_modules u;
 				module::mapping synthetic_mappings[] = {
@@ -184,7 +189,7 @@ namespace micro_profiler
 
 				// ACT (secondary mapping is not possible in real life, but module_tracker must handle it fine)
 				module_helper.emulate_mapped(synthetic_mappings[2]);
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ASSERT
 				assert_equivalent_pred(plural
@@ -196,7 +201,7 @@ namespace micro_profiler
 				// ACT
 				module_helper.emulate_mapped(synthetic_mappings[0]);
 				module_helper.emulate_mapped(synthetic_mappings[1]);
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ASSERT
 				assert_equivalent_pred(plural
@@ -209,6 +214,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
+				module_tracker::mapping_history_key hk = {};
 				loaded_modules l;
 				unloaded_modules u;
 				module_tracker::module_info infos[3];
@@ -222,7 +228,7 @@ namespace micro_profiler
 
 				// INIT
 				module_helper.emulate_mapped(*img3);
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 				module_helper.emulate_unmapped(img2->base_ptr());
 
 				// ACT / ASSERT
@@ -242,6 +248,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
+				module_tracker::mapping_history_key hk = {};
 				loaded_modules l;
 				unloaded_modules u;
 
@@ -251,18 +258,18 @@ namespace micro_profiler
 
 				// ACT
 				module_helper.emulate_unmapped(img2->base_ptr());
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ASSERT
 				assert_equivalent_pred(plural
 					+ make_mapping_instance(1, 1, img1->absolute_path(), img1->base())
 					+ make_mapping_instance(3, 3, img3->absolute_path(), img3->base()), l, mapping_less());
-				assert_equivalent(plural + 2u, u); // Mapping ID comes for a previously 'unknown' mapping.
+				assert_is_empty(u); // Mapping ID comes for a previously 'unknown' mapping.
 
 				// ACT
 				module_helper.emulate_unmapped(img1->base_ptr());
 				module_helper.emulate_unmapped(img3->base_ptr());
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ASSERT
 				assert_is_empty(l);
@@ -270,7 +277,7 @@ namespace micro_profiler
 
 				// ACT
 				module_helper.emulate_mapped(*img2);
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ASSERT
 				assert_equivalent_pred(plural
@@ -279,7 +286,7 @@ namespace micro_profiler
 
 				// ACT
 				module_helper.emulate_unmapped(img2->base_ptr());
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ASSERT
 				assert_is_empty(l);
@@ -291,18 +298,19 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
+				module_tracker::mapping_history_key hk = {};
 				loaded_modules l;
 				unloaded_modules u;
 
 				module_helper.emulate_mapped(*img1);
 				module_helper.emulate_mapped(*img2);
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ACT
 				module_helper.emulate_mapped(*img3);
 				module_helper.emulate_unmapped(img2->base_ptr());
 				module_helper.emulate_unmapped(img1->base_ptr());
-				t.get_changes(l, u);
+				t.get_changes(hk, l, u);
 
 				// ASSERT
 				assert_equivalent_pred(plural

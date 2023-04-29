@@ -99,30 +99,36 @@ namespace micro_profiler
 	}
 
 	module_tracker::module_tracker(module &module_helper)
-		: _last_reported_mapping_id(0u), _module_helper(module_helper),
-			_this_module_file(module_helper.locate(&local_dummy).path), _module_notifier(module_helper.notify(*this))
+		: _module_helper(module_helper), _this_module_file(module_helper.locate(&local_dummy).path),
+			_module_notifier(module_helper.notify(*this))
 	{	}
 
-	void module_tracker::get_changes(loaded_modules &loaded_modules_, unloaded_modules &unloaded_modules_)
+	void module_tracker::get_changes(mapping_history_key &key, loaded_modules &mapped_, unloaded_modules &unmapped_) const
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);
-		auto last_reported_mapping_id = _last_reported_mapping_id;
+		auto last_reported_mapping_id = key.last_mapping_id;
+		auto last_reported_unmapped_id = key.last_unmapped_id;
 		auto &mappings_idx = sdb::ordered_index_(_mappings, keyer::id());
-		const auto &modules_idx = sdb::unique_index(_modules, keyer::id());
+		auto &unmapped_idx = sdb::ordered_index_(_unmapped, keyer::id());
+		const auto &modules_idx = sdb::unique_index<keyer::id>(_modules);
 		auto i = mappings_idx.upper_bound(last_reported_mapping_id);
+		auto j = unmapped_idx.upper_bound(last_reported_unmapped_id);
 
-		loaded_modules_.clear();
-		for (auto end = mappings_idx.end(); i != end; i++)
+		mapped_.clear();
+		unmapped_.clear();
+		for (auto end = mappings_idx.end(); i != end; last_reported_mapping_id = i->id, i++)
 		{
 			auto &module = modules_idx[i->module_id];
 			module::mapping_ex m = {	module.id, module.path, reinterpret_cast<uintptr_t>(i->base), module.hash	};
 
-			loaded_modules_.push_back(make_pair(i->id, m));
-			last_reported_mapping_id = i->id;
+			mapped_.push_back(make_pair(i->id, m));
 		}
-		unloaded_modules_.clear();
-		swap(unloaded_modules_, _uqueue);
-		_last_reported_mapping_id = last_reported_mapping_id;
+		for (auto end = unmapped_idx.end(); j != end; last_reported_unmapped_id = j->id, j++)
+			if (j->mapping_id <= key.last_mapping_id)
+				unmapped_.push_back(j->mapping_id);
+
+		key.last_mapping_id = last_reported_mapping_id;
+		key.last_unmapped_id = last_reported_unmapped_id;
 	}
 
 	bool module_tracker::get_module(module_info& info, id_t module_id) const
@@ -208,8 +214,12 @@ namespace micro_profiler
 
 		if (auto r = mappings_by_base.find(static_cast<byte *>(base)))
 		{
-			_uqueue.push_back(r->id);
-			mappings_by_base[static_cast<byte *>(base)].remove();
+			auto m = mappings_by_base[static_cast<byte *>(base)];
+			auto u = _unmapped.create();
+
+			(*u).mapping_id = r->id;
+			u.commit();
+			m.remove();
 		}
 	}
 }

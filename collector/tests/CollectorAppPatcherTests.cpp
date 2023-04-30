@@ -5,6 +5,7 @@
 #include "mocks_allocator.h"
 #include "mocks_patch_manager.h"
 
+#include <collector/module_tracker.h>
 #include <collector/serialization.h>
 #include <ipc/client_session.h>
 #include <mt/event.h>
@@ -44,14 +45,14 @@ namespace micro_profiler
 			active_server_app::client_factory_t factory;
 			shared_ptr<ipc::client_session> client;
 			mocks::tracer collector;
-			mocks::thread_monitor tmonitor;
-			shared_ptr<mocks::patch_manager> pmanager;
-			collector_app::patch_manager_factory patch_manager_factory;
+			mocks::thread_monitor threads;
+			mocks::module_helper module_helper;
+			unique_ptr<micro_profiler::module_tracker> module_tracker;
+			unique_ptr<mocks::patch_manager> pmanager;
 			unique_ptr<image> img1, img2, img3;
 			mt::event client_ready;
 			vector< shared_ptr<void> > subscriptions;
 
-			mocks::module_helper module_helper;
 
 			shared_ptr<void> &new_subscription()
 			{	return *subscriptions.insert(subscriptions.end(), shared_ptr<void>());	}
@@ -61,25 +62,23 @@ namespace micro_profiler
 				img1.reset(new image(c_symbol_container_1));
 				img2.reset(new image(c_symbol_container_2));
 				img3.reset(new image(c_symbol_container_3_nosymbols));
-				patch_manager_factory = [&] (mapping_access &/*mapping_access_*/) -> shared_ptr<patch_manager> {
-					pmanager = make_shared<mocks::patch_manager>();
-					client_ready.set();
-					return pmanager;
-				};
+				pmanager.reset(new mocks::patch_manager);
 				factory = [this] (ipc::channel &outbound_) -> ipc::channel_ptr_t {
 					client = make_shared<ipc::client_session>(outbound_);
 					auto p = client.get();
 					client->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
+					client_ready.set();
 					return client;
 				};
 				module_helper.on_load = [] (string path) {	return module::platform().load(path);	};
+				module_tracker.reset(new micro_profiler::module_tracker(module_helper));
 			}
 
 
 			test( PatchActivationIsMadeOnRequest )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
@@ -120,7 +119,7 @@ namespace micro_profiler
 			test( PatchActivationFailuresAreReturned )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				auto aresults1 = plural
@@ -180,7 +179,7 @@ namespace micro_profiler
 			test( PatchRevertIsMadeOnRequest )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				vector<unsigned> ids_log;
@@ -223,7 +222,7 @@ namespace micro_profiler
 			test( PatchRevertFailuresAreReturned )
 			{
 				// INIT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 				shared_ptr<void> rq;
 				unsigned rva1[] = {	100u, 3110u, 3211u,	};
 				auto rresults1 = plural

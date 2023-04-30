@@ -103,6 +103,9 @@ namespace micro_profiler
 			_module_notifier(module_helper.notify(*this))
 	{	}
 
+	module &module_tracker::helper() const
+	{	return _module_helper;	}
+
 	void module_tracker::get_changes(mapping_history_key &key, loaded_modules &mapped_, unloaded_modules &unmapped_) const
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);

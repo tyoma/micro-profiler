@@ -63,6 +63,8 @@ namespace micro_profiler
 	public:
 		module_tracker(module &module_helper);
 
+		module &helper() const;
+
 		void get_changes(mapping_history_key &key, loaded_modules &mapped_, unloaded_modules &unmapped_) const;
 		bool get_module(module_info& info, id_t module_id) const;
 		metadata_ptr get_metadata(id_t module_id) const;

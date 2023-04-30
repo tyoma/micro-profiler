@@ -46,9 +46,10 @@ namespace micro_profiler
 			shared_ptr<ipc::client_session> client;
 			function<void (ipc::client_session &client_)> initialize_client;
 			mocks::tracer collector;
-			mocks::thread_monitor tmonitor;
+			mocks::thread_monitor threads;
 			mocks::module_helper module_helper;
-			collector_app::patch_manager_factory patch_manager_factory;
+			unique_ptr<micro_profiler::module_tracker> module_tracker;
+			unique_ptr<mocks::patch_manager> pmanager;
 			mt::event client_ready;
 			vector< shared_ptr<void> > subscriptions;
 
@@ -57,9 +58,7 @@ namespace micro_profiler
 
 			init( Init )
 			{
-				patch_manager_factory = [&] (mapping_access &/*mapping_access_*/) {
-					return make_shared<mocks::patch_manager>();
-				};
+				pmanager.reset(new mocks::patch_manager);
 				factory = [this] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					client = make_shared<ipc::client_session>(outbound);
 					auto p = client.get();
@@ -70,6 +69,7 @@ namespace micro_profiler
 					return client;
 				};
 				module_helper.on_lock_at = [] (void * /*address*/) {	return nullptr;	};
+				module_tracker.reset(new micro_profiler::module_tracker(module_helper));
 			}
 
 			teardown( Term )
@@ -97,7 +97,7 @@ namespace micro_profiler
 				module_helper.on_get_executable = [&] {	return unique_name;	};
 
 				// ACT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 				app.connect(factory, false);
 				initialized.wait();
 
@@ -124,7 +124,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 				app.connect(factory, true);
 				initialized.wait();
 
@@ -138,7 +138,7 @@ namespace micro_profiler
 				// INIT
 				mt::event stopping;
 				shared_ptr<void> subs;
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory));
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, threads, *module_tracker, *pmanager));
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto &stopping_ = stopping;
@@ -169,11 +169,10 @@ namespace micro_profiler
 				loaded_modules l;
 				unloaded_modules u;
 				shared_ptr<void> req;
-				module_tracker tracker(module_helper);
 				image img1(c_symbol_container_1);
 				image img2(c_symbol_container_2);
 				image img3(c_symbol_container_3_nosymbols);
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -221,7 +220,7 @@ namespace micro_profiler
 				module_helper.emulate_mapped(img2);
 				module_helper.emulate_mapped(img3);
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -272,8 +271,8 @@ namespace micro_profiler
 					flushed = true;
 				};
 
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper,
-					patch_manager_factory));
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, threads, *module_tracker,
+					*pmanager));
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
 					auto client_ = make_shared<ipc::client_session>(outbound);
@@ -320,8 +319,8 @@ namespace micro_profiler
 					trace.clear();
 				};
 
-				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, tmonitor, module_helper,
-					patch_manager_factory));
+				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, threads, *module_tracker,
+					*pmanager));
 				mt::thread t([&] {	app.reset();	}); // TODO: dangerous - app can get destroyed before the next line executes.
 
 				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
@@ -364,7 +363,7 @@ namespace micro_profiler
 						done.set();
 				};
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 
 				app.connect(factory, false);
 
@@ -401,7 +400,7 @@ namespace micro_profiler
 					ready.set();
 				};
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -464,7 +463,7 @@ namespace micro_profiler
 
 				collector.on_read_collected = [&] (calls_collector_i::acceptor &) {	ready.set();	};
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 
 				app.connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
 					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
@@ -511,13 +510,11 @@ namespace micro_profiler
 						a.accept_calls(11710u, trace, 2), ready[1].set();
 				};
 
-				unique_ptr<collector_app> app1(new collector_app(*tracer1, o1, tmonitor, module_helper,
-					patch_manager_factory));
+				unique_ptr<collector_app> app1(new collector_app(*tracer1, o1, threads, *module_tracker, *pmanager));
 				app1->connect(factory, false);
 				client_ready.wait();
 				auto client1 = client;
-				unique_ptr<collector_app> app2(new collector_app(*tracer2, o2, tmonitor, module_helper,
-					patch_manager_factory));
+				unique_ptr<collector_app> app2(new collector_app(*tracer2, o2, threads, *module_tracker, *pmanager));
 				app2->connect(factory, false);
 				client_ready.wait();
 				auto client2 = client;
@@ -562,7 +559,7 @@ namespace micro_profiler
 				module_info_metadata md;
 				image img1(c_symbol_container_1);
 				image img2(c_symbol_container_2);
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
@@ -621,7 +618,7 @@ namespace micro_profiler
 				// INIT
 				shared_ptr<void> req;
 				mt::event ready;
-				vector< pair<unsigned /*thread_id*/, thread_info> > threads;
+				vector< pair<unsigned /*thread_id*/, thread_info> > threads_;
 				thread_info ti[] = {
 					{ 1221, "thread 1", mt::milliseconds(190212), mt::milliseconds(0), mt::milliseconds(1902), false },
 					{ 171717, "thread 2", mt::milliseconds(112), mt::milliseconds(0), mt::milliseconds(2900), false },
@@ -629,18 +626,18 @@ namespace micro_profiler
 				};
 				thread_monitor::thread_id request1[] = { 1, }, request2[] = { 1, 19, 2, };
 
-				tmonitor.add_info(1 /*thread_id*/, ti[0]);
-				tmonitor.add_info(2 /*thread_id*/, ti[1]);
-				tmonitor.add_info(19 /*thread_id*/, ti[2]);
+				threads.add_info(1 /*thread_id*/, ti[0]);
+				threads.add_info(2 /*thread_id*/, ti[1]);
+				threads.add_info(19 /*thread_id*/, ti[2]);
 
-				collector_app app(collector, c_overhead, tmonitor, module_helper, patch_manager_factory);
+				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 
 				app.connect(factory, false);
 				client_ready.wait();
 
 				// ACT
 				client->request(req, request_threads_info, mkvector(request1), response_threads_info, [&] (deserializer &d) {
-					d(threads);
+					d(threads_);
 					ready.set();
 				});
 				ready.wait();
@@ -650,11 +647,11 @@ namespace micro_profiler
 					make_pair(1, ti[0]),
 				};
 
-				assert_equal(reference1, threads);
+				assert_equal(reference1, threads_);
 
 				// ACT
 				client->request(req, request_threads_info, mkvector(request2), response_threads_info, [&] (deserializer &d) {
-					d(threads);
+					d(threads_);
 					ready.set();
 				});
 				ready.wait();
@@ -664,7 +661,7 @@ namespace micro_profiler
 					make_pair(1, ti[0]), make_pair(19, ti[2]), make_pair(2, ti[1]),
 				};
 
-				assert_equal(reference2, threads);
+				assert_equal(reference2, threads_);
 			}
 
 		end_test_suite

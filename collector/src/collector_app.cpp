@@ -39,9 +39,9 @@ using namespace std;
 namespace micro_profiler
 {
 	collector_app::collector_app(calls_collector_i &collector, const overhead &overhead_, thread_monitor &threads,
-			module &module_helper, patch_manager_factory patch_manager_factory_)
+			module_tracker &module_tracker_, patch_manager &patch_manager_)
 		: _collector(collector), _analyzer(new analyzer(overhead_)), _thread_monitor(threads),
-			_module_helper(module_helper), _patch_manager_factory(patch_manager_factory_), _server(*this)
+			_module_tracker(module_tracker_), _patch_manager(patch_manager_), _server(*this)
 	{	}
 
 	collector_app::~collector_app()
@@ -62,9 +62,6 @@ namespace micro_profiler
 
 		const module_tracker::mapping_history_key history_key_zero = {};
 
-		auto module_tracker_ = make_shared<module_tracker>(_module_helper);
-		auto patch_manager = _patch_manager_factory(*module_tracker_);
-
 		// Keep buffer objects to avoid excessive allocations.
 		auto history_key = make_shared<module_tracker::mapping_history_key>(history_key_zero);
 		auto mapped_ = make_shared<loaded_modules>();
@@ -74,8 +71,8 @@ namespace micro_profiler
 		auto threads_buffer = make_shared< vector< pair<thread_monitor::thread_id, thread_info> > >();
 		auto patch_results = make_shared<response_patched_data>();
 
-		session.add_handler(request_update, [this, module_tracker_, history_key, mapped_, unmapped_] (response &resp) {
-			module_tracker_->get_changes(*history_key, *mapped_, *unmapped_);
+		session.add_handler(request_update, [this, history_key, mapped_, unmapped_] (response &resp) {
+			_module_tracker.get_changes(*history_key, *mapped_, *unmapped_);
 			resp(response_modules_loaded, *mapped_);
 			resp(response_statistics_update, *_analyzer);
 			resp(response_modules_unloaded, *unmapped_);
@@ -83,12 +80,12 @@ namespace micro_profiler
 		});
 
 		session.add_handler(request_module_metadata,
-			[module_tracker_, metadata, module_info] (response &resp, unsigned int module_id) {
+			[this, metadata, module_info] (response &resp, unsigned int module_id) {
 
 			auto &md = *metadata;
-			auto metadata_ = module_tracker_->get_metadata(module_id);
+			auto metadata_ = _module_tracker.get_metadata(module_id);
 
-			module_tracker_->get_module(*module_info, module_id); // TODO: check the result.
+			_module_tracker.get_module(*module_info, module_id); // TODO: check the result.
 			md.path = module_info->path;
 			md.hash = module_info->hash;
 			md.symbols.clear();
@@ -110,26 +107,22 @@ namespace micro_profiler
 			resp(response_threads_info, *threads_buffer);
 		});
 
-		session.add_handler(request_apply_patches,
-			[this, module_tracker_, patch_manager, patch_results] (response &resp, const patch_request &payload) {
-
+		session.add_handler(request_apply_patches, [this, patch_results] (response &resp, const patch_request &payload) {
 			patch_results->clear();
-			patch_manager->apply(*patch_results, payload.image_persistent_id, make_range(payload.functions_rva));
+			_patch_manager.apply(*patch_results, payload.image_persistent_id, make_range(payload.functions_rva));
 			resp(response_patched, *patch_results);
 		});
 
-		session.add_handler(request_revert_patches,
-			[this, module_tracker_, patch_manager, patch_results] (response &resp, const patch_request &payload) {
-
+		session.add_handler(request_revert_patches, [this, patch_results] (response &resp, const patch_request &payload) {
 			patch_results->clear();
-			patch_manager->revert(*patch_results, payload.image_persistent_id, make_range(payload.functions_rva));
+			_patch_manager.revert(*patch_results, payload.image_persistent_id, make_range(payload.functions_rva));
 			resp(response_reverted, *patch_results);
 		});
 
 
 		session.message(init, [this] (ipc::serializer &ser) {
 			initialization_data idata = {
-				_module_helper.executable(),
+				_module_tracker.helper().executable(),
 				ticks_per_second(),
 				_injected,
 			};

@@ -147,8 +147,11 @@ namespace micro_profiler
 			mt::thread_callbacks &thread_callbacks, module &module_helper, size_t trace_limit,
 			calls_collector *&collector_ptr)
 		: _logger(create_writer(module_helper), (log::g_logger = &_logger, &get_datetime)),
-			_thread_monitor(make_shared<thread_monitor>(thread_callbacks)), _memory_manager(new default_memory_manager),
-			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks), _auto_connect(true)
+			_memory_manager(new default_memory_manager), _thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
+			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks), _module_tracker(module_helper),
+			_patch_manager([this] (void *target, id_t /*id*/, executable_memory_allocator &allocator) {
+				return unique_ptr<patch>(new function_patch(target, &_collector, allocator));
+			}, _module_tracker, *_memory_manager), _auto_connect(true)
 	{
 		collector_ptr = &_collector;
 
@@ -158,13 +161,7 @@ namespace micro_profiler
 		const auto total_ns = static_cast<int>((oh.inner + oh.outer) * period);
 
 		LOG(PREAMBLE "overhead calibrated...") % A(inner_ns) % A(total_ns);
-		_app.reset(new collector_app(_collector, oh, *_thread_monitor, module_helper, [this] (mapping_access &ma) -> shared_ptr<patch_manager> {
-			auto &c = _collector;
-
-			return make_shared<image_patch_manager>([&c] (void *target, id_t /*id*/, executable_memory_allocator &allocator) {
-				return unique_ptr<patch>(new function_patch(target, &c, allocator));
-			}, ma, *_memory_manager);
-		}));
+		_app.reset(new collector_app(_collector, oh, *_thread_monitor, _module_tracker, _patch_manager));
 		_app->get_queue().schedule([this, auto_frontend_factory] {
 			if (_auto_connect)
 				_app->connect(auto_frontend_factory, false);

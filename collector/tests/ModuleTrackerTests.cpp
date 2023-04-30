@@ -77,7 +77,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				module_tracker::mapping_history_key hk = {};
+				module_tracker::mapping_history_key hk;
 				loaded_modules mapped_;
 				unloaded_modules unmapped_;
 
@@ -97,7 +97,7 @@ namespace micro_profiler
 			{
 				// INIT
 				file_id self(module::platform().locate(&dummy).path);
-				module_tracker::mapping_history_key hk = {};
+				module_tracker::mapping_history_key hk;
 				module_tracker t(module_helper);
 				loaded_modules mapped_;
 				unloaded_modules unmapped_;
@@ -117,7 +117,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				module_tracker::mapping_history_key hk = {};
+				module_tracker::mapping_history_key hk;
 				loaded_modules mapped_;
 				unloaded_modules unmapped_;
 
@@ -146,7 +146,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				module_tracker::mapping_history_key hk = {};
+				module_tracker::mapping_history_key hk;
 				loaded_modules l;
 				unloaded_modules u;
 				image img4(c_symbol_container_3_nosymbols);
@@ -170,7 +170,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				module_tracker::mapping_history_key hk = {};
+				module_tracker::mapping_history_key hk;
 				loaded_modules l;
 				unloaded_modules u;
 				module::mapping synthetic_mappings[] = {
@@ -214,7 +214,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				module_tracker::mapping_history_key hk = {};
+				module_tracker::mapping_history_key hk;
 				loaded_modules l;
 				unloaded_modules u;
 				module_tracker::module_info infos[3];
@@ -248,7 +248,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				module_tracker::mapping_history_key hk = {};
+				module_tracker::mapping_history_key hk;
 				loaded_modules l;
 				unloaded_modules u;
 
@@ -298,7 +298,7 @@ namespace micro_profiler
 			{
 				// INIT
 				module_tracker t(module_helper);
-				module_tracker::mapping_history_key hk = {};
+				module_tracker::mapping_history_key hk;
 				loaded_modules l;
 				unloaded_modules u;
 

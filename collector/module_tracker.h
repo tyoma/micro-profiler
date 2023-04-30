@@ -48,6 +48,8 @@ namespace micro_profiler
 
 		struct mapping_history_key
 		{
+			mapping_history_key();
+
 			id_t last_mapping_id;
 			id_t last_unmapped_id;
 		};

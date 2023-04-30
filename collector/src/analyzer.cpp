@@ -48,7 +48,7 @@ namespace micro_profiler
 
 	void analyzer::clear() throw()
 	{
-		for (thread_analyzers::iterator i = _thread_analyzers.begin(); i != _thread_analyzers.end(); ++i)
+		for (auto i = _thread_analyzers.begin(); i != _thread_analyzers.end(); ++i)
 			i->second.clear();
 	}
 
@@ -63,7 +63,7 @@ namespace micro_profiler
 
 	bool analyzer::has_data() const throw()
 	{
-		for (thread_analyzers::const_iterator i = _thread_analyzers.begin(); i != _thread_analyzers.end(); ++i)
+		for (auto i = _thread_analyzers.begin(); i != _thread_analyzers.end(); ++i)
 		{
 			if (i->second.size())
 				return true;
@@ -73,7 +73,7 @@ namespace micro_profiler
 
 	void analyzer::accept_calls(unsigned int threadid, const call_record *calls, size_t count)
 	{
-		thread_analyzers::iterator i = _thread_analyzers.find(threadid);
+		auto i = _thread_analyzers.find(threadid);
 
 		if (i == _thread_analyzers.end())
 			i = _thread_analyzers.insert(std::make_pair(threadid, thread_analyzer(_overhead))).first;

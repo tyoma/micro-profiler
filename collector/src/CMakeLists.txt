@@ -79,7 +79,6 @@ target_link_libraries(${micro-profiler} collector patcher ipc common logger sche
 target_link_options(${micro-profiler} PRIVATE "-DEF:${CMAKE_CURRENT_SOURCE_DIR}/collector.def;-IMPLIB:${MP_OUTDIR}/${micro-profiler}.lib")
 
 set_source_files_properties(${CALIBRATION_SOURCES} PROPERTIES
-	COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:-Ob0;-GH;-Gh;-GL->"
 	COMPILE_OPTIONS "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-inline;-finstrument-functions>"
 )
 
@@ -88,6 +87,8 @@ set_source_files_properties(calls_collector.cpp calls_collector_thread.cpp PROPE
 )
 
 if(MSVC)
+	set_property(SOURCE ${CALIBRATION_SOURCES} APPEND_STRING PROPERTY COMPILE_FLAGS " -Ob0 -GH -Gh /GL- ")
+
 	add_library(micro-profiler SHARED IMPORTED GLOBAL)
 	add_dependencies(micro-profiler ${micro-profiler})
 	set_target_properties(micro-profiler PROPERTIES IMPORTED_IMPLIB ${micro-profiler}.lib)

@@ -60,10 +60,8 @@ namespace micro_profiler
 	{
 		typedef ipc::server_session::response response;
 
-		const module_tracker::mapping_history_key history_key_zero = {};
-
 		// Keep buffer objects to avoid excessive allocations.
-		auto history_key = make_shared<module_tracker::mapping_history_key>(history_key_zero);
+		auto history_key = make_shared<module_tracker::mapping_history_key>();
 		auto mapped_ = make_shared<loaded_modules>();
 		auto unmapped_ = make_shared<unloaded_modules>();
 		auto metadata = make_shared<module_info_metadata>();

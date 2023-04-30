@@ -82,6 +82,11 @@ namespace micro_profiler
 	}
 
 
+	module_tracker::mapping_history_key::mapping_history_key()
+		: last_mapping_id(0), last_unmapped_id(0)
+	{	}
+
+
 	uint32_t module_tracker::calculate_hash(const string &path_)
 	{
 		enum {	n = 1024	};

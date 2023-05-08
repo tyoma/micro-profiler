@@ -93,6 +93,7 @@ namespace micro_profiler
 
 			init( Init )
 			{
+				results.resize(3);
 				mappings.on_lock_mapping = [] (id_t /*mapping_id*/) -> mapping_ptr {	return nullptr;	};
 			}
 
@@ -203,7 +204,7 @@ namespace micro_profiler
 			test( AppliedPatchesAreListedWhenQueried )
 			{
 				// INIT
-				patch_manager::patch_states states;
+				patch_manager::patch_states states(7);
 				image_patch_manager_overriden pm([&] (void *t, id_t, executable_memory_allocator &) -> patch_ptr {
 					return patch_ptr(new mocks::patch([] (void*, int) {}, t));
 				}, mappings, memory_manager_);
@@ -231,9 +232,6 @@ namespace micro_profiler
 					+ make_patch_state(0x100210, patch_state::active, 2)
 					+ make_patch_state(0x9910, patch_state::active, 3)
 					+ make_patch_state(0x20010, patch_state::active, 6), states, less());
-
-				// INIT
-				states.clear();
 
 				// ACT
 				pm.query(states, 17);
@@ -285,7 +283,7 @@ namespace micro_profiler
 			{
 				// INIT
 				patch_manager::patch_states states;
-				patch_manager::patch_change_results results2;
+				patch_manager::patch_change_results results2(4);
 				image_patch_manager_overriden pm([&] (void *, id_t, executable_memory_allocator &) -> patch_ptr {
 
 					// ASSERT
@@ -300,7 +298,7 @@ namespace micro_profiler
 					return nullptr;
 				};
 				pm.apply(results, 13u, mkrange(functions1));
-				results.clear();
+				results.resize(1);
 
 				// ACT
 				pm.revert(results, 13u, mkrange(functions2));
@@ -951,6 +949,77 @@ namespace micro_profiler
 					+ make_pair((void*)(0xC0000000 + 0x20001), 3)
 					+ make_pair((void*)(0xC0000000 + 0x30002), 3), targets);
 			}
+
+
+			test( RepeatedApplyDoesNothingAndReturnsNoChange )
+			{
+				// INIT
+				vector< pair<void *, int /*act*/> > targets;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x20001, 0x30002,	};
+				unsigned functions2[] = {	0x20001, 0x10002, 0x30002,	};
+
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x10000000, ""));
+				pm->apply(results, 1u, mkrange(functions1));
+				targets.clear();
+				results.clear();
+
+				// ACT
+				pm->apply(results, 1u, mkrange(functions2));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10000000 + 0x10002), 0)
+					+ make_pair((void*)(0x10000000 + 0x10002), 1), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x20001, patch_change_result::unchanged, 1)
+					+ make_patch_apply(0x10002, patch_change_result::ok, 3)
+					+ make_patch_apply(0x30002, patch_change_result::unchanged, 2), results);
+			}
+
+
+			test( RepeatedRevertDoesNothingAndReturnsNoChange )
+			{
+				// INIT
+				vector< pair<void *, int /*act*/> > targets;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x20001, 0x10002, 0x30002,	};
+				unsigned functions2[] = {	0x20001, 0x10002,	};
+
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x10000000, ""));
+				pm->apply(results, 1u, mkrange(functions1));
+				pm->revert(results, 1u, mkrange(functions2));
+				targets.clear();
+				results.clear();
+
+				// ACT
+				pm->revert(results, 1u, mkrange(functions1));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10000000 + 0x30002), 2), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x20001, patch_change_result::unchanged, 1)
+					+ make_patch_apply(0x10002, patch_change_result::unchanged, 2)
+					+ make_patch_apply(0x30002, patch_change_result::ok, 3), results);
+			}
 		end_test_suite
 	}
 }
+

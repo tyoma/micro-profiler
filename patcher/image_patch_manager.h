@@ -62,7 +62,7 @@ namespace micro_profiler
 			id_t module_id;
 			unsigned int rva;
 			bool active;
-			std::shared_ptr<patch> patch_; // TODO: fix savant_db to support unique_ptr here.
+			std::shared_ptr<micro_profiler::patch> patch; // TODO: fix savant_db to support unique_ptr here.
 		};
 
 	private:

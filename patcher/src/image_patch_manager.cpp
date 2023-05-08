@@ -95,8 +95,8 @@ namespace micro_profiler
 		for (auto m = _mappings.begin(); m != _mappings.end(); ++m)
 			if (const auto locked = lock_module(m->module_id))
 				for (auto r = patch_idx.equal_range(m->module_id); r.first != r.second; r.first++)
-					if (r.first->patch_ && r.first->active)
-						r.first->patch_->revert();
+					if (r.first->patch && r.first->active)
+						r.first->patch->revert();
 	}
 
 	shared_ptr<image_patch_manager::mapping> image_patch_manager::lock_module(id_t module_id)
@@ -125,10 +125,12 @@ namespace micro_profiler
 		mt::lock_guard<mt::mutex> l(_mtx);
 		auto range = sdb::multi_index(_patches, module_keyer()).equal_range(module_id);
 
+		states.clear();
+		states.reserve(distance(range.first, range.second));
 		for (auto i = range.first; i != range.second; ++i)
 		{
 			patch_state state = {
-				i->id, i->rva, i->active ? i->patch_ ? patch_state::active : patch_state::pending : patch_state::dormant,
+				i->id, i->rva, i->active ? i->patch ? patch_state::active : patch_state::pending : patch_state::dormant,
 			};
 
 			states.push_back(state);
@@ -137,6 +139,7 @@ namespace micro_profiler
 
 	void image_patch_manager::apply(patch_change_results &results, id_t module_id, request_range targets)
 	{
+		results.clear();
 		results.reserve(targets.length());
 
 		auto locked = lock_module(module_id);
@@ -149,14 +152,23 @@ namespace micro_profiler
 			auto &p = *patch_record;
 			patch_change_result result = {	p.id, p.rva, patch_change_result::error,	};
 
-			if (locked)
+			if (patch_record.is_new())
+				p.active = false;
+			if (!p.active)
 			{
-				if (!p.patch_)
-					p.patch_ = move(_patch_factory(locked->base + *i, p.id, *locked->allocator));
-				p.patch_->activate();
+				if (locked)
+				{
+					if (!p.patch)
+						p.patch = move(_patch_factory(locked->base + *i, p.id, *locked->allocator));
+					p.patch->activate();
+				}
+				p.active = true;
+				result.result = patch_change_result::ok;
 			}
-			p.active = true;
-			result.result = patch_change_result::ok;
+			else
+			{
+				result.result = patch_change_result::unchanged;
+			}
 			patch_record.commit();
 			results.push_back(result);
 		}
@@ -164,6 +176,7 @@ namespace micro_profiler
 
 	void image_patch_manager::revert(patch_change_results &results, id_t module_id, request_range targets)
 	{
+		results.clear();
 		results.reserve(targets.length());
 
 		auto locked = lock_module(module_id);
@@ -180,11 +193,18 @@ namespace micro_profiler
 				auto patch_record = patch_idx[key];
 				auto &p = *patch_record;
 
-				if (p.patch_ && locked)
-					p.patch_->revert();
-				p.active = false;
 				result.id = p.id;
-				result.result = patch_change_result::ok;
+				if (p.active)
+				{
+					if (p.patch && locked)
+						p.patch->revert();
+					p.active = false;
+					result.result = patch_change_result::ok;
+				}
+				else
+				{
+					result.result = patch_change_result::unchanged;
+				}
 				patch_record.commit();
 			}
 			results.push_back(result);
@@ -209,8 +229,8 @@ namespace micro_profiler
 
 			if (p.active)
 			{
-				p.patch_ = move(_patch_factory(mapping.base + p.rva, p.id, *allocator));
-				p.patch_->activate();
+				p.patch = move(_patch_factory(mapping.base + p.rva, p.id, *allocator));
+				p.patch->activate();
 			}
 			patch_record.commit();
 		}
@@ -227,7 +247,7 @@ namespace micro_profiler
 		{
 			auto patch_record = patch_idx[make_tuple(module_id, r.first->rva)];
 
-			(*patch_record).patch_.reset();
+			(*patch_record).patch.reset();
 			patch_record.commit();
 		}
 		mapping_record.remove();

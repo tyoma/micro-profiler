@@ -132,7 +132,7 @@ namespace micro_profiler
 					+ mkpatch_change(rva2[1], patch_change_result::ok, 100)
 					+ mkpatch_change(rva2[2], patch_change_result::unchanged, 1901)
 					+ mkpatch_change(rva2[3], patch_change_result::ok, 100000)
-					+ mkpatch_change(rva2[4], patch_change_result::error, 0);
+					+ mkpatch_change(rva2[4], patch_change_result::unrecoverable_error, 0);
 				vector<patch_change_results> log;
 				mt::event ready;
 
@@ -228,13 +228,13 @@ namespace micro_profiler
 				auto rresults1 = plural
 					+ mkpatch_change(rva1[0], patch_change_result::ok, 1)
 					+ mkpatch_change(rva1[1], patch_change_result::unchanged, 2)
-					+ mkpatch_change(rva1[2], patch_change_result::error, 3);
+					+ mkpatch_change(rva1[2], patch_change_result::unrecoverable_error, 3);
 				unsigned rva2[] = {	1001u, 310u, 3211u, 1000001u, 13u,	};
 				auto rresults2 = plural
 					+ mkpatch_change(rva2[0], patch_change_result::ok, 4)
 					+ mkpatch_change(rva2[1], patch_change_result::unchanged, 5)
 					+ mkpatch_change(rva2[2], patch_change_result::ok, 6)
-					+ mkpatch_change(rva2[3], patch_change_result::error, 7)
+					+ mkpatch_change(rva2[3], patch_change_result::unrecoverable_error, 7)
 					+ mkpatch_change(rva2[4], patch_change_result::ok, 8);
 				vector<patch_change_results> log;
 				mt::event ready;

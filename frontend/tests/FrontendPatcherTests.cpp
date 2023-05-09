@@ -169,8 +169,8 @@ namespace micro_profiler
 								+ mkpatch_change(1, patch_change_result::ok, 1)
 
 								// Failed...
-								+ mkpatch_change(3, patch_change_result::error, 2)
-								+ mkpatch_change(2, patch_change_result::error, 3));
+								+ mkpatch_change(3, patch_change_result::unrecoverable_error, 2)
+								+ mkpatch_change(2, patch_change_result::unrecoverable_error, 3));
 						});
 						break;
 
@@ -183,9 +183,9 @@ namespace micro_profiler
 								+ mkpatch_change(100, patch_change_result::ok, 13)
 
 								// Failed...
-								+ mkpatch_change(7, patch_change_result::error, 14)
-								+ mkpatch_change(4, patch_change_result::error, 15)
-								+ mkpatch_change(5, patch_change_result::error, 16));
+								+ mkpatch_change(7, patch_change_result::unrecoverable_error, 14)
+								+ mkpatch_change(4, patch_change_result::unrecoverable_error, 15)
+								+ mkpatch_change(5, patch_change_result::unrecoverable_error, 16));
 						});
 						break;
 					}
@@ -242,14 +242,14 @@ namespace micro_profiler
 					{
 					case 19:
 						resp(response_patched, plural
-							+ mkpatch_change(3, patch_change_result::error, 0)
-							+ mkpatch_change(2, patch_change_result::error, 0));
+							+ mkpatch_change(3, patch_change_result::unrecoverable_error, 0)
+							+ mkpatch_change(2, patch_change_result::unrecoverable_error, 0));
 						break;
 
 					case 20:
 						resp(response_patched, plural
-							+ mkpatch_change(2, patch_change_result::error, 0)
-							+ mkpatch_change(5, patch_change_result::error, 0));
+							+ mkpatch_change(2, patch_change_result::unrecoverable_error, 0)
+							+ mkpatch_change(5, patch_change_result::unrecoverable_error, 0));
 						break;
 					}
 				});
@@ -294,13 +294,13 @@ namespace micro_profiler
 				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_request &/*payload*/) {
 					resp(response_patched, plural
 						+ mkpatch_change(1, patch_change_result::ok, 1)
-						+ mkpatch_change(2, patch_change_result::error, 0)
+						+ mkpatch_change(2, patch_change_result::unrecoverable_error, 0)
 						+ mkpatch_change(3, patch_change_result::ok, 2));
 					resp.defer([] (ipc::server_session::response &resp) {
 						resp(response_patched, plural
-							+ mkpatch_change(1, patch_change_result::error, 0)
+							+ mkpatch_change(1, patch_change_result::unrecoverable_error, 0)
 							+ mkpatch_change(2, patch_change_result::ok, 1)
-							+ mkpatch_change(3, patch_change_result::error, 0));
+							+ mkpatch_change(3, patch_change_result::unrecoverable_error, 0));
 					});
 				});
 
@@ -332,9 +332,9 @@ namespace micro_profiler
 
 					resp.defer([] (ipc::server_session::response &resp) {
 						resp(response_patched, plural
-							+ mkpatch_change(1, patch_change_result::error, 0)
+							+ mkpatch_change(1, patch_change_result::unrecoverable_error, 0)
 							+ mkpatch_change(2, patch_change_result::ok, 1)
-							+ mkpatch_change(3, patch_change_result::error, 3));
+							+ mkpatch_change(3, patch_change_result::unrecoverable_error, 3));
 					});
 				});
 
@@ -487,8 +487,8 @@ namespace micro_profiler
 								+ mkpatch_change(1, patch_change_result::ok)
 
 								// Failed...
-								+ mkpatch_change(3, patch_change_result::error)
-								+ mkpatch_change(2, patch_change_result::error));
+								+ mkpatch_change(3, patch_change_result::unrecoverable_error)
+								+ mkpatch_change(2, patch_change_result::unrecoverable_error));
 						});
 						break;
 
@@ -501,9 +501,9 @@ namespace micro_profiler
 								+ mkpatch_change(100, patch_change_result::ok)
 								
 								// Failed...
-								+ mkpatch_change(7, patch_change_result::error)
-								+ mkpatch_change(4, patch_change_result::error)
-								+ mkpatch_change(5, patch_change_result::error));
+								+ mkpatch_change(7, patch_change_result::unrecoverable_error)
+								+ mkpatch_change(4, patch_change_result::unrecoverable_error)
+								+ mkpatch_change(5, patch_change_result::unrecoverable_error));
 						});
 						break;
 					}
@@ -564,7 +564,7 @@ namespace micro_profiler
 				vector<patch_request> log;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
-				apply_results[100] = patch_change_result::error;
+				apply_results[100] = patch_change_result::unrecoverable_error;
 				patches->apply(99, mkrange(rva0));
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
@@ -620,7 +620,7 @@ namespace micro_profiler
 				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &resp, const patch_request &) {
 					resp(response_reverted, plural + mkpatch_change(1, patch_change_result::ok));
 					resp.defer([] (ipc::server_session::response &resp) {
-						resp(response_reverted, plural + mkpatch_change(1, patch_change_result::error));
+						resp(response_reverted, plural + mkpatch_change(1, patch_change_result::unrecoverable_error));
 					});
 				});
 
@@ -655,9 +655,9 @@ namespace micro_profiler
 
 					resp.defer([] (ipc::server_session::response &resp) {
 						resp(response_reverted, plural
-							+ mkpatch_change(1, patch_change_result::error)
+							+ mkpatch_change(1, patch_change_result::unrecoverable_error)
 							+ mkpatch_change(2, patch_change_result::ok)
-							+ mkpatch_change(3, patch_change_result::error));
+							+ mkpatch_change(3, patch_change_result::unrecoverable_error));
 					});
 				});
 

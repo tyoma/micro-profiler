@@ -58,11 +58,14 @@ namespace micro_profiler
 
 		struct patch_record
 		{
+			patch_record();
+			patch_record(patch_record &&from);
+
 			id_t id;
 			id_t module_id;
 			unsigned int rva;
-			bool active;
-			std::shared_ptr<micro_profiler::patch> patch; // TODO: fix savant_db to support unique_ptr here.
+			enum {	dormant, active, unrecoverable_error, activation_error,	} state;
+			std::unique_ptr<micro_profiler::patch> patch;
 		};
 
 	private:
@@ -76,7 +79,6 @@ namespace micro_profiler
 		mt::mutex _mtx;
 		sdb::table< patch_record, auto_increment_constructor<patch_record> > _patches;
 		sdb::table<mapping_record> _mappings;
-		id_t _next_id;
 
 		std::shared_ptr<void> _mapping_subscription;
 	};
@@ -89,4 +91,14 @@ namespace micro_profiler
 
 		std::shared_ptr<executable_memory_allocator> allocator;
 	};
+
+
+
+	inline image_patch_manager::patch_record::patch_record()
+		: state(dormant)
+	{	}
+
+	inline image_patch_manager::patch_record::patch_record(patch_record &&from)
+		: id(from.id), module_id(from.module_id), rva(from.rva), state(from.state), patch(std::move(from.patch))
+	{	}
 }

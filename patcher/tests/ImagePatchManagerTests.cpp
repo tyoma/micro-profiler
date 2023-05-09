@@ -174,7 +174,6 @@ namespace micro_profiler
 
 				targets.clear();
 				targets2.clear();
-				results.clear();
 				pm.on_lock_module = [&] (id_t module_id) -> mapping_ptr {
 					assert_equal(1u, module_id);
 					auto m = make_shared_copy(make_mapping((void*)0x1000, ""));
@@ -343,7 +342,6 @@ namespace micro_profiler
 					return make_shared_copy(make_mapping((void*)0x10000000, ""));
 				};
 				pm->apply(results, 13u, mkrange(functions1));
-				results.clear();
 				targets.clear();
 				pm->on_lock_module = [&] (id_t /*module_id*/) -> mapping_ptr {
 					return nullptr;
@@ -413,7 +411,6 @@ namespace micro_profiler
 				unsigned functions2[] = {	0x10001, 0x10003,	};
 
 				targets.clear();
-				results.clear();
 
 				// ACT
 				pm->revert(results, 1u, mkrange(functions2));
@@ -428,13 +425,11 @@ namespace micro_profiler
 
 				// INIT
 				targets.clear();
-				results.clear();
 
 				// INIT
 				unsigned functions3[] = {	0x10003,	};
 
 				targets.clear();
-				results.clear();
 
 				// ACT
 				pm->apply(results, 1u, mkrange(functions3));
@@ -970,7 +965,6 @@ namespace micro_profiler
 				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x10000000, ""));
 				pm->apply(results, 1u, mkrange(functions1));
 				targets.clear();
-				results.clear();
 
 				// ACT
 				pm->apply(results, 1u, mkrange(functions2));
@@ -1006,7 +1000,6 @@ namespace micro_profiler
 				pm->apply(results, 1u, mkrange(functions1));
 				pm->revert(results, 1u, mkrange(functions2));
 				targets.clear();
-				results.clear();
 
 				// ACT
 				pm->revert(results, 1u, mkrange(functions1));
@@ -1018,6 +1011,85 @@ namespace micro_profiler
 					+ make_patch_apply(0x20001, patch_change_result::unchanged, 1)
 					+ make_patch_apply(0x10002, patch_change_result::unchanged, 2)
 					+ make_patch_apply(0x30002, patch_change_result::ok, 3), results);
+			}
+
+
+			test( ExceptionAtPatchConstructionIsConsideredIrrecoverable )
+			{
+				// INIT
+				vector< pair<void *, int /*act*/> > targets;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						if (target == (void*)(0x10000000 + 0x10002))
+							throw exception();
+						targets.push_back(make_pair(target, act));
+					}, target));
+				}, mappings, memory_manager_);
+				unsigned functions[] = {	0x20001, 0x10002, 0x30002,	};
+
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x10000000, ""));
+
+				// ACT
+				pm->apply(results, 1u, mkrange(functions));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10000000 + 0x20001), 0)
+					+ make_pair((void*)(0x10000000 + 0x30002), 0)
+					+ make_pair((void*)(0x10000000 + 0x20001), 1)
+					+ make_pair((void*)(0x10000000 + 0x30002), 1), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x20001, patch_change_result::ok, 1)
+					+ make_patch_apply(0x10002, patch_change_result::unrecoverable_error, 2)
+					+ make_patch_apply(0x30002, patch_change_result::ok, 3), results);
+			}
+
+
+			test( NoPatchConstructionIsAttemptedAfterUnrecoverableError )
+			{
+				// INIT
+				vector< pair<void *, int /*act*/> > targets;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+						throw exception();
+					}, target));
+				}, mappings, memory_manager_);
+				unsigned functions1[] = {	0x20001, 0x10002,	};
+				unsigned functions2[] = {	0x10002, 0x20001, 0x30002,	};
+
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x10000000, ""));
+				pm->apply(results, 1u, mkrange(functions1));
+				targets.clear();
+
+				// ACT
+				pm->apply(results, 1u, mkrange(functions2));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10000000 + 0x30002), 0), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10002, patch_change_result::unrecoverable_error, 2)
+					+ make_patch_apply(0x20001, patch_change_result::unrecoverable_error, 1)
+					+ make_patch_apply(0x30002, patch_change_result::unrecoverable_error, 3), results);
+
+				// INIT
+				targets.clear();
+
+				// ACT
+				mappings.subscription->unmapped(100);
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x23000000, ""));
+
+				// ASSERT
+				assert_is_empty(targets);
 			}
 		end_test_suite
 	}

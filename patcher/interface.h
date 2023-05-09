@@ -32,13 +32,14 @@ namespace micro_profiler
 			pending,	// Will be applied when module is mapped;
 			active,	// Patch is applied;
 			dormant,	// Patch was once requested, but is now reverted and not required on load;
-			errored,	// Patch was once requested, but failed to apply. Sticks forever.
+			unrecoverable_error,	// Patch was once requested, but failed to apply. Sticks forever;
+			activation_error, // Patch activation failed, can be retried later.
 		} state;
 	};
 
 	struct patch_change_result
 	{
-		enum errors {	ok, error, unchanged,	};
+		enum errors {	ok, unchanged, unrecoverable_error, activation_error,	};
 
 		id_t id; // Identifier assigned or existed before for a pending patch.
 		unsigned int rva;

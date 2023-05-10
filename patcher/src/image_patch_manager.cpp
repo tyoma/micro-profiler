@@ -114,13 +114,12 @@ namespace micro_profiler
 			return pm ? match = *pm, true : false;
 		};
 
-		if (find_mapping(m))
-			if (const auto l = _mapping_access.lock_mapping(m.mapping_id))
-			{
-				auto c = make_shared_copy(make_tuple(mapping(*l, m.allocator), l, protect(_memory_manager, l->regions)));
+		if (const auto l = find_mapping(m) ? _mapping_access.lock_mapping(m.mapping_id) : nullptr)
+		{
+			auto c = make_shared_copy(make_tuple(mapping(*l, m.allocator), l, protect(_memory_manager, l->regions)));
 
-				return make_shared_aspect(c, &get<0>(*c));
-			}
+			return make_shared_aspect(c, &get<0>(*c));
+		}
 		return nullptr;
 	}
 
@@ -171,12 +170,15 @@ namespace micro_profiler
 					result.result = patch_change_result::unrecoverable_error;
 					if (!p.patch && locked)
 						p.patch = move(_patch_factory(locked->base + *i, p.id, *locked->allocator));
+					p.state = patch_record::activation_error;
+					result.result = patch_change_result::activation_error;
 
-//				case patch_record::activation_error:
-//					p.state = patch_record::activation_error;
-//					result.result = patch_change_result::activation_error;
-					if (p.patch) // TODO: check 'locked' as well.
-						p.patch->activate();
+				case patch_record::activation_error:
+					if (p.patch)
+						if (locked) // TODO: check 'locked' as well.
+							p.patch->activate();
+						else
+							break;
 					p.state = patch_record::active;
 					result.result = patch_change_result::ok;
 					break;

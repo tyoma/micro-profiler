@@ -1091,6 +1091,95 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(targets);
 			}
+
+
+			test( PatchCanSuccessfullyBeReactivatedIfPreviousActivationFailed )
+			{
+				// INIT
+				void *failing_target = nullptr;
+				vector< pair<void *, int /*act*/> > targets;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						if (act == 1 && failing_target == target)
+							throw exception();
+						targets.push_back(make_pair(target, act));
+					}, target));
+				}, mappings, memory_manager_);
+				unsigned functions[] = {	0x10002, 0x20001, 0x30002,	};
+
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x10000000, ""));
+
+				// ACT
+				failing_target = (void *)(0x10000000 + 0x20001);
+				pm->apply(results, 1u, mkrange(functions));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10000000 + 0x10002), 0)
+					+ make_pair((void*)(0x10000000 + 0x20001), 0)
+					+ make_pair((void*)(0x10000000 + 0x30002), 0)
+					+ make_pair((void*)(0x10000000 + 0x10002), 1)
+					+ make_pair((void*)(0x10000000 + 0x30002), 1), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10002, patch_change_result::ok, 1)
+					+ make_patch_apply(0x20001, patch_change_result::activation_error, 2)
+					+ make_patch_apply(0x30002, patch_change_result::ok, 3), results);
+
+				// INIT
+				targets.clear();
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+
+				// ACT
+				failing_target = nullptr;
+				pm->apply(results, 1u, mkrange(functions));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x10000000 + 0x20001), 1), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10002, patch_change_result::unchanged, 1)
+					+ make_patch_apply(0x20001, patch_change_result::ok, 2)
+					+ make_patch_apply(0x30002, patch_change_result::unchanged, 3), results);
+			}
+
+
+			test( PatchIsNotActivatedIfLockingFailed )
+			{
+				// INIT
+				vector< pair<void *, int /*act*/> > targets;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
+						targets.push_back(make_pair(target, act));
+					}, target));
+				}, mappings, memory_manager_);
+				unsigned functions[] = {	0x10002, 0x20001, 0x30002,	};
+
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x10000000, ""));
+				pm->apply(results, 1u, mkrange(functions));
+				pm->revert(results, 1u, mkrange(functions));
+				targets.clear();
+				mappings.on_lock_mapping = [&] (id_t) {	return shared_ptr<module::mapping>();	};
+
+				// ACT
+				pm->apply(results, 1u, mkrange(functions));
+
+				// ASSERT
+				assert_is_empty(targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10002, patch_change_result::activation_error, 1)
+					+ make_patch_apply(0x20001, patch_change_result::activation_error, 2)
+					+ make_patch_apply(0x30002, patch_change_result::activation_error, 3), results);
+			}
 		end_test_suite
 	}
 }

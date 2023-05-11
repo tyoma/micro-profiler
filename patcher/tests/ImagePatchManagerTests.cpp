@@ -463,7 +463,6 @@ namespace micro_profiler
 				// INIT
 				vector< pair<id_t, executable_memory_allocator *> > targets_ex;
 				vector< pair<void *, int /*act*/> > targets;
-				size_t expected_protections = 0u;
 				auto pm = make_shared<image_patch_manager_overriden>([&] (void *target, id_t id, executable_memory_allocator &e) {
 					return targets_ex.push_back(make_pair(id, &e)), unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
 						targets.push_back(make_pair(target, act));
@@ -483,7 +482,6 @@ namespace micro_profiler
 				};
 
 				// ACT
-				expected_protections = 3u;
 				mappings.subscription->mapped(1u, 171u, make_mapping((void*)0x1010F000, "", plural
 					+ make_mapped_region((byte*)0x19010000, 100, protection::read)
 					+ make_mapped_region((byte*)0x11010000, 300, protection::read | protection::execute)
@@ -510,7 +508,6 @@ namespace micro_profiler
 				targets_ex.clear();
 
 				// ACT
-				expected_protections = 1u;
 				mappings.subscription->mapped(100u, 175u, make_mapping((void*)0x100000, "", plural
 					+ make_mapped_region((byte*)0x19010000, 100, protection::read)
 					+ make_mapped_region((byte*)0x11010000, 300, protection::read | protection::execute)));
@@ -1018,6 +1015,7 @@ namespace micro_profiler
 			{
 				// INIT
 				vector< pair<void *, int /*act*/> > targets;
+				patch_manager::patch_states states;
 				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
 					return unique_ptr<patch>(new mocks::patch([&] (void *target, int act) {
 						if (target == (void*)(0x10000000 + 0x10002))
@@ -1046,6 +1044,27 @@ namespace micro_profiler
 					+ make_patch_apply(0x20001, patch_change_result::ok, 1)
 					+ make_patch_apply(0x10002, patch_change_result::unrecoverable_error, 2)
 					+ make_patch_apply(0x30002, patch_change_result::ok, 3), results);
+
+				// ACT
+				pm->query(states, 1);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_patch_state(0x20001, patch_state::active, 1)
+					+ make_patch_state(0x10002, patch_state::unrecoverable_error, 2)
+					+ make_patch_state(0x30002, patch_state::active, 3), states, less());
+
+				// ACT
+				mappings.subscription->unmapped(100u);
+
+				// ACT
+				pm->query(states, 1);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_patch_state(0x20001, patch_state::pending, 1)
+					+ make_patch_state(0x10002, patch_state::unrecoverable_error, 2)
+					+ make_patch_state(0x30002, patch_state::pending, 3), states, less());
 			}
 
 
@@ -1146,6 +1165,113 @@ namespace micro_profiler
 					+ make_patch_apply(0x10002, patch_change_result::unchanged, 1)
 					+ make_patch_apply(0x20001, patch_change_result::ok, 2)
 					+ make_patch_apply(0x30002, patch_change_result::unchanged, 3), results);
+			}
+
+
+			test( PatchIsSuccessfullyRecreatedOnRemap )
+			{
+				// INIT
+				void *construction_failure_target = nullptr;
+				void *activation_failure_target = nullptr;
+				vector< pair<void *, int /*act*/> > targets;
+				patch_manager::patch_states states;
+				auto pm = make_shared<image_patch_manager>([&] (void *target, id_t, executable_memory_allocator &) {
+					return unique_ptr<patch>(new mocks::patch([&] (void *tgt, int act) {
+						if ((act == 0 && construction_failure_target==tgt) || (act == 1 && activation_failure_target==tgt))
+							throw exception();
+						targets.push_back(make_pair(tgt, act));
+					}, target));
+				}, mappings, memory_manager_);
+				unsigned functions[] = {	0x10002, 0x20001, 0x30002,	};
+
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x10000000, ""));
+				};
+
+				mappings.subscription->mapped(1u, 100u, make_mapping((void *)0x10000000, ""));
+				activation_failure_target = (void *)(0x10000000 + 0x20001);
+				pm->apply(results, 1u, mkrange(functions));
+
+				// ACT
+				mappings.subscription->unmapped(100u);
+				pm->query(states, 1u);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_patch_state(0x10002, patch_state::pending, 1)
+					+ make_patch_state(0x20001, patch_state::pending, 2)
+					+ make_patch_state(0x30002, patch_state::pending, 3), states, less());
+
+				// INIT
+				mappings.on_lock_mapping = [&] (id_t) {
+					return make_shared_copy(make_mapping((void*)0x20000000, ""));
+				};
+				targets.clear();
+
+				// ACT
+				activation_failure_target = (void *)(0x20000000 + 0x30002);
+				mappings.subscription->mapped(1u, 101u, make_mapping((void *)0x20000000, ""));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x20000000 + 0x10002), 0)
+					+ make_pair((void*)(0x20000000 + 0x20001), 0)
+					+ make_pair((void*)(0x20000000 + 0x30002), 0)
+					+ make_pair((void*)(0x20000000 + 0x10002), 1)
+					+ make_pair((void*)(0x20000000 + 0x20001), 1), targets);
+
+				// ACT
+				pm->query(states, 1u);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_patch_state(0x10002, patch_state::active, 1)
+					+ make_patch_state(0x20001, patch_state::active, 2)
+					+ make_patch_state(0x30002, patch_state::activation_error, 3), states, less());
+
+				// INIT
+				targets.clear();
+
+				// ACT
+				activation_failure_target = nullptr;
+				pm->apply(results, 1u, mkrange(functions));
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x20000000 + 0x30002), 1), targets);
+				assert_equal(plural
+					+ make_patch_apply(0x10002, patch_change_result::unchanged, 1)
+					+ make_patch_apply(0x20001, patch_change_result::unchanged, 2)
+					+ make_patch_apply(0x30002, patch_change_result::ok, 3), results);
+
+				// ACT
+				pm->query(states, 1u);
+
+				// ASSERT
+				assert_equivalent_pred(plural
+					+ make_patch_state(0x10002, patch_state::active, 1)
+					+ make_patch_state(0x20001, patch_state::active, 2)
+					+ make_patch_state(0x30002, patch_state::active, 3), states, less());
+
+				// INIT
+				mappings.subscription->unmapped(101);
+				targets.clear();
+				construction_failure_target = (void*)(0x20000000 + 0x10002);
+
+				// ACT
+				mappings.subscription->mapped(1u, 10u, make_mapping((void *)0x20000000, ""));
+				pm->query(states, 1u);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair((void*)(0x20000000 + 0x20001), 0)
+					+ make_pair((void*)(0x20000000 + 0x30002), 0)
+					+ make_pair((void*)(0x20000000 + 0x20001), 1)
+					+ make_pair((void*)(0x20000000 + 0x30002), 1), targets);
+				assert_equivalent_pred(plural
+					+ make_patch_state(0x10002, patch_state::unrecoverable_error, 1)
+					+ make_patch_state(0x20001, patch_state::active, 2)
+					+ make_patch_state(0x30002, patch_state::active, 3), states, less());
 			}
 
 

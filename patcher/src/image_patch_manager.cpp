@@ -133,6 +133,12 @@ namespace micro_profiler
 			case image_patch_manager::patch_record::active:
 				return r.patch ? patch_state::active : patch_state::pending;
 
+			case image_patch_manager::patch_record::activation_error:
+				return r.patch ? patch_state::activation_error : patch_state::pending;
+
+			case image_patch_manager::patch_record::unrecoverable_error:
+				return patch_state::unrecoverable_error;
+
 			default:
 				return patch_state::dormant;
 			}
@@ -254,14 +260,24 @@ namespace micro_profiler
 			auto patch_record = patch_idx[make_tuple(module_id, r.first->rva)];
 			auto &p = *patch_record;
 
-			switch (p.state)
+			try
 			{
-			case patch_record::active:
-				p.patch = move(_patch_factory(mapping.base + p.rva, p.id, *allocator));
-				p.patch->activate();
-				patch_record.commit();
-				break;
+				switch (p.state)
+				{
+				case patch_record::activation_error:
+				case patch_record::active:
+					p.state = patch_record::unrecoverable_error;
+					p.patch = move(_patch_factory(mapping.base + p.rva, p.id, *allocator));
+					p.state = patch_record::activation_error;
+					p.patch->activate();
+					p.state = patch_record::active;
+					break;
+				}
 			}
+			catch (...)
+			{
+			}
+			patch_record.commit();
 		}
 	}
 

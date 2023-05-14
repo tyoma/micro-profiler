@@ -531,6 +531,165 @@ namespace micro_profiler
 				assert_equal(0, prohibited_calls);
 			}
 
+
+			test( MappingEventsAreReportedToMappingSubscriber )
+			{
+				// INIT
+				vector< tuple<id_t, id_t, module::mapping> > mapped;
+				vector<id_t> unmapped;
+				tracker_event e;
+				module_tracker t(module_helper);
+
+				e.on_mapped = [&] (id_t module_id, id_t mapping_id, const module::mapping &m) {
+					mapped.push_back(make_tuple(module_id, mapping_id, m));
+				};
+				e.on_unmapped = [&] (id_t mapping_id) {	unmapped.push_back(mapping_id);	};
+
+				// INIT / ACT
+				auto s = t.notify(e);
+
+				// ACT
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_mapped(*img1);
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img2->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img1->base_ptr())), mapped);
+
+				// ACT
+				module_helper.emulate_mapped(*img3);
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img2->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(3u, 3u, module::platform().locate(img3->base_ptr())), mapped);
+				assert_is_empty(unmapped);
+
+				// ACT
+				module_helper.emulate_unmapped(img1->base_ptr());
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img2->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(3u, 3u, module::platform().locate(img3->base_ptr())), mapped);
+				assert_equal(plural + 2u, unmapped);
+
+				// ACT
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_unmapped(img2->base_ptr());
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img2->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(3u, 3u, module::platform().locate(img3->base_ptr()))
+					+ make_tuple(2u, 4u, module::platform().locate(img1->base_ptr())), mapped);
+				assert_equal(plural + 2u + 1u, unmapped);
+
+				// INIT
+				mapped.clear();
+				unmapped.clear();
+
+				// ACT
+				s.reset();
+				module_helper.emulate_unmapped(img1->base_ptr());
+				module_helper.emulate_mapped(*img1);
+
+				// ASSERT
+				assert_is_empty(mapped);
+				assert_is_empty(unmapped);
+			}
+
+
+			test( MultipleMappingSubscribersCanBeRegistered )
+			{
+				// INIT
+				vector< tuple<id_t, id_t, module::mapping> > mapped[2];
+				vector<id_t> unmapped[2];
+				tracker_event e1, e2;
+				unique_ptr<module_tracker> t(new module_tracker(module_helper));
+
+				e1.on_mapped = [&] (id_t module_id, id_t mapping_id, const module::mapping &m) {
+					mapped[0].push_back(make_tuple(module_id, mapping_id, m));
+				};
+				e1.on_unmapped = [&] (id_t mapping_id) {	unmapped[0].push_back(mapping_id);	};
+				e2.on_mapped = [&] (id_t module_id, id_t mapping_id, const module::mapping &m) {
+					mapped[1].push_back(make_tuple(module_id, mapping_id, m));
+				};
+				e2.on_unmapped = [&] (id_t mapping_id) {	unmapped[1].push_back(mapping_id);	};
+
+				// INIT / ACT
+				auto s1 = t->notify(e1);
+				auto s2 = t->notify(e2);
+
+				// ASSERT
+				assert_not_equal(s1, s2);
+
+				// ACT
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_mapped(*img2);
+				module_helper.emulate_unmapped(img1->base_ptr());
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img2->base_ptr())), mapped[0]);
+				assert_equal(plural + 1u, unmapped[0]);
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img2->base_ptr())), mapped[1]);
+				assert_equal(plural + 1u, unmapped[1]);
+
+				// INIT
+				mapped[1].clear(), unmapped[1].clear();
+
+				// ACT
+				s2.reset();
+				module_helper.emulate_mapped(*img1);
+				module_helper.emulate_unmapped(img1->base_ptr());
+
+				// ASSERT
+				assert_equal(plural
+					+ make_tuple(1u, 1u, module::platform().locate(img1->base_ptr()))
+					+ make_tuple(2u, 2u, module::platform().locate(img2->base_ptr()))
+					+ make_tuple(1u, 3u, module::platform().locate(img1->base_ptr())), mapped[0]);
+				assert_equal(plural + 1u + 3u, unmapped[0]);
+				assert_is_empty(mapped[1]);
+				assert_is_empty(unmapped[1]);
+
+				// ACT
+				t.reset();
+
+				// ACT / ASSERT (shall not crash)
+				s1.reset();
+			}
+
+
+			test( UnmappingOfAnUnknownMappingGeneratesNoNotifications )
+			{
+				// INIT
+				vector<id_t> unmapped;
+				tracker_event e;
+				module_tracker t(module_helper);
+				auto s = t.notify(e);
+
+				e.on_mapped = [] (id_t /*module_id*/, id_t /*mapping_id*/, const module::mapping &/*m*/) {
+					assert_is_false(true);
+				};
+				e.on_unmapped = [&] (id_t mapping_id) {	unmapped.push_back(mapping_id);	};
+
+				// ACT
+				module_helper.emulate_unmapped_no_check((void *)0x1010101);
+
+				// ASSERT
+				assert_is_empty(unmapped);
+
+				// ACT / ASSERT(No records were created at previous unmap)
+				t.notify(e);
+			}
 		end_test_suite
 	}
 }

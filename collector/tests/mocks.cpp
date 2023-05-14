@@ -50,6 +50,14 @@ namespace micro_profiler
 					(*i)->unmapped(base);
 			}
 
+			void module_helper::emulate_unmapped_no_check(void *base)
+			{
+				mt::lock_guard<mt::mutex> l(_mtx);
+
+				for (auto i = begin(_listeners); i != end(_listeners); ++i)
+					(*i)->unmapped(base);
+			}
+
 			shared_ptr<module::dynamic> module_helper::load(const string &path)
 			{	return on_load(path);	}
 

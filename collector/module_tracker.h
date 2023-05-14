@@ -90,12 +90,13 @@ namespace micro_profiler
 		virtual void unmapped(void *base) override;
 
 	private:
-		mutable mt::mutex _mtx;
+		module &_module_helper;
+		const file_id _this_module_file;
+		const std::shared_ptr<mt::mutex> _mtx;
 		sdb::table< module_info, auto_increment_constructor<module_info> > _modules;
 		sdb::table< mapping, auto_increment_constructor<mapping> > _mappings;
 		sdb::table< unmapped_entry, auto_increment_constructor<unmapped_entry> > _unmapped;
-		module &_module_helper;
-		const file_id _this_module_file;
-		const std::shared_ptr<void> _module_notifier;
+		const std::shared_ptr< std::list<mapping_access::events *> > _sinks;
+		const std::shared_ptr<void> _module_notifier; // Goes last to stop the updates before the tables are destroyed.
 	};
 }

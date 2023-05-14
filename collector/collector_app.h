@@ -26,7 +26,7 @@ namespace micro_profiler
 {
 	class analyzer;
 	struct calls_collector_i;
-	struct module_tracker;
+	class module_tracker;
 	struct overhead;
 	struct patch_manager;
 	class thread_monitor;

@@ -25,6 +25,7 @@ namespace micro_profiler
 				void emulate_mapped(const image &image_);
 				void emulate_mapped(const mapping &mapping_);
 				void emulate_unmapped(void *base);
+				void emulate_unmapped_no_check(void *base);
 
 			public:
 				std::function<std::shared_ptr<dynamic> (const std::string &path)> on_load;

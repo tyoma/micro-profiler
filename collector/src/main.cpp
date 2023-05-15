@@ -69,7 +69,7 @@ namespace micro_profiler
 			ptrdiff_t /*max_distance*/) override
 		{	return make_shared<executable_memory_allocator>();	}
 
-		virtual shared_ptr<void> scoped_protect(byte_range region, int /*scoped_protection*/, int /*released_protection*/)
+		virtual shared_ptr<void> scoped_protect(byte_range region, int /*scoped_protection*/, int /*released_protection*/) override
 		{
 			try
 			{

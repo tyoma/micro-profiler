@@ -34,7 +34,7 @@ namespace micro_profiler
 
 		const void *target() const;
 		bool active() const;
-		bool activate();
+		virtual bool activate() override;
 		virtual bool revert() override;
 		void detach();
 

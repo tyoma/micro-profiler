@@ -4,6 +4,7 @@ set(COMMON_TEST_SOURCES
 	AllocatorTests.cpp
 	FileStreamTests.cpp
 	FileUtilitiesTests.cpp
+	GapSearcherTests.cpp
 	ImageUtilitiesTests.cpp
 	MiscTests.cpp
 	PoolAllocatorTests.cpp

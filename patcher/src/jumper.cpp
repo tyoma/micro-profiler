@@ -78,8 +78,7 @@ namespace micro_profiler
 	}
 
 	jumper::jumper(void *target, const void *divert_to)
-	try
-		: _target(static_cast<byte *>(target)), _active(0), _detached(0)
+		: _target(static_cast<byte *>(target)), _active(0)
 	{
 		VALIDATION_OVERRIDE(_target);
 
@@ -90,7 +89,6 @@ namespace micro_profiler
 		_entry = assembler::is_nop(_target) ? (max)(extra, c_short_jump_size) : -(c_short_jump_size + extra);
 
 		byte_range j(prologue(), c_jumper_size);
-		scoped_unprotect u(byte_range(prologue(), prologue_size()));
 
 		if (!is_uniform(prologue(), prologue_size()))
 			throw padding_insufficient();
@@ -106,37 +104,11 @@ namespace micro_profiler
 			reinterpret_cast<assembler::short_jump *>(_target - c_short_jump_size)->init(_target + extra);
 		}
 	}
-	catch (const patch_exception &)
-	{
-		throw;
-	}
-	catch (const runtime_error &)
-	{
-		throw padding_insufficient();
-	}
-
-	jumper::~jumper()
-	{
-		if (_detached)
-			return;
-
-		scoped_unprotect u(byte_range(prologue(), prologue_size() + c_short_jump_size));
-
-		if (_active)
-			*reinterpret_cast<assembler::short_jump *>(_target) = *reinterpret_cast<assembler::short_jump *>(_fuse_revert);
-		fill_n(prologue(), prologue_size(), _fill);
-	}
 
 	bool jumper::activate()
 	{
-		if (_detached)
-			throw logic_error("jumper detached");
 		if (_active)
 			return false;
-
-		byte_range fuse(_target, c_short_jump_size);
-		scoped_unprotect u(fuse);
-
 		*reinterpret_cast<assembler::short_jump *>(_fuse_revert) = *reinterpret_cast<assembler::short_jump *>(_target);
 		reinterpret_cast<assembler::short_jump *>(_target)->init(prologue());
 		_active = -1;
@@ -145,21 +117,12 @@ namespace micro_profiler
 
 	bool jumper::revert()
 	{
-		if (_detached)
-			throw logic_error("jumper detached");
 		if (!_active)
 			return false;
-
-		byte_range fuse(_target, c_short_jump_size);
-		scoped_unprotect u(fuse);
-
 		*reinterpret_cast<assembler::short_jump *>(_target) = *reinterpret_cast<assembler::short_jump *>(_fuse_revert);
 		_active = 0;
 		return true;
 	}
-
-	void jumper::detach()
-	{	_detached = -1;	}
 
 	byte *jumper::prologue() const
 	{	return _target - prologue_size();	}

@@ -20,7 +20,6 @@
 
 #include <patcher/dynamic_hooking.h>
 
-#include "intel/jump.h"
 #include "replace.h"
 
 #include <algorithm>

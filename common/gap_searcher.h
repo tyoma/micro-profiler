@@ -70,7 +70,7 @@ namespace micro_profiler
 			i != std::end(map) && (pred.region_start(*i) < location + min_gap_size);
 			location = pred.region_end(*i++))
 		{	}
-		return reference <= location + min_gap_size - 1;
+		return reference <= (location - 1) + min_gap_size;
 	}
 
 	template <typename L, typename T, typename S, typename P>

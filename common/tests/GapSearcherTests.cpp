@@ -73,11 +73,11 @@ namespace micro_profiler
 			test( GapSearchUpFailsOnOverflow )
 			{
 				// ACT / ASSERT
-				auto ilocation = numeric_limits<int>::max() - 49;
-				assert_is_false(gap_search_up(ilocation, vector< pair<int, int> >(), 51 /*size*/, location_length_pair_less()));
+				auto ilocation = numeric_limits<unsigned>::max() - 49;
+				assert_is_false(gap_search_up(ilocation, vector< pair<unsigned, unsigned> >(), 51u /*size*/, location_length_pair_less()));
 
 				auto plocation = (byte *)(numeric_limits<size_t>::max() - 50);
-				assert_is_false(gap_search_up(plocation, vector< pair<byte *, int> >(), 52 /*size*/, location_length_pair_less()));
+				assert_is_false(gap_search_up(plocation, vector< pair<byte *, unsigned> >(), 52u /*size*/, location_length_pair_less()));
 			}
 
 
@@ -213,8 +213,8 @@ namespace micro_profiler
 			test( GapSearchDownFailsOnOverflow )
 			{
 				// ACT / ASSERT
-				auto ilocation = numeric_limits<int>::min() + 50;
-				assert_is_false(gap_search_down(ilocation, vector< pair<int, int> >(), 51 /*size*/, location_length_pair_less()));
+				auto ilocation = numeric_limits<unsigned>::min() + 50;
+				assert_is_false(gap_search_down(ilocation, vector< pair<unsigned, int> >(), 51 /*size*/, location_length_pair_less()));
 
 				auto plocation = (byte *)57;
 				assert_is_false(gap_search_down(plocation, vector< pair<byte *, int> >(), 58 /*size*/, location_length_pair_less()));

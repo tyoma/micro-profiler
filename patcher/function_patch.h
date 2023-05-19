@@ -36,7 +36,6 @@ namespace micro_profiler
 		bool active() const;
 		virtual bool activate() override;
 		virtual bool revert() override;
-		void detach();
 
 	private:
 		std::shared_ptr<void> _trampoline;
@@ -61,7 +60,4 @@ namespace micro_profiler
 
 	inline bool function_patch::revert()
 	{	return _jumper.revert();	}
-
-	inline void function_patch::detach()
-	{	_jumper.detach();	}
 }

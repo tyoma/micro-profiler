@@ -53,14 +53,13 @@ namespace micro_profiler
 		{
 			enum {	page_size = 4096	};
 
-			shared_ptr<void> m(::VirtualAlloc(0, 2 * page_size, MEM_RESERVE, PAGE_EXECUTE_READ), 
-				[] (void *p) {
-				::VirtualFree(p, 0, MEM_RELEASE);
+			shared_ptr<void> m(::VirtualAlloc(0, 2 * page_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE), [] (void *p) {
+				::VirtualFree(p, 0, MEM_FREE);
 			});
-			auto address = static_cast<byte *>(m.get()) + page_size;
+			const auto address = static_cast<byte *>(m.get()) + page_size;
 
-			::VirtualAlloc(address, page_size, MEM_COMMIT, PAGE_EXECUTE);
-			return make_shared_aspect(m, static_cast<byte *>(m.get()) + page_size);
+//			::VirtualAlloc(address, page_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+			return make_shared_aspect(m, address);
 		}
 	}
 }

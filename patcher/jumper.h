@@ -31,29 +31,27 @@ namespace micro_profiler
 	{
 	public:
 		jumper(void *target, const void *divert_to);
-		~jumper();
 
 		bool active() const;
 		const void *entry() const;
 		const void *target() const;
 		bool activate();
 		bool revert();
-		void detach();
 
-	private:
+	protected:
 		byte *prologue() const;
 		byte prologue_size() const;
 
 	private:
 		byte *_target;
 		byte _fuse_revert[8], _fill;
-		int _entry : 6, _active : 1, _detached : 1;
+		int _entry : 6, _active : 1;
 	};
 
 
 
 	inline bool jumper::active() const
-	{	return !_detached && !!_active;	}
+	{	return !!_active;	}
 
 	inline const void *jumper::entry() const
 	{	return _target + _entry;	}

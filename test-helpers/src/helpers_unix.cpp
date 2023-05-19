@@ -84,7 +84,7 @@ namespace micro_profiler
 		{
 			enum {	page_size = 4096	};
 
-			return shared_ptr<void>(::mmap(0, page_size, PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0),
+			return shared_ptr<void>(::mmap(0, page_size, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0),
 				[] (void *p) {
 				::munmap(p, page_size);
 			});

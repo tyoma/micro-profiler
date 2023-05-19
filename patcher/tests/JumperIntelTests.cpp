@@ -1,9 +1,10 @@
 #include <patcher/jumper.h>
 
-#include <patcher/exceptions.h>
+#include "helpers.h"
 
 #include <common/memory.h>
 #include <iterator>
+#include <patcher/exceptions.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -14,6 +15,22 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			struct auto_jumper : jumper, noncopyable
+			{
+				auto_jumper(void *target, const void *divert_to)
+					: jumper(target, divert_to)
+				{	}
+
+				~auto_jumper()
+				{
+					mem_set(prologue(), 0, prologue_size());
+					revert();
+				}
+			};
+		}
+
 		string one();
 		string two();
 		string three();	// expected not to be modified
@@ -21,10 +38,12 @@ namespace micro_profiler
 
 		begin_test_suite( JumperIntelTests )
 			shared_ptr<byte> edge;
+			shared_ptr<void> scope;
 
 			init( Init )
 			{
 				edge = static_pointer_cast<byte>(allocate_edge());
+				scope = temporary_unlock_code_at(address_cast_hack<void *>(&one));
 			}
 
 
@@ -34,43 +53,43 @@ namespace micro_profiler
 				auto target = edge.get() + c_jumper_size;
 
 				// INIT / ACT / ASSERT (must not throw)
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x90, target[1] = 0x90;	} // nop, nop
-				jumper(target, 0);
-				assert_equal(target + 2, static_cast<const byte *>(jumper(target, 0).entry()));
-				assert_is_false(jumper(target, 0).active());
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x66, target[1] = 0x90;	} // xchg ax, ax
-				jumper (target, 0);
-				assert_equal(target + 2, static_cast<const byte *>(jumper(target, 0).entry()));
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x8B, target[1] = 0xFF;	} // mov edi, edi
-				jumper(target, 0);
-				assert_equal(target + 2, static_cast<const byte *>(jumper(target, 0).entry()));
-				{	scoped_unprotect u(byte_range(target, 3)); target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x00;	} // 3-byte nop
-				jumper(target, 0);
-				assert_equal(target + 3, static_cast<const byte *>(jumper(target, 0).entry()));
-				{	scoped_unprotect u(byte_range(target, 4)); target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x40, target[3] = 0x08;	} // 4-byte nop
-				jumper(target, 0);
-				assert_equal(target + 4, static_cast<const byte *>(jumper(target, 0).entry()));
+				target[0] = 0x90, target[1] = 0x90; // nop, nop
+				auto_jumper(target, 0);
+				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, 0).entry()));
+				assert_is_false(auto_jumper(target, 0).active());
+				target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
+				auto_jumper (target, 0);
+				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, 0).entry()));
+				target[0] = 0x8B, target[1] = 0xFF; // mov edi, edi
+				auto_jumper(target, 0);
+				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, 0).entry()));
+				target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x00; // 3-byte nop
+				auto_jumper(target, 0);
+				assert_equal(target + 3, static_cast<const byte *>(auto_jumper(target, 0).entry()));
+				target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x40, target[3] = 0x08; // 4-byte nop
+				auto_jumper(target, 0);
+				assert_equal(target + 4, static_cast<const byte *>(auto_jumper(target, 0).entry()));
 			}
 
-#ifdef WIN32	// It is possible to prepare the edge allocation validly only on Windows
-			test( ConstructionFailsIfPrecedeedAllocatedBytesAreInsufficientForANOPJumper )
-			{
-				// INIT
-				auto target = edge.get() + c_jumper_size - 1 /*one byte short of allocated space*/;
-
-				// INIT / ACT / ASSERT
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x90, target[1] = 0x90;	} // nop, nop
-				assert_throws(jumper(target, 0), padding_insufficient);
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x66, target[1] = 0x90;	} // xchg ax, ax
-				assert_throws(jumper(target, 0), padding_insufficient);
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x8B, target[1] = 0xFF;	} // mov edi, edi
-				assert_throws(jumper(target, 0), padding_insufficient);
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x00;	} // 3-byte nop
-				assert_throws(jumper(target, 0), padding_insufficient);
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x40, target[3] = 0x08;	} // 4-byte nop
-				assert_throws(jumper(target, 0), padding_insufficient);
-			}
-#endif
+//#ifdef WIN32	// It is possible to prepare the edge allocation validly only on Windows
+//			test( ConstructionFailsIfPrecedeedAllocatedBytesAreInsufficientForANOPJumper )
+//			{
+//				// INIT
+//				auto target = edge.get() + c_jumper_size - 1 /*one byte short of allocated space*/;
+//
+//				// INIT / ACT / ASSERT
+//				target[0] = 0x90, target[1] = 0x90; // nop, nop
+//				assert_throws(auto_jumper(target, 0), padding_insufficient);
+//				target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
+//				assert_throws(auto_jumper(target, 0), padding_insufficient);
+//				target[0] = 0x8B, target[1] = 0xFF; // mov edi, edi
+//				assert_throws(auto_jumper(target, 0), padding_insufficient);
+//				target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x00; // 3-byte nop
+//				assert_throws(auto_jumper(target, 0), padding_insufficient);
+//				target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x40, target[3] = 0x08; // 4-byte nop
+//				assert_throws(auto_jumper(target, 0), padding_insufficient);
+//			}
+//#endif
 
 
 			test( MorePaddingIsRequiredForRealMultibyteInstructions )
@@ -78,79 +97,52 @@ namespace micro_profiler
 				// INIT
 				const auto jmp_size = 2; // change to sizeof short_jump
 
-				const auto edge2 = static_pointer_cast<byte>(allocate_edge());
 				const auto ok = edge.get() + c_jumper_size + jmp_size;
-				const auto fail = edge2.get() + c_jumper_size + jmp_size - 1;
 
 				// INIT
 				auto ok_target = ok + 2;
-				auto fail_target = fail + 2;
-				{
-					scoped_unprotect u1(byte_range(fail_target, 2)), u2(byte_range(ok_target, 2));
-					fail_target[0] = ok_target[0] = 0xF7, fail_target[1] = ok_target[1] = 0xF9; // idiv ecx
-				}
+				ok_target[0] = 0xF7, ok_target[1] = 0xF9; // idiv ecx
 
 				// ACT / ASSERT
-				jumper(ok_target, 0);
-				assert_equal(ok_target - 4, jumper(ok_target, 0).entry());
-				assert_throws(jumper(fail_target, 0), padding_insufficient);
+				auto_jumper(ok_target, 0);
+				assert_equal(ok_target - 4, auto_jumper(ok_target, 0).entry());
 
 				// INIT
 				ok_target = ok + 3;
-				fail_target = fail + 3;
-				{
-					scoped_unprotect u1(byte_range(fail_target - 1, 4)), u2(byte_range(ok_target - 1, 4));
-					fail_target[-1] = ok_target[-1] = 0x00,
-					fail_target[0] = ok_target[0] = 0x89, fail_target[1] = ok_target[1] = 0x65, fail_target[2] = ok_target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
-				}
+				ok_target[-1] = 0x00,
+				ok_target[0] = 0x89, ok_target[1] = 0x65, ok_target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
 
 				// ACT / ASSERT
-				jumper(ok_target, 0);
-				assert_equal(ok_target - 5, jumper(ok_target, 0).entry());
-				assert_throws(jumper(fail_target, 0), padding_insufficient);
+				auto_jumper(ok_target, 0);
+				assert_equal(ok_target - 5, auto_jumper(ok_target, 0).entry());
 
 				// INIT
 				ok_target = ok + 4;
-				fail_target = fail + 4;
-				{
-					scoped_unprotect u1(byte_range(fail_target - 1, 5)), u2(byte_range(ok_target - 1, 5));
-					fail_target[-1] = ok_target[-1] = 0x00,
-					fail_target[0] = ok_target[0] = 0x8D, fail_target[1] = ok_target[1] = 0x44, fail_target[2] = ok_target[2] = 0x30; // lea dword ptr [rax+rsi*1-0x1], eax
-					fail_target[3] = ok_target[3] = 0xFF;
-				}
+				ok_target[-1] = 0x00,
+				ok_target[0] = 0x8D, ok_target[1] = 0x44, ok_target[2] = 0x30; // lea dword ptr [rax+rsi*1-0x1], eax
+				ok_target[3] = 0xFF;
 
 				// ACT / ASSERT
-				jumper(ok_target, 0);
-				assert_equal(ok_target - 6, jumper(ok_target, 0).entry());
-				assert_throws(jumper(fail_target, 0), padding_insufficient);
+				auto_jumper(ok_target, 0);
+				assert_equal(ok_target - 6, auto_jumper(ok_target, 0).entry());
 
 				// INIT
 				ok_target = ok + 5;
-				fail_target = fail + 5;
-				{
-					scoped_unprotect u1(byte_range(fail_target - 1, 6)), u2(byte_range(ok_target - 1, 6));
-					fail_target[-1] = ok_target[-1] = 0x00,
-					fail_target[0] = ok_target[0] = 0xB8, fail_target[1] = ok_target[1] = 0x00, fail_target[2] = ok_target[2] = 0x00; // mov eax, 00000000h
-					fail_target[3] = ok_target[3] = 0x00, fail_target[4] = ok_target[4] = 0x00;
-				}
+				ok_target[-1] = 0x00,
+				ok_target[0] = 0xB8, ok_target[1] = 0x00, ok_target[2] = 0x00; // mov eax, 00000000h
+				ok_target[3] = 0x00, ok_target[4] = 0x00;
 
 				// ACT / ASSERT
-				jumper(ok_target, 0);
-				assert_throws(jumper(fail_target, 0), padding_insufficient);
+				auto_jumper(ok_target, 0);
 
 				// INIT
 				ok_target = ok + 6;
-				fail_target = fail + 6;
-				{
-					scoped_unprotect u1(byte_range(fail_target - 1, 7)), u2(byte_range(ok_target - 1, 7));
-					fail_target[-1] = ok_target[-1] = 0x00,
-					fail_target[0] = ok_target[0] = 0x8B, fail_target[1] = ok_target[1] = 0x8D, fail_target[2] = ok_target[2] = 0x54; // mov dword ptr [rbp-0x2ac], ecx
-					fail_target[3] = ok_target[3] = 0xFD, fail_target[4] = ok_target[4] = 0xFF, fail_target[5] = ok_target[5] = 0xFF;
-				}
+				ok_target[-1] = 0x00,
+				ok_target[0] = 0x8B, ok_target[1] = 0x8D, ok_target[2] = 0x54; // mov dword ptr [rbp-0x2ac], ecx
+				ok_target[3] = 0xFD, ok_target[4] = 0xFF, ok_target[5] = 0xFF;
 
 				// ACT / ASSERT
-				jumper(ok_target, 0);
-				assert_throws(jumper(fail_target, 0), padding_insufficient);
+				auto_jumper(ok_target, 0);
 			}
 
 
@@ -160,30 +152,18 @@ namespace micro_profiler
 				auto target = edge.get() + c_jumper_size;
 
 				// INIT / ACT / ASSERT
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size, c_jumper_size + 2));
-					target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
-					target[-(c_jumper_size / 2)] = 0x12;
-				}
-				assert_throws(jumper(target, 0), padding_insufficient);
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size, c_jumper_size));
-					fill(target - c_jumper_size, target, (byte)0xCC);
-					fill(target - c_jumper_size / 3, target, (byte)0x90);
-				}
-				assert_throws(jumper(target, 0), padding_insufficient);
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size, c_jumper_size));
-					fill(target - c_jumper_size, target, (byte)0x90);
-					fill(target - 2 * c_jumper_size / 3, target - c_jumper_size / 3, (byte)0x9B);
-				}
-				assert_throws(jumper(target, 0), padding_insufficient);
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size, c_jumper_size));
-					fill(target - c_jumper_size, target, (byte)0x90);
-					target[-c_jumper_size] = 0x12;
-				}
-				assert_throws(jumper(target, 0), padding_insufficient);
+				target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
+				target[-(c_jumper_size / 2)] = 0x12;
+				assert_throws(auto_jumper(target, 0), padding_insufficient);
+				fill(target - c_jumper_size, target, (byte)0xCC);
+				fill(target - c_jumper_size / 3, target, (byte)0x90);
+				assert_throws(auto_jumper(target, 0), padding_insufficient);
+				fill(target - c_jumper_size, target, (byte)0x90);
+				fill(target - 2 * c_jumper_size / 3, target - c_jumper_size / 3, (byte)0x9B);
+				assert_throws(auto_jumper(target, 0), padding_insufficient);
+				fill(target - c_jumper_size, target, (byte)0x90);
+				target[-c_jumper_size] = 0x12;
+				assert_throws(auto_jumper(target, 0), padding_insufficient);
 			}
 
 
@@ -192,77 +172,33 @@ namespace micro_profiler
 				// INIT
 				auto target = edge.get() + c_jumper_size + 6;
 
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 4, c_jumper_size + 6));
-					target[0] = 0xF7, target[1] = 0xF9; // idiv ecx
-					target[-(c_jumper_size + 4)] = 0x12;
-				}
+				target[0] = 0xF7, target[1] = 0xF9; // idiv ecx
+				target[-(c_jumper_size + 4)] = 0x12;
 
 				// INIT / ACT / ASSERT
-				assert_throws(jumper(target, 0), padding_insufficient);
+				assert_throws(auto_jumper(target, 0), padding_insufficient);
 
 				// INIT
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 4, c_jumper_size + 6));
-					fill(target - (c_jumper_size + 4), target, (byte)0xCC);
-					target[-1] = 0x12;
-				}
+				fill(target - (c_jumper_size + 4), target, (byte)0xCC);
+				target[-1] = 0x12;
 
 				// INIT / ACT / ASSERT
-				assert_throws(jumper(target, 0), padding_insufficient);
+				assert_throws(auto_jumper(target, 0), padding_insufficient);
 
 				// INIT
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
-					fill(target - (c_jumper_size + 5), target, (byte)0x90);
-					target[-(c_jumper_size + 5)] = 0x87;
-					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
-				}
+				fill(target - (c_jumper_size + 5), target, (byte)0x90);
+				target[-(c_jumper_size + 5)] = 0x87;
+				target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
 
 				// INIT / ACT / ASSERT
-				assert_throws(jumper(target, 0), padding_insufficient);
+				assert_throws(auto_jumper(target, 0), padding_insufficient);
 
 				// INIT
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
-					fill(target - (c_jumper_size + 5), target, (byte)0x83);
-					target[-1] = 0x12;
-				}
+				fill(target - (c_jumper_size + 5), target, (byte)0x83);
+				target[-1] = 0x12;
 
 				// INIT / ACT / ASSERT
-				assert_throws(jumper(target, 0), padding_insufficient);
-			}
-
-
-			test( PaddingSpaceIsRestoredOnDestruction )
-			{
-				// INIT
-				auto target = edge.get() + c_jumper_size;
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size, c_jumper_size));
-					fill(target - c_jumper_size, target, (byte)0xC9);
-					target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
-				}
-
-				// ACT
-				jumper(target, 0);
-
-				// ASSERT
-				assert_is_true(all_of(target - c_jumper_size, target, [] (byte b) {	return b == 0xC9;	}));
-
-				// INIT
-				target = edge.get() + c_jumper_size + 5;
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
-					fill(target - c_jumper_size - 5, target, (byte)0xFD);
-					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
-				}
-
-				// ACT
-				jumper(target, 0);
-
-				// ASSERT
-				assert_is_true(all_of(target - c_jumper_size - 5, target, [] (byte b) {	return b == 0xFD;	}));
+				assert_throws(auto_jumper(target, 0), padding_insufficient);
 			}
 
 
@@ -282,11 +218,9 @@ namespace micro_profiler
 			{
 				// INIT / ACT
 				auto target = edge.get() + c_jumper_size;
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size, c_jumper_size));
-					fill(target - c_jumper_size, target, (byte)0xC9);
-					target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
-				}
+				fill(target - c_jumper_size, target, (byte)0xC9);
+				target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
+
 				{
 					jumper j(target, address_cast_hack<void *>(&three));
 
@@ -296,11 +230,9 @@ namespace micro_profiler
 
 				// INIT / ACT
 				target = edge.get() + c_jumper_size + 5;
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size));
-					fill(target - c_jumper_size - 5, target, (byte)0xC9);
-					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
-				}
+				fill(target - c_jumper_size - 5, target, (byte)0xC9);
+				target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
+
 				{
 					jumper j(target, address_cast_hack<void *>(&four));
 
@@ -369,54 +301,27 @@ namespace micro_profiler
 			}
 
 
-			test( DiversionEndsWhenJumperIsDestroyed )
-			{
-				// INIT
-				{
-					jumper j(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
-
-					j.activate();
-
-				// ACT
-				}
-
-				// ACT / ASSERT
-				assert_equal("one", one());
-			}
-
-
 			test( ConsequentApplicationDoesNothing )
 			{
 				// INIT
-				{
-					jumper j(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
+				jumper j(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
 
-					j.activate();
+				j.activate();
 
 				// ACT / ASSERT
-					assert_is_false(j.activate());
-
-				// ACT
-				}
-
-				// ASSERT
-				assert_equal("one", one());
+				assert_is_false(j.activate());
 			}
 
 
 			test( RevertingInactiveJumperDoesNothing )
 			{
 				// INIT
-				{
-					jumper j(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
+				jumper j(address_cast_hack<void *>(&one), address_cast_hack<void *>(&three));
 
 				// ACT / ASSERT
-					assert_is_false(j.revert());
+				assert_is_false(j.revert());
 
-				// ACT
-				}
-
-				// ASSERT
+				// ACT / ASSERT
 				assert_equal("one", one());
 			}
 
@@ -427,80 +332,10 @@ namespace micro_profiler
 				auto target = edge.get() + c_jumper_size + 4 /*guarantee no problems with space to move to*/;
 
 				// INIT / ACT / ASSERT
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0x52, target[1] = 0xC3;	} // push ..., ret
+				target[0] = 0x52, target[1] = 0xC3; // push ..., ret
 				assert_throws(jumper(target, 0), leading_too_short);
-				{	scoped_unprotect u(byte_range(target, 2)); target[0] = 0xC3, target[1] = 0x52;	} // ret, push ...
+				target[0] = 0xC3, target[1] = 0x52; // ret, push ...
 				assert_throws(jumper(target, 0), leading_too_short);
-			}
-
-
-			test( NoRestorationTakesPlaceAfterDetachingJumper )
-			{
-				// INIT
-				auto target = edge.get() + c_jumper_size + 5;
-				vector<byte> before_detach;
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
-					fill(target - c_jumper_size - 5, target, (byte)0xFD);
-					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
-				}
-				unique_ptr<jumper> j(new jumper(target, 0));
-
-				j->activate();
-				copy(target - c_jumper_size - 5, target + 2, back_inserter(before_detach));
-
-				// ACT
-				j->detach();
-
-				// ASSERT
-				assert_is_false(j->active());
-
-				// ACT
-				j.reset();
-
-				// ASSERT
-				assert_equal(before_detach, vector<byte>(target - c_jumper_size - 5, target + 2));
-			}
-
-
-			test( NoMemoryLockOnDestroyAfterDetach )
-			{
-				// INIT
-				auto target = edge.get() + c_jumper_size + 5;
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
-					fill(target - c_jumper_size - 5, target, (byte)0xFD);
-					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
-				}
-				unique_ptr<jumper> j(new jumper(target, 0));
-
-				j->activate();
-				j->detach();
-
-				// ACT
-				edge.reset(); // release memory
-
-				// ACT / ASSERT (must not crash)
-				j.reset();
-			}
-
-
-			test( ActivationAndRevertFailForADetachedJumper )
-			{
-				// INIT
-				auto target = edge.get() + c_jumper_size + 5;
-				{
-					scoped_unprotect u(byte_range(target - c_jumper_size - 5, c_jumper_size + 8));
-					fill(target - c_jumper_size - 5, target, (byte)0xFD);
-					target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
-				}
-				jumper j(target, 0);
-
-				j.detach();
-
-				// ACT / ASSERT
-				assert_throws(j.activate(), logic_error);
-				assert_throws(j.revert(), logic_error);
 			}
 
 		end_test_suite

@@ -11,6 +11,13 @@ set(PATCHER_TEST_SOURCES
 	OffsetDisplacedReferencesTestsX86.cpp
 )
 
+if (WIN32)
+	set(PATCHER_TEST_SOURCES ${PATCHER_TEST_SOURCES}
+		helpers_win32.cpp
+	)
+elseif (UNIX)	
+endif()
+
 add_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fpatchable-function-entry=14,12>"
 	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>>:-hotpatch>"

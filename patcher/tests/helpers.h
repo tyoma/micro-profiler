@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <common/memory.h>
 #include <common/range.h>
+#include <memory>
 #include <test-helpers/helpers.h>
 
 namespace micro_profiler
@@ -15,5 +16,10 @@ namespace micro_profiler
 	{
 		mapped_region r = {	address, size, protection	};
 		return r;
+	}
+	
+	namespace tests
+	{
+		std::shared_ptr<void> temporary_unlock_code_at(void *address);
 	}
 }

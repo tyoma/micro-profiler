@@ -4,7 +4,6 @@
 #include "mocks.h"
 
 #include <test-helpers/constants.h>
-#include <test-helpers/file_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
@@ -21,7 +20,12 @@ namespace micro_profiler
 		begin_test_suite( FunctionPatchTests )
 			executable_memory_allocator allocator;
 			mocks::trace_events trace;
-			temporary_directory dir;
+			shared_ptr<void> scope;
+
+			init( Init )
+			{
+				scope = temporary_unlock_code_at(address_cast_hack<void *>(&recursive_factorial));
+			}
 
 
 			test( PatchIsNotActiveActiveAtConstruction )
@@ -74,21 +78,6 @@ namespace micro_profiler
 
 				// ACT / ASSERT
 				assert_is_false(patch.revert());
-			}
-
-
-			test( DetachingIsDelegatedToJumper )
-			{
-				// INIT
-				unique_ptr<image> image1(new image(dir.copy_file(c_symbol_container_1)));
-				unique_ptr<function_patch> patch(new function_patch(image1->get_symbol_address("get_function_addresses_1"), &trace, allocator));
-
-				// ACT
-				image1.reset();
-				patch->detach();
-
-				// ACT / ASSERT (must not crash)
-				patch.reset();
 			}
 
 
@@ -171,24 +160,6 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal("132214 - some random value...", string(buffer));
-			}
-
-
-			test( DestructionOfPatchCancelsHooking )
-			{
-				// INIT
-				unique_ptr<function_patch> patch(new function_patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator));
-
-				patch->activate();
-
-				// ACT / ASSERT
-				patch.reset();
-
-				// ACT / ASSERT
-				assert_equal(5040, recursive_factorial(7));
-
-				// ASSERT
-				assert_is_empty(trace.call_log);
 			}
 		end_test_suite
 	}

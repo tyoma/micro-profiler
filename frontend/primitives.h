@@ -24,6 +24,7 @@
 #include <common/hash.h>
 #include <common/primitives.h>
 #include <common/types.h>
+#include <patcher/interface.h>
 #include <vector>
 
 namespace micro_profiler
@@ -59,21 +60,15 @@ namespace micro_profiler
 		mutable unsigned int _reentrance;
 	};
 
-	// TODO: combine with patch_state returned by the patch_manager::query
-	struct patch_state2 : /*external*/ identity
+	struct patch_state_ex : patch_state // Permitted states: dormant, active, unrecoverable_error.
 	{
-		patch_state2()
-		{	id = 0, state.requested = state.error = state.active = 0;	}
+		patch_state_ex()
+			: in_transit(false), last_result(patch_change_result::ok)
+		{	id = 0, state = dormant;	}
 
 		unsigned int module_id;
-		unsigned int rva;
-
-		struct
-		{
-			unsigned int requested : 1,
-				error : 1,
-				active : 1;
-		} state;
+		bool in_transit;
+		patch_change_result::errors last_result;
 	};
 
 
@@ -109,6 +104,13 @@ namespace micro_profiler
 				lhs.max_call_time = rhs.max_call_time;
 		}
 	}
+
+
+	inline bool is_errored(patch_state::states s)
+	{	return s == patch_state::unrecoverable_error || s == patch_state::activation_error;	}
+
+	inline bool is_active(patch_state::states s)
+	{	return s == patch_state::active;	}
 }
 
 namespace std

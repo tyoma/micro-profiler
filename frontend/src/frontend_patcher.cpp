@@ -29,19 +29,37 @@ namespace micro_profiler
 {
 	namespace
 	{
-		bool set_requested(patch_state2 &p, bool for_active)
+		bool set_requested(patch_state_ex &p, bool for_active)
 		{
-			return !!p.state.active == for_active && !p.state.error && !p.state.requested
-				? p.state.requested = true, true : false;
+			return is_active(p.state) == for_active && !is_errored(p.state) && !p.in_transit
+				? p.in_transit = true, true : false;
 		}
 
-		void set_complete(patch_state2 &p, patch_change_result::errors error, bool active)
+		void set_applied(patch_state_ex &p, const patch_change_result &applied)
 		{
-			p.state.requested = false;
-			if (error != patch_change_result::ok)
-				p.state.error = true;
-			else
-				p.state.active = active;
+			p.id = applied.id;
+			p.in_transit = false;
+			switch (applied.result)
+			{
+			case patch_change_result::unrecoverable_error:
+				p.state = patch_state::unrecoverable_error;
+				break;
+
+			case patch_change_result::ok:
+				p.state = patch_state::active;
+
+			default:
+				p.last_result = applied.result;
+				break;
+			}
+		}
+
+		void set_reverted(patch_state_ex &p, const patch_change_result &reverted)
+		{
+			p.in_transit = false;
+			if (patch_change_result::ok == reverted.result)
+				p.state = patch_state::dormant;
+			p.last_result = reverted.result;
 		}
 	}
 
@@ -82,8 +100,7 @@ namespace micro_profiler
 			{
 				auto rec = idx[make_tuple(module_id, i->rva)];
 
-				(*rec).id = i->id;
-				set_complete(*rec, i->result, true);
+				set_applied(*rec, *i);
 				rec.commit();
 			}
 			_db->patches.invalidate();
@@ -123,7 +140,7 @@ namespace micro_profiler
 			{
 				auto rec = idx[make_tuple(module_id, i->rva)];
 
-				set_complete(*rec, i->result, false);
+				set_reverted(*rec, *i);
 				rec.commit();
 			}
 			_db->patches.invalidate();

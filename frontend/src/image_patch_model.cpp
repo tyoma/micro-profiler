@@ -51,11 +51,15 @@ namespace micro_profiler
 			{	return toupper(lhs) < toupper(rhs);	}
 		};
 
-		unsigned int encode_state(const patch_state2 &p)
-		{	return (p.state.error << 2) + (p.state.active << 1) + (p.state.requested << 0);	}
+		unsigned int encode_state(const patch_state_ex &p)
+		{	return ((p.in_transit ? 1u : 0u) << 8) | static_cast<unsigned int>(p.state);	}
 
-		const char *c_patch_states[8] = {
-			"inactive", "applying", "active", "removing", "error", "error", "error", "error",
+		const char *c_complete_patch_states[] = {
+			"", "active", "inactive", "unpatchable", "",
+		};
+
+		const char *c_requested_patch_states[] = {
+			"", "removing", "applying", "unpatchable", "",
 		};
 	}
 
@@ -228,7 +232,7 @@ namespace micro_profiler
 	void image_patch_model::format_state(agge::richtext_t &value, const KeyT &key) const
 	{
 		if (const auto patch = sdb::unique_index<keyer::symbol_id>(*_patches).find(key))
-			value << c_patch_states[encode_state(*patch)];
+			value << (patch->in_transit ? c_requested_patch_states : c_complete_patch_states)[patch->state];
 	}
 
 	void image_patch_model::format_module_name(agge::richtext_t &value, unsigned int module_id) const

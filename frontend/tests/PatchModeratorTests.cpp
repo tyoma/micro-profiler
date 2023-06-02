@@ -37,6 +37,11 @@ namespace micro_profiler
 				cache = make_shared<mocks::profiling_cache_with_tasks>();
 			}
 
+			teardown( ReleaseCacheTasks )
+			{
+				cache->tasks.clear();
+			}
+
 
 			test( NothingIsAppliedWhenPreferencesAreNew )
 			{
@@ -199,20 +204,18 @@ namespace micro_profiler
 
 				// ACT
 				add_records(s->patches, plural
-					+ make_patch(13, 100121, 0, false, false, true)
-					+ make_patch(13, 200121, 0, false, false, true)
-					+ make_patch(13, 100321, 0, false, false, true)
-					+ make_patch(13, 400121, 0, false, false, true)
-					+ make_patch(17, 100121, 0, false, false, true)
-					+ make_patch(17, 400121, 0, false, false, true)
+					+ make_patch(13, 100121, 0, false, patch_state::active)
+					+ make_patch(13, 200121, 0, false, patch_state::active)
+					+ make_patch(13, 100321, 0, false, patch_state::active)
+					+ make_patch(13, 400121, 0, false, patch_state::active)
+					+ make_patch(17, 100121, 0, false, patch_state::active)
+					+ make_patch(17, 400121, 0, false, patch_state::active)
 					
 					// These records won't affect cached addition.
-					+ make_patch(13, 50002, 0, false, true, false)
-					+ make_patch(13, 50003, 0, false, true, true)
-					+ make_patch(13, 50004, 0, true, false, false)
-					+ make_patch(13, 50005, 0, true, false, true)
-					+ make_patch(13, 50006, 0, true, true, false)
-					+ make_patch(13, 50007, 0, true, true, true));
+					+ make_patch(13, 50002, 0, false, patch_state::unrecoverable_error)
+					+ make_patch(13, 50004, 0, true, patch_state::dormant)
+					+ make_patch(13, 50005, 0, true, patch_state::active)
+					+ make_patch(13, 50006, 0, true, patch_state::unrecoverable_error));
 
 				// ASSERT
 				assert_is_empty(apartment.tasks);
@@ -246,9 +249,9 @@ namespace micro_profiler
 
 				// ACT
 				add_records(s->patches, plural
-					+ make_patch(13, 50002, 0, false, false, true)
-					+ make_patch(13, 50004, 0, false, false, true)
-					+ make_patch(13, 50006, 0, false, false, true), keyer::symbol_id());
+					+ make_patch(13, 50002, 0, false, patch_state::active)
+					+ make_patch(13, 50004, 0, false, patch_state::active)
+					+ make_patch(13, 50006, 0, false, patch_state::active), keyer::symbol_id());
 
 				// ASSERT
 				assert_is_empty(apartment.tasks);
@@ -309,10 +312,10 @@ namespace micro_profiler
 
 				// ACT (these changes emulate patch application)
 				add_records(s->patches, plural
-					+ make_patch(100, 10001u, 0, true, false, false)
-					+ make_patch(100, 10101u, 0, true, false, false)
-					+ make_patch(100, 21001u, 0, true, false, false)
-					+ make_patch(300, 90101u, 0, true, false, false));
+					+ make_patch(100, 10001u, 0, true, patch_state::dormant)
+					+ make_patch(100, 10101u, 0, true, patch_state::dormant)
+					+ make_patch(100, 21001u, 0, true, patch_state::dormant)
+					+ make_patch(300, 90101u, 0, true, patch_state::dormant));
 				s->patches.invalidate();
 
 				// ASSERT
@@ -351,7 +354,7 @@ namespace micro_profiler
 					{
 						auto r = patches_idx[make_tuple(module_id, *i)];
 
-						(*r).state.active = true, (*r).state.error = false, (*r).state.requested = false;
+						(*r).state = patch_state::active, (*r).in_transit = false;
 						r.commit();
 					}
 				};
@@ -370,9 +373,9 @@ namespace micro_profiler
 
 				// ACT
 				add_records(s->patches, plural
-					+ make_patch(100, 200121u, 0, false, false, false)
-					+ make_patch(100, 100321u, 0, false, false, false)
-					+ make_patch(300, 100121u, 0, false, false, false), keyer::symbol_id());
+					+ make_patch(100, 200121u, 0, false, patch_state::dormant)
+					+ make_patch(100, 100321u, 0, false, patch_state::dormant)
+					+ make_patch(300, 100121u, 0, false, patch_state::dormant), keyer::symbol_id());
 
 				// ASSERT
 				assert_is_empty(worker.tasks);
@@ -404,7 +407,7 @@ namespace micro_profiler
 
 				// ACT
 				add_records(s->patches, plural
-					+ make_patch(300, 50006u, 0, false, false, false), keyer::symbol_id());
+					+ make_patch(300, 50006u, 0, false, patch_state::dormant), keyer::symbol_id());
 				s->patches.invalidate();
 
 				// ASSERT
@@ -422,11 +425,10 @@ namespace micro_profiler
 
 				// ACT
 				add_records(s->patches, plural
-					+ make_patch(100u, 100121u, 0, false, true, false)
-					+ make_patch(100u, 400121u, 0, true, false, false)
-					+ make_patch(300u, 400121u, 0, true, true, false)
-					+ make_patch(100u, 50002u, 0, true, false, true)
-					+ make_patch(100u, 50004u, 0, false, true, true), keyer::symbol_id());
+					+ make_patch(100u, 100121u, 0, false, patch_state::unrecoverable_error)
+					+ make_patch(100u, 400121u, 0, true, patch_state::dormant)
+					+ make_patch(300u, 400121u, 0, true, patch_state::unrecoverable_error)
+					+ make_patch(100u, 50002u, 0, true, patch_state::active), keyer::symbol_id());
 				s->patches.invalidate();
 
 				// ASSERT
@@ -464,17 +466,17 @@ namespace micro_profiler
 				apartment.run_till_end();
 
 				add_records(s->patches, plural
-					+ make_patch(100u, 100121u, 0, false, false, true)
-					+ make_patch(100u, 400121u, 0, false, false, true)
-					+ make_patch(300u, 400121u, 0, false, false, true)
-					+ make_patch(100u, 50002u, 0, false, false, true)
-					+ make_patch(100u, 50004u, 0, false, false, true), keyer::symbol_id());
+					+ make_patch(100u, 100121u, 0, false, patch_state::active)
+					+ make_patch(100u, 400121u, 0, false, patch_state::active)
+					+ make_patch(300u, 400121u, 0, false, patch_state::active)
+					+ make_patch(100u, 50002u, 0, false, patch_state::active)
+					+ make_patch(100u, 50004u, 0, false, patch_state::active), keyer::symbol_id());
 
 				// ACT
 				add_records(s->patches, plural
-					+ make_patch(100u, 400121u, 0, false, false, false)
-					+ make_patch(100u, 50002u, 0, false, false, false)
-					+ make_patch(100u, 50004u, 0, false, false, false), keyer::symbol_id());
+					+ make_patch(100u, 400121u, 0, false, patch_state::dormant)
+					+ make_patch(100u, 50002u, 0, false, patch_state::dormant)
+					+ make_patch(100u, 50004u, 0, false, patch_state::dormant), keyer::symbol_id());
 				s->patches.invalidate();
 				worker.run_till_end();
 

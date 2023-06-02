@@ -17,14 +17,17 @@ namespace micro_profiler
 			return s;
 		}
 
-		inline patch_state2 make_patch(id_t module_id, unsigned rva, id_t id, bool requested, bool error, bool active)
+		inline patch_state_ex make_patch(id_t module_id, unsigned rva, id_t id, bool requested, patch_state::states state,
+			patch_change_result::errors last_result = patch_change_result::ok)
 		{
-			patch_state2 p;
+			patch_state_ex p;
 
 			p.id = id;
 			p.module_id = module_id;
 			p.rva = rva;
-			p.state.requested = !!requested, p.state.error = !!error, p.state.active = !!active;
+			p.state = state;
+			p.in_transit = requested;
+			p.last_result = last_result;
 			return p;
 		}
 	}

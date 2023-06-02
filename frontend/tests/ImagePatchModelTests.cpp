@@ -255,11 +255,11 @@ namespace micro_profiler
 
 				// ACT
 				add_records(*patches, plural
-					+ make_patch(140, 0x00001234, 1, true, false, false)
-					+ make_patch(140, 0x00000001, 2, true, false, true)
-					+ make_patch(11, 0x901A9010, 3, false, true, false)
-					+ make_patch(11, 0x00000011, 4, false, false, false)
-					+ make_patch(11, 0x00000031, 5, false, false, true));
+					+ make_patch(140, 0x00001234, 1, true, patch_state::dormant)
+					+ make_patch(140, 0x00000001, 2, true, patch_state::active)
+					+ make_patch(11, 0x901A9010, 3, false, patch_state::unrecoverable_error)
+					+ make_patch(11, 0x00000011, 4, false, patch_state::dormant)
+					+ make_patch(11, 0x00000031, 5, false, patch_state::active));
 				patches->invalidate();
 
 				// ASSERT
@@ -267,7 +267,7 @@ namespace micro_profiler
 					{	"gc_collect", "", 	},
 					{	"malloc", "applying", 	},
 					{	"free", "removing", 	},
-					{	"string::string", "error", 	},
+					{	"string::string", "unpatchable", 	},
 					{	"string::find", "active", 	},
 					{	"string::~string", "",	},
 					{	"string::clear", "",	},
@@ -279,8 +279,8 @@ namespace micro_profiler
 
 				// ACT
 				add_records(*patches, plural
-					+ make_patch(140, 0x00001234, 1, false, false, true)
-					+ make_patch(140, 0x00000001, 2, false, false, false), keyer::external_id());
+					+ make_patch(140, 0x00001234, 1, false, patch_state::active)
+					+ make_patch(140, 0x00000001, 2, false, patch_state::dormant), keyer::external_id());
 				patches->invalidate();
 
 				// ASSERT
@@ -288,7 +288,7 @@ namespace micro_profiler
 					{	"gc_collect", "", 	},
 					{	"malloc", "active", 	},
 					{	"free", "inactive", 	},
-					{	"string::string", "error", 	},
+					{	"string::string", "unpatchable", 	},
 					{	"string::find", "active", 	},
 					{	"string::~string", "",	},
 					{	"string::clear", "",	},
@@ -478,11 +478,11 @@ namespace micro_profiler
 
 				add_metadata(*modules, 1, data);
 				add_records(*patches, plural
-					+ make_patch(1, 0x901A9010, 1, false, true, false)
-					+ make_patch(1, 0x901A9011, 2, false, false, false)
-					+ make_patch(1, 0x00000011, 3, true, false, false)
-					+ make_patch(1, 0x00000021, 4, false, false, true)
-					+ make_patch(1, 0x00000031, 5, true, false, true));
+					+ make_patch(1, 0x901A9010, 1, false, patch_state::unrecoverable_error)
+					+ make_patch(1, 0x901A9011, 2, false, patch_state::dormant)
+					+ make_patch(1, 0x00000011, 3, true, patch_state::dormant)
+					+ make_patch(1, 0x00000021, 4, false, patch_state::active)
+					+ make_patch(1, 0x00000031, 5, true, patch_state::active));
 
 				image_patch_model model(patches, modules, mappings);
 
@@ -492,11 +492,11 @@ namespace micro_profiler
 				// ASSERT
 				string reference[][2] = {
 					{	"string::~string", "", 	},
-					{	"string::String", "inactive", 	},
-					{	"string::operator []", "applying", 	},
 					{	"string::clear", "active", 	},
+					{	"string::String", "inactive", 	},
+					{	"Gc_collect", "unpatchable", 	},
 					{	"string::Find", "removing", 	},
-					{	"Gc_collect", "error", 	},
+					{	"string::operator []", "applying", 	},
 				};
 
 				assert_equal(mkvector(reference), get_text(model, columns));

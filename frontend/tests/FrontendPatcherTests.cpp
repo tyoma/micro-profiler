@@ -21,7 +21,7 @@ using namespace std::placeholders;
 
 namespace micro_profiler
 {
-	inline bool operator ==(const patch_state2 &lhs, const patch_state2 &rhs)
+	inline bool operator ==(const patch_state_ex &lhs, const patch_state_ex &rhs)
 	{	return !(lhs < rhs) && !(rhs < lhs);	}
 
 	namespace tests
@@ -125,7 +125,7 @@ namespace micro_profiler
 						auto p = idx.find(make_tuple(payload.image_persistent_id, *i));
 
 						assert_not_null(p);
-						assert_equal(make_patch(payload.image_persistent_id, *i, 0, true, false, false), *p);
+						assert_equal(make_patch(payload.image_persistent_id, *i, 0, true, patch_state::dormant), *p);
 					}
 				});
 
@@ -134,22 +134,22 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_patch(11, 1000129, 0, true, false, false)
-					+ make_patch(11, 100100u, 0, true, false, false)
-					+ make_patch(11, 0x10000u, 0, true, false, false), *patches);
+					+ make_patch(11, 1000129, 0, true, patch_state::dormant)
+					+ make_patch(11, 100100u, 0, true, patch_state::dormant)
+					+ make_patch(11, 0x10000u, 0, true, patch_state::dormant), *patches);
 
 				// ACT
 				patches->apply(191, mkrange(rva2));
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_patch(11, 1000129, 0, true, false, false)
-					+ make_patch(11, 100100u, 0, true, false, false)
-					+ make_patch(11, 0x10000u, 0, true, false, false)
-					+ make_patch(191, 13, 0, true, false, false)
-					+ make_patch(191, 1000u, 0, true, false, false)
-					+ make_patch(191, 0x10000u, 0, true, false, false)
-					+ make_patch(191, 0x8000091u, 0, true, false, false), *patches);
+					+ make_patch(11, 1000129, 0, true, patch_state::dormant)
+					+ make_patch(11, 100100u, 0, true, patch_state::dormant)
+					+ make_patch(11, 0x10000u, 0, true, patch_state::dormant)
+					+ make_patch(191, 13, 0, true, patch_state::dormant)
+					+ make_patch(191, 1000u, 0, true, patch_state::dormant)
+					+ make_patch(191, 0x10000u, 0, true, patch_state::dormant)
+					+ make_patch(191, 0x8000091u, 0, true, patch_state::dormant), *patches);
 			}
 
 
@@ -170,7 +170,7 @@ namespace micro_profiler
 
 								// Failed...
 								+ mkpatch_change(3, patch_change_result::unrecoverable_error, 2)
-								+ mkpatch_change(2, patch_change_result::unrecoverable_error, 3));
+								+ mkpatch_change(2, patch_change_result::activation_error, 3));
 						});
 						break;
 
@@ -200,15 +200,15 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, queue.tasks.size());
 				assert_equivalent(plural
-					+ make_patch(19, 1, 1, false, false, true)
-					+ make_patch(19, 2, 3, false, true, false)
-					+ make_patch(19, 3, 2, false, true, false)
-					+ make_patch(31, 2, 0, true, false, false)
-					+ make_patch(31, 4, 0, true, false, false)
-					+ make_patch(31, 5, 0, true, false, false)
-					+ make_patch(31, 6, 0, true, false, false)
-					+ make_patch(31, 7, 0, true, false, false)
-					+ make_patch(31, 100, 0, true, false, false), *patches);
+					+ make_patch(19, 1, 1, false, patch_state::active)
+					+ make_patch(19, 2, 3, false, patch_state::dormant, patch_change_result::activation_error)
+					+ make_patch(19, 3, 2, false, patch_state::unrecoverable_error)
+					+ make_patch(31, 2, 0, true, patch_state::dormant)
+					+ make_patch(31, 4, 0, true, patch_state::dormant)
+					+ make_patch(31, 5, 0, true, patch_state::dormant)
+					+ make_patch(31, 6, 0, true, patch_state::dormant)
+					+ make_patch(31, 7, 0, true, patch_state::dormant)
+					+ make_patch(31, 100, 0, true, patch_state::dormant), *patches);
 
 				// ACT
 				queue.run_one();
@@ -216,15 +216,15 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(queue.tasks);
 				assert_equivalent(plural
-					+ make_patch(19, 1, 1, false, false, true)
-					+ make_patch(19, 2, 3, false, true, false)
-					+ make_patch(19, 3, 2, false, true, false)
-					+ make_patch(31, 2, 11, false, false, true)
-					+ make_patch(31, 4, 15, false, true, false)
-					+ make_patch(31, 5, 16, false, true, false)
-					+ make_patch(31, 6, 12, false, false, true)
-					+ make_patch(31, 7, 14, false, true, false)
-					+ make_patch(31, 100, 13, false, false, true), *patches);
+					+ make_patch(19, 1, 1, false, patch_state::active)
+					+ make_patch(19, 2, 3, false, patch_state::dormant, patch_change_result::activation_error)
+					+ make_patch(19, 3, 2, false, patch_state::unrecoverable_error)
+					+ make_patch(31, 2, 11, false, patch_state::active)
+					+ make_patch(31, 4, 15, false, patch_state::unrecoverable_error)
+					+ make_patch(31, 5, 16, false, patch_state::unrecoverable_error)
+					+ make_patch(31, 6, 12, false, patch_state::active)
+					+ make_patch(31, 7, 14, false, patch_state::unrecoverable_error)
+					+ make_patch(31, 100, 13, false, patch_state::active), *patches);
 			}
 
 
@@ -311,18 +311,18 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_patch(19, 1, 1, false, false, true)
-					+ make_patch(19, 2, 0, false, true, false)
-					+ make_patch(19, 3, 2, false, false, true), *patches);
+					+ make_patch(19, 1, 1, false, patch_state::active)
+					+ make_patch(19, 2, 0, false, patch_state::unrecoverable_error)
+					+ make_patch(19, 3, 2, false, patch_state::active), *patches);
 			}
 
 
 			test( TableIsInvalidatedOnApplyRequestSendingAndOnReceival )
 			{
 				// INIT
-				vector< vector<patch_state2> > log;
+				vector< vector<patch_state_ex> > log;
 				auto conn = patches->invalidate += [&] {
-					log.push_back(vector<patch_state2>(this->patches->begin(), this->patches->end()));
+					log.push_back(vector<patch_state_ex>(this->patches->begin(), this->patches->end()));
 				};
 				unsigned rva[] = {	1, 2, 3,	};
 
@@ -344,9 +344,9 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, log.size());
 				assert_equivalent(plural
-					+ make_patch(19, 1, 0, true, false, false)
-					+ make_patch(19, 2, 0, true, false, false)
-					+ make_patch(19, 3, 0, true, false, false), log.back());
+					+ make_patch(19, 1, 0, true, patch_state::dormant)
+					+ make_patch(19, 2, 0, true, patch_state::dormant)
+					+ make_patch(19, 3, 0, true, patch_state::dormant), log.back());
 
 				// ACT
 				queue.run_one();
@@ -354,9 +354,9 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, log.size());
 				assert_equivalent(plural
-					+ make_patch(19, 1, 0, false, true, false)
-					+ make_patch(19, 2, 1, false, false, true)
-					+ make_patch(19, 3, 3, false, true, false), log.back());
+					+ make_patch(19, 1, 0, false, patch_state::unrecoverable_error)
+					+ make_patch(19, 2, 1, false, patch_state::active)
+					+ make_patch(19, 3, 3, false, patch_state::unrecoverable_error), log.back());
 			}
 
 
@@ -423,7 +423,7 @@ namespace micro_profiler
 				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
 				unsigned rva20[] = {	3u, 13u, 1000u, 0x10000u, 100u, 0x8000091u,	};
 				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
-				vector< vector<patch_state2> > log;
+				vector< vector<patch_state_ex> > log;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
@@ -444,10 +444,10 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, log.size());
 				assert_equivalent(plural
-					+ make_patch(11, 1, 1, false, false, true)
-					+ make_patch(11, 1000129, 2, true, false, true)
-					+ make_patch(11, 100100u, 3, true, false, true)
-					+ make_patch(11, 0x10000u, 4, true, false, true), log.back());
+					+ make_patch(11, 1, 1, false, patch_state::active)
+					+ make_patch(11, 1000129, 2, true, patch_state::active)
+					+ make_patch(11, 100100u, 3, true, patch_state::active)
+					+ make_patch(11, 0x10000u, 4, true, patch_state::active), log.back());
 
 				// ACT
 				patches->revert(191, mkrange(rva2));
@@ -455,12 +455,12 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, log.size());
 				assert_equivalent(plural
-					+ make_patch(191, 3, 5, false, false, true)
-					+ make_patch(191, 13, 6, true, false, true)
-					+ make_patch(191, 1000, 7, true, false, true)
-					+ make_patch(191, 0x10000, 8, true, false, true)
-					+ make_patch(191, 100, 9, false, false, true)
-					+ make_patch(191, 0x8000091u, 10, true, false, true), log.back());
+					+ make_patch(191, 3, 5, false, patch_state::active)
+					+ make_patch(191, 13, 6, true, patch_state::active)
+					+ make_patch(191, 1000, 7, true, patch_state::active)
+					+ make_patch(191, 0x10000, 8, true, patch_state::active)
+					+ make_patch(191, 100, 9, false, patch_state::active)
+					+ make_patch(191, 0x8000091u, 10, true, patch_state::active), log.back());
 			}
 
 
@@ -487,8 +487,8 @@ namespace micro_profiler
 								+ mkpatch_change(1, patch_change_result::ok)
 
 								// Failed...
-								+ mkpatch_change(3, patch_change_result::unrecoverable_error)
-								+ mkpatch_change(2, patch_change_result::unrecoverable_error));
+								+ mkpatch_change(3, patch_change_result::activation_error)
+								+ mkpatch_change(2, patch_change_result::activation_error));
 						});
 						break;
 
@@ -501,9 +501,9 @@ namespace micro_profiler
 								+ mkpatch_change(100, patch_change_result::ok)
 								
 								// Failed...
-								+ mkpatch_change(7, patch_change_result::unrecoverable_error)
-								+ mkpatch_change(4, patch_change_result::unrecoverable_error)
-								+ mkpatch_change(5, patch_change_result::unrecoverable_error));
+								+ mkpatch_change(7, patch_change_result::activation_error)
+								+ mkpatch_change(4, patch_change_result::activation_error)
+								+ mkpatch_change(5, patch_change_result::activation_error));
 						});
 						break;
 					}
@@ -518,19 +518,20 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, queue.tasks.size());
 				assert_equivalent(plural
-					+ make_patch(19, 1, 1, false, false, false)
-					+ make_patch(19, 2, 2, false, true, true)
-					+ make_patch(19, 20, 3, false, false, true)
-					+ make_patch(19, 3, 4, false, true, true)
-					+ make_patch(19, 100, 5, false, false, true)
-					+ make_patch(31, 2, 6, true, false, true)
-					+ make_patch(31, 4, 7, true, false, true)
-					+ make_patch(31, 5, 8, true, false, true)
-					+ make_patch(31, 50, 9, false, false, true)
-					+ make_patch(31, 6, 10, true, false, true)
-					+ make_patch(31, 7, 11, true, false, true)
-					+ make_patch(31, 100, 12, true, false, true)
-					+ make_patch(31, 1001, 13, false, false, true), *patches);
+					+ make_patch(19, 1, 1, false, patch_state::dormant)
+					+ make_patch(19, 2, 2, false, patch_state::active, patch_change_result::activation_error)
+					+ make_patch(19, 20, 3, false, patch_state::active)
+					+ make_patch(19, 3, 4, false, patch_state::active, patch_change_result::activation_error)
+					+ make_patch(19, 100, 5, false, patch_state::active)
+
+					+ make_patch(31, 2, 6, true, patch_state::active)
+					+ make_patch(31, 4, 7, true, patch_state::active)
+					+ make_patch(31, 5, 8, true, patch_state::active)
+					+ make_patch(31, 50, 9, false, patch_state::active)
+					+ make_patch(31, 6, 10, true, patch_state::active)
+					+ make_patch(31, 7, 11, true, patch_state::active)
+					+ make_patch(31, 100, 12, true, patch_state::active)
+					+ make_patch(31, 1001, 13, false, patch_state::active), *patches);
 
 				// ACT
 				queue.run_one();
@@ -538,19 +539,20 @@ namespace micro_profiler
 				// ASSERT
 				assert_is_empty(queue.tasks);
 				assert_equivalent(plural
-					+ make_patch(19, 1, 1, false, false, false)
-					+ make_patch(19, 2, 2, false, true, true)
-					+ make_patch(19, 20, 3, false, false, true)
-					+ make_patch(19, 3, 4, false, true, true)
-					+ make_patch(19, 100, 5, false, false, true)
-					+ make_patch(31, 2, 6, false, false, false)
-					+ make_patch(31, 4, 7, false, true, true)
-					+ make_patch(31, 5, 8, false, true, true)
-					+ make_patch(31, 50, 9, false, false, true)
-					+ make_patch(31, 6, 10, false, false, false)
-					+ make_patch(31, 7, 11, false, true, true)
-					+ make_patch(31, 100, 12, false, false, false)
-					+ make_patch(31, 1001, 13, false, false, true), *patches);
+					+ make_patch(19, 1, 1, false, patch_state::dormant)
+					+ make_patch(19, 2, 2, false, patch_state::active, patch_change_result::activation_error)
+					+ make_patch(19, 20, 3, false, patch_state::active)
+					+ make_patch(19, 3, 4, false, patch_state::active, patch_change_result::activation_error)
+					+ make_patch(19, 100, 5, false, patch_state::active)
+
+					+ make_patch(31, 2, 6, false, patch_state::dormant)
+					+ make_patch(31, 4, 7, false, patch_state::active, patch_change_result::activation_error)
+					+ make_patch(31, 5, 8, false, patch_state::active, patch_change_result::activation_error)
+					+ make_patch(31, 50, 9, false, patch_state::active)
+					+ make_patch(31, 6, 10, false, patch_state::dormant)
+					+ make_patch(31, 7, 11, false, patch_state::active, patch_change_result::activation_error)
+					+ make_patch(31, 100, 12, false, patch_state::dormant)
+					+ make_patch(31, 1001, 13, false, patch_state::active), *patches);
 			}
 
 
@@ -587,24 +589,24 @@ namespace micro_profiler
 				assert_equal(99u, log.back().image_persistent_id);
 				assert_equal(plural + 5u + 7u, log.back().functions_rva);
 				assert_equivalent(plural
-					+ make_patch(99, 2, 1, false, false, false)
-					+ make_patch(99, 4, 2, false, false, true)
-					+ make_patch(99, 5, 3, true, false, true)
-					+ make_patch(99, 6, 4, true, false, true)
-					+ make_patch(99, 7, 5, true, false, true)
-					+ make_patch(99, 100, 6, false, true, false), *patches);
+					+ make_patch(99, 2, 1, false, patch_state::dormant)
+					+ make_patch(99, 4, 2, false, patch_state::active)
+					+ make_patch(99, 5, 3, true, patch_state::active)
+					+ make_patch(99, 6, 4, true, patch_state::active)
+					+ make_patch(99, 7, 5, true, patch_state::active)
+					+ make_patch(99, 100, 6, false, patch_state::unrecoverable_error), *patches);
 
 				// ACT
 				patches->revert(99, mkrange(rva));
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_patch(99, 2, 1, false, false, false)
-					+ make_patch(99, 4, 2, false, false, true)
-					+ make_patch(99, 5, 3, true, false, true)
-					+ make_patch(99, 6, 4, true, false, true)
-					+ make_patch(99, 7, 5, true, false, true)
-					+ make_patch(99, 100, 6, false, true, false), *patches);
+					+ make_patch(99, 2, 1, false, patch_state::dormant)
+					+ make_patch(99, 4, 2, false, patch_state::active)
+					+ make_patch(99, 5, 3, true, patch_state::active)
+					+ make_patch(99, 6, 4, true, patch_state::active)
+					+ make_patch(99, 7, 5, true, patch_state::active)
+					+ make_patch(99, 100, 6, false, patch_state::unrecoverable_error), *patches);
 				assert_equal(1u, log.size());
 			}
 
@@ -632,21 +634,21 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, patches->size());
 				assert_equivalent(plural
-					+ make_patch(99, 1, 1, false, false, false), *patches);
+					+ make_patch(99, 1, 1, false, patch_state::dormant), *patches);
 			}
 
 
 			test( TableIsInvalidatedOnRevertRequestSendingAndOnReceival )
 			{
 				// INIT
-				vector< vector<patch_state2> > log;
+				vector< vector<patch_state_ex> > log;
 				unsigned rva[] = {	1, 2, 3,	};
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 				patches->apply(19, mkrange(rva));
 
 				auto conn = patches->invalidate += [&] {
-					log.push_back(vector<patch_state2>(this->patches->begin(), this->patches->end()));
+					log.push_back(vector<patch_state_ex>(this->patches->begin(), this->patches->end()));
 				};
 
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
@@ -655,9 +657,9 @@ namespace micro_profiler
 
 					resp.defer([] (ipc::server_session::response &resp) {
 						resp(response_reverted, plural
-							+ mkpatch_change(1, patch_change_result::unrecoverable_error)
+							+ mkpatch_change(1, patch_change_result::activation_error)
 							+ mkpatch_change(2, patch_change_result::ok)
-							+ mkpatch_change(3, patch_change_result::unrecoverable_error));
+							+ mkpatch_change(3, patch_change_result::activation_error));
 					});
 				});
 
@@ -667,9 +669,9 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(1u, log.size());
 				assert_equivalent(plural
-					+ make_patch(19, 1, 1, true, false, true)
-					+ make_patch(19, 2, 2, true, false, true)
-					+ make_patch(19, 3, 3, true, false, true), log.back());
+					+ make_patch(19, 1, 1, true, patch_state::active)
+					+ make_patch(19, 2, 2, true, patch_state::active)
+					+ make_patch(19, 3, 3, true, patch_state::active), log.back());
 
 				// ACT
 				queue.run_one();
@@ -677,9 +679,9 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, log.size());
 				assert_equivalent(plural
-					+ make_patch(19, 1, 1, false, true, true)
-					+ make_patch(19, 2, 2, false, false, false)
-					+ make_patch(19, 3, 3, false, true, true), log.back());
+					+ make_patch(19, 1, 1, false, patch_state::active, patch_change_result::activation_error)
+					+ make_patch(19, 2, 2, false, patch_state::dormant)
+					+ make_patch(19, 3, 3, false, patch_state::active, patch_change_result::activation_error), log.back());
 			}
 
 		end_test_suite

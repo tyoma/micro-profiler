@@ -15,11 +15,11 @@ namespace micro_profiler
 			{
 			public:
 				unlocked_code_segment(void *address)
-					: _owned(get_range_for(address)), _unprotect(_owned), _original(begin(_owned), end(_owned))
+					: _owned(get_range_for(address)), _unprotect(_owned), _original(_owned.begin(), _owned.end())
 				{	}
 
 				~unlocked_code_segment()
-				{	copy(begin(_original), end(_original), begin(_owned));	}
+				{	copy(begin(_original), _original.end(), _owned.begin());	}
 
 			private:
 				static byte_range get_range_for(void *address)

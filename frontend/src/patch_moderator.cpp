@@ -50,7 +50,7 @@ namespace micro_profiler
 			restore_and_apply(cache, patches_, changes, *m, *tasks);
 		};
 		auto on_patch_upsert = [changes, &changes_symbol_idx] (tables::patches::const_iterator p) {
-			if (p->state.error | p->state.requested)
+			if (is_errored(p->state) || p->in_transit)
 				return;
 
 			auto r = changes_symbol_idx[keyer::symbol_id()(*p)];
@@ -58,9 +58,9 @@ namespace micro_profiler
 			if (r.is_new())
 			{
 				(*r).scope_id = 0; // TODO: support patch-scopes in the future.
-				(*r).state = (p->state.active) ? patch_moderator::patch_added : patch_moderator::patch_removed;
+				(*r).state = is_active(p->state) ? patch_moderator::patch_added : patch_moderator::patch_removed;
 			}
-			else if (!p->state.active)
+			else if (!is_active(p->state))
 			{
 				if (patch_moderator::patch_added == (*r).state)
 				{

@@ -246,7 +246,25 @@ namespace micro_profiler
 
 	void image_patch_manager::mapped(id_t module_id, id_t mapping_id, const module::mapping &mapping)
 	{
-		auto allocator = _memory_manager.create_executable_allocator(const_byte_range(0, 0), 0); // TODO: pass in proper reference and distance values.
+		auto allocator = [&] () -> shared_ptr<executable_memory_allocator> {
+			if (mapping.regions.empty())
+				return nullptr;
+
+			auto empty = true;
+			const byte *b = nullptr, *e = b;
+
+			for (auto i = begin(mapping.regions); i != end(mapping.regions); ++i)
+			{
+				if (!(i->protection & protection::execute))
+					continue;
+				if (empty || i->address < b)
+					b = i->address;
+				if (empty || (i->address + i->size) > e)
+					e = i->address + i->size;
+				empty = false;
+			}
+			return !empty ? _memory_manager.create_executable_allocator(const_byte_range(b, (e - b)), 32) : nullptr;
+		}();
 		auto protection_scope = protect(_memory_manager, mapping.regions);
 		mt::lock_guard<mt::mutex> l(_mtx);
 		auto &patch_idx = sdb::unique_index(_patches, module_rva_keyer());

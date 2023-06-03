@@ -61,7 +61,8 @@ namespace micro_profiler
 				std::vector<lock_info> locks() const;
 
 			public:
-				std::vector< std::shared_ptr<executable_memory_allocator> > allocators;
+				std::vector< std::tuple<std::shared_ptr<executable_memory_allocator>, const_byte_range, std::size_t> >
+					allocators;
 
 			private:
 				virtual std::shared_ptr<executable_memory_allocator> create_executable_allocator(const_byte_range,

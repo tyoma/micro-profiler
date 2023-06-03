@@ -51,11 +51,11 @@ namespace micro_profiler
 			vector<memory_manager::lock_info> memory_manager::locks() const
 			{	return vector<lock_info>(_locks.begin(), _locks.end());	}
 
-			shared_ptr<executable_memory_allocator> memory_manager::create_executable_allocator(const_byte_range,
-				ptrdiff_t)
+			shared_ptr<executable_memory_allocator> memory_manager::create_executable_allocator(const_byte_range source,
+				ptrdiff_t distance)
 			{
-				allocators.push_back(make_shared<executable_memory_allocator>());
-				return allocators.back();
+				allocators.push_back(make_tuple(make_shared<executable_memory_allocator>(), source, distance));
+				return get<0>(allocators.back());
 			}
 
 			shared_ptr<void> memory_manager::scoped_protect(byte_range region, int scoped_protection,

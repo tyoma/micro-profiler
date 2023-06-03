@@ -27,6 +27,12 @@ namespace micro_profiler
 			typedef shared_ptr<image_patch_manager::mapping> mapping_ptr;
 			typedef unique_ptr<patch> patch_ptr;
 
+			struct shallow_eq
+			{
+				bool operator ()(const_byte_range lhs, const_byte_range rhs) const
+				{	return lhs.begin() == rhs.begin() && lhs.end() == rhs.end();	}
+			};
+
 			class image_patch_manager_overriden : public image_patch_manager
 			{
 			public:
@@ -492,9 +498,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_pair(1u, memory_manager_.allocators[0].get())
-					+ make_pair(2u, memory_manager_.allocators[0].get())
-					+ make_pair(3u, memory_manager_.allocators[0].get()), targets_ex);
+					+ make_pair(1u, get<0>(memory_manager_.allocators[0]).get())
+					+ make_pair(2u, get<0>(memory_manager_.allocators[0]).get())
+					+ make_pair(3u, get<0>(memory_manager_.allocators[0]).get()), targets_ex);
 				assert_equivalent(plural
 					+ make_pair((void*)(0x1010F000 + 0x10001), 0)
 					+ make_pair((void*)(0x1010F000 + 0x10002), 0)
@@ -514,8 +520,8 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equivalent(plural
-					+ make_pair(4u, memory_manager_.allocators[1].get())
-					+ make_pair(5u, memory_manager_.allocators[1].get()), targets_ex);
+					+ make_pair(4u, get<0>(memory_manager_.allocators[1]).get())
+					+ make_pair(5u, get<0>(memory_manager_.allocators[1]).get()), targets_ex);
 				assert_equivalent(plural
 					+ make_pair((void*)(0x100000 + 0x10001), 0)
 					+ make_pair((void*)(0x100000 + 0x10090), 0)
@@ -725,28 +731,40 @@ namespace micro_profiler
 				}, mappings, memory_manager_);
 
 				// ACT
-				mappings.subscription->mapped(11u, 1u, make_mapping((void*)0x10300000, ""));
-				mappings.subscription->mapped(12u, 3u, make_mapping((void*)0x10300000, ""));
+				mappings.subscription->mapped(11u, 1u, make_mapping((void*)0x10300000, "", plural
+					+ make_mapped_region((byte *)0x10000, 0x2000, protection::execute | protection::read)));
+				mappings.subscription->mapped(12u, 3u, make_mapping((void*)0x10300000, "", plural
+					+ make_mapped_region((byte *)0x1000000, 0x2000, protection::write | protection::read)
+					+ make_mapped_region((byte *)0x1002000, 0x2000, protection::execute)
+					+ make_mapped_region((byte *)0x1008000, 0x3000, protection::read)
+					+ make_mapped_region((byte *)0x10B0000, 0x1000, protection::execute | protection::write | protection::read)
+					+ make_mapped_region((byte *)0x1200000, 0x2000, protection::write)));
 
 				// ASSERT
 				assert_equal(2u, memory_manager_.allocators.size());
-				assert_is_true(memory_manager_.allocators[0].use_count() > 1);
-				assert_is_true(memory_manager_.allocators[1].use_count() > 1);
+				assert_is_true(get<0>(memory_manager_.allocators[0]).use_count() > 1);
+				assert_equal_pred(const_byte_range((byte *)0x10000, 0x2000), get<1>(memory_manager_.allocators[0]),
+					shallow_eq());
+				assert_equal(32u, get<2>(memory_manager_.allocators[0]));
+				assert_is_true(get<0>(memory_manager_.allocators[1]).use_count() > 1);
+				assert_equal_pred(const_byte_range((byte *)0x1002000, 0xAF000), get<1>(memory_manager_.allocators[1]),
+					shallow_eq());
+				assert_equal(32u, get<2>(memory_manager_.allocators[1]));
 
 				// ACT
 				mappings.subscription->mapped(13u, 5u, make_mapping((void*)0x10300000, ""));
 				mappings.subscription->unmapped(1u);
 
 				// ASSERT
-				assert_equal(3u, memory_manager_.allocators.size());
-				assert_equal(1, memory_manager_.allocators[0].use_count());
-				assert_is_true(memory_manager_.allocators[1].use_count() > 1);
+				assert_equal(2u, memory_manager_.allocators.size()); // No new allocator is created.
+				assert_equal(1, get<0>(memory_manager_.allocators[0]).use_count());
+				assert_is_true(get<0>(memory_manager_.allocators[1]).use_count() > 1);
 
 				// ACT
 				mappings.subscription->unmapped(3u);
 
 				// ASSERT
-				assert_equal(1, memory_manager_.allocators[1].use_count());
+				assert_equal(1, get<0>(memory_manager_.allocators[1]).use_count());
 			}
 
 
@@ -757,8 +775,10 @@ namespace micro_profiler
 					throw 0;
 				}, mappings, memory_manager_);
 
-				mappings.subscription->mapped(11u, 11011u, make_mapping((void*)0x10300000, ""));
-				mappings.subscription->mapped(13u, 1131u, make_mapping((void*)0x7A300000, ""));
+				mappings.subscription->mapped(11u, 11011u, make_mapping((void*)0x10300000, "", plural
+					+ make_mapped_region(0, 0, protection::execute)));
+				mappings.subscription->mapped(13u, 1131u, make_mapping((void*)0x7A300000, "", plural
+					+ make_mapped_region(0, 0, protection::execute)));
 				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) {
 					return make_shared_copy(make_mapping((void*)0x15300000, "abcd"));
 				};
@@ -769,7 +789,7 @@ namespace micro_profiler
 				// ASSERT
 				assert_not_null(l);
 				assert_equal(make_mapping((void*)0x15300000, "abcd"), *l);
-				assert_equal(memory_manager_.allocators[0], l->allocator);
+				assert_equal(get<0>(memory_manager_.allocators[0]), l->allocator);
 
 				// INIT
 				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) {
@@ -781,7 +801,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(make_mapping((void*)0x25309000, "abcd zmzala"), *l);
-				assert_equal(memory_manager_.allocators[1], l->allocator);
+				assert_equal(get<0>(memory_manager_.allocators[1]), l->allocator);
 
 				// INIT
 				mappings.on_lock_mapping = [&] (id_t /*mapping_id*/) -> shared_ptr<module::mapping> {	return nullptr;	};

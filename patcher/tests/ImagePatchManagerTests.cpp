@@ -37,7 +37,7 @@ namespace micro_profiler
 			{
 			public:
 				image_patch_manager_overriden(const patch_factory &patch_factory_, mapping_access &mappings,
-						memory_manager &memory_manager_)
+						virtual_memory_manager &memory_manager_)
 					: image_patch_manager(patch_factory_, mappings, memory_manager_)
 				{	}
 

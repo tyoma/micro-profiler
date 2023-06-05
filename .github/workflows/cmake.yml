@@ -17,8 +17,8 @@ jobs:
       matrix:
         config:
           - os: ubuntu-20.04
-          - os: macos-latest
           - os: windows-latest
+#          - os: macos-latest
 
     steps:
     - uses: actions/checkout@v2

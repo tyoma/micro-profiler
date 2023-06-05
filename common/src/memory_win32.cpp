@@ -89,6 +89,38 @@ namespace micro_profiler
 	void virtual_memory::free(void *address, size_t /*size*/)
 	{	::VirtualFree(address, 0, MEM_RELEASE);	}
 
+	function<bool (pair<void *, size_t> &allocation)> virtual_memory::enumerate_allocations()
+	{
+		class enumerator
+		{
+		public:
+			enumerator()
+				: _ptr(nullptr)
+			{	}
+
+			bool operator ()(pair<void *, size_t> &allocation)
+			{
+				MEMORY_BASIC_INFORMATION mi;
+				auto start = _ptr;
+				size_t size = 0;
+
+				for (auto base = _ptr; ::VirtualQuery(_ptr, &mi, sizeof mi); _ptr += mi.RegionSize, size += mi.RegionSize)
+					if (base != mi.AllocationBase)
+					{
+						if (!mi.AllocationBase) // We've just hit an unallocated space...
+							_ptr = static_cast<byte *>(mi.BaseAddress) + mi.RegionSize; // ...let's skip it.
+						return allocation = make_pair(start, size), true;
+					}
+				return false;
+			}
+
+		private:
+			byte *_ptr;
+		};
+
+		return enumerator();
+	}
+
 
 	executable_memory_allocator::block::block(size_t size)
 		: _region(static_cast<byte *>(::VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE)), size),

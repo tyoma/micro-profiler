@@ -7,6 +7,7 @@ set(COMMON_SOURCES
 	file_stream.cpp
 	formatting.cpp
 	memory.cpp
+	memory_manager.cpp
 	path.cpp
 	pool_allocator.cpp
 	stream.cpp
@@ -34,10 +35,12 @@ elseif (UNIX)
 	)
 	if (APPLE)
 		set(COMMON_SOURCES ${COMMON_SOURCES}
+			memory_macos.cpp
 			module_macos.cpp
 		)
 	else()
 		set(COMMON_SOURCES ${COMMON_SOURCES}
+			memory_linux.cpp
 			module_linux.cpp
 		)
 	endif()		

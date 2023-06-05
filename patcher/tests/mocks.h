@@ -52,7 +52,7 @@ namespace micro_profiler
 			};
 
 
-			class memory_manager : public micro_profiler::memory_manager
+			class memory_manager : public micro_profiler::virtual_memory_manager
 			{
 			public:
 				typedef std::tuple<byte_range, int /*scoped*/, int /*released*/> lock_info;

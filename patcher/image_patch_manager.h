@@ -39,7 +39,7 @@ namespace micro_profiler
 		struct mapping;
 
 	public:
-		image_patch_manager(patch_factory patch_factory_, mapping_access &mappings, memory_manager &memory_manager_);
+		image_patch_manager(patch_factory patch_factory_, mapping_access &mappings, virtual_memory_manager &memory_manager_);
 		~image_patch_manager();
 
 		virtual std::shared_ptr<mapping> lock_module(id_t module_id);
@@ -75,7 +75,7 @@ namespace micro_profiler
 	private:
 		const patch_factory _patch_factory;
 		mapping_access &_mapping_access;
-		memory_manager &_memory_manager;
+		virtual_memory_manager &_memory_manager;
 		mt::mutex _mtx;
 		sdb::table< patch_record, auto_increment_constructor<patch_record> > _patches;
 		sdb::table<mapping_record> _mappings;

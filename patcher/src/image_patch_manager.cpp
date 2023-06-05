@@ -68,7 +68,7 @@ namespace micro_profiler
 
 
 		template <typename T>
-		vector< shared_ptr<void> > protect(memory_manager &mm, const T &regions)
+		vector< shared_ptr<void> > protect(virtual_memory_manager &mm, const T &regions)
 		{
 			enum {	rwx = protection::read | protection::write | protection::execute	};
 			vector< shared_ptr<void> > locks;
@@ -85,7 +85,7 @@ namespace micro_profiler
 	}
 
 	image_patch_manager::image_patch_manager(patch_factory patch_factory_, mapping_access &mapping_access_,
-			memory_manager &memory_manager_)
+			virtual_memory_manager &memory_manager_)
 		: _patch_factory(patch_factory_), _mapping_access(mapping_access_), _memory_manager(memory_manager_),
 			_mapping_subscription(mapping_access_.notify(*this))
 	{	}

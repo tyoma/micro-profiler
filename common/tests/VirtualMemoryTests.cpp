@@ -82,6 +82,64 @@ namespace micro_profiler
 				assert_equal(occupied + 8 * g, p2.get());
 				assert_equal(occupied + g, p3.get());
 			}
+
+
+			test( AllocationsMadeAreEnumerated )
+			{
+				// INIT
+				const auto g = virtual_memory::granularity();
+				vector< pair<void *, size_t> > allocations;
+				auto read = [&] {
+					pair<void *, size_t> a;
+
+					allocations.clear();
+					for (auto e = virtual_memory::enumerate_allocations(); e(a); )
+						allocations.push_back(a);
+				};
+				auto find_ = [&] (pair<void *, size_t> a) {
+					for (auto i = allocations.begin(); i != allocations.end(); ++i)
+						if (i->first <= a.first && static_cast<byte *>(a.first) + a.second <= static_cast<byte *>(i->first) + i->second)
+							return true;
+					return false;
+				};
+
+				allocations.reserve(100);
+
+				// INIT / ACT
+				auto a1 = virtual_memory::allocate(10 * g, protection::read);
+				auto a2 = virtual_memory::allocate(16 * g, protection::read);
+				auto a3 = virtual_memory::allocate(18 * g, protection::read);
+
+				// ACT
+				read();
+
+				// ASSERT
+				assert_is_true(find_(make_pair(a1, 10 * g)));
+				assert_is_true(find_(make_pair(a2, 16 * g)));
+				assert_is_true(find_(make_pair(a3, 18 * g)));
+
+				// INIT / ACT
+				virtual_memory::free(a2, 16 * g);
+
+				// ACT
+				read();
+
+				// ASSERT
+				assert_is_true(find_(make_pair(a1, 10 * g)));
+				assert_is_false(find_(make_pair(a2, 16 * g)));
+				assert_is_true(find_(make_pair(a3, 18 * g)));
+
+				// INIT / ACT
+				virtual_memory::free(a1, 10 * g);
+				virtual_memory::free(a3, 18 * g);
+
+				// ACT
+				read();
+
+				// ASSERT
+				assert_is_false(find_(make_pair(a1, 10 * g)));
+				assert_is_false(find_(make_pair(a3, 18 * g)));
+			}
 		end_test_suite
 	}
 }

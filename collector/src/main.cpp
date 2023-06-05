@@ -63,7 +63,7 @@ micro_profiler::collector_app_instance g_instance(&micro_profiler::collector_app
 
 namespace micro_profiler
 {
-	class collector_app_instance::default_memory_manager : public memory_manager
+	class collector_app_instance::default_memory_manager : public virtual_memory_manager
 	{
 		virtual shared_ptr<executable_memory_allocator> create_executable_allocator(const_byte_range /*reference_region*/,
 			ptrdiff_t /*max_distance*/) override

@@ -23,6 +23,7 @@
 #include "noncopyable.h"
 #include "range.h"
 
+#include <functional>
 #include <memory>
 
 namespace micro_profiler
@@ -37,10 +38,10 @@ namespace micro_profiler
 		enum flags {	read = (1 << 0), write = (1 << 1), execute = (1 << 2),	};
 	};
 
-	struct memory_manager
+	struct virtual_memory_manager
 	{
 		virtual std::shared_ptr<executable_memory_allocator> create_executable_allocator(const_byte_range reference_region,
-			std::ptrdiff_t max_distance) = 0;
+			std::ptrdiff_t distance_order) = 0;
 		virtual std::shared_ptr<void> scoped_protect(byte_range region, int /*protection::flags*/ scoped_protection,
 			int /*protection::flags*/ released_protection) = 0;
 	};
@@ -71,6 +72,7 @@ namespace micro_profiler
 		static void *allocate(std::size_t size, int protection);
 		static void *allocate(const void *at, std::size_t size, int protection);
 		static void free(void *address, std::size_t size);
+		static std::function<bool (std::pair<void *, size_t> &allocation)> enumerate_allocations();
 	};
 
 	struct virtual_memory::bad_fixed_alloc : std::bad_alloc

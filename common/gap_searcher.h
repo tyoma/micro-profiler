@@ -65,9 +65,15 @@ namespace micro_profiler
 	inline bool gap_search_up(L &location, const T &map, S min_gap_size, const P &pred)
 	{
 		const auto reference = location;
+		auto i = upper_bound(map, location, pred);
 
-		for (auto i = lower_bound(map, location, pred);
-			i != std::end(map) && (pred.region_start(*i) < location + min_gap_size);
+		if (std::begin(map) != i)
+		{
+			if (pred.region_end(*--i) > location)
+				location = pred.region_end(*i);
+			i++;
+		}
+		for (; i != std::end(map) && (pred.region_start(*i) < location + min_gap_size);
 			location = pred.region_end(*i++))
 		{	}
 		return reference <= (location - 1) + min_gap_size;

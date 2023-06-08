@@ -168,6 +168,44 @@ namespace micro_profiler
 			}
 
 
+			test( GapSearchUpFromInsideRegionReturnsFirstMatch )
+			{
+				// INIT
+				unsigned location;
+				auto m1 = plural
+					+ make_pair(1000u, 100u);
+				auto m2 = plural
+					+ make_pair(10000u, 2000u);
+				auto m3 = plural
+					+ make_pair(10000u, 2000u)
+					+ make_pair(13000u, 4000u)
+					+ make_pair(20000u, 2000u);
+
+				// ACT / ASSERT
+				location = 990u;
+				assert_is_true(gap_search_up(location, m1, 10u /*size*/, location_length_pair_less()));
+				assert_equal(990u, location);
+				location = 990u;
+				assert_is_true(gap_search_up(location, m1, 11u /*size*/, location_length_pair_less()));
+				assert_equal(1100u, location);
+				location = 1090u;
+				assert_is_true(gap_search_up(location, m1, 110u /*size*/, location_length_pair_less()));
+				assert_equal(1100u, location);
+				location = 1000u;
+				assert_is_true(gap_search_up(location, m1, 10u /*size*/, location_length_pair_less()));
+				assert_equal(1100u, location);
+				location = 11000u;
+				assert_is_true(gap_search_up(location, m2, 200u /*size*/, location_length_pair_less()));
+				assert_equal(12000u, location);
+				location = 11000u;
+				assert_is_true(gap_search_up(location, m3, 200u /*size*/, location_length_pair_less()));
+				assert_equal(12000u, location);
+				location = 11050u;
+				assert_is_true(gap_search_up(location, m3, 1001u /*size*/, location_length_pair_less()));
+				assert_equal(17000u, location);
+			}
+
+
 			test( GapSearchDownReturnsFirstMatchNoGaps )
 			{
 				// INIT

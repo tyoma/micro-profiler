@@ -30,12 +30,14 @@ namespace micro_profiler
 	{
 	public:
 		reachable_executable_allocator(const_byte_range reference, ptrdiff_t distance_order, size_t block_size)
-			: _reference(reference), _distance_order(distance_order), _block_size(block_size),
-				_block(make_shared<block>(reference, distance_order, block_size))
+			: _reference(reference), _distance_order(distance_order), _block_size(block_size)
 		{	}
 
 		virtual shared_ptr<void> allocate(size_t size) override
 		{
+			if (!_block)
+				_block = make_shared<block>(_reference, _distance_order, _block_size);
+
 			void *ptr = _block->allocate(size);
 
 			if (!ptr)
@@ -57,7 +59,7 @@ namespace micro_profiler
 				auto below = -((static_cast<ptrdiff_t>(1) << (d - 1)) - 1) - 1;
 
 				for (pair<void *, size_t> a; e(a); )
-					allocations.push_back(make_pair(static_cast<byte *>(a.first), a.second));
+					virtual_memory::normalize(a), allocations.push_back(make_pair(static_cast<byte *>(a.first), a.second));
 				if (!gap_search_up(l, allocations, block_size, location_length_pair_less()) || l - r.begin() - 1 > above)
 				{
 					l = r.begin();
@@ -103,9 +105,17 @@ namespace micro_profiler
 		ptrdiff_t distance_order)
 	{	return make_shared<reachable_executable_allocator>(reference, distance_order, _allocation_block_size);	}
 
-	shared_ptr<void> memory_manager::scoped_protect(byte_range /*region*/, int /*protection::flags*/ /*scoped_protection*/,
+	shared_ptr<void> memory_manager::scoped_protect(byte_range region, int /*protection::flags*/ /*scoped_protection*/,
 		int /*protection::flags*/ /*released_protection*/)
 	{
-		throw 0;
+		// TODO: rewrite through tests.
+		try
+		{
+			return make_shared<scoped_unprotect>(region); // For a while forgive protection change exceptions.
+		} 
+		catch (exception &/*e*/)
+		{
+			return nullptr;
+		}
 	}
 }

@@ -24,6 +24,7 @@
 #include <collector/collector_app.h>
 #include <collector/module_tracker.h>
 #include <common/allocator.h>
+#include <common/memory_manager.h>
 #include <common/noncopyable.h>
 #include <logger/multithreaded_logger.h>
 #include <logger/writer.h>
@@ -46,16 +47,13 @@ namespace micro_profiler
 		static ipc::channel_ptr_t probe_create_channel(ipc::channel &inbound);
 
 	private:
-		class default_memory_manager;
-
-	private:
 		void platform_specific_init();
 		static log::writer_t create_writer(module &module_helper);
 
 	private:
 		log::multithreaded_logger _logger;
 		default_allocator _allocator;
-		std::unique_ptr<default_memory_manager> _memory_manager;
+		memory_manager _memory_manager;
 		std::shared_ptr<thread_monitor> _thread_monitor;
 		calls_collector _collector;
 		module_tracker _module_tracker;

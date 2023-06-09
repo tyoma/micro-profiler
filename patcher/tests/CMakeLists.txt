@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 set(PATCHER_TEST_SOURCES
+	allocator.cpp
 	BinaryTranslationTestsX86.cpp
 	DynamicHookingTests.cpp
 	FunctionPatchTests.cpp

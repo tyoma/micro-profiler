@@ -1,5 +1,6 @@
 #include <patcher/function_patch.h>
 
+#include "allocator.h"
 #include "helpers.h"
 #include "mocks.h"
 
@@ -18,12 +19,13 @@ namespace micro_profiler
 		int guinea_snprintf(char *buffer, size_t count, const char *format, ...);
 
 		begin_test_suite( FunctionPatchTests )
-			executable_memory_allocator allocator;
+			this_module_allocator allocator;
 			mocks::trace_events trace;
 			shared_ptr<void> scope;
 
 			init( Init )
 			{
+				allocator.allocate(1);
 				scope = temporary_unlock_code_at(address_cast_hack<void *>(&recursive_factorial));
 			}
 

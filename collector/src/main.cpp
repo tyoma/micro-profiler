@@ -63,27 +63,6 @@ micro_profiler::collector_app_instance g_instance(&micro_profiler::collector_app
 
 namespace micro_profiler
 {
-	class collector_app_instance::default_memory_manager : public virtual_memory_manager
-	{
-		virtual shared_ptr<executable_memory_allocator> create_executable_allocator(const_byte_range /*reference_region*/,
-			ptrdiff_t /*max_distance*/) override
-		{	return make_shared<executable_memory_allocator>();	}
-
-		virtual shared_ptr<void> scoped_protect(byte_range region, int /*scoped_protection*/, int /*released_protection*/) override
-		{
-			try
-			{
-				return make_shared<scoped_unprotect>(region); // For a while forgive protection change exceptions.
-			} 
-			catch (exception &e)
-			{
-				LOGE("Failed to scope-protect memory region!") % A(e.what()) % A(region.begin()) % A(region.length());
-				return nullptr;
-			}
-		}
-	};
-
-
 	namespace
 	{
 		struct null_channel : ipc::channel
@@ -147,11 +126,11 @@ namespace micro_profiler
 			mt::thread_callbacks &thread_callbacks, module &module_helper, size_t trace_limit,
 			calls_collector *&collector_ptr)
 		: _logger(create_writer(module_helper), (log::g_logger = &_logger, &get_datetime)),
-			_memory_manager(new default_memory_manager), _thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
+			_memory_manager(virtual_memory::granularity()), _thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
 			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks), _module_tracker(module_helper),
 			_patch_manager([this] (void *target, id_t /*id*/, executable_memory_allocator &allocator) {
 				return unique_ptr<patch>(new function_patch(target, &_collector, allocator));
-			}, _module_tracker, *_memory_manager), _auto_connect(true)
+			}, _module_tracker, _memory_manager), _auto_connect(true)
 	{
 		collector_ptr = &_collector;
 

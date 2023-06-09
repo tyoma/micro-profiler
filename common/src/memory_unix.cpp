@@ -84,6 +84,9 @@ namespace micro_profiler
 
 	void virtual_memory::free(void *address, size_t size)
 	{	::munmap(address, size);	}
+	
+	void virtual_memory::normalize(pair<void *, size_t> &/*allocation*/)
+	{	}
 
 
 	executable_memory_allocator::block::block(size_t size)

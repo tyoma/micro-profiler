@@ -73,6 +73,7 @@ namespace micro_profiler
 		static void *allocate(const void *at, std::size_t size, int protection);
 		static void free(void *address, std::size_t size);
 		static std::function<bool (std::pair<void *, size_t> &allocation)> enumerate_allocations();
+		static void normalize(std::pair<void *, size_t> &allocation);
 	};
 
 	struct virtual_memory::bad_fixed_alloc : std::bad_alloc

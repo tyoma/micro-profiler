@@ -1,8 +1,8 @@
 #include <patcher/dynamic_hooking.h>
 
+#include "allocator.h"
 #include "mocks.h"
 
-#include <common/memory.h>
 #include <common/time.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
@@ -185,7 +185,7 @@ namespace micro_profiler
 
 		begin_test_suite( DynamicHookingTests )
 
-			executable_memory_allocator allocator;
+			this_module_allocator allocator;
 			shared_ptr<void> thunk_memory;
 			mocks::trace_events trace;
 

@@ -72,7 +72,6 @@
 
 	micro_profiler_jumper_proto:
 	_micro_profiler_jumper_proto:
-		mov	$0x3141592600000001, %rax # trampoline address
-		jmp	*%rax
+		jmp	micro_profiler_jumper_proto_end + 0x31415981 # trampoline address (displacement)
 	micro_profiler_jumper_proto_end:
 	_micro_profiler_jumper_proto_end:

@@ -121,6 +121,9 @@ namespace micro_profiler
 		return enumerator();
 	}
 
+	void virtual_memory::normalize(pair<void *, size_t> &allocation)
+	{	allocation.second = ((allocation.second - 1) / granularity() + 1) * granularity();	}
+
 
 	executable_memory_allocator::block::block(size_t size)
 		: _region(static_cast<byte *>(::VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE)), size),

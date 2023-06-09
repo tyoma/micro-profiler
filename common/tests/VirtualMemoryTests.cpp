@@ -96,7 +96,7 @@ namespace micro_profiler
 					for (auto e = virtual_memory::enumerate_allocations(); e(a); )
 						allocations.push_back(a);
 				};
-				auto find_ = [&] (pair<void *, size_t> a) {
+				auto find_ = [&] (pair<void *, size_t> a) -> bool {
 					for (auto i = allocations.begin(); i != allocations.end(); ++i)
 						if (i->first <= a.first && static_cast<byte *>(a.first) + a.second <= static_cast<byte *>(i->first) + i->second)
 							return true;

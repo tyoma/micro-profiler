@@ -76,8 +76,6 @@
 	micro_profiler_trampoline_proto_end:
 
 	micro_profiler_jumper_proto:
-		jmp	[jumper_target]
-
-		jumper_target	dq	3141592600000001h
+		jmp	micro_profiler_jumper_proto_end + 31415981h ; trampoline address (displacement)
 	micro_profiler_jumper_proto_end:
 end

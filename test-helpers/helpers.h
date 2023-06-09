@@ -144,7 +144,6 @@ namespace micro_profiler
 		{	c = static_cast<CharT>(::toupper(c));	}
 
 		std::shared_ptr<void> occupy_memory(void *start, unsigned int length = 1000);
-		std::shared_ptr<void> allocate_edge(); // creates guard + allocated pages, returns a pointer to the boundary.
 	}
 
 	inline bool operator ==(const thread_info &lhs, const thread_info &rhs)

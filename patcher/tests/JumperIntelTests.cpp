@@ -1,8 +1,8 @@
 #include <patcher/jumper.h>
 
+#include "allocator.h"
 #include "helpers.h"
 
-#include <common/memory.h>
 #include <iterator>
 #include <patcher/exceptions.h>
 #include <test-helpers/helpers.h>
@@ -39,6 +39,15 @@ namespace micro_profiler
 		begin_test_suite( JumperIntelTests )
 			shared_ptr<byte> edge;
 			shared_ptr<void> scope;
+			this_module_allocator allocator;
+
+			shared_ptr<byte> allocate_edge()
+			{
+				auto n = virtual_memory::granularity();
+				auto m = allocator.allocate(n);
+
+				return shared_ptr<byte>(m, static_cast<byte *>(m.get()) + n / 2);
+			}
 
 			init( Init )
 			{

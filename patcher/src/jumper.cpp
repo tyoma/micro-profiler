@@ -96,7 +96,7 @@ namespace micro_profiler
 		mem_copy(j.begin(), &micro_profiler_jumper_proto, j.length());
 		replace(j, 1, [divert_to] (...) {	return reinterpret_cast<size_t>(divert_to);	});
 		replace(j, 0x81, [divert_to] (ptrdiff_t address) {
-			return reinterpret_cast<ptrdiff_t>(divert_to) - address;
+			return static_cast<int>(reinterpret_cast<ptrdiff_t>(divert_to) - address);
 		});
 		if (_entry < 0)
 		{

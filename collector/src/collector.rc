@@ -65,7 +65,7 @@ BEGIN
             VALUE "FileDescription", "Realtime statistics collector for MicroProfiler"
             VALUE "FileVersion", MP_VERSION_STR
             VALUE "InternalName", "micro-profiler.dll"
-            VALUE "LegalCopyright", "© Copyright 2011-2022 gevorkyan.org. All rights reserved."
+            VALUE "LegalCopyright", "© Copyright 2011-2023 gevorkyan.org. All rights reserved."
             VALUE "OriginalFilename", "micro-profiler.dll"
             VALUE "ProductName", "MicroProfiler"
             VALUE "ProductVersion", MP_VERSION_STR

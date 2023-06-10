@@ -26,6 +26,7 @@
 #include <common/memory.h>
 #include <cstdint>
 #include <limits>
+#include <patcher/jump.h>
 #include <stdexcept>
 
 using namespace std;
@@ -37,28 +38,27 @@ extern "C" {
 
 namespace micro_profiler
 {
-	const size_t c_trampoline_size = &micro_profiler_trampoline_proto_end - &micro_profiler_trampoline_proto;
+	const size_t c_trampoline_prologue_size = &micro_profiler_trampoline_proto_end - &micro_profiler_trampoline_proto;
+	const size_t c_trampoline_base_size = c_trampoline_prologue_size + c_jump_size;
 
 
 	void initialize_trampoline(void *trampoline_address, const void *target, const void *id,
 		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
-		byte_range trampoline(static_cast<byte *>(trampoline_address), c_trampoline_size);
+		byte_range prologue(static_cast<byte *>(trampoline_address), c_trampoline_prologue_size);
 
-		mem_copy(trampoline.begin(), &micro_profiler_trampoline_proto, trampoline.length());
-		replace(trampoline, 1, [interceptor] (...) {	return reinterpret_cast<size_t>(interceptor);	});
-		replace(trampoline, 2, [id] (...) {	return reinterpret_cast<size_t>(id);	});
-		replace(trampoline, 3, [on_enter] (...) {	return reinterpret_cast<size_t>(on_enter);	});
-		replace(trampoline, 0x83, [on_enter] (ptrdiff_t address) {
+		mem_copy(prologue.begin(), &micro_profiler_trampoline_proto, prologue.length());
+		replace(prologue, 1, [interceptor] (...) {	return reinterpret_cast<size_t>(interceptor);	});
+		replace(prologue, 2, [id] (...) {	return reinterpret_cast<size_t>(id);	});
+		replace(prologue, 3, [on_enter] (...) {	return reinterpret_cast<size_t>(on_enter);	});
+		replace(prologue, 0x83, [on_enter] (ptrdiff_t address) {
 			return reinterpret_cast<ptrdiff_t>(on_enter) - address;
 		});
-		replace(trampoline, 4, [on_exit] (...) {	return reinterpret_cast<size_t>(on_exit);	});
-		replace(trampoline, 0x84, [on_exit] (ptrdiff_t address) {
+		replace(prologue, 4, [on_exit] (...) {	return reinterpret_cast<size_t>(on_exit);	});
+		replace(prologue, 0x84, [on_exit] (ptrdiff_t address) {
 			return reinterpret_cast<ptrdiff_t>(on_exit) - address;
 		});
-		replace(trampoline, 5, [target] (...) {	return reinterpret_cast<size_t>(target);	});
-		replace(trampoline, 0x85, [target] (ptrdiff_t address) {
-			return reinterpret_cast<ptrdiff_t>(target) - address;
-		});
+
+		jump_initialize(static_cast<byte *>(trampoline_address) + c_trampoline_prologue_size, target);
 	}
 }

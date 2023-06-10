@@ -191,7 +191,7 @@ namespace micro_profiler
 
 			init( AllocateMemory )
 			{
-				thunk_memory = allocator.allocate(c_trampoline_size);
+				thunk_memory = allocator.allocate(c_trampoline_base_size);
 			}
 
 
@@ -313,7 +313,7 @@ namespace micro_profiler
 				typedef string (fn_t)(throwing_fn_t *f, string input);
 
 				// INIT
-				shared_ptr<void> thunk2 = allocator.allocate(c_trampoline_size);
+				shared_ptr<void> thunk2 = allocator.allocate(c_trampoline_base_size);
 				exception_call_tracer trace2;
 
 				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&throwing_function),
@@ -337,7 +337,7 @@ namespace micro_profiler
 
 				// INIT
 				shared_ptr<void> thunks[3] = {
-					allocator.allocate(c_trampoline_size), allocator.allocate(c_trampoline_size), allocator.allocate(c_trampoline_size),
+					allocator.allocate(c_trampoline_base_size), allocator.allocate(c_trampoline_base_size), allocator.allocate(c_trampoline_base_size),
 				};
 				initialize_trampoline(thunks[0].get(), address_cast_hack<const void *>(&nesting_3<fn2_t, fn1_t, string>),
 					"f3", &trace);
@@ -427,7 +427,7 @@ namespace micro_profiler
 				// INIT
 				void * const id1 = reinterpret_cast<void *>(size_t() - 1234);
 				void * const id2 = reinterpret_cast<void *>(size_t() - 12323);
-				shared_ptr<void> thunk_memory2 = allocator.allocate(c_trampoline_size);
+				shared_ptr<void> thunk_memory2 = allocator.allocate(c_trampoline_base_size);
 				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), id1, &trace);
 				initialize_trampoline(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), id2,
 					&trace);
@@ -464,7 +464,7 @@ namespace micro_profiler
 				// INIT
 				const char *text1 = "reverse_string_2";
 				const char *text2 = "outer_function<fn1_t*>";
-				shared_ptr<void> thunk_memory2 = allocator.allocate(c_trampoline_size);
+				shared_ptr<void> thunk_memory2 = allocator.allocate(c_trampoline_base_size);
 				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), text1, &trace);
 				initialize_trampoline(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), text2,
 					&trace);

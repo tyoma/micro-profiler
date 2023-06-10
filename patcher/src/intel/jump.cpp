@@ -20,14 +20,26 @@
 
 #include "jump.h"
 
+#include <cstdint>
+#include <numeric>
+#include <patcher/jump.h>
+
+using namespace std;
+
 namespace micro_profiler
 {
+	const size_t c_jump_size = sizeof(assembler::jump);
+
 	namespace assembler
 	{
 		void jump::init(const void *address)
 		{
+			auto d = static_cast<const byte *>(address) - reinterpret_cast<byte *>(this + 1);
+
+			if (d < numeric_limits<int32_t>::min() || numeric_limits<int32_t>::max() < d)
+				throw out_of_range("address");
 			opcode = 0xE9;
-			displacement = static_cast<dword>(reinterpret_cast<size_t>(address) - reinterpret_cast<size_t>(this + 1));
+			displacement = static_cast<dword>(d);
 		}
 
 		void short_jump::init(const void *address)
@@ -40,4 +52,7 @@ namespace micro_profiler
 			*this = j;
 		}
 	}
+
+	void jump_initialize(void *at, const void *target)
+	{	static_cast<assembler::jump *>(at)->init(target);	}
 }

@@ -21,7 +21,6 @@
 .model flat
 .code
 	PUBLIC _micro_profiler_trampoline_proto, _micro_profiler_trampoline_proto_end
-	PUBLIC _micro_profiler_jumper_proto, _micro_profiler_jumper_proto_end
 
 	_micro_profiler_trampoline_proto: ; fastcall argument passing: ECX, EDX, <stack>
 		push	eax ; some MS CRT functions accept arguments in EAX register...
@@ -40,7 +39,7 @@
 		pop	eax
 
 		lea	esp, dword ptr [esp + 04h]
-		call	target + 31415985h ; target address
+		call	[trampoline_proto_end]
 	target:
 		lea	esp, dword ptr [esp - 04h]
 
@@ -55,9 +54,6 @@
 		mov	dword ptr [esp + 04h], eax ; restore return address
 		pop	eax
 		ret
+	trampoline_proto_end:
 	_micro_profiler_trampoline_proto_end:
-
-	_micro_profiler_jumper_proto:
-		jmp	_micro_profiler_jumper_proto_end + 31415981h ; trampoline address (displacement)
-	_micro_profiler_jumper_proto_end:
 end

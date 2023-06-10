@@ -20,32 +20,11 @@
 
 #pragma once
 
-#include <common/types.h>
-
-#pragma pack(push, 1)
+#include <cstddef>
 
 namespace micro_profiler
 {
-	namespace assembler
-	{
-		typedef unsigned int dword;
-
-		struct jump
-		{
-			void init(const void *address);
-
-			byte opcode;
-			dword displacement;
-		};
-
-		struct short_jump
-		{
-			void init(const void *address);
-
-			byte opcode;
-			byte displacement;
-		};
-	}
+	extern const std::size_t c_jump_size;
+	
+	void jump_initialize(void *at, const void *target);
 }
-
-#pragma pack(pop)

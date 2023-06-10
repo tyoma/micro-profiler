@@ -31,15 +31,8 @@
 
 using namespace std;
 
-extern "C" {
-	extern const uint8_t micro_profiler_jumper_proto;
-	extern const uint8_t micro_profiler_jumper_proto_end;
-}
-
 namespace micro_profiler
 {
-	const byte c_jumper_size = static_cast<byte>(&micro_profiler_jumper_proto_end - &micro_profiler_jumper_proto);
-
 	namespace
 	{
 		const auto c_short_jump_size = static_cast<signed char>(sizeof(assembler::short_jump));
@@ -88,16 +81,10 @@ namespace micro_profiler
 			throw leading_too_short();
 		_entry = assembler::is_nop(_target) ? (max)(extra, c_short_jump_size) : -(c_short_jump_size + extra);
 
-		byte_range j(prologue(), c_jumper_size);
-
 		if (!is_uniform(prologue(), prologue_size()))
 			throw padding_insufficient();
 		_fill = *prologue();
-		mem_copy(j.begin(), &micro_profiler_jumper_proto, j.length());
-		replace(j, 1, [divert_to] (...) {	return reinterpret_cast<size_t>(divert_to);	});
-		replace(j, 0x81, [divert_to] (ptrdiff_t address) {
-			return static_cast<int>(reinterpret_cast<ptrdiff_t>(divert_to) - address);
-		});
+		reinterpret_cast<assembler::jump *>(prologue())->init(divert_to);
 		if (_entry < 0)
 		{
 			mem_copy(_target + _entry, _target, extra);
@@ -128,5 +115,5 @@ namespace micro_profiler
 	{	return _target - prologue_size();	}
 
 	byte jumper::prologue_size() const
-	{	return static_cast<byte>(c_jumper_size + (_entry < 0 ? -_entry : 0));	}
+	{	return static_cast<byte>(sizeof(assembler::jump) + (_entry < 0 ? -_entry : 0));	}
 }

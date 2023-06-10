@@ -21,8 +21,6 @@
 .text
 	.globl micro_profiler_trampoline_proto, micro_profiler_trampoline_proto_end
 	.globl _micro_profiler_trampoline_proto, _micro_profiler_trampoline_proto_end
-	.globl micro_profiler_jumper_proto, micro_profiler_jumper_proto_end
-	.globl _micro_profiler_jumper_proto, _micro_profiler_jumper_proto_end
 
 	micro_profiler_trampoline_proto:	# argument passing: RDI, RSI, RDX, RCX, R8, and R9, <stack>
 	_micro_profiler_trampoline_proto:
@@ -40,8 +38,7 @@
 		pop	%ecx
 
 		lea	0x04(%esp), %esp
-		call	target + 0x31415985 # target address (displacement)
-	target:
+		call	trampoline_proto_end
 		lea	-0x04(%esp), %esp
 
 		push	%eax
@@ -55,11 +52,6 @@
 		mov	%eax, 0x04(%esp) # restore return address
 		pop	%eax
 		ret
+	trampoline_proto_end:
 	micro_profiler_trampoline_proto_end:
 	_micro_profiler_trampoline_proto_end:
-
-	micro_profiler_jumper_proto:
-	_micro_profiler_jumper_proto:
-		jmp	micro_profiler_jumper_proto_end + 0x31415981 # trampoline address (displacement)
-	micro_profiler_jumper_proto_end:
-	_micro_profiler_jumper_proto_end:

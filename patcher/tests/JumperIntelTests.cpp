@@ -5,6 +5,7 @@
 
 #include <iterator>
 #include <patcher/exceptions.h>
+#include <patcher/jump.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -59,32 +60,33 @@ namespace micro_profiler
 			test( ConstructionSucceedsWhenAJumperLengthImmediatelyPrecedingTargetAreAvailableForNOPsAtEntry )
 			{
 				// INIT
-				auto target = edge.get() + c_jumper_size;
+				auto dt = static_cast<const void *>(edge.get() + virtual_memory::granularity());
+				auto target = edge.get() + c_jump_size;
 
 				// INIT / ACT / ASSERT (must not throw)
 				target[0] = 0x90, target[1] = 0x90; // nop, nop
-				auto_jumper(target, 0);
-				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, 0).entry()));
-				assert_is_false(auto_jumper(target, 0).active());
+				auto_jumper(target, dt);
+				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, dt).entry()));
+				assert_is_false(auto_jumper(target, dt).active());
 				target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
-				auto_jumper (target, 0);
-				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, 0).entry()));
+				auto_jumper (target, dt);
+				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, dt).entry()));
 				target[0] = 0x8B, target[1] = 0xFF; // mov edi, edi
-				auto_jumper(target, 0);
-				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, 0).entry()));
+				auto_jumper(target, dt);
+				assert_equal(target + 2, static_cast<const byte *>(auto_jumper(target, dt).entry()));
 				target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x00; // 3-byte nop
-				auto_jumper(target, 0);
-				assert_equal(target + 3, static_cast<const byte *>(auto_jumper(target, 0).entry()));
+				auto_jumper(target, dt);
+				assert_equal(target + 3, static_cast<const byte *>(auto_jumper(target, dt).entry()));
 				target[0] = 0x0f, target[1] = 0x1f, target[2] = 0x40, target[3] = 0x08; // 4-byte nop
-				auto_jumper(target, 0);
-				assert_equal(target + 4, static_cast<const byte *>(auto_jumper(target, 0).entry()));
+				auto_jumper(target, dt);
+				assert_equal(target + 4, static_cast<const byte *>(auto_jumper(target, dt).entry()));
 			}
 
 //#ifdef WIN32	// It is possible to prepare the edge allocation validly only on Windows
 //			test( ConstructionFailsIfPrecedeedAllocatedBytesAreInsufficientForANOPJumper )
 //			{
 //				// INIT
-//				auto target = edge.get() + c_jumper_size - 1 /*one byte short of allocated space*/;
+//				auto target = edge.get() + c_jump_size - 1 /*one byte short of allocated space*/;
 //
 //				// INIT / ACT / ASSERT
 //				target[0] = 0x90, target[1] = 0x90; // nop, nop
@@ -105,16 +107,17 @@ namespace micro_profiler
 			{
 				// INIT
 				const auto jmp_size = 2; // change to sizeof short_jump
+				auto dt = static_cast<const void *>(edge.get() + virtual_memory::granularity());
 
-				const auto ok = edge.get() + c_jumper_size + jmp_size;
+				const auto ok = edge.get() + c_jump_size + jmp_size;
 
 				// INIT
 				auto ok_target = ok + 2;
 				ok_target[0] = 0xF7, ok_target[1] = 0xF9; // idiv ecx
 
 				// ACT / ASSERT
-				auto_jumper(ok_target, 0);
-				assert_equal(ok_target - 4, auto_jumper(ok_target, 0).entry());
+				auto_jumper(ok_target, dt);
+				assert_equal(ok_target - 4, auto_jumper(ok_target, dt).entry());
 
 				// INIT
 				ok_target = ok + 3;
@@ -122,8 +125,8 @@ namespace micro_profiler
 				ok_target[0] = 0x89, ok_target[1] = 0x65, ok_target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
 
 				// ACT / ASSERT
-				auto_jumper(ok_target, 0);
-				assert_equal(ok_target - 5, auto_jumper(ok_target, 0).entry());
+				auto_jumper(ok_target, dt);
+				assert_equal(ok_target - 5, auto_jumper(ok_target, dt).entry());
 
 				// INIT
 				ok_target = ok + 4;
@@ -132,8 +135,8 @@ namespace micro_profiler
 				ok_target[3] = 0xFF;
 
 				// ACT / ASSERT
-				auto_jumper(ok_target, 0);
-				assert_equal(ok_target - 6, auto_jumper(ok_target, 0).entry());
+				auto_jumper(ok_target, dt);
+				assert_equal(ok_target - 6, auto_jumper(ok_target, dt).entry());
 
 				// INIT
 				ok_target = ok + 5;
@@ -142,7 +145,7 @@ namespace micro_profiler
 				ok_target[3] = 0x00, ok_target[4] = 0x00;
 
 				// ACT / ASSERT
-				auto_jumper(ok_target, 0);
+				auto_jumper(ok_target, dt);
 
 				// INIT
 				ok_target = ok + 6;
@@ -151,59 +154,60 @@ namespace micro_profiler
 				ok_target[3] = 0xFD, ok_target[4] = 0xFF, ok_target[5] = 0xFF;
 
 				// ACT / ASSERT
-				auto_jumper(ok_target, 0);
+				auto_jumper(ok_target, dt);
 			}
 
 
 			test( JumperFailsToWrapAFunctionWithADirtyPrologueNOP )
 			{
 				// INIT
-				auto target = edge.get() + c_jumper_size;
+				auto target = edge.get() + c_jump_size;
+				auto dt = static_cast<const void *>(edge.get() + virtual_memory::granularity());
 
 				// INIT / ACT / ASSERT
 				target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
-				target[-(c_jumper_size / 2)] = 0x12;
-				assert_throws(auto_jumper(target, 0), padding_insufficient);
-				fill(target - c_jumper_size, target, (byte)0xCC);
-				fill(target - c_jumper_size / 3, target, (byte)0x90);
-				assert_throws(auto_jumper(target, 0), padding_insufficient);
-				fill(target - c_jumper_size, target, (byte)0x90);
-				fill(target - 2 * c_jumper_size / 3, target - c_jumper_size / 3, (byte)0x9B);
-				assert_throws(auto_jumper(target, 0), padding_insufficient);
-				fill(target - c_jumper_size, target, (byte)0x90);
-				target[-c_jumper_size] = 0x12;
-				assert_throws(auto_jumper(target, 0), padding_insufficient);
+				target[-((ptrdiff_t)c_jump_size / 2)] = 0x12;
+				assert_throws(auto_jumper(target, dt), padding_insufficient);
+				fill(target - c_jump_size, target, (byte)0xCC);
+				fill(target - c_jump_size / 3, target, (byte)0x90);
+				assert_throws(auto_jumper(target, dt), padding_insufficient);
+				fill(target - c_jump_size, target, (byte)0x90);
+				fill(target - 2 * c_jump_size / 3, target - c_jump_size / 3, (byte)0x9B);
+				assert_throws(auto_jumper(target, dt), padding_insufficient);
+				fill(target - c_jump_size, target, (byte)0x90);
+				target[-(ptrdiff_t)c_jump_size] = 0x12;
+				assert_throws(auto_jumper(target, dt), padding_insufficient);
 			}
 
 
 			test( JumperFailsToWrapAFunctionWithADirtyPrologueOpcode )
 			{
 				// INIT
-				auto target = edge.get() + c_jumper_size + 6;
+				auto target = edge.get() + c_jump_size + 6;
 
 				target[0] = 0xF7, target[1] = 0xF9; // idiv ecx
-				target[-(c_jumper_size + 4)] = 0x12;
+				target[-((ptrdiff_t)c_jump_size + 4)] = 0x12;
 
 				// INIT / ACT / ASSERT
 				assert_throws(auto_jumper(target, 0), padding_insufficient);
 
 				// INIT
-				fill(target - (c_jumper_size + 4), target, (byte)0xCC);
+				fill(target - (c_jump_size + 4), target, (byte)0xCC);
 				target[-1] = 0x12;
 
 				// INIT / ACT / ASSERT
 				assert_throws(auto_jumper(target, 0), padding_insufficient);
 
 				// INIT
-				fill(target - (c_jumper_size + 5), target, (byte)0x90);
-				target[-(c_jumper_size + 5)] = 0x87;
+				fill(target - (c_jump_size + 5), target, (byte)0x90);
+				target[-((ptrdiff_t)c_jump_size + 5)] = 0x87;
 				target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
 
 				// INIT / ACT / ASSERT
 				assert_throws(auto_jumper(target, 0), padding_insufficient);
 
 				// INIT
-				fill(target - (c_jumper_size + 5), target, (byte)0x83);
+				fill(target - (c_jump_size + 5), target, (byte)0x83);
 				target[-1] = 0x12;
 
 				// INIT / ACT / ASSERT
@@ -214,8 +218,9 @@ namespace micro_profiler
 			test( FunctionsWorkNormallyAfterJumperConstruction )
 			{
 				// INIT / ACT
-				jumper j1(address_cast_hack<void *>(&one), 0);
-				jumper j2(address_cast_hack<void *>(&two), 0);
+				auto dt = static_cast<const void *>(edge.get() + virtual_memory::granularity());
+				jumper j1(address_cast_hack<void *>(&one), dt);
+				jumper j2(address_cast_hack<void *>(&two), dt);
 
 				// ACT / ASSERT
 				assert_equal("one", one());
@@ -226,27 +231,27 @@ namespace micro_profiler
 			test( JumperIsInitializedOnConstruction )
 			{
 				// INIT / ACT
-				auto target = edge.get() + c_jumper_size;
-				fill(target - c_jumper_size, target, (byte)0xC9);
+				auto target = edge.get() + c_jump_size;
+				fill(target - c_jump_size, target, (byte)0xC9);
 				target[0] = 0x66, target[1] = 0x90; // xchg ax, ax
 
 				{
 					jumper j(target, address_cast_hack<void *>(&three));
 
 				// ACT / ASSERT
-					assert_equal("three", address_cast_hack<string (*)()>(target - c_jumper_size)());
+					assert_equal("three", address_cast_hack<string (*)()>(target - c_jump_size)());
 				}
 
 				// INIT / ACT
-				target = edge.get() + c_jumper_size + 5;
-				fill(target - c_jumper_size - 5, target, (byte)0xC9);
+				target = edge.get() + c_jump_size + 5;
+				fill(target - c_jump_size - 5, target, (byte)0xC9);
 				target[0] = 0x89, target[1] = 0x65, target[2] = 0xF0; // mov esp, dword ptr [ebp-0x10]
 
 				{
 					jumper j(target, address_cast_hack<void *>(&four));
 
 				// ACT / ASSERT
-					assert_equal("four", address_cast_hack<string (*)()>(target - c_jumper_size - 5)());
+					assert_equal("four", address_cast_hack<string (*)()>(target - c_jump_size - 5)());
 				}
 			}
 
@@ -254,8 +259,9 @@ namespace micro_profiler
 			test( EntryIsCallableOnConstruction )
 			{
 				// INIT / ACT
-				jumper j1(address_cast_hack<void *>(&one), 0);
-				jumper j2(address_cast_hack<void *>(&two), 0);
+				auto dt = static_cast<const void *>(edge.get() + virtual_memory::granularity());
+				jumper j1(address_cast_hack<void *>(&one), dt);
+				jumper j2(address_cast_hack<void *>(&two), dt);
 
 				// ACT / ASSERT
 				assert_equal("one", address_cast_hack<string (*)()>(j1.entry())());
@@ -338,7 +344,7 @@ namespace micro_profiler
 			test( AttemptToConstructOverSingleByteOpcodedFunctionFails )
 			{
 				// INIT
-				auto target = edge.get() + c_jumper_size + 4 /*guarantee no problems with space to move to*/;
+				auto target = edge.get() + c_jump_size + 4 /*guarantee no problems with space to move to*/;
 
 				// INIT / ACT / ASSERT
 				target[0] = 0x52, target[1] = 0xC3; // push ..., ret

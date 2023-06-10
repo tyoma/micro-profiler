@@ -20,7 +20,6 @@
 
 .code
 	PUBLIC micro_profiler_trampoline_proto, micro_profiler_trampoline_proto_end
-	PUBLIC micro_profiler_jumper_proto, micro_profiler_jumper_proto_end
 
 	micro_profiler_trampoline_proto: ; argument passing: RCX, RDX, R8, and R9, <stack>
 		push	rcx
@@ -47,7 +46,7 @@
 		pop	rcx
 
 		add	rsp, 08h
-		call	[target]
+		call	[trampoline_proto_end]
 		sub	rsp, 08h
 
 		push	rax
@@ -72,10 +71,6 @@
 		callee_id	dq	3141592600000002h
 		on_enter	dq	3141592600000003h
 		on_exit	dq	3141592600000004h
-		target	dq	3141592600000005h
+	trampoline_proto_end:
 	micro_profiler_trampoline_proto_end:
-
-	micro_profiler_jumper_proto:
-		jmp	micro_profiler_jumper_proto_end + 31415981h ; trampoline address (displacement)
-	micro_profiler_jumper_proto_end:
 end

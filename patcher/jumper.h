@@ -25,8 +25,6 @@
 
 namespace micro_profiler
 {
-	extern const byte c_jumper_size;
-
 	class jumper
 	{
 	public:

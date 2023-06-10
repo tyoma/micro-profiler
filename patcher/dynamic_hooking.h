@@ -25,7 +25,7 @@
 
 namespace micro_profiler
 {
-	extern const size_t c_trampoline_size;
+	extern const size_t c_trampoline_base_size;
 
 	template <typename InterceptorT>
 	struct hook_types
@@ -45,7 +45,6 @@ namespace micro_profiler
 		static hook_types<void>::on_exit_t *on_exit()
 		{	return reinterpret_cast<hook_types<void>::on_exit_t *>(&InterceptorT::on_exit);	}
 	};
-
 
 
 	void initialize_trampoline(void *trampoline, const void *target, const void *id, void *interceptor,

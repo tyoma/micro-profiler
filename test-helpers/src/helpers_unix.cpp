@@ -19,19 +19,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			string get_current_dir()
-			{
-				char path[4096] = { 0 };
-				char *p = getcwd(path, 4096);
-
-				assert_not_null(p);
-				return p;
-			}
-		}
-
-
 		image::image(string path)
 		{
 			reset(::dlopen(path.c_str(), RTLD_NOW), [] (void *h) {

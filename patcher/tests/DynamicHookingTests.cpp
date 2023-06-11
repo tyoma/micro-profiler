@@ -4,6 +4,7 @@
 #include "mocks.h"
 
 #include <common/time.h>
+#include <patcher/jump.h>
 #include <test-helpers/helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -16,6 +17,16 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			size_t trampoline_jump_size()
+			{	return c_trampoline_size + c_jump_size;	}
+
+			template <typename T>
+			inline void initialize_trampoline_jump(void *at, const void *target, const void *id, T *interceptor)
+			{
+				initialize_trampoline(at, id, interceptor);
+				jump_initialize(static_cast<byte *>(at) + c_trampoline_size, target);
+			}
+
 			template <typename U, typename V>
 			inline U address_cast_hack2(V v)
 			{
@@ -191,7 +202,7 @@ namespace micro_profiler
 
 			init( AllocateMemory )
 			{
-				thunk_memory = allocator.allocate(c_trampoline_base_size);
+				thunk_memory = allocator.allocate(trampoline_jump_size());
 			}
 
 
@@ -200,7 +211,7 @@ namespace micro_profiler
 				typedef int (fn_t)(int *value);
 
 				// INIT / ACT
-				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&increment), 0, &trace);
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack<const void *>(&increment), 0, &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 				int value = 123;
 
@@ -225,7 +236,7 @@ namespace micro_profiler
 			void CheckReturnValueIdentity(FunctionT *original, const T &input)
 			{
 				// INIT / ACT
-				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(original), 0, &trace);
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack<const void *>(original), 0, &trace);
 				FunctionT *f = address_cast_hack<FunctionT *>(thunk_memory.get());
 
 				// ACT / ASSERT
@@ -236,7 +247,7 @@ namespace micro_profiler
 			void CheckReturnValueIdentity2(FunctionT *original, const T &input)
 			{
 				// INIT / ACT
-				initialize_trampoline(thunk_memory.get(), address_cast_hack2<const void *>(original), 0, &trace);
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack2<const void *>(original), 0, &trace);
 				FunctionT *f = address_cast_hack2<FunctionT *>(thunk_memory.get());
 
 				// ACT / ASSERT
@@ -247,7 +258,7 @@ namespace micro_profiler
 			void CheckReturnValueIdentity3(FunctionT *original, const T &input)
 			{
 				// INIT / ACT
-				initialize_trampoline(thunk_memory.get(), address_cast_hack3<const void *>(original), 0, &trace);
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack3<const void *>(original), 0, &trace);
 				FunctionT *f = address_cast_hack3<FunctionT *>(thunk_memory.get());
 
 				// ACT / ASSERT
@@ -313,12 +324,12 @@ namespace micro_profiler
 				typedef string (fn_t)(throwing_fn_t *f, string input);
 
 				// INIT
-				shared_ptr<void> thunk2 = allocator.allocate(c_trampoline_base_size);
+				shared_ptr<void> thunk2 = allocator.allocate(trampoline_jump_size());
 				exception_call_tracer trace2;
 
-				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&throwing_function),
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack<const void *>(&throwing_function),
 					"thrower", &trace2);
-				initialize_trampoline(thunk2.get(), address_cast_hack<const void *>(&calling_a_thrower_1<throwing_fn_t, string>),
+				initialize_trampoline_jump(thunk2.get(), address_cast_hack<const void *>(&calling_a_thrower_1<throwing_fn_t, string>),
 					"caller", &trace2);
 				throwing_fn_t *thrower = address_cast_hack<throwing_fn_t *>(thunk_memory.get());
 				fn_t *caller = address_cast_hack<fn_t *>(thunk2.get());
@@ -337,13 +348,13 @@ namespace micro_profiler
 
 				// INIT
 				shared_ptr<void> thunks[3] = {
-					allocator.allocate(c_trampoline_base_size), allocator.allocate(c_trampoline_base_size), allocator.allocate(c_trampoline_base_size),
+					allocator.allocate(trampoline_jump_size()), allocator.allocate(trampoline_jump_size()), allocator.allocate(trampoline_jump_size()),
 				};
-				initialize_trampoline(thunks[0].get(), address_cast_hack<const void *>(&nesting_3<fn2_t, fn1_t, string>),
+				initialize_trampoline_jump(thunks[0].get(), address_cast_hack<const void *>(&nesting_3<fn2_t, fn1_t, string>),
 					"f3", &trace);
-				initialize_trampoline(thunks[1].get(), address_cast_hack<const void *>(&nesting_2<fn1_t, string>),
+				initialize_trampoline_jump(thunks[1].get(), address_cast_hack<const void *>(&nesting_2<fn1_t, string>),
 					"f2", &trace);
-				initialize_trampoline(thunks[2].get(), address_cast_hack<const void *>(&identity_11<string>),
+				initialize_trampoline_jump(thunks[2].get(), address_cast_hack<const void *>(&identity_11<string>),
 					"f1", &trace);
 				fn3_t *f3 = address_cast_hack<fn3_t *>(thunks[0].get());
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunks[1].get());
@@ -391,7 +402,7 @@ namespace micro_profiler
 
 				// INIT
 				void * const id = reinterpret_cast<void *>(size_t() - 123);
-				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), id, &trace);
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), id, &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 
 				// ACT
@@ -427,9 +438,9 @@ namespace micro_profiler
 				// INIT
 				void * const id1 = reinterpret_cast<void *>(size_t() - 1234);
 				void * const id2 = reinterpret_cast<void *>(size_t() - 12323);
-				shared_ptr<void> thunk_memory2 = allocator.allocate(c_trampoline_base_size);
-				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), id1, &trace);
-				initialize_trampoline(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), id2,
+				shared_ptr<void> thunk_memory2 = allocator.allocate(trampoline_jump_size());
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), id1, &trace);
+				initialize_trampoline_jump(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), id2,
 					&trace);
 				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
@@ -464,9 +475,9 @@ namespace micro_profiler
 				// INIT
 				const char *text1 = "reverse_string_2";
 				const char *text2 = "outer_function<fn1_t*>";
-				shared_ptr<void> thunk_memory2 = allocator.allocate(c_trampoline_base_size);
-				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), text1, &trace);
-				initialize_trampoline(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), text2,
+				shared_ptr<void> thunk_memory2 = allocator.allocate(trampoline_jump_size());
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack<const void *>(&reverse_string_2), text1, &trace);
+				initialize_trampoline_jump(thunk_memory2.get(), address_cast_hack<const void *>(&outer_function<fn1_t*>), text2,
 					&trace);
 				fn1_t *f1 = address_cast_hack<fn1_t *>(thunk_memory.get());
 				fn2_t *f2 = address_cast_hack<fn2_t *>(thunk_memory2.get());
@@ -500,7 +511,7 @@ namespace micro_profiler
 				// INIT
 				vector<int> buffer1(500), buffer2(1500);
 				vector<int> buffer3(3000), buffer4(4000);
-				initialize_trampoline(thunk_memory.get(), address_cast_hack<const void *>(&bubble_sort), "test", &trace);
+				initialize_trampoline_jump(thunk_memory.get(), address_cast_hack<const void *>(&bubble_sort), "test", &trace);
 				fn_t *f = address_cast_hack<fn_t *>(thunk_memory.get());
 				stopwatch sw;
 

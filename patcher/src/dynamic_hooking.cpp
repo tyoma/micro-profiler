@@ -22,13 +22,6 @@
 
 #include "replace.h"
 
-#include <algorithm>
-#include <common/memory.h>
-#include <cstdint>
-#include <limits>
-#include <patcher/jump.h>
-#include <stdexcept>
-
 using namespace std;
 
 extern "C" {
@@ -38,14 +31,13 @@ extern "C" {
 
 namespace micro_profiler
 {
-	const size_t c_trampoline_prologue_size = &micro_profiler_trampoline_proto_end - &micro_profiler_trampoline_proto;
-	const size_t c_trampoline_base_size = c_trampoline_prologue_size + c_jump_size;
+	const size_t c_trampoline_size = &micro_profiler_trampoline_proto_end - &micro_profiler_trampoline_proto;
 
 
-	void initialize_trampoline(void *trampoline_address, const void *target, const void *id,
-		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
+	void initialize_trampoline(void *at, const void *id, void *interceptor,
+		hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
-		byte_range prologue(static_cast<byte *>(trampoline_address), c_trampoline_prologue_size);
+		byte_range prologue(static_cast<byte *>(at), c_trampoline_size);
 
 		mem_copy(prologue.begin(), &micro_profiler_trampoline_proto, prologue.length());
 		replace(prologue, 1, [interceptor] (...) {	return reinterpret_cast<size_t>(interceptor);	});
@@ -58,7 +50,5 @@ namespace micro_profiler
 		replace(prologue, 0x84, [on_exit] (ptrdiff_t address) {
 			return reinterpret_cast<ptrdiff_t>(on_exit) - address;
 		});
-
-		jump_initialize(static_cast<byte *>(trampoline_address) + c_trampoline_prologue_size, target);
 	}
 }

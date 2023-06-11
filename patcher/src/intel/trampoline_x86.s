@@ -39,19 +39,18 @@
 
 		lea	0x04(%esp), %esp
 		call	trampoline_proto_end
-		lea	-0x04(%esp), %esp
 
 		push	%eax
 		rdtsc
 		mov	$0x31415901, %ecx # 1st argument, interceptor
 		push	%edx
 		push	%eax # 3rd argument, timestamp
-		lea	0x0C(%esp), %edx # 2nd argument, stack_ptr
+		lea	0x08(%esp), %edx # 2nd argument, stack_ptr
 		call	on_exit + 0x31415984 # on_exit address (displacement)
 	on_exit:
-		mov	%eax, 0x04(%esp) # restore return address
+		mov	%eax, %ecx # restore return address
 		pop	%eax
-		ret
+		jmp	*%ecx
 	trampoline_proto_end:
 	micro_profiler_trampoline_proto_end:
 	_micro_profiler_trampoline_proto_end:

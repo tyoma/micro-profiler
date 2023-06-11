@@ -49,21 +49,20 @@
 
 		add	$0x08, %rsp
 		call	trampoline_proto_end
-		sub	$0x08, %rsp
 
 		push	%rax
 		rdtsc
 		mov	$0x3141592600000001, %rdi # 1st argument, interceptor
-		lea	0x08(%rsp), %rsi # 2nd argument, stack_ptr
+		lea	(%rsp), %rsi # 2nd argument, stack_ptr
 		shl	$0x20, %rdx
 		or		%rax, %rdx # 3rd argument, timestamp
 		mov	$0x3141592600000004, %rax # on_exit() address
-		sub	$0x80, %rsp
+		sub	$0x88, %rsp
 		call	*%rax
-		add	$0x80, %rsp
-		mov	%rax, 0x08(%rsp) # restore return address
+		add	$0x88, %rsp
+		mov	%rax, %rcx # restore return address
 		pop	%rax
-		ret
+		jmp	*%rcx
 	trampoline_proto_end:
 	micro_profiler_trampoline_proto_end:
 	_micro_profiler_trampoline_proto_end:

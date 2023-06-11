@@ -40,20 +40,18 @@
 
 		lea	esp, dword ptr [esp + 04h]
 		call	[trampoline_proto_end]
-	target:
-		lea	esp, dword ptr [esp - 04h]
 
 		push	eax
 		rdtsc
 		mov	ecx, 31415901h ; 1st argument, interceptor
 		push	edx
 		push	eax ; 3rd argument, timestamp
-		lea	edx, dword ptr [esp + 0Ch] ; 2nd argument, stack_ptr
+		lea	edx, dword ptr [esp + 08h] ; 2nd argument, stack_ptr
 		call	on_exit + 31415984h ; on_exit address (displacement)
 	on_exit:
-		mov	dword ptr [esp + 04h], eax ; restore return address
+		mov	ecx, eax
 		pop	eax
-		ret
+		jmp	ecx ; jmp to return address instead of ret
 	trampoline_proto_end:
 	_micro_profiler_trampoline_proto_end:
 end

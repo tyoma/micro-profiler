@@ -47,7 +47,6 @@
 
 		add	rsp, 08h
 		call	[trampoline_proto_end]
-		sub	rsp, 08h
 
 		push	rax
 		push	r10
@@ -57,15 +56,15 @@
 		shl	rdx, 20h
 		or		rdx, rax
 		mov	r8, rdx ; 3rd argument, timestamp
-		lea	rdx, qword ptr [rsp + 18h] ; 2nd argument, stack_ptr
-		sub	rsp, 020h
+		lea	rdx, qword ptr [rsp + 10h] ; 2nd argument, stack_ptr
+		sub	rsp, 028h
 		call	[on_exit]
-		add	rsp, 020h
-		mov	qword ptr [rsp + 18h], rax ; restore return address
+		add	rsp, 028h
+		mov	rcx, rax ; jump-as-return here
 		pop	r11
 		pop	r10
 		pop	rax
-		ret
+		jmp	rcx
 
 		interceptor	dq	3141592600000001h
 		callee_id	dq	3141592600000002h

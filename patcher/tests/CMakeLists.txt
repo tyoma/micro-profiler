@@ -11,6 +11,7 @@ set(PATCHER_TEST_SOURCES
 	JumperIntelTests.cpp
 	mocks.cpp
 	OffsetDisplacedReferencesTestsX86.cpp
+	TranslatedFunctionPatchTests.cpp
 )
 
 add_compile_options(

@@ -1,9 +1,11 @@
-#include <patcher/function_patch.h>
+#include <patcher/translated_function_patch.h>
 
 #include "allocator.h"
 #include "helpers.h"
 #include "mocks.h"
 
+#include <common/image_info.h>
+#include <common/module.h>
 #include <test-helpers/constants.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -15,10 +17,23 @@ namespace micro_profiler
 {
 	namespace tests
 	{
+		namespace
+		{
+			template <typename F>
+			size_t get_function_size(F *function)
+			{
+				static auto meta = load_image_info(
+					module::platform().locate(address_cast_hack<void *>(function)).path
+				);
+
+				return 123;
+			}
+		}
+
 		int recursive_factorial(int v);
 		int guinea_snprintf(char *buffer, size_t count, const char *format, ...);
 
-		begin_test_suite( FunctionPatchTests )
+		begin_test_suite( TranslatedFunctionPatchTests )
 			this_module_allocator allocator;
 			mocks::trace_events trace;
 			shared_ptr<void> scope;
@@ -33,7 +48,8 @@ namespace micro_profiler
 			test( PatchIsNotActiveActiveAtConstruction )
 			{
 				// INIT / ACT
-				function_patch patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator);
+				translated_function_patch patch(address_cast_hack<void *>(&recursive_factorial),
+					get_function_size(&recursive_factorial), &trace, allocator);
 
 				// ACT
 				recursive_factorial(2);
@@ -64,7 +80,8 @@ namespace micro_profiler
 			test( RevertingStopsTracing )
 			{
 				// INIT / ACT
-				function_patch patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator);
+				translated_function_patch patch(address_cast_hack<void *>(&recursive_factorial),
+					get_function_size(&recursive_factorial), &trace, allocator);
 
 				patch.activate();
 
@@ -85,7 +102,8 @@ namespace micro_profiler
 			test( PatchedFunctionCallsHookCallbacks )
 			{
 				// INIT / ACT
-				function_patch patch(address_cast_hack<void *>(&recursive_factorial), &trace, allocator);
+				translated_function_patch patch(address_cast_hack<void *>(&recursive_factorial),
+					get_function_size(&recursive_factorial), &trace, allocator);
 
 				patch.activate();
 
@@ -146,7 +164,7 @@ namespace micro_profiler
 				char buffer[1000] = { 0 };
 
 				// INIT / ACT
-				function_patch patch(address_cast_hack<void *>(f), &trace, allocator);
+				translated_function_patch patch(address_cast_hack<void *>(f), get_function_size(f), &trace, allocator);
 
 				patch.activate();
 

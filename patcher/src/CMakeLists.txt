@@ -10,6 +10,7 @@ set(PATCHER_SOURCES
 	intel/jump.cpp
 	intel/trampoline${ASMEXT}
 	jumper.cpp
+	translated_function_patch.cpp
 )
 
 add_library(patcher STATIC ${PATCHER_SOURCES})

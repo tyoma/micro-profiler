@@ -22,42 +22,34 @@
 
 #include "dynamic_hooking.h"
 #include "interface.h"
-#include "jump.h"
-#include "jumper.h"
 
 namespace micro_profiler
 {
-	class function_patch : public patch, noncopyable
+	class translated_function_patch : public patch, noncopyable
 	{
 	public:
 		template <typename T>
-		function_patch(void *target, T *interceptor, executable_memory_allocator &allocator_);
+		translated_function_patch(void *target, std::size_t size, T *interceptor, executable_memory_allocator &allocator_);
 
 		bool active() const;
 		virtual bool activate() override;
 		virtual bool revert() override;
 
 	private:
+		void init(void *target, std::size_t target_size, executable_memory_allocator &allocator_, void *interceptor,
+			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
+
+	private:
 		std::shared_ptr<void> _trampoline;
-		jumper _jumper;
+		byte *_target;
+		std::size_t _moved_size;
+		std::vector<byte> _original_prolouge;
 	};
 
 
 
 	template <typename T>
-	inline function_patch::function_patch(void *target, T *interceptor, executable_memory_allocator &allocator_)
-		: _trampoline(allocator_.allocate(c_trampoline_size + c_jump_size)), _jumper(target, _trampoline.get())
-	{
-		initialize_trampoline(_trampoline.get(), target, interceptor);
-		jump_initialize(static_cast<byte *>(_trampoline.get()) + c_trampoline_size, _jumper.entry());
-	}
-
-	inline bool function_patch::active() const
-	{	return _jumper.active();	}
-
-	inline bool function_patch::activate()
-	{	return _jumper.activate();	}
-
-	inline bool function_patch::revert()
-	{	return _jumper.revert();	}
+	inline translated_function_patch::translated_function_patch(void *target, std::size_t size, T *interceptor,
+		executable_memory_allocator &allocator_)
+	{	init(target, size, allocator_, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
 }

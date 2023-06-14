@@ -22,6 +22,8 @@
 
 #include "replace.h"
 
+#include <cstdint>
+
 using namespace std;
 
 extern "C" {

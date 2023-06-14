@@ -1,9 +1,9 @@
 #include <patcher/binary_translation.h>
 
-#include "ldisasm.h"
-
+#include <capstone/capstone.h>
 #include <common/memory.h>
 #include <common/noncopyable.h>
+#include <patcher/instruction_iterator.h>
 #include <stddef.h>
 
 using namespace std;
@@ -19,38 +19,6 @@ namespace micro_profiler
 		template <typename DispT>
 		bool is_target_inside(const byte *disp, const_byte_range source)
 		{	return source.inside(disp + sizeof(DispT) + *reinterpret_cast<const DispT *>(disp));	}
-
-		template <typename ByteT>
-		class instruction_iterator
-		{
-		public:
-			instruction_iterator(range<ByteT, size_t> body)
-				: _ptr(body.begin()), _remaining_length(body.length()), _current_length(0)
-			{	}
-
-			ByteT *ptr() const
-			{	return _ptr;	}
-
-			byte length() const
-			{	return _current_length;	}
-
-			bool fetch()
-			{
-				if (_remaining_length == _current_length)
-					return false;
-				_ptr += _current_length;
-				_remaining_length -= _current_length;
-				_current_length = static_cast<byte>(ldisasm(_ptr, sizeof(void*) == 8));
-				if (_current_length > _remaining_length)
-					throw inconsistent_function_range_exception("attempt to read past the function body"); // TODO: test!
-				return true;
-			}
-
-		private:
-			ByteT *_ptr;
-			size_t _remaining_length;
-			byte _current_length;
-		};
 
 		template <typename ByteT>
 		struct displacement_visitor
@@ -137,6 +105,8 @@ namespace micro_profiler
 
 		for (instruction_iterator<const byte> i(source); i.fetch(); destination += i.length())
 		{
+			if (i.is_rip_based())
+				throw inconsistent_function_range_exception("rip-based addressing is not supported yet");
 			if (0xCC == *i.ptr())
 				throw inconsistent_function_range_exception("debug interrupt met");
 			mem_copy(destination, i.ptr(), i.length());

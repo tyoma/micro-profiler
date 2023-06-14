@@ -28,15 +28,15 @@ using namespace std;
 namespace micro_profiler
 {
 	bool translated_function_patch::active() const
-	{	return !_original_prolouge.empty();	}
+	{	return _active;	}
 
 	bool translated_function_patch::activate()
 	{
 		if (active())
 			return false;
-		_original_prolouge.assign(_target, _target + _moved_size);
 		jump_initialize(_target, _trampoline.get());
-		mem_set(_target + c_jump_size, 0xCC, _moved_size - c_jump_size);
+		mem_set(_target + c_jump_size, 0xCC, _prologue_size - c_jump_size);
+		_active = true;
 		return true;
 	}
 
@@ -44,18 +44,20 @@ namespace micro_profiler
 	{
 		if (!active())
 			return false;
-		mem_copy(_target, _original_prolouge.data(), _original_prolouge.size());
-		_original_prolouge.clear();
+		mem_copy(_target, static_cast<byte *>(_trampoline.get()) + _prologue_backup_offset, _prologue_size);
+		_active = false;
 		return true;
 	}
 
 	void translated_function_patch::init(void *target, size_t target_size, executable_memory_allocator &allocator_,
 		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
-		byte_range src(static_cast<byte *>(target), target_size);
+		const byte_range src(static_cast<byte *>(target), target_size);
+		const auto moved_size = static_cast<byte>(calculate_fragment_length(src, c_jump_size));
 
-		_moved_size = calculate_fragment_length(src, c_jump_size);
-		_trampoline = allocator_.allocate(c_trampoline_size + _moved_size + c_jump_size);
+		_prologue_backup_offset = static_cast<byte>(c_trampoline_size + moved_size + c_jump_size);
+		_trampoline = allocator_.allocate(_prologue_backup_offset + moved_size);
+		_prologue_size = moved_size;
 		_target = static_cast<byte *>(target);
 
 		auto ptr = static_cast<byte *>(_trampoline.get());
@@ -63,9 +65,12 @@ namespace micro_profiler
 		initialize_trampoline(ptr, target, interceptor, on_enter, on_exit);
 		ptr += c_trampoline_size;
 
-		move_function(ptr, byte_range(src.begin(), _moved_size));
-		ptr += _moved_size;
+		move_function(ptr, byte_range(_target, moved_size));
+		ptr += moved_size;
 
-		jump_initialize(ptr, src.begin() + _moved_size);
+		jump_initialize(ptr, src.begin() + moved_size);
+		ptr += c_jump_size;
+
+		mem_copy(ptr, _target, _prologue_size);
 	}
 }

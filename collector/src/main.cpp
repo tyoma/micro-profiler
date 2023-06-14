@@ -32,6 +32,7 @@
 #include <mt/thread_callbacks.h>
 #include <patcher/function_patch.h>
 #include <patcher/image_patch_manager.h>
+#include <patcher/translated_function_patch.h>
 
 #ifdef _WIN32
 	#include <process.h>
@@ -129,7 +130,8 @@ namespace micro_profiler
 			_memory_manager(virtual_memory::granularity()), _thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
 			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks), _module_tracker(module_helper),
 			_patch_manager([this] (void *target, id_t /*id*/, executable_memory_allocator &allocator) {
-				return unique_ptr<patch>(new function_patch(target, &_collector, allocator));
+				return unique_ptr<patch>(new translated_function_patch(target, 19, &_collector, allocator));
+//				return unique_ptr<patch>(new function_patch(target, &_collector, allocator));
 			}, _module_tracker, _memory_manager), _auto_connect(true)
 	{
 		collector_ptr = &_collector;

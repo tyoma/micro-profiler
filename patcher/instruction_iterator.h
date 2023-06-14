@@ -20,37 +20,50 @@
 
 #pragma once
 
-#include "dynamic_hooking.h"
-#include "interface.h"
+#include <common/range.h>
+#include <memory>
 
 namespace micro_profiler
 {
-	class translated_function_patch : public patch, noncopyable
+	class instruction_iterator_
 	{
 	public:
-		template <typename T>
-		translated_function_patch(void *target, std::size_t size, T *interceptor, executable_memory_allocator &allocator_);
+		instruction_iterator_(range<const byte, size_t> source_range);
+		~instruction_iterator_();
 
-		bool active() const;
-		virtual bool activate() override;
-		virtual bool revert() override;
+		bool fetch();
+		byte length() const;
+		bool is_rip_based() const;
+		const char *mnemonic() const;
+		const char *operands() const;
+
+	protected:
+		const byte *ptr_() const;
 
 	private:
-		void init(void *target, std::size_t target_size, executable_memory_allocator &allocator_, void *interceptor,
-			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
+		struct impl;
 
 	private:
-		std::shared_ptr<void> _trampoline;
-		byte *_target;
-		byte _prologue_backup_offset, _prologue_size;
-		bool _active;
+		const std::unique_ptr<impl> _impl;
+	};
+
+	template <typename ByteT>
+	class instruction_iterator : public instruction_iterator_
+	{
+	public:
+		instruction_iterator(range<ByteT, size_t> source_range);
+
+		ByteT *ptr() const;
 	};
 
 
 
-	template <typename T>
-	inline translated_function_patch::translated_function_patch(void *target, std::size_t size, T *interceptor,
-			executable_memory_allocator &allocator_)
-		: _active(false)
-	{	init(target, size, allocator_, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
+	template <typename ByteT>
+	inline instruction_iterator<ByteT>::instruction_iterator(range<ByteT, size_t> source_range)
+		: instruction_iterator_(source_range)
+	{	}
+
+	template <typename ByteT>
+	inline ByteT *instruction_iterator<ByteT>::ptr() const
+	{	return const_cast<ByteT *>(ptr_());	}
 }

@@ -21,12 +21,12 @@
 #include <patcher/jumper.h>
 
 #include "intel/jump.h"
-#include "intel/ldisasm.h"
 #include "intel/nop.h"
 #include "replace.h"
 
 #include <common/memory.h>
 #include <patcher/exceptions.h>
+#include <patcher/instruction_iterator.h>
 #include <stdexcept>
 
 using namespace std;
@@ -75,7 +75,8 @@ namespace micro_profiler
 	{
 		VALIDATION_OVERRIDE(_target);
 
-		const auto extra = static_cast<signed char>(ldisasm(target, sizeof(void*) == 8));
+		instruction_iterator<const byte> ins(const_byte_range(_target, 15 /*max length of a single instruction*/));
+		const auto extra = static_cast<signed char>(ins.fetch() ? ins.length() : 0);
 		
 		if (extra < c_short_jump_size && !assembler::is_nop(*_target))
 			throw leading_too_short();

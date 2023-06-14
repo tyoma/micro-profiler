@@ -26,4 +26,4 @@ set_source_files_properties(guineapigs.cpp PROPERTIES
 )
 
 add_library(patcher.tests SHARED ${PATCHER_TEST_SOURCES})
-target_link_libraries(patcher.tests patcher common test-helpers)
+target_link_libraries(patcher.tests patcher logger common test-helpers)

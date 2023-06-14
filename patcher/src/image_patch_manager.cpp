@@ -21,8 +21,11 @@
 #include <patcher/image_patch_manager.h>
 
 #include <common/smart_ptr.h>
+#include <logger/log.h>
 #include <patcher/exceptions.h>
 #include <sdb/integrated_index.h>
+
+#define PREAMBLE "Patch manager: "
 
 using namespace std;
 
@@ -198,8 +201,9 @@ namespace micro_profiler
 					break;
 				}
 			}
-			catch (...)
+			catch (exception &e)
 			{
+				LOGE("Failed to apply patch...") % A(p.module_id) % A(p.id) % A(p.rva) % A(e.what());
 			}
 			patch_record.commit();
 			results.push_back(result);

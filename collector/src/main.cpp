@@ -129,8 +129,8 @@ namespace micro_profiler
 		: _logger(create_writer(module_helper), (log::g_logger = &_logger, &get_datetime)),
 			_memory_manager(virtual_memory::granularity()), _thread_monitor(make_shared<thread_monitor>(thread_callbacks)),
 			_collector(_allocator, trace_limit, *_thread_monitor, thread_callbacks), _module_tracker(module_helper),
-			_patch_manager([this] (void *target, id_t /*id*/, executable_memory_allocator &allocator) {
-				return unique_ptr<patch>(new translated_function_patch(target, 19, &_collector, allocator));
+			_patch_manager([this] (void *target, size_t target_size, id_t /*id*/, executable_memory_allocator &allocator) {
+				return unique_ptr<patch>(new translated_function_patch(target, target_size, &_collector, allocator));
 //				return unique_ptr<patch>(new function_patch(target, &_collector, allocator));
 			}, _module_tracker, _memory_manager), _auto_connect(true)
 	{

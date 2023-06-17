@@ -40,6 +40,7 @@ namespace strmd
 	template <> struct version<micro_profiler::module_info_metadata> {	enum {	value = 6	};	};
 	template <> struct version<micro_profiler::thread_info> {	enum {	value = 4	};	};
 	template <> struct version<micro_profiler::patch_request> {	enum {	value = 4	};	};
+	template <> struct version<micro_profiler::patch_apply_request> {	enum {	value = 5	};	};
 	template <> struct version<micro_profiler::patch_change_result> {	enum {	value = 5	};	};
 }
 
@@ -132,6 +133,27 @@ namespace micro_profiler
 	{
 		archive(data.image_persistent_id);
 		archive(data.functions_rva);
+	}
+
+	template <typename ArchiveT>
+	inline void serialize(ArchiveT &archive, patch_apply_request &data, unsigned int ver)
+	{
+		archive(data.image_persistent_id);
+		if (ver < 5) // TODO: until passing the function 'size' is implemented in frontend.
+		{
+			std::vector<unsigned int> legacy;
+
+			for (auto i = std::begin(data.functions); i != std::end(data.functions); ++i)
+				legacy.push_back(i->first);
+			archive(legacy);
+			data.functions.clear();
+			for (auto i = std::begin(legacy); i != std::end(legacy); ++i)
+				data.functions.push_back(std::make_pair(*i, 19u));
+		}
+		else
+		{
+			archive(data.functions);
+		}
 	}
 
 	template <typename ArchiveT>

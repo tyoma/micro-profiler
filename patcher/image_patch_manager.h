@@ -34,8 +34,8 @@ namespace micro_profiler
 	class image_patch_manager : public patch_manager, mapping_access::events, noncopyable
 	{
 	public:
-		typedef std::function<std::unique_ptr<patch> (void *target, id_t id, executable_memory_allocator &allocator)>
-			patch_factory;
+		typedef std::function<std::unique_ptr<patch> (void *target, std::size_t target_size, id_t id,
+			executable_memory_allocator &allocator)> patch_factory;
 		struct mapping;
 
 	public:
@@ -45,8 +45,8 @@ namespace micro_profiler
 		virtual std::shared_ptr<mapping> lock_module(id_t module_id);
 
 		virtual void query(patch_states &states, id_t module_id) override;
-		virtual void apply(patch_change_results &results, id_t module_id, request_range targets) override;
-		virtual void revert(patch_change_results &results, id_t module_id, request_range targets) override;
+		virtual void apply(patch_change_results &results, id_t module_id, apply_request_range targets) override;
+		virtual void revert(patch_change_results &results, id_t module_id, revert_request_range targets) override;
 
 	private:
 		struct mapping_record
@@ -63,7 +63,7 @@ namespace micro_profiler
 
 			id_t id;
 			id_t module_id;
-			unsigned int rva;
+			unsigned int rva, size;
 			enum {	dormant, active, unrecoverable_error, activation_error,	} state;
 			std::unique_ptr<micro_profiler::patch> patch;
 		};

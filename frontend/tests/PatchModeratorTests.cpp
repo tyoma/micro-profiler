@@ -352,7 +352,7 @@ namespace micro_profiler
 				s->patches.apply = [&patches_idx] (id_t module_id, range<const unsigned, size_t> rva) {
 					for (auto i = rva.begin(); i != rva.end(); ++i)
 					{
-						auto r = patches_idx[make_tuple(module_id, *i)];
+						auto r = patches_idx[symbol_key(module_id, *i)];
 
 						(*r).state = patch_state::active, (*r).in_transit = false;
 						r.commit();

@@ -99,7 +99,7 @@ namespace micro_profiler
 
 				for (auto i = begin(*loaded); i != end(*loaded); ++i)
 				{
-					auto r = changes_symbol_idx[make_tuple(mapping.module_id, i->rva)];
+					auto r = changes_symbol_idx[symbol_key(mapping.module_id, i->rva)];
 
 					rva.push_back(i->rva);
 					(*r).state = patch_moderator::patch_saved;

@@ -14,8 +14,6 @@ namespace wpl
 
 namespace micro_profiler
 {
-	typedef std::tuple<id_t, unsigned int> symbol_key;
-
 	class image_patch_model;
 	class symbol_resolver;
 

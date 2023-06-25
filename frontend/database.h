@@ -92,7 +92,7 @@ namespace micro_profiler
 		{
 			id_t scope_id;
 			id_t module_id;
-			unsigned int rva;
+			unsigned int rva, size;
 		};
 	}
 

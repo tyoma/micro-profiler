@@ -25,10 +25,14 @@
 #include <common/primitives.h>
 #include <common/types.h>
 #include <patcher/interface.h>
+#include <tuple>
 #include <vector>
 
 namespace micro_profiler
 {
+	typedef std::tuple<id_t /*module_id*/, unsigned int /*rva*/> symbol_key;
+	typedef std::tuple<id_t /*module_id*/, unsigned int /*rva*/, unsigned int /*size*/> selected_symbol;
+
 	struct identity
 	{
 		id_t id;

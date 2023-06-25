@@ -37,8 +37,6 @@ namespace micro_profiler
 	template <typename UnderlyingT>
 	class trackables_provider;
 
-	typedef std::tuple<id_t, unsigned int> symbol_key;
-
 
 	class image_patch_model : public wpl::richtext_table_model, noncopyable
 	{
@@ -57,7 +55,7 @@ namespace micro_profiler
 		void set_filter(const Predicate &predicate);
 		void set_filter();
 		void set_order(index_type column, bool ascending);
-		std::shared_ptr< selection<symbol_key> > create_selection() const;
+		std::shared_ptr< selection<selected_symbol> > create_selection() const;
 
 		virtual index_type get_count() const throw() override;
 		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const override;

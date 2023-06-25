@@ -35,6 +35,7 @@ namespace micro_profiler
 			unrecoverable_error,	// Patch was once requested, but failed to apply. Sticks forever;
 			activation_error, // Patch activation failed, can be retried later.
 		} state;
+		unsigned int size;
 	};
 
 	struct patch_change_result

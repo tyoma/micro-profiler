@@ -33,7 +33,7 @@ namespace micro_profiler
 	template <>
 	struct key_traits<image_patch_model::record_type>
 	{
-		typedef tuple<id_t, unsigned int> key_type;
+		typedef symbol_key key_type;
 
 		template <typename T>
 		static key_type get_key(const T &item)
@@ -70,7 +70,7 @@ namespace micro_profiler
 
 	image_patch_model::flattener::const_reference image_patch_model::flattener::get(const tables::modules::value_type &l1, const symbol_info &l2)
 	{
-		record_type r = {	make_tuple(l1.id, l2.rva), &l2	};
+		record_type r = {	symbol_key(l1.id, l2.rva), &l2	};
 		return r;
 	}
 
@@ -178,10 +178,15 @@ namespace micro_profiler
 		fetch();
 	}
 
-	shared_ptr< selection<symbol_key> > image_patch_model::create_selection() const
+	shared_ptr< selection<selected_symbol> > image_patch_model::create_selection() const
 	{
-		return make_shared< selection<symbol_key> >(make_shared< sdb::table<symbol_key> >(),
-			[this] (index_type item) {	return _ordered_view[item].first;	});
+		return make_shared< selection<selected_symbol> >(make_shared< sdb::table<selected_symbol> >(),
+			[this] (index_type index) -> selected_symbol {
+
+			const auto &item = _ordered_view[index];
+
+			return selected_symbol(get<0>(item.first), get<1>(item.first), item.symbol->size);
+		});
 	}
 
 	image_patch_model::index_type image_patch_model::get_count() const throw()

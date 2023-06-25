@@ -83,7 +83,7 @@ namespace micro_profiler
 		targets.clear();
 		targets.reserve(rva.length());
 		for_each(rva.begin(), rva.end(), [&] (unsigned int rva) {
-			auto rec = idx[make_tuple(module_id, rva)];
+			auto rec = idx[symbol_key(module_id, rva)];
 
 			if (set_requested(*rec, false))
 				targets.push_back(rva);
@@ -98,7 +98,7 @@ namespace micro_profiler
 			d(_patched_buffer);
 			for (auto i = _patched_buffer.begin(); i != _patched_buffer.end(); ++i)
 			{
-				auto rec = idx[make_tuple(module_id, i->rva)];
+				auto rec = idx[symbol_key(module_id, i->rva)];
 
 				set_applied(*rec, *i);
 				rec.commit();
@@ -118,7 +118,7 @@ namespace micro_profiler
 		targets.clear();
 		targets.reserve(rva.length());
 		for_each(rva.begin(), rva.end(), [&] (unsigned int rva) {
-			auto symbol_id = make_tuple(module_id, rva);
+			auto symbol_id = symbol_key(module_id, rva);
 
 			if (idx.find(symbol_id))
 			{
@@ -138,7 +138,7 @@ namespace micro_profiler
 			d(_reverted_buffer);
 			for (auto i = _reverted_buffer.begin(); i != _reverted_buffer.end(); ++i)
 			{
-				auto rec = idx[make_tuple(module_id, i->rva)];
+				auto rec = idx[symbol_key(module_id, i->rva)];
 
 				set_reverted(*rec, *i);
 				rec.commit();

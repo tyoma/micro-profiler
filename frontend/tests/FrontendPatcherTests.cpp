@@ -122,7 +122,7 @@ namespace micro_profiler
 				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
 					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
 					{
-						auto p = idx.find(make_tuple(payload.image_persistent_id, *i));
+						auto p = idx.find(symbol_key(payload.image_persistent_id, *i));
 
 						assert_not_null(p);
 						assert_equal(make_patch(payload.image_persistent_id, *i, 0, true, patch_state::dormant), *p);

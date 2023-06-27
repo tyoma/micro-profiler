@@ -73,6 +73,10 @@ namespace micro_profiler
 		inline void bind_parameters(statement &/*statement_*/, const column<T, F> &/*e*/, unsigned int &/*index*/)
 		{	}
 
+		template <unsigned int table_index, typename T, typename F>
+		inline void bind_parameters(statement &/*statement_*/, const prefixed_column<table_index, T, F> &/*e*/, unsigned int &/*index*/)
+		{	}
+
 		template <typename T>
 		inline void bind_parameters(statement &statement_, const parameter<T> &e, unsigned int &index)
 		{	statement_.bind(index++, e.object);	}

@@ -48,31 +48,16 @@ namespace micro_profiler
 			void create_table();
 
 			template <typename T>
-			void create_table(const char *name);
-
-			template <typename T>
 			reader<T> select();
-
-			template <typename T>
-			reader<T> select(const char *table_name);
 
 			template <typename T, typename W>
 			reader<T> select(const W &where);
 
-			template <typename T, typename W>
-			reader<T> select(const W &where, const char *table_name);
-
 			template <typename T>
 			inserter<T> insert();
 
-			template <typename T>
-			inserter<T> insert(const char *table_name);
-
 			template <typename T, typename W>
 			remover remove(const W &where);
-
-			template <typename T, typename W>
-			remover remove(const W &where, const char *table_name);
 
 			void commit();
 
@@ -84,29 +69,7 @@ namespace micro_profiler
 			bool _comitted;
 		};
 
-		struct table_name_visitor
-		{
-			template <typename U>
-			void operator ()(U &table_name_)
-			{	table_name = table_name_;	}
 
-			template <typename U, typename V>
-			void operator ()(U, V) const
-			{	}
-
-			std::string table_name;
-		};
-
-
-
-		template <typename T>
-		inline std::string default_table_name()
-		{
-			table_name_visitor v;
-
-			describe<T>(v);
-			return std::move(v.table_name);
-		}
 
 		inline transaction::transaction(connection_ptr connection, type type_, int timeout_ms)
 			: _connection(connection), _comitted(false)
@@ -130,48 +93,28 @@ namespace micro_profiler
 
 		template <typename T>
 		inline void transaction::create_table()
-		{	create_table<T>(default_table_name<T>().c_str());	}
-
-		template <typename T>
-		inline void transaction::create_table(const char *name)
 		{
 			std::string create_table_ddl;
 
-			format_create_table<T>(create_table_ddl, name);
+			format_create_table<T>(create_table_ddl, default_table_name<T>().c_str());
 			execute(create_table_ddl.c_str());
 		}
 
 		template <typename T>
 		inline reader<T> transaction::select()
-		{	return select<T>(default_table_name<T>().c_str());	}
-
-		template <typename T>
-		inline reader<T> transaction::select(const char *table_name)
-		{	return select_builder<T>(table_name).create_reader(*_connection);	}
+		{	return select_builder<T>().create_reader(*_connection);	}
 
 		template <typename T, typename W>
 		inline reader<T> transaction::select(const W &where)
-		{	return select<T>(where, default_table_name<T>().c_str());	}
-
-		template <typename T, typename W>
-		inline reader<T> transaction::select(const W &where, const char *table_name)
-		{	return select_builder<T>(table_name).create_reader(*_connection, where);	}
+		{	return select_builder<T>().create_reader(*_connection, where);	}
 
 		template <typename T>
 		inline inserter<T> transaction::insert()
-		{	return insert<T>(default_table_name<T>().c_str());	}
-
-		template <typename T>
-		inline inserter<T> transaction::insert(const char *table_name)
-		{	return insert_builder<T>(table_name).create_inserter(*_connection);	}
+		{	return insert_builder<T>(default_table_name<T>().c_str()).create_inserter(*_connection);	}
 
 		template <typename T, typename W>
 		inline remover transaction::remove(const W &where)
-		{	return remove<T>(where, default_table_name<T>().c_str());	}
-
-		template <typename T, typename W>
-		inline remover transaction::remove(const W &where, const char *table_name)
-		{	return remove_builder(table_name).create_statement(*_connection, where);	}
+		{	return remove_builder(default_table_name<T>().c_str()).create_statement(*_connection, where);	}
 
 		inline void transaction::commit()
 		{	execute("COMMIT");	}

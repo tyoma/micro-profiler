@@ -29,6 +29,12 @@ namespace micro_profiler
 					int year_founded;
 				};
 
+				struct event
+				{
+					string name;
+					int year;
+				};
+
 				template <typename E>
 				string format(const E &e)
 				{
@@ -44,6 +50,7 @@ namespace micro_profiler
 				template <typename VisitorT>
 				void describe(VisitorT &&visitor, person *)
 				{
+					visitor("staff");
 					visitor(&person::last_name, "last_name");
 					visitor(&person::first_name, "FirstName");
 					visitor(&person::year, "YearOfBirth");
@@ -54,12 +61,139 @@ namespace micro_profiler
 				template <typename VisitorT>
 				void describe(VisitorT &&visitor, company *)
 				{
+					visitor("companies");
 					visitor(&company::name, "CompanyName");
 					visitor(&company::year_founded, "Founded");
+				}
+
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, event *)
+				{
+					visitor("events");
+					visitor(&event::name, "Name");
 				}
 			}
 
 			begin_test_suite( DatabaseExpressionTests )
+				test( SingleTableNameIsFormattedAccordinglyToMetadata )
+				{
+					// INIT
+					string result;
+
+					// ACT
+					format_table_source(result, static_cast<person *>(nullptr));
+
+					// ASSERT
+					assert_equal("staff", result);
+
+					// ACT
+					format_table_source(result, static_cast<company *>(nullptr));
+					format_table_source(result, static_cast<event *>(nullptr));
+
+					// ASSERT
+					assert_equal("staffcompaniesevents", result);
+				}
+
+
+				test( TupleTableNamesAreFormattedWithAliasesAccordinglyToMetadata )
+				{
+					// INIT
+					string result;
+
+					// ACT
+					format_table_source(result, static_cast<tuple<person, company> *>(nullptr));
+
+					// ASSERT
+					assert_equal("staff AS t0,companies AS t1", result);
+
+					// ACT
+					format_table_source(result, static_cast<tuple<company, person> *>(nullptr));
+
+					// ASSERT
+					assert_equal("staff AS t0,companies AS t1companies AS t0,staff AS t1", result);
+
+					// INIT
+					result = "a";
+
+					// ACT
+					format_table_source(result, static_cast<tuple<company, person, event> *>(nullptr));
+
+					// ASSERT
+					assert_equal("acompanies AS t0,staff AS t1,events AS t2", result);
+
+					// INIT
+					result = "bb";
+
+					// ACT
+					format_table_source(result, static_cast<tuple<person, company, event> *>(nullptr));
+
+					// ASSERT
+					assert_equal("bbstaff AS t0,companies AS t1,events AS t2", result);
+				}
+
+
+				test( SingleTableSelectListIsFormattedAccordinglyToMetadata )
+				{
+					// INIT
+					string result = "aB";
+
+					// ACT
+					format_select_list(result, static_cast<person *>(nullptr));
+
+					// ASSERT
+					assert_equal("aBlast_name,FirstName,YearOfBirth,Month,Day", result);
+
+					// INIT
+					result.clear();
+
+					// ACT
+					format_select_list(result, static_cast<company *>(nullptr));
+
+					// ASSERT
+					assert_equal("CompanyName,Founded", result);
+				}
+
+
+				test( TupleSelectListsAreFormattedWithAliasesAccordinglyToMetadata )
+				{
+					// INIT
+					string result = "1.";
+
+					// ACT
+					format_select_list(result, static_cast<tuple<person, company> *>(nullptr));
+
+					// ASSERT
+					assert_equal("1.t0.last_name,t0.FirstName,t0.YearOfBirth,t0.Month,t0.Day,t1.CompanyName,t1.Founded", result);
+
+					// INIT
+					result = "2.";
+
+					// ACT
+					format_select_list(result, static_cast<tuple<company, person> *>(nullptr));
+
+					// ASSERT
+					assert_equal("2.t0.CompanyName,t0.Founded,t1.last_name,t1.FirstName,t1.YearOfBirth,t1.Month,t1.Day", result);
+
+					// INIT
+					result = "a";
+
+					// ACT
+					format_select_list(result, static_cast<tuple<company, person, event> *>(nullptr));
+
+					// ASSERT
+					assert_equal("at0.CompanyName,t0.Founded,t1.last_name,t1.FirstName,t1.YearOfBirth,t1.Month,t1.Day,t2.Name", result);
+
+					// INIT
+					result = "A";
+
+					// ACT
+					format_select_list(result, static_cast<tuple<person, company, event> *>(nullptr));
+
+					// ASSERT
+					assert_equal("At0.last_name,t0.FirstName,t0.YearOfBirth,t0.Month,t0.Day,t1.CompanyName,t1.Founded,t2.Name", result);
+				}
+
+
 				test( ParametersAreFormattedAsExpressions )
 				{
 					// INIT
@@ -96,6 +230,24 @@ namespace micro_profiler
 					assert_equal("Day", format(col3));
 					assert_equal("CompanyName", format(col4));
 					assert_equal("Founded", format(col5));
+				}
+
+
+				test( PrefixedColumnsAreFormattedBasedOnSqlDescription )
+				{
+					// INIT / ACT
+					auto col1 = c<1>(&person::first_name);
+					auto col2 = c<3>(&person::last_name);
+					auto col3 = c<7>(&person::day);
+					auto col4 = c<111>(&company::name);
+					auto col5 = c<11>(&company::year_founded);
+
+					// ACT / ASSERT
+					assert_equal("t1.FirstName", format(col1));
+					assert_equal("t3.last_name", format(col2));
+					assert_equal("t7.Day", format(col3));
+					assert_equal("t111.CompanyName", format(col4));
+					assert_equal("t11.Founded", format(col5));
 				}
 
 

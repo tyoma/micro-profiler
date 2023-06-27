@@ -4,6 +4,7 @@ set(SLITEPP_TESTS_SOURCES
 	DatabaseDDLTests.cpp
 	DatabaseExpressionTests.cpp
 	DatabaseTests.cpp
+	JoiningTests.cpp
 )
 
 add_library(sqlite++.tests SHARED ${SLITEPP_TESTS_SOURCES})

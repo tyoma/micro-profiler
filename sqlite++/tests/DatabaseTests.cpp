@@ -1,5 +1,7 @@
 #include <sqlite++/database.h>
 
+#include "helpers.h"
+
 #include <sqlite++/types.h>
 #include <frontend/constructors.h>
 #include <sqlite3.h>
@@ -30,23 +32,20 @@ namespace micro_profiler
 					"INSERT INTO 'lorem_ipsums' VALUES ('Lorem Ipsum Amet Dolor', 314);"
 					"INSERT INTO 'lorem_ipsums' VALUES ('lorem', 31415926);"
 
-					"CREATE TABLE 'other_lorem_ipsums' ('name' TEXT, 'age' INTEGER);"
-					"INSERT INTO 'other_lorem_ipsums' VALUES ('Lorem Ipsum', 13);"
-					"INSERT INTO 'other_lorem_ipsums' VALUES ('amet dolor', 191);"
-
-					"CREATE TABLE 'reordered_lorem_ipsums' ('age' INTEGER, 'nickname' TEXT, 'name' TEXT);"
-					"INSERT INTO 'reordered_lorem_ipsums' VALUES (3141, 'Bob', 'lorem');"
-					"INSERT INTO 'reordered_lorem_ipsums' VALUES (314159, 'AJ', 'Ipsum');"
-					"INSERT INTO 'reordered_lorem_ipsums' VALUES (314, 'Liz', 'Lorem Ipsum Amet Dolor');"
-					"INSERT INTO 'reordered_lorem_ipsums' VALUES (314, 'K', 'lorem');"
-					"INSERT INTO 'reordered_lorem_ipsums' VALUES (31415926, 'K', 'lorem');"
+					"CREATE TABLE 'sample_items_2' ('age' INTEGER, 'nickname' TEXT, 'name' TEXT);"
+					"INSERT INTO 'sample_items_2' VALUES (3141, 'Bob', 'lorem');"
+					"INSERT INTO 'sample_items_2' VALUES (314159, 'AJ', 'Ipsum');"
+					"INSERT INTO 'sample_items_2' VALUES (314, 'Liz', 'Lorem Ipsum Amet Dolor');"
+					"INSERT INTO 'sample_items_2' VALUES (314, 'K', 'lorem');"
+					"INSERT INTO 'sample_items_2' VALUES (31415926, 'K', 'lorem');"
 
 					"CREATE TABLE 'sample_items_1' ('a' INTEGER, 'b' TEXT);"
-					"CREATE TABLE 'sample_items_2' ('age' INTEGER, 'nickname' TEXT, 'name' TEXT);"
+
 					"CREATE TABLE 'sample_items_3' ('MyID' INTEGER PRIMARY KEY ASC, 'a' INTEGER, 'b' TEXT, 'c' INTEGER, 'd' REAL, 'e' INTEGER, 'f' INTEGER);"
 
 					"COMMIT;";
 
+				template <int>
 				struct test_a
 				{
 					string name;
@@ -96,6 +95,7 @@ namespace micro_profiler
 					{	return make_tuple(a, b) < make_tuple(rhs.a, rhs.b);	}
 				};
 
+				template <int>
 				struct sample_item_3
 				{
 					int id;
@@ -149,42 +149,68 @@ namespace micro_profiler
 				};
 
 				template <typename VisitorT>
-				void describe(VisitorT &visitor, test_a *)
+				void describe(VisitorT &visitor, test_a<0> *)
 				{
-					visitor(&test_a::name, "name");
-					visitor(&test_a::age, "age");
+					visitor("lorem_ipsums");
+					visitor(&test_a<0>::name, "name");
+					visitor(&test_a<0>::age, "age");
+				}
+
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, test_a<1> *)
+				{
+					visitor("other_lorem_ipsums");
+					visitor(&test_a<1>::name, "name");
+					visitor(&test_a<1>::age, "age");
+				}
+
+				template <typename VisitorT>
+				void describe(VisitorT &visitor, sample_item_1 *)
+				{
+					visitor("sample_items_1");
+					visitor(&sample_item_1::a, "a");
+					visitor(&sample_item_1::b, "b");
 				}
 
 				template <typename VisitorT>
 				void describe(VisitorT& visitor, test_b *)
 				{
+					visitor("sample_items_2");
 					visitor(&test_b::suspect_name, "name");
 					visitor(&test_b::suspect_age, "age");
 					visitor(&test_b::nickname, "nickname");
 				}
 
 				template <typename VisitorT>
-				void describe(VisitorT &visitor, sample_item_1 *)
+				void describe(VisitorT &visitor, sample_item_3<0> *)
 				{
-					visitor(&sample_item_1::a, "a");
-					visitor(&sample_item_1::b, "b");
+					visitor("sample_items_3");
+					visitor(pk(&sample_item_3<0>::id), "MyID");
+					visitor(&sample_item_3<0>::a, "a");
+					visitor(&sample_item_3<0>::b, "b");
+					visitor(&sample_item_3<0>::c, "c");
+					visitor(&sample_item_3<0>::d, "d");
+					visitor(&sample_item_3<0>::e, "e");
+					visitor(&sample_item_3<0>::f, "f");
 				}
 
 				template <typename VisitorT>
-				void describe(VisitorT &visitor, sample_item_3 *)
+				void describe(VisitorT &visitor, sample_item_3<1> *)
 				{
-					visitor(pk(&sample_item_3::id), "MyID");
-					visitor(&sample_item_3::a, "a");
-					visitor(&sample_item_3::b, "b");
-					visitor(&sample_item_3::c, "c");
-					visitor(&sample_item_3::d, "d");
-					visitor(&sample_item_3::e, "e");
-					visitor(&sample_item_3::f, "f");
+					visitor("other_sample_items_3");
+					visitor(pk(&sample_item_3<1>::id), "MyID");
+					visitor(&sample_item_3<1>::a, "a");
+					visitor(&sample_item_3<1>::b, "b");
+					visitor(&sample_item_3<1>::c, "c");
+					visitor(&sample_item_3<1>::d, "d");
+					visitor(&sample_item_3<1>::e, "e");
+					visitor(&sample_item_3<1>::f, "f");
 				}
 
 				template <typename VisitorT>
 				void describe(VisitorT &visitor, sample_inherited *)
 				{
+					visitor("Test");
 					visitor(pk(&sample_inherited::id), "myid");
 					visitor(&sample_inherited::b, "bb");
 					visitor(&sample_inherited::c, "cc");
@@ -206,44 +232,6 @@ namespace micro_profiler
 					visitor(&test_d::bb, "bb");
 					visitor(&test_d::bbb, "bbb");
 					visitor(&test_d::bbbb, "bbbb");
-				}
-
-				template <typename T>
-				vector<T> read_all(reader<T> &&reader)
-				{
-					T item;
-					vector<T> result;
-
-					while (reader(item))
-						result.push_back(item);
-					return result;
-				}
-
-				template <typename T>
-				vector<T> read_all(transaction &tx, const char *table_name)
-				{	return read_all(tx.select<T>(table_name));	}
-
-				template <typename T>
-				vector<T> read_all(string path, const char *table_name)
-				{
-					transaction tx(create_connection(path.c_str()));
-					return read_all<T>(tx, table_name);
-				}
-
-				template <typename T>
-				void write_all(transaction &tx, const vector<T> &records, const char *table_name)
-				{
-					auto w = tx.insert<T>(table_name);
-
-					for (auto i = records.begin(); i != records.end(); ++i)
-						w(*i);
-				}
-
-				template <typename T>
-				void write_all(string path, const vector<T> &records, const char *table_name)
-				{
-					transaction tx(create_connection(path.c_str()));
-					write_all(tx, records, table_name);
 				}
 			}
 
@@ -269,11 +257,11 @@ namespace micro_profiler
 				test( ValuesInTablesCanBeRead )
 				{
 					// INIT / ACT
-					test_a a;
-					vector<test_a> results_a;
+					test_a<0> a;
+					vector<test_a<0>> results_a;
 					transaction t(create_connection(path.c_str()));
 
-					auto r = t.select<test_a>("lorem_ipsums");
+					auto r = t.select<test_a<0>>();
 
 					// ACT
 					while (r(a))
@@ -281,32 +269,17 @@ namespace micro_profiler
 
 					// ASSERT
 					assert_equivalent(plural
-						+ initialize<test_a>("lorem", 3141)
-						+ initialize<test_a>("Ipsum", 314159)
-						+ initialize<test_a>("Lorem Ipsum Amet Dolor", 314)
-						+ initialize<test_a>("lorem", 31415926), results_a);
-
-					// INIT
-					results_a.clear();
-
-					// INIT / ACT
-					auto r2 = t.select<test_a>("other_lorem_ipsums");
-
-					// ACT
-					while (r2(a))
-						results_a.push_back(a);
-
-					// ASSERT
-					assert_equivalent(plural
-						+ initialize<test_a>("Lorem Ipsum", 13)
-						+ initialize<test_a>("amet dolor", 191), results_a);
+						+ initialize<test_a<0>>("lorem", 3141)
+						+ initialize<test_a<0>>("Ipsum", 314159)
+						+ initialize<test_a<0>>("Lorem Ipsum Amet Dolor", 314)
+						+ initialize<test_a<0>>("lorem", 31415926), results_a);
 
 					// INIT
 					test_b b;
 					vector<test_b> results_b;
 
 					// INIT / ACT
-					auto rb = t.select<test_b>("reordered_lorem_ipsums");
+					auto rb = t.select<test_b>();
 
 					// ACT
 					while (rb(b))
@@ -322,29 +295,6 @@ namespace micro_profiler
 				}
 
 
-				test( ValuesInTablesCanBeReadForOtherOrder )
-				{
-					// INIT / ACT
-					test_a a;
-					vector<test_a> results_a;
-					transaction t(create_connection(path.c_str()));
-
-					auto r = t.select<test_a>("reordered_lorem_ipsums");
-
-					// ACT
-					while (r(a))
-						results_a.push_back(a);
-
-					// ASSERT
-					assert_equivalent(plural
-						+ initialize<test_a>("lorem", 3141)
-						+ initialize<test_a>("Ipsum", 314159)
-						+ initialize<test_a>("Lorem Ipsum Amet Dolor", 314)
-						+ initialize<test_a>("lorem", 314)
-						+ initialize<test_a>("lorem", 31415926), results_a);
-				}
-
-
 				test( ValuesInTableCanBeReadWithAQuery )
 				{
 					// INIT / ACT
@@ -353,7 +303,7 @@ namespace micro_profiler
 					transaction t(create_connection(path.c_str()));
 
 					// INIT / ACT
-					auto r = t.select<test_b>(c(&test_b::suspect_age) == p<const int>(314), "reordered_lorem_ipsums");
+					auto r = t.select<test_b>(c(&test_b::suspect_age) == p<const int>(314));
 
 					// ACT
 					while (r(b))
@@ -371,9 +321,9 @@ namespace micro_profiler
 
 					// INIT / ACT
 					auto r2 = t.select<test_b>(c(&test_b::suspect_age) == p<const int>(314)
-						|| c(&test_b::suspect_name) == p<const string>("Ipsum"), "reordered_lorem_ipsums");
+						|| c(&test_b::suspect_name) == p<const string>("Ipsum"));
 					auto r3 = t.select<test_b>(c(&test_b::suspect_name) == p<const string>("Ipsum")
-						|| c(&test_b::suspect_age) == p<const int>(314), "reordered_lorem_ipsums");
+						|| c(&test_b::suspect_age) == p<const int>(314));
 
 					// ACT
 					while (r2(b))
@@ -398,13 +348,13 @@ namespace micro_profiler
 					transaction t(create_connection(path.c_str()));
 
 					// INIT / ACT
-					auto w1 = t.insert<sample_item_1>("sample_items_1");
+					auto w1 = t.insert<sample_item_1>();
 
 					// ACT
 					w1(item);
 
 					// ASSERT
-					assert_is_empty(read_all<sample_item_1>(path, "sample_items_1"));
+					assert_is_empty(read_all<sample_item_1>(path));
 				}
 
 
@@ -419,7 +369,7 @@ namespace micro_profiler
 					transaction t(create_connection(path.c_str()));
 
 					// INIT / ACT
-					auto w1 = t.insert<sample_item_1>("sample_items_1");
+					auto w1 = t.insert<sample_item_1>();
 
 					// ACT
 					for (auto i = begin(items1); i != end(items1); ++i)
@@ -427,7 +377,7 @@ namespace micro_profiler
 					t.commit();
 
 					// ASSERT
-					assert_equivalent(items1, read_all<sample_item_1>(path, "sample_items_1"));
+					assert_equivalent(items1, read_all<sample_item_1>(path));
 
 					// INIT
 					test_b items2[] = {
@@ -440,7 +390,7 @@ namespace micro_profiler
 
 					// INIT / ACT
 					transaction t2(create_connection(path.c_str()));
-					auto w2 = t2.insert<test_b>("sample_items_2");
+					auto w2 = t2.insert<test_b>();
 
 					// ACT
 					for (auto i = begin(items2); i != end(items2); ++i)
@@ -448,7 +398,14 @@ namespace micro_profiler
 					t2.commit();
 
 					// ASSERT
-					assert_equivalent(items2, read_all<test_b>(path, "sample_items_2"));
+					auto ref = plural
+						+ initialize<test_b>("Bob", 3141, "lorem")
+						+ initialize<test_b>("AJ", 314159, "Ipsum")
+						+ initialize<test_b>("Liz", 314, "Lorem Ipsum Amet Dolor")
+						+ initialize<test_b>("K", 314, "lorem")
+						+ initialize<test_b>("K", 31415926, "lorem");
+					ref.insert(ref.end(), begin(items2), end(items2));
+					assert_equivalent(ref, read_all<test_b>(path));
 				}
 
 
@@ -515,12 +472,12 @@ namespace micro_profiler
 				{
 					// INIT
 					transaction t(create_connection(path.c_str()));
-					auto w = t.insert<sample_item_3>("sample_items_3");
+					auto w = t.insert<sample_item_3<0>>();
 
 					// ACT
 					for (int n = 1000, previous = 0; n--; )
 					{
-						sample_item_3 item = {};
+						sample_item_3<0> item = {};
 
 						w(item);
 
@@ -536,26 +493,26 @@ namespace micro_profiler
 				test( AllSupportedTypesCanBeSelected )
 				{
 					// INIT
-					vector<sample_item_3> items_read;
-					sample_item_3 items[] = {
+					vector<sample_item_3<0>> items_read;
+					sample_item_3<0> items[] = {
 						{	100, 0, "Bod Dylan", 10000000001, 1.5391, 0x8912323200000001, 0xB0000000	},
 						{	100, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
 						{	100, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
 					};
 					transaction t(create_connection(path.c_str()));
-					auto w = t.insert<sample_item_3>("sample_items_3");
+					auto w = t.insert<sample_item_3<0>>();
 
 					for (auto i = begin(items); i != end(items); ++i)
 						w(*i);
 
 					// ACT
-					auto r = t.select<sample_item_3>("sample_items_3");
+					auto r = t.select<sample_item_3<0>>();
 
-					for (sample_item_3 item; r(item); )
+					for (sample_item_3<0> item; r(item); )
 						items_read.push_back(item);
 
 					// ASSERT
-					sample_item_3 reference1[] = {
+					sample_item_3<0> reference1[] = {
 						{	1, 0, "Bod Dylan", 10000000001, 1.5391, 0x8912323200000001, 0xB0000000	},
 						{	2, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
 						{	3, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
@@ -564,7 +521,7 @@ namespace micro_profiler
 					assert_equivalent(reference1, items_read);
 
 					// INIT
-					sample_item_3 items2[] = {
+					sample_item_3<0> items2[] = {
 						{	100, 0, "Jimi Hendrix", 30000000001, 1.5391, 0, 0	},
 						{	100, 0, "Tom Waits", 70000000002, 3.141e-8, 0, 0	},
 					};
@@ -574,13 +531,13 @@ namespace micro_profiler
 					items_read.clear();
 
 					// ACT
-					auto r2 = t.select<sample_item_3>("sample_items_3");
+					auto r2 = t.select<sample_item_3<0>>();
 
-					for (sample_item_3 item; r2(item); )
+					for (sample_item_3<0> item; r2(item); )
 						items_read.push_back(item);
 
 					// ASSERT
-					sample_item_3 reference2[] = {
+					sample_item_3<0> reference2[] = {
 						{	1, 0, "Bod Dylan", 10000000001, 1.5391, 0x8912323200000001, 0xB0000000	},
 						{	2, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
 						{	3, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
@@ -598,42 +555,42 @@ namespace micro_profiler
 					transaction t(create_connection(path.c_str()));
 
 					// ACT
-					t.create_table<sample_item_3>("Musicians");
+					t.create_table< sample_item_3<1> >();
 
 					// ASSERT
-					vector<sample_item_3> items_read;
-					sample_item_3 items[] = {
+					vector< sample_item_3<1> > items_read;
+					sample_item_3<1> items[] = {
 						{	100, 0, "Bod Dylan", 10000000001, 1.5391, 0x8912323200000001, 0xB0000000	},
 						{	100, 110, "Nick Cave", 10000000002, 1e-8, 0xF912323200000001, 0x00000000	},
 						{	100, 13, "Robert Fripp", 10000000001, 1.5e12, 0x1912323200000001, 0x10000000	},
 					};
-					auto w = t.insert<sample_item_3>("Musicians");
+					auto w = t.insert< sample_item_3<1> >();
 
 					for (auto i = begin(items); i != end(items); ++i)
 						w(*i);
-					auto r = t.select<sample_item_3>("Musicians");
+					auto r = t.select< sample_item_3<1> >();
 
-					for (sample_item_3 item; r(item); )
+					for (sample_item_3<1> item; r(item); )
 						items_read.push_back(item);
 
 					assert_equivalent(items, items_read);
 
 					// ACT
-					t.create_table<test_a>("snoobs");
+					t.create_table< test_a<1> >();
 
 					// ASSERT
-					vector<test_a> items_read2;
-					test_a items2[] = {
+					vector< test_a<1> > items_read2;
+					test_a<1> items2[] = {
 						{	"Bod Dylan", -9001	},
 						{	"Nick Cave", 11123	},
 					};
-					auto w2 = t.insert<test_a>("snoobs");
+					auto w2 = t.insert< test_a<1> >();
 
 					for (auto i = begin(items2); i != end(items2); ++i)
 						w2(*i);
-					auto r2 = t.select<test_a>("snoobs");
+					auto r2 = t.select< test_a<1> >();
 
-					for (test_a item; r2(item); )
+					for (test_a<1> item; r2(item); )
 						items_read2.push_back(item);
 
 					assert_equivalent(items2, items_read2);
@@ -650,9 +607,9 @@ namespace micro_profiler
 						+ sample_inherited::create(10, "amet dolor", 1, 2223);
 
 					// INIT / ACT
-					t.create_table<sample_inherited>("Test");
+					t.create_table<sample_inherited>();
 
-					auto w = t.insert<sample_inherited>("Test");
+					auto w = t.insert<sample_inherited>();
 
 					// ACT
 					for (auto i = begin(items); i != end(items); ++i)
@@ -668,7 +625,7 @@ namespace micro_profiler
 
 					// INIT / ACT
 					vector<sample_inherited> items_read;
-					auto r = t.select<sample_inherited>("Test");
+					auto r = t.select<sample_inherited>();
 
 					// ACT
 					for (sample_inherited item; r(item); )
@@ -698,8 +655,8 @@ namespace micro_profiler
 					t.create_table<test_d>();
 
 					// INIT / ACT
-					auto w1 = t.insert<test_c>("test_c_table");
-					auto w2 = t.insert<test_d>("TestTableD");
+					auto w1 = t.insert<test_c>();
+					auto w2 = t.insert<test_d>();
 
 					for (auto i = begin(items1); i != end(items1); ++i)
 						w1(*i);
@@ -795,15 +752,25 @@ namespace micro_profiler
 						+ initialize<sample_item_1>(2, "feature")
 						+ initialize<sample_item_1>(2, "goal");
 
-					t.create_table<test_b>("test1");
-					t.create_table<sample_item_1>("test2");
+					// INIT / ACT
+					auto stmt01 = t.remove<test_b>(p<const int>(1) == p<const int>(1));
+					auto stmt02 = t.remove<test_b>(p<const int>(1) == p<const int>(1));
 
-					write_all(t, items1, "test1");
-					write_all(t, items2, "test2");
+					// ACT
+					stmt01.execute();
+					stmt02.execute();
+
+					// ASSERT
+					assert_is_empty(read_all<test_b>(t));
+					assert_is_empty(read_all<sample_item_1>(t));
+
+					// INIT
+					write_all(t, items1);
+					write_all(t, items2);
 
 					// INIT / ACT
-					auto stmt1 = t.remove<test_b>(p<const string>("qqq") == c(&test_b::nickname), "test1");
-					auto stmt2 = t.remove<test_b>(p<const string>("foo") == c(&test_b::nickname) && p<const int>(17) == c(&test_b::suspect_age), "test1");
+					auto stmt1 = t.remove<test_b>(p<const string>("qqq") == c(&test_b::nickname));
+					auto stmt2 = t.remove<test_b>(p<const string>("foo") == c(&test_b::nickname) && p<const int>(17) == c(&test_b::suspect_age));
 
 					// ACT
 					stmt1.execute();
@@ -815,10 +782,10 @@ namespace micro_profiler
 						+ initialize<test_b>("bar", 31, "amet")
 						+ initialize<test_b>("bar", 23, "dolor")
 						+ initialize<test_b>("bar", 29, "lorem")
-						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "test1"));
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t));
 
 					// INIT / ACT
-					auto stmt3 = t.remove<test_b>(p<const string>("lorem") == c(&test_b::suspect_name), "test1");
+					auto stmt3 = t.remove<test_b>(p<const string>("lorem") == c(&test_b::suspect_name));
 
 					// ACT
 					stmt3.execute();
@@ -827,10 +794,10 @@ namespace micro_profiler
 					assert_equivalent(plural
 						+ initialize<test_b>("bar", 31, "amet")
 						+ initialize<test_b>("bar", 23, "dolor")
-						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "test1"));
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t));
 
 					// INIT / ACT
-					auto stmt4 = t.remove<sample_item_1>(p<const int>(2) == c(&sample_item_1::a), "test2");
+					auto stmt4 = t.remove<sample_item_1>(p<const int>(2) == c(&sample_item_1::a));
 
 					// ACT
 					stmt4.execute();
@@ -838,7 +805,7 @@ namespace micro_profiler
 					// ASSERT
 					assert_equivalent(plural
 						+ initialize<sample_item_1>(1, "test")
-						+ initialize<sample_item_1>(3, "sample"), read_all<sample_item_1>(t, "test2"));
+						+ initialize<sample_item_1>(3, "sample"), read_all<sample_item_1>(t));
 				}
 
 
@@ -856,13 +823,12 @@ namespace micro_profiler
 					string arg1, arg2;
 					int arg3 = 0;
 
-					t.create_table<test_b>("test1");
-
-					write_all(t, items1, "test1");
+					t.remove<test_b>(p<const int>(1) == p<const int>(1)).execute();
+					write_all(t, items1);
 
 					// INIT / ACT
-					auto stmt1 = t.remove<test_b>(p(arg1) == c(&test_b::nickname), "test1");
-					auto stmt2 = t.remove<test_b>(p(arg2) == c(&test_b::suspect_name) && p(arg3) == c(&test_b::suspect_age), "test1");
+					auto stmt1 = t.remove<test_b>(p(arg1) == c(&test_b::nickname));
+					auto stmt2 = t.remove<test_b>(p(arg2) == c(&test_b::suspect_name) && p(arg3) == c(&test_b::suspect_age));
 
 					stmt1.execute();
 					stmt2.execute();
@@ -877,7 +843,7 @@ namespace micro_profiler
 						+ initialize<test_b>("bar", 31, "lorem")
 						+ initialize<test_b>("bar", 29, "dolor")
 						+ initialize<test_b>("bar", 29, "lorem")
-						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "test1"));
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t));
 
 					// ACT
 					arg2 = "lorem";
@@ -889,7 +855,7 @@ namespace micro_profiler
 					assert_equivalent(plural
 						+ initialize<test_b>("bar", 31, "lorem")
 						+ initialize<test_b>("bar", 29, "dolor")
-						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t, "test1"));
+						+ initialize<test_b>("baz", 7, "ipsum"), read_all<test_b>(t));
 				}
 			end_test_suite
 		}

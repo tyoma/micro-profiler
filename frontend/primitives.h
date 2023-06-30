@@ -70,7 +70,7 @@ namespace micro_profiler
 			: in_transit(false), last_result(patch_change_result::ok)
 		{	id = 0, state = dormant;	}
 
-		unsigned int module_id;
+		id_t module_id;
 		bool in_transit;
 		patch_change_result::errors last_result;
 	};

@@ -177,11 +177,12 @@ namespace micro_profiler
 
 						DWORD displacement;
 						IMAGEHLP_LINE64 info = { sizeof(IMAGEHLP_LINE64), };
-						unsigned int file_id = 0, line = 0;
+						id_t file_id = 0;
+						unsigned int line = 0;
 
 						if (self->_dbghelp->SymGetLineFromAddr64(self->_dbghelp.get(), symbol->Address, &displacement, &info))
 						{
-							pair<containers::unordered_map<string, unsigned int>::iterator, bool> r
+							pair<containers::unordered_map<string, id_t>::iterator, bool> r
 								= self->files.insert(make_pair(info.FileName, 0));
 
 							if (r.second)
@@ -201,8 +202,8 @@ namespace micro_profiler
 				}
 
 			private:
-				unsigned int _file_id;
-				containers::unordered_map<string, unsigned int> files;
+				id_t _file_id;
+				containers::unordered_map<string, id_t> files;
 				shared_ptr<dbghelp> _dbghelp;
 				symbol_callback_t _callback;
 				symbol_info _si;
@@ -240,7 +241,7 @@ namespace micro_profiler
 				}
 
 			private:
-				unsigned int _file_id;
+				id_t _file_id;
 				set<string> files;
 				shared_ptr<dbghelp> _dbghelp;
 				file_callback_t _callback;

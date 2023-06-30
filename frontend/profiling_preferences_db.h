@@ -37,6 +37,17 @@ namespace micro_profiler
 		v(&module_info_metadata::hash, "hash");
 	}
 
+	template <typename VisitorT>
+	inline void describe(VisitorT &&v, symbol_info *)
+	{
+		v(&symbol_info::rva, "rva");
+		v(&symbol_info::size, "size");
+		v(&symbol_info::name, "name");
+		v(&symbol_info::file_id, "source_file_id");
+		v(&symbol_info::line, "line_number");
+	}
+
+
 	namespace tables
 	{
 		template <typename VisitorT>
@@ -48,15 +59,11 @@ namespace micro_profiler
 		}
 
 		template <typename VisitorT>
-		inline void describe(VisitorT &&v, symbol_info *)
+		inline void describe(VisitorT &&v, symbol_info *s)
 		{
 			v("symbols");
+			describe(v, static_cast<micro_profiler::symbol_info *>(s));
 			v(&symbol_info::module_id, "module_id");
-			v(&symbol_info::rva, "rva");
-			v(&symbol_info::size, "size");
-			v(&symbol_info::name, "name");
-			v(&symbol_info::file_id, "source_file_id");
-			v(&symbol_info::line, "line_number");
 		}
 
 		template <typename VisitorT>

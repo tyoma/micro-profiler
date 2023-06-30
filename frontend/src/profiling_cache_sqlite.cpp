@@ -106,12 +106,21 @@ namespace micro_profiler
 
 	vector<tables::cached_patch> profiling_cache_sqlite::load_default_patches(id_t cached_module_id)
 	{
+		typedef tuple<tables::cached_patch, tables::symbol_info> item_type;
+
 		sql::transaction tx(sql::create_connection(_preferences_db.c_str()));
-		auto r = tx.select<tables::cached_patch>(sql::c(&tables::cached_patch::module_id) == sql::p(cached_module_id));
+		auto r = tx.select<item_type>(
+			sql::c<0>(&tables::cached_patch::rva) == sql::c<1>(&tables::symbol_info::rva)
+				&& sql::c<0>(&tables::cached_patch::module_id) == sql::p(cached_module_id)
+				&& sql::c<1>(&tables::symbol_info::module_id) == sql::p(cached_module_id)
+		);
 		vector<tables::cached_patch> result;
 
-		for (tables::cached_patch item; r(item); )
-			result.push_back(item);
+		for (item_type item; r(item); )
+		{
+			result.push_back(get<0>(item));
+			result.back().size = get<1>(item).size;
+		}
 		return move(result);
 	}
 

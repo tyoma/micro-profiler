@@ -202,7 +202,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				patch_request preq1 = {	2u, mkvector(rva1)	};
+				patch_revert_request preq1 = {	2u, mkvector(rva1)	};
 				client->request(rq, request_revert_patches, preq1, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
@@ -214,7 +214,7 @@ namespace micro_profiler
 				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
 
 				// ACT
-				patch_request preq2 = {	1u, mkvector(rva2)	};
+				patch_revert_request preq2 = {	1u, mkvector(rva2)	};
 				client->request(rq, request_revert_patches, preq2, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
@@ -252,7 +252,7 @@ namespace micro_profiler
 				module_helper.emulate_mapped(*img2);
 
 				// ACT
-				const patch_request preq1 = {	1u, mkvector(rva1)	};
+				const patch_revert_request preq1 = {	1u, mkvector(rva1)	};
 				client->request(rq, request_revert_patches, preq1, response_reverted, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());
@@ -270,7 +270,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				const patch_request preq2 = {	1u, mkvector(rva2)	};
+				const patch_revert_request preq2 = {	1u, mkvector(rva2)	};
 				client->request(rq, request_revert_patches, preq2, response_reverted, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());

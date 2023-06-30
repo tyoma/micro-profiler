@@ -23,8 +23,11 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			typedef tables::patches::patch_def patch_def;
+
 			const auto cached_patch_less = [] (const tables::cached_patch &lhs, const tables::cached_patch &rhs) {
-				return make_tuple(lhs.scope_id, lhs.module_id, lhs.rva) < make_tuple(rhs.scope_id, rhs.module_id, rhs.rva);
+				return make_tuple(lhs.scope_id, lhs.module_id, lhs.rva, lhs.size)
+					< make_tuple(rhs.scope_id, rhs.module_id, rhs.rva, rhs.size);
 			};
 		}
 
@@ -108,10 +111,10 @@ namespace micro_profiler
 			{
 				// INIT
 				const auto s = make_shared<profiling_session>();
-				vector< pair<id_t, vector<unsigned>> > rva_log;
+				vector< pair<id_t, vector<patch_def>> > rva_log;
 
-				s->patches.apply = [&] (id_t module_id, range<const unsigned, size_t> rva) {
-					rva_log.push_back(make_pair(module_id, vector<unsigned>(rva.begin(), rva.end())));
+				s->patches.apply = [&] (id_t module_id, range<const patch_def, size_t> rva) {
+					rva_log.push_back(make_pair(module_id, vector<patch_def>(rva.begin(), rva.end())));
 				};
 				add_records(s->mappings, plural
 					+ make_mapping(1, 2, 1, "", 37012u)
@@ -131,8 +134,8 @@ namespace micro_profiler
 				cache->on_load_default_patches = [] (id_t cached_module_id) -> vector<tables::cached_patch> {
 					assert_equal(102u, cached_module_id);
 					return plural
-						+ initialize<tables::cached_patch>(0u, 102u, 11001u)
-						+ initialize<tables::cached_patch>(0u, 102u, 11101u);
+						+ initialize<tables::cached_patch>(0u, 102u, 11001u, 17100u)
+						+ initialize<tables::cached_patch>(0u, 102u, 11101u, 10001u);
 				};
 
 				// ACT
@@ -149,7 +152,7 @@ namespace micro_profiler
 				assert_equal(0u, worker.tasks.size());
 				assert_equal(0u, apartment.tasks.size());
 				assert_equal(plural
-					+ make_pair(3u, plural + 11001u + 11101u), rva_log);
+					+ make_pair(3u, plural + make_pair(11001u, 17100u) + make_pair(11101u, 10001u)), rva_log);
 
 				// ACT
 				cache->tasks.find(37012u)->second->set(101);
@@ -160,12 +163,12 @@ namespace micro_profiler
 					assert_is_true(101u == cached_module_id || 103u == cached_module_id);
 					return 101u == cached_module_id
 						? plural
-							+ initialize<tables::cached_patch>(0u, 101u, 10001u)
-							+ initialize<tables::cached_patch>(0u, 101u, 10101u)
-							+ initialize<tables::cached_patch>(0u, 101u, 10011u)
+							+ initialize<tables::cached_patch>(0u, 101u, 10001u, 171u)
+							+ initialize<tables::cached_patch>(0u, 101u, 10101u, 177u)
+							+ initialize<tables::cached_patch>(0u, 101u, 10011u, 174u)
 						: plural
-							+ initialize<tables::cached_patch>(0u, 103u, 21001u)
-							+ initialize<tables::cached_patch>(0u, 103u, 90101u);
+							+ initialize<tables::cached_patch>(0u, 103u, 21001u, 173u)
+							+ initialize<tables::cached_patch>(0u, 103u, 90101u, 172u);
 				};
 
 				//ACT
@@ -174,9 +177,9 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(plural
-					+ make_pair(3u, plural + 11001u + 11101u)
-					+ make_pair(2u, plural + 10001u + 10101u + 10011u)
-					+ make_pair(13u, plural + 21001u + 90101u), rva_log);
+					+ make_pair(3u, plural + patch_def(11001u, 17100u) + patch_def(11101u, 10001u))
+					+ make_pair(2u, plural + patch_def(10001u, 171u) + patch_def(10101u, 177u) + patch_def(10011u, 174))
+					+ make_pair(13u, plural + patch_def(21001u, 173u) + patch_def(90101u, 172u)), rva_log);
 			}
 
 
@@ -349,10 +352,10 @@ namespace micro_profiler
 							+ initialize<tables::cached_patch>(0u, 3u, 400121u)
 							+ initialize<tables::cached_patch>(0u, 3u, 50006u);
 				};
-				s->patches.apply = [&patches_idx] (id_t module_id, range<const unsigned, size_t> rva) {
+				s->patches.apply = [&patches_idx] (id_t module_id, range<const patch_def, size_t> rva) {
 					for (auto i = rva.begin(); i != rva.end(); ++i)
 					{
-						auto r = patches_idx[symbol_key(module_id, *i)];
+						auto r = patches_idx[symbol_key(module_id, i->first)];
 
 						(*r).state = patch_state::active, (*r).in_transit = false;
 						r.commit();
@@ -449,7 +452,7 @@ namespace micro_profiler
 				cache->on_update_default_patches = [&] (id_t cached_module_id, vector<unsigned> added, vector<unsigned> removed) {
 					log.push_back(make_tuple(cached_module_id, added, removed));
 				};
-				s->patches.apply = [&patches_idx] (id_t /*module_id*/, range<const unsigned, size_t> /*rva*/) {
+				s->patches.apply = [&patches_idx] (id_t /*module_id*/, range<const patch_def, size_t> /*rva*/) {
 				};
 				add_records(s->mappings, plural
 					+ make_mapping(19, 100, 1000000, "", 1)

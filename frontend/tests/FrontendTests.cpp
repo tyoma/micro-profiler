@@ -26,6 +26,7 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			typedef tables::patches::patch_def patch_def;
 			typedef call_graph_types<unsigned> unthreaded_statistic_types;
 
 			struct emulator_ : ipc::channel, noncopyable
@@ -79,7 +80,6 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				unsigned dummy[] = {	1, 2, 3,	};
 
 				emulator->message(init, format(make_initialization_data("", 1)));
 
@@ -88,8 +88,8 @@ namespace micro_profiler
 
 				// ACT / ASSERT (must not throw)
 				context->modules.request_presence(req[0], 123, [] (module_info_metadata) {});
-				context->patches.apply(123, mkrange(dummy));
-				context->patches.revert(123, mkrange(dummy));
+				context->patches.apply(123, mkrange(plural + patch_def(1, 10) + patch_def(2, 10) + patch_def(3, 10)));
+				context->patches.revert(123, mkrange(plural + 1u + 2u + 3u));
 			}
 
 

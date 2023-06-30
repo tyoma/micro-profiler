@@ -36,7 +36,7 @@ using namespace std;
 
 namespace micro_profiler
 {
-	void frontend::request_metadata(shared_ptr<void> &request_, unsigned int module_id,
+	void frontend::request_metadata(shared_ptr<void> &request_, id_t module_id,
 		const tables::modules::metadata_ready_cb &ready)
 	{
 		const auto init = mx_metadata_requests_t::create(request_, _mx_metadata_requests, module_id, ready);
@@ -68,7 +68,7 @@ namespace micro_profiler
 	}
 
 	template <typename F>
-	void frontend::request_metadata_nw_cached(shared_ptr<void> &request_, unsigned int module_id, unsigned int hash,
+	void frontend::request_metadata_nw_cached(shared_ptr<void> &request_, id_t module_id, unsigned int hash,
 		const F &ready)
 	{
 		const auto req = make_shared< shared_ptr<void> >();
@@ -101,7 +101,7 @@ namespace micro_profiler
 	}
 
 	template <typename F>
-	void frontend::request_metadata_nw(shared_ptr<void> &request_, unsigned int module_id, const F &ready)
+	void frontend::request_metadata_nw(shared_ptr<void> &request_, id_t module_id, const F &ready)
 	{
 		LOG(PREAMBLE "requesting from remote...") % A(this) % A(module_id);
 		request(request_, request_module_metadata, module_id, response_module_metadata,

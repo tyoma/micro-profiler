@@ -240,7 +240,7 @@ namespace micro_profiler
 			value << (patch->in_transit ? c_requested_patch_states : c_complete_patch_states)[patch->state];
 	}
 
-	void image_patch_model::format_module_name(agge::richtext_t &value, unsigned int module_id) const
+	void image_patch_model::format_module_name(agge::richtext_t &value, id_t module_id) const
 	{
 		const auto m = _module_paths.find(module_id);
 
@@ -248,7 +248,7 @@ namespace micro_profiler
 			value << *m->second;
 	}
 
-	void image_patch_model::format_module_path(agge::richtext_t &value, unsigned int module_id) const
+	void image_patch_model::format_module_path(agge::richtext_t &value, id_t module_id) const
 	{
 		const auto m = _module_paths.find(module_id);
 

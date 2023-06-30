@@ -82,10 +82,10 @@ namespace micro_profiler
 			toolbar->add(btn = factory_.create_control<button>("button"), pixels(120), false, 100);
 				btn->set_text(agge::style_modifier::empty + "Patch Selected");
 				_connections.push_back(btn->clicked += [model, patches, selection_] {
-					unordered_map< unsigned int, vector<unsigned int> > s;
+					unordered_map< unsigned int, vector<tables::patches::patch_def> > s;
 
 					for (auto i = selection_->begin(); i != selection_->end(); ++i)
-						s[get<0>(*i)].push_back(get<1>(*i));
+						s[get<0>(*i)].push_back(tables::patches::patch_def(get<1>(*i), get<2>(*i)));
 					for (auto i = s.begin(); i != s.end(); ++i)
 						patches->apply(i->first, make_range(i->second));
 					selection_->clear();

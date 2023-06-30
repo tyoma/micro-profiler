@@ -96,7 +96,7 @@ namespace micro_profiler
 				}
 			}
 
-			begin_test_suite( AJoiningTests )
+			begin_test_suite( JoiningTests )
 				temporary_directory dir;
 				string path;
 				unique_ptr<transaction> tx;

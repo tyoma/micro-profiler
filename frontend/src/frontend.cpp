@@ -50,7 +50,7 @@ namespace micro_profiler
 			request_full_update(_update_request, [] (shared_ptr<void> &r) {	r.reset();	});
 		};
 
-		_db->modules.request_presence = [this] (shared_ptr<void> &request, unsigned int module_id,
+		_db->modules.request_presence = [this] (shared_ptr<void> &request, id_t module_id,
 			const tables::modules::metadata_ready_cb &ready) {
 
 			request_metadata(request, module_id, ready);
@@ -129,7 +129,7 @@ namespace micro_profiler
 		request(request_, request_update, 0, callbacks);
 	}
 
-	void frontend::update_threads(vector<unsigned int> &thread_ids)
+	void frontend::update_threads(vector<id_t> &thread_ids)
 	{
 		auto req = new_request_handle();
 		auto &idx = sdb::unique_index(_db->threads, keyer::external_id());
@@ -164,7 +164,7 @@ namespace micro_profiler
 			const auto self = this;
 			const auto remaining = make_shared<unsigned int>(0);
 			const auto enable = make_shared<bool>(false);
-			containers::unordered_map<unsigned int, int> requested;
+			containers::unordered_map<id_t, int> requested;
 			auto &statistics = _db->statistics;
 			auto &idx = sdb::ordered_index_(_db->mappings, keyer::base());
 

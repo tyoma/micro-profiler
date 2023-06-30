@@ -54,8 +54,8 @@ namespace micro_profiler
 
 	private:
 		typedef std::shared_ptr<module_info_metadata> module_ptr;
-		typedef containers::unordered_map<unsigned int /*module_id*/, std::uint32_t> module_hashes_t;
-		typedef reqm::multiplexing_request<unsigned int, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
+		typedef containers::unordered_map<id_t /*module_id*/, std::uint32_t> module_hashes_t;
+		typedef reqm::multiplexing_request<id_t, tables::modules::metadata_ready_cb> mx_metadata_requests_t;
 		typedef std::list< std::shared_ptr<void> > requests_t;
 
 	private:
@@ -63,23 +63,23 @@ namespace micro_profiler
 		virtual void disconnect() throw() override;
 
 		void init_patcher();
-		void apply(unsigned int module_id, range<const unsigned int, size_t> rva);
-		void revert(unsigned int module_id, range<const unsigned int, size_t> rva);
+		void apply(id_t module_id, range<const tables::patches::patch_def, size_t> rva);
+		void revert(id_t module_id, range<const unsigned int, size_t> rva);
 
 		template <typename OnUpdate>
 		void request_full_update(std::shared_ptr<void> &request_, const OnUpdate &on_update);
-		void update_threads(std::vector<unsigned int> &thread_ids);
+		void update_threads(std::vector<id_t> &thread_ids);
 		void finalize();
 
-		void request_metadata(std::shared_ptr<void> &request_, unsigned int module_id,
+		void request_metadata(std::shared_ptr<void> &request_, id_t module_id,
 			const tables::modules::metadata_ready_cb &ready);
 
 		template <typename F>
-		void request_metadata_nw_cached(std::shared_ptr<void> &request_, unsigned int module_id, unsigned int hash,
+		void request_metadata_nw_cached(std::shared_ptr<void> &request_, id_t module_id, unsigned int hash,
 			const F &ready);
 
 		template <typename F>
-		void request_metadata_nw(std::shared_ptr<void> &request_, unsigned int module_id, const F &ready);
+		void request_metadata_nw(std::shared_ptr<void> &request_, id_t module_id, const F &ready);
 
 		requests_t::iterator new_request_handle();
 
@@ -96,10 +96,11 @@ namespace micro_profiler
 		std::shared_ptr<void> _update_request;
 
 		// request_apply_patches buffers
-		patch_request _patch_request_payload;
+		patch_apply_request _patch_apply_payload;
 		response_patched_data _patched_buffer;
 
 		// request_revert_patches buffers
+		patch_revert_request _patch_revert_payload;
 		response_reverted_data _reverted_buffer;
 	};
 }

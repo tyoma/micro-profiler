@@ -52,6 +52,9 @@ namespace micro_profiler
 	void translated_function_patch::init(void *target, size_t target_size, executable_memory_allocator &allocator_,
 		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
+		if (target_size < c_jump_size)
+			throw inconsistent_function_range_exception("function to be patched is too small");
+
 		const byte_range src(static_cast<byte *>(target), target_size);
 		const auto moved_size = static_cast<byte>(calculate_fragment_length(src, c_jump_size));
 

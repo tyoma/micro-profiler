@@ -6,6 +6,8 @@
 
 #include <common/image_info.h>
 #include <common/module.h>
+#include <patcher/binary_translation.h>
+#include <patcher/jump.h>
 #include <test-helpers/constants.h>
 #include <ut/assert.h>
 #include <ut/test.h>
@@ -42,6 +44,22 @@ namespace micro_profiler
 			{
 				allocator.allocate(1);
 				scope = temporary_unlock_code_at(address_cast_hack<void *>(&recursive_factorial));
+			}
+
+
+			test( FunctionTooShortToBeMovedCannotBePatched )
+			{
+				// INIT
+				vector<byte> small(c_jump_size - 1);
+				auto enough = static_pointer_cast<byte>(allocator.allocate(c_jump_size));
+				
+				jump_initialize(enough.get(), enough.get() + 1000u);
+
+				// INIT / ACT / ASSERT
+				assert_throws(translated_function_patch(small.data(), small.size(), &trace, allocator),
+					inconsistent_function_range_exception);
+
+				translated_function_patch(enough.get(), c_jump_size, &trace, allocator);
 			}
 
 

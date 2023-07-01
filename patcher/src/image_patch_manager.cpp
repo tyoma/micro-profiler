@@ -156,7 +156,7 @@ namespace micro_profiler
 		}
 	}
 
-	void image_patch_manager::apply(patch_change_results &results, id_t module_id, request_range targets)
+	void image_patch_manager::apply(patch_change_results &results, id_t module_id, apply_request_range targets)
 	{
 		prepare(results, targets.length());
 
@@ -166,7 +166,7 @@ namespace micro_profiler
 
 		for (auto i = targets.begin(); i != targets.end(); ++i)
 		{
-			auto patch_record = patch_idx[make_tuple(module_id, *i)]; // Postcondition: id, rva, module_id are set.
+			auto patch_record = patch_idx[make_tuple(module_id, i->first)]; // Postcondition: id, rva, module_id are set.
 			auto &p = *patch_record;
 			patch_change_result result = {	p.id, p.rva,	};
 
@@ -175,10 +175,11 @@ namespace micro_profiler
 				switch (p.state)
 				{
 				case patch_record::dormant:
+					p.size = i->second;
 					p.state = patch_record::unrecoverable_error;
 					result.result = patch_change_result::unrecoverable_error;
 					if (!p.patch && locked)
-						p.patch = move(_patch_factory(locked->base + *i, p.id, *locked->allocator));
+						p.patch = move(_patch_factory(locked->base + i->first, i->second, p.id, *locked->allocator));
 					p.state = patch_record::activation_error;
 					result.result = patch_change_result::activation_error;
 
@@ -210,7 +211,7 @@ namespace micro_profiler
 		}
 	}
 
-	void image_patch_manager::revert(patch_change_results &results, id_t module_id, request_range targets)
+	void image_patch_manager::revert(patch_change_results &results, id_t module_id, revert_request_range targets)
 	{
 		prepare(results, targets.length());
 
@@ -289,7 +290,7 @@ namespace micro_profiler
 				case patch_record::activation_error:
 				case patch_record::active:
 					p.state = patch_record::unrecoverable_error;
-					p.patch = move(_patch_factory(mapping.base + p.rva, p.id, *allocator));
+					p.patch = move(_patch_factory(mapping.base + p.rva, p.size, p.id, *allocator));
 					p.state = patch_record::activation_error;
 					p.patch->activate();
 					p.state = patch_record::active;

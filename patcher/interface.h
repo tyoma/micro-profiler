@@ -35,6 +35,7 @@ namespace micro_profiler
 			unrecoverable_error,	// Patch was once requested, but failed to apply. Sticks forever;
 			activation_error, // Patch activation failed, can be retried later.
 		} state;
+		unsigned int size;
 	};
 
 	struct patch_change_result
@@ -67,13 +68,16 @@ namespace micro_profiler
 	{
 		typedef std::vector<patch_change_result> patch_change_results;
 		typedef std::vector<patch_state> patch_states;
-		typedef range<const unsigned int /*rva*/, size_t> request_range;
+		typedef std::pair<unsigned int /*rva*/, unsigned int /*size*/> apply_request;
+		typedef range<const apply_request, size_t> apply_request_range;
+		typedef unsigned int /*rva*/ revert_request;
+		typedef range<const revert_request, size_t> revert_request_range;
 
 		patch_manager() {	}
 
 		virtual void query(patch_states &states, id_t module_id) = 0;
-		virtual void apply(patch_change_results &results, id_t module_id, request_range targets) = 0;
-		virtual void revert(patch_change_results &results, id_t module_id, request_range targets) = 0;
+		virtual void apply(patch_change_results &results, id_t module_id, apply_request_range targets) = 0;
+		virtual void revert(patch_change_results &results, id_t module_id, revert_request_range targets) = 0;
 	};
 
 	struct patch

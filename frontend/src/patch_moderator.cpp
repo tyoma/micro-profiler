@@ -94,14 +94,14 @@ namespace micro_profiler
 				return cache->load_default_patches(*cached_module_id);
 			}, _worker)
 			.continue_with([patches, changes, mapping] (const async_result< vector<cached_patch> > &loaded) {
-				vector<unsigned int> rva;
+				vector<tables::patches::patch_def> rva;
 				auto &changes_symbol_idx = sdb::unique_index(*changes, keyer::symbol_id());
 
 				for (auto i = begin(*loaded); i != end(*loaded); ++i)
 				{
-					auto r = changes_symbol_idx[make_tuple(mapping.module_id, i->rva)];
+					auto r = changes_symbol_idx[symbol_key(mapping.module_id, i->rva)];
 
-					rva.push_back(i->rva);
+					rva.push_back(tables::patches::patch_def(i->rva, i->size));
 					(*r).state = patch_moderator::patch_saved;
 					r.commit();
 				}

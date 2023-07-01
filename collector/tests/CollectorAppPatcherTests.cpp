@@ -80,21 +80,23 @@ namespace micro_profiler
 				// INIT
 				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 				shared_ptr<void> rq;
-				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				patch_manager::apply_request rva1[] = {
+					make_pair(100u, 11u), make_pair(3110u, 13u), make_pair(3211u, 9u),
+				};
 				vector<unsigned> ids_log;
-				vector< vector<unsigned> > rva_log;
+				vector< vector<patch_manager::apply_request> > rva_log;
 				mt::event ready;
 
 				app.connect(factory, false);
 				client_ready.wait();
-				pmanager->on_apply = [&] (patch_change_results &, unsigned module_id, patch_manager::request_range targets) {
+				pmanager->on_apply = [&] (patch_change_results &, unsigned module_id, patch_manager::apply_request_range targets) {
 					ids_log.push_back(module_id);
-					rva_log.push_back(vector<unsigned>(targets.begin(), targets.end()));
+					rva_log.push_back(vector<patch_manager::apply_request>(targets.begin(), targets.end()));
 					ready.set();
 				};
 
 				// ACT
-				const patch_request preq1 = {	3u, mkvector(rva1)	};
+				const patch_apply_request preq1 = {	3u, mkvector(rva1)	};
 				client->request(rq, request_apply_patches, preq1, response_patched, [] (deserializer &) {	});
 				ready.wait();
 
@@ -103,10 +105,12 @@ namespace micro_profiler
 				assert_equal(rva1, rva_log.back());
 
 				// INIT
-				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
+				patch_manager::apply_request rva2[] = {
+					make_pair(11u, 1110u), make_pair(17u, 0u), make_pair(191u, 0u), make_pair(111111u, 987654u),
+				};
 
 				// ACT
-				const patch_request preq2 = {	1u, mkvector(rva2)	};
+				const patch_apply_request preq2 = {	1u, mkvector(rva2)	};
 				client->request(rq, request_apply_patches, preq2, response_patched, [] (deserializer &) {	});
 				ready.wait();
 
@@ -121,30 +125,31 @@ namespace micro_profiler
 				// INIT
 				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 				shared_ptr<void> rq;
-				unsigned rva1[] = {	100u, 3110u, 3211u,	};
+				auto rva1 = plural + make_pair(100u, 0u) + make_pair(3110u, 0u) + make_pair(3211u, 0u);
 				auto aresults1 = plural
-					+ mkpatch_change(rva1[0], patch_change_result::ok, 0)
-					+ mkpatch_change(rva1[1], patch_change_result::ok, 0)
-					+ mkpatch_change(rva1[2], patch_change_result::ok, 0);
-				unsigned rva2[] = {	1001u, 310u, 3211u, 1000001u, 13u,	};
+					+ mkpatch_change(rva1[0].first, patch_change_result::ok, 0)
+					+ mkpatch_change(rva1[1].first, patch_change_result::ok, 0)
+					+ mkpatch_change(rva1[2].first, patch_change_result::ok, 0);
+				auto rva2 = plural
+					+ make_pair(1001u, 0u) + make_pair(310u, 0u) + make_pair(3211u, 0u) + make_pair(1000001u, 0u) + make_pair(13u, 0u);
 				auto aresults2 = plural
-					+ mkpatch_change(rva2[0], patch_change_result::ok, 0)
-					+ mkpatch_change(rva2[1], patch_change_result::ok, 100)
-					+ mkpatch_change(rva2[2], patch_change_result::unchanged, 1901)
-					+ mkpatch_change(rva2[3], patch_change_result::ok, 100000)
-					+ mkpatch_change(rva2[4], patch_change_result::unrecoverable_error, 0);
+					+ mkpatch_change(rva2[0].first, patch_change_result::ok, 0)
+					+ mkpatch_change(rva2[1].first, patch_change_result::ok, 100)
+					+ mkpatch_change(rva2[2].first, patch_change_result::unchanged, 1901)
+					+ mkpatch_change(rva2[3].first, patch_change_result::ok, 100000)
+					+ mkpatch_change(rva2[4].first, patch_change_result::unrecoverable_error, 0);
 				vector<patch_change_results> log;
 				mt::event ready;
 
 				app.connect(factory, false);
 				client_ready.wait();
-				pmanager->on_apply = [&] (patch_change_results &results, id_t, patch_manager::request_range) {
+				pmanager->on_apply = [&] (patch_change_results &results, id_t, patch_manager::apply_request_range) {
 					results = aresults1;
 				};
 				module_helper.emulate_mapped(*img1);
 
 				// ACT
-				const patch_request preq1 = {	1u, mkvector(rva1)	};
+				const patch_apply_request preq1 = {	1u, rva1	};
 				client->request(rq, request_apply_patches, preq1, response_patched, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());
@@ -157,12 +162,12 @@ namespace micro_profiler
 				assert_equal(aresults1, log.back());
 
 				// INIT
-				pmanager->on_apply = [&] (patch_change_results &results, id_t, patch_manager::request_range) {
+				pmanager->on_apply = [&] (patch_change_results &results, id_t, patch_manager::apply_request_range) {
 					results = aresults2;
 				};
 
 				// ACT
-				const patch_request preq2 = {	1u, mkvector(rva2)	};
+				const patch_apply_request preq2 = {	1u, rva2	};
 				client->request(rq, request_apply_patches, preq2, response_patched, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());
@@ -190,14 +195,14 @@ namespace micro_profiler
 				module_helper.emulate_mapped(*img2);
 				app.connect(factory, false);
 				client_ready.wait();
-				pmanager->on_revert = [&] (patch_change_results &, unsigned module_id, patch_manager::request_range tgts) {
+				pmanager->on_revert = [&] (patch_change_results &, unsigned module_id, patch_manager::revert_request_range tgts) {
 					ids_log.push_back(module_id);
 					rva_log.push_back(vector<unsigned>(tgts.begin(), tgts.end()));
 					ready.set();
 				};
 
 				// ACT
-				patch_request preq1 = {	2u, mkvector(rva1)	};
+				patch_revert_request preq1 = {	2u, mkvector(rva1)	};
 				client->request(rq, request_revert_patches, preq1, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
@@ -209,7 +214,7 @@ namespace micro_profiler
 				unsigned rva2[] = {	11u, 17u, 191u, 111111u,	};
 
 				// ACT
-				patch_request preq2 = {	1u, mkvector(rva2)	};
+				patch_revert_request preq2 = {	1u, mkvector(rva2)	};
 				client->request(rq, request_revert_patches, preq2, response_reverted, [] (deserializer &) {	});
 				ready.wait();
 
@@ -241,13 +246,13 @@ namespace micro_profiler
 
 				app.connect(factory, false);
 				client_ready.wait();
-				pmanager->on_revert = [&] (patch_change_results &results, id_t, patch_manager::request_range) {
+				pmanager->on_revert = [&] (patch_change_results &results, id_t, patch_manager::revert_request_range) {
 					results = rresults1;
 				};
 				module_helper.emulate_mapped(*img2);
 
 				// ACT
-				const patch_request preq1 = {	1u, mkvector(rva1)	};
+				const patch_revert_request preq1 = {	1u, mkvector(rva1)	};
 				client->request(rq, request_revert_patches, preq1, response_reverted, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());
@@ -260,12 +265,12 @@ namespace micro_profiler
 				assert_equal(rresults1, log.back());
 
 				// INIT
-				pmanager->on_revert = [&] (patch_change_results &results, id_t, patch_manager::request_range) {
+				pmanager->on_revert = [&] (patch_change_results &results, id_t, patch_manager::revert_request_range) {
 					results = rresults2;
 				};
 
 				// ACT
-				const patch_request preq2 = {	1u, mkvector(rva2)	};
+				const patch_revert_request preq2 = {	1u, mkvector(rva2)	};
 				client->request(rq, request_revert_patches, preq2, response_reverted, [&] (deserializer &d) {
 					log.resize(log.size() + 1);
 					d(log.back());

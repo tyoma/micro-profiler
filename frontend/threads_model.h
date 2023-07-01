@@ -44,7 +44,7 @@ namespace micro_profiler
 	public:
 		threads_model(std::shared_ptr<const tables::threads> threads);
 
-		bool get_key(unsigned int &thread_id, index_type index) const throw();
+		bool get_key(id_t &thread_id, index_type index) const throw();
 
 		virtual index_type get_count() const throw() override;
 		virtual void get_value(index_type index, std::string &text) const override;

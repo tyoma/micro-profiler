@@ -30,7 +30,7 @@ namespace micro_profiler
 	{
 		struct additive
 		{
-			std::vector<unsigned int> threads;
+			std::vector<id_t> threads;
 		};
 
 		template <typename U, typename C, int static_level>

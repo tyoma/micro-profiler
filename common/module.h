@@ -39,7 +39,7 @@ namespace micro_profiler
 		struct mapping;
 		struct mapping_ex;
 
-		typedef std::pair<unsigned int /*instance_id*/, mapping_ex> mapping_instance;
+		typedef std::pair<id_t /*mapping_id*/, mapping_ex> mapping_instance;
 
 		virtual std::shared_ptr<dynamic> load(const std::string &path) = 0;
 		virtual std::string executable() = 0;
@@ -65,7 +65,7 @@ namespace micro_profiler
 
 	struct module::mapping_ex
 	{
-		unsigned int module_id; // Persistent one-based ID of the image this mapping is for.
+		id_t module_id; // Persistent one-based ID of the image this mapping is for.
 		std::string path;
 		long_address_t base;
 		std::uint32_t hash;

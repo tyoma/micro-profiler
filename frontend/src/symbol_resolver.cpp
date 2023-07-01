@@ -35,7 +35,7 @@ namespace micro_profiler
 
 	const string &symbol_resolver::symbol_name_by_va(long_address_t address) const
 	{
-		unsigned int module_id;
+		id_t module_id;
 
 		if (const auto symbol = find_symbol_by_va(address, module_id))
 			return symbol->name;
@@ -44,7 +44,7 @@ namespace micro_profiler
 
 	bool symbol_resolver::symbol_fileline_by_va(long_address_t address, fileline_t &result) const
 	{
-		unsigned int module_id;
+		id_t module_id;
 
 		if (const auto symbol = find_symbol_by_va(address, module_id))
 		{
@@ -61,7 +61,7 @@ namespace micro_profiler
 		return false;
 	}
 
-	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, unsigned int &module_id) const
+	const symbol_info *symbol_resolver::find_symbol_by_va(long_address_t address, id_t &module_id) const
 	{
 		if (const auto mapping = find_range(sdb::ordered_index_(*_mappings, keyer::base()), address))
 		{

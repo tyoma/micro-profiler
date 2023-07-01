@@ -39,7 +39,7 @@ namespace micro_profiler
 	struct image_info
 	{
 		typedef std::function<void (const symbol_info &symbol)> symbol_callback_t;
-		typedef std::function<void (const std::pair<unsigned int /*file_id*/, std::string /*path*/> &file)> file_callback_t;
+		typedef std::function<void (const std::pair<id_t /*file_id*/, std::string /*path*/> &file)> file_callback_t;
 
 		virtual ~image_info() {	}
 		virtual void enumerate_functions(const symbol_callback_t &callback) const = 0;

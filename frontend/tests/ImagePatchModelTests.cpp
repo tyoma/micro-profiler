@@ -663,8 +663,8 @@ namespace micro_profiler
 				sel->add(3);
 
 				// ASSERT
-				symbol_key reference1[] = {
-					symbol_key(1, 0x901A9010), symbol_key(3, 0x00000021),
+				selected_symbol reference1[] = {
+					selected_symbol(1, 0x901A9010, 15), selected_symbol(3, 0x00000021, 14),
 				};
 
 				assert_equivalent(reference1, get_selected(*sel));

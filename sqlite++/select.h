@@ -26,6 +26,7 @@
 #include "types.h"
 
 #include <cstdint>
+#include <tuple>
 
 namespace micro_profiler
 {
@@ -70,13 +71,7 @@ namespace micro_profiler
 		class select_builder
 		{
 		public:
-			select_builder(const char *table_name);
-
-			template <typename U>
-			void operator ()(U);
-
-			template <typename F>
-			void operator ()(F field, const char *name);
+			select_builder();
 
 			reader<T> create_reader(sqlite3 &database) const;
 
@@ -88,6 +83,35 @@ namespace micro_profiler
 			std::string _expression_text;
 		};
 
+
+
+		template <typename T>
+		inline void read_field(T &record, statement &statement_)
+		{
+			record_reader<T> rr = {	record, statement_, 0	};
+
+			describe<T>(rr);
+		}
+
+		template <typename T1, typename T2>
+		inline void read_field(std::tuple<T1, T2> &record, statement &statement_)
+		{
+			record_reader<T1> rr0 = {	std::get<0>(record), statement_, 0	};
+			describe<T1>(rr0);
+			record_reader<T2> rr1 = {	std::get<1>(record), statement_, rr0.index	};
+			describe<T2>(rr1);
+		}
+
+		template <typename T1, typename T2, typename T3>
+		inline void read_field(std::tuple<T1, T2, T3> &record, statement &statement_)
+		{
+			record_reader<T1> rr0 = {	std::get<0>(record), statement_, 0	};
+			describe<T1>(rr0);
+			record_reader<T2> rr1 = {	std::get<1>(record), statement_, rr0.index	};
+			describe<T2>(rr1);
+			record_reader<T3> rr2 = {	std::get<2>(record), statement_, rr1.index	};
+			describe<T3>(rr2);
+		}
 
 
 		template <typename T>
@@ -103,33 +127,16 @@ namespace micro_profiler
 
 		template <typename T>
 		inline bool reader<T>::operator ()(T& record)
-		{
-			record_reader<T> rr = {	record, *this, 0	};
-
-			return execute() ? describe<T>(rr), true : false;
-		}
+		{	return execute() ? read_field(record, *this), true : false;	}
 
 
 		template <typename T>
-		inline select_builder<T>::select_builder(const char *table_name)
-			: _index(0), _expression_text("SELECT")
+		inline select_builder<T>::select_builder()
+			: _expression_text("SELECT ")
 		{
-			describe<T>(*this);
+			format_select_list(_expression_text, static_cast<T *>(nullptr));
 			_expression_text += " FROM ";
-			_expression_text += table_name;
-		}
-
-		template <typename T>
-		template <typename U>
-		inline void select_builder<T>::operator ()(U)
-		{	}
-
-		template <typename T>
-		template <typename F>
-		inline void select_builder<T>::operator ()(F /*field*/, const char *name)
-		{
-			_expression_text += _index++ ? ',' : ' ';
-			_expression_text += name;
+			format_table_source(_expression_text, static_cast<T *>(nullptr));
 		}
 
 		template <typename T>

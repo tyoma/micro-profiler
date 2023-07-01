@@ -30,6 +30,41 @@ namespace micro_profiler
 {
 	namespace sql
 	{
+		struct table_source_visitor
+		{
+			template <typename U>
+			void operator ()(U &table_name_)
+			{	table_name.append(table_name_);	}
+
+			template <typename U, typename V>
+			void operator ()(U, V) const
+			{	}
+
+			std::string &table_name;
+		};
+
+		struct select_list_visitor
+		{
+			template <typename U>
+			void operator ()(U)
+			{	}
+
+			template <typename F>
+			void operator ()(F /*field*/, const char *name)
+			{
+				if (!first)
+					table_name += ",";
+				table_name += prefix;
+				table_name += name;
+				first = false;
+			}
+
+			const char *prefix;
+			std::string &table_name;
+			bool first;
+		};
+
+
 		template <typename T>
 		struct column_definition_format_visitor
 		{
@@ -89,16 +124,16 @@ namespace micro_profiler
 		template <typename T, typename F>
 		struct format_column_visitor
 		{
-			format_column_visitor(F T::*field_, std::string &column_name_)
-				: field(field_), column_name(column_name_)
-			{	}
-
 			template <typename U>
 			void operator ()(F U::*field_, const char *column_name_) const
 			{
 				if (field_ == field)
 					column_name.append(column_name_);
 			}
+
+			template <typename U, typename F2>
+			void operator ()(const primary_key<U, F2> &field, const char *column_name)
+			{	(*this)(field.field, column_name);	}
 
 			template <typename U>
 			void operator ()(U)
@@ -114,11 +149,85 @@ namespace micro_profiler
 
 
 
+		template <typename T>
+		inline std::string default_table_name()
+		{
+			std::string r;
+			table_source_visitor v = {	r	};
+
+			describe<T>(v);
+			return r;
+		}
+
+		template <typename T>
+		inline void format_table_source(std::string &output, T *)
+		{
+			table_source_visitor v = {	output	};
+
+			describe<T>(v);
+		}
+
+		template <typename T1, typename T2>
+		inline void format_table_source(std::string &output, std::tuple<T1, T2> *)
+		{
+			table_source_visitor v = {	output	};
+
+			describe<T1>(v), output += " AS t0,";
+			describe<T2>(v), output += " AS t1";
+		}
+
+		template <typename T1, typename T2, typename T3>
+		inline void format_table_source(std::string &output, std::tuple<T1, T2, T3> *)
+		{
+			table_source_visitor v = {	output	};
+
+			describe<T1>(v), output += " AS t0,";
+			describe<T2>(v), output += " AS t1,";
+			describe<T3>(v), output += " AS t2";
+		}
+
+
+		template <typename T>
+		inline void format_select_list(std::string &output, T *)
+		{
+			select_list_visitor v = {	"", output, true	};
+
+			describe<T>(v);
+		}
+
+		template <typename T1, typename T2>
+		inline void format_select_list(std::string &output, std::tuple<T1, T2> *)
+		{
+			select_list_visitor v0 = {	"t0.", output, true	}, v1 = {	"t1.", output, false	};
+
+			describe<T1>(v0);
+			describe<T2>(v1);
+		}
+
+		template <typename T1, typename T2, typename T3>
+		inline void format_select_list(std::string &output, std::tuple<T1, T2, T3> *)
+		{
+			select_list_visitor v0 = {	"t0.", output, true	}, v1 = {	"t1.", output, false	},
+				v2 = {	"t2.", output, false	};
+
+			describe<T1>(v0);
+			describe<T2>(v1);
+			describe<T3>(v2);
+		}
+
+
 		template <typename T, typename F>
 		inline void format_expression(std::string &output, const column<T, F> &e, unsigned int &/*index*/)
 		{
-			format_column_visitor<T, F> v(e.field, output);
+			format_column_visitor<T, F> v = {	e.field, output	};
 			describe<T>(v);
+		}
+
+		template <unsigned int table_index, typename T, typename F>
+		inline void format_expression(std::string &output, const prefixed_column<table_index, T, F> &e, unsigned int &/*index*/)
+		{
+			format_column_visitor<T, F> v = {	e.field, output	};
+			output += "t", output += std::to_string(table_index), output += ".", describe<T>(v);
 		}
 
 		template <typename T>

@@ -65,25 +65,25 @@ namespace micro_profiler
 
 	void frontend::init_patcher()
 	{
-		_db->patches.apply = [this] (unsigned int module_id, range<const unsigned int, size_t> rva) {
+		_db->patches.apply = [this] (id_t module_id, range<const tables::patches::patch_def, size_t> rva) {
 			apply(module_id, rva);
 		};
-		_db->patches.revert = [this] (unsigned int module_id, range<const unsigned int, size_t> rva) {
+		_db->patches.revert = [this] (id_t module_id, range<const unsigned int, size_t> rva) {
 			revert(module_id, rva);
 		};
 	}
 
-	void frontend::apply(unsigned int module_id, range<const unsigned int, size_t> rva)
+	void frontend::apply(id_t module_id, range<const tables::patches::patch_def, size_t> rva)
 	{
 		auto req = new_request_handle();
 		auto &idx = sdb::unique_index<keyer::symbol_id>(_db->patches);
-		auto &targets = _patch_request_payload.functions_rva;
+		auto &targets = _patch_apply_payload.functions;
 
-		_patch_request_payload.image_persistent_id = module_id;
+		_patch_apply_payload.module_id = module_id;
 		targets.clear();
 		targets.reserve(rva.length());
-		for_each(rva.begin(), rva.end(), [&] (unsigned int rva) {
-			auto rec = idx[make_tuple(module_id, rva)];
+		for_each(rva.begin(), rva.end(), [&] (const tables::patches::patch_def &rva) {
+			auto rec = idx[symbol_key(module_id, rva.first)];
 
 			if (set_requested(*rec, false))
 				targets.push_back(rva);
@@ -92,13 +92,13 @@ namespace micro_profiler
 		if (targets.empty())
 			return;
 		_db->patches.invalidate();
-		request(*req, request_apply_patches, _patch_request_payload, response_patched,
+		request(*req, request_apply_patches, _patch_apply_payload, response_patched,
 			[this, module_id, req, &idx] (ipc::deserializer &d) {
 
 			d(_patched_buffer);
 			for (auto i = _patched_buffer.begin(); i != _patched_buffer.end(); ++i)
 			{
-				auto rec = idx[make_tuple(module_id, i->rva)];
+				auto rec = idx[symbol_key(module_id, i->rva)];
 
 				set_applied(*rec, *i);
 				rec.commit();
@@ -108,17 +108,17 @@ namespace micro_profiler
 		});
 	}
 
-	void frontend::revert(unsigned int module_id, range<const unsigned int, size_t> rva)
+	void frontend::revert(id_t module_id, range<const unsigned int, size_t> rva)
 	{
 		auto req = new_request_handle();
 		auto &idx = sdb::unique_index<keyer::symbol_id>(_db->patches);
-		auto &targets = _patch_request_payload.functions_rva;
+		auto &targets = _patch_revert_payload.functions_rva;
 
-		_patch_request_payload.image_persistent_id = module_id;
+		_patch_revert_payload.module_id = module_id;
 		targets.clear();
 		targets.reserve(rva.length());
 		for_each(rva.begin(), rva.end(), [&] (unsigned int rva) {
-			auto symbol_id = make_tuple(module_id, rva);
+			auto symbol_id = symbol_key(module_id, rva);
 
 			if (idx.find(symbol_id))
 			{
@@ -132,13 +132,13 @@ namespace micro_profiler
 		if (targets.empty())
 			return;
 		_db->patches.invalidate();
-		request(*req, request_revert_patches, _patch_request_payload, response_reverted,
+		request(*req, request_revert_patches, _patch_revert_payload, response_reverted,
 			[this, module_id, req, &idx] (ipc::deserializer &d) {
 
 			d(_reverted_buffer);
 			for (auto i = _reverted_buffer.begin(); i != _reverted_buffer.end(); ++i)
 			{
-				auto rec = idx[make_tuple(module_id, i->rva)];
+				auto rec = idx[symbol_key(module_id, i->rva)];
 
 				set_reverted(*rec, *i);
 				rec.commit();

@@ -28,6 +28,8 @@ namespace micro_profiler
 	{
 		namespace
 		{
+			typedef tables::patches::patch_def patch_def;
+
 			struct emulator_ : ipc::channel, noncopyable
 			{
 				emulator_(scheduler::queue &queue)
@@ -86,51 +88,57 @@ namespace micro_profiler
 			test( ApplyingPatchToMissingEntriesSendsCorrespondingRequest )
 			{
 				// INIT
-				vector<patch_request> log;
-				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
-				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
+				vector<patch_apply_request> log;
 
-				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
+				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &, const patch_apply_request &payload) {
 					log.push_back(payload);
 				});
 
 				// ACT
-				patches->apply(101, mkrange(rva1));
+				patches->apply(101, mkrange(plural
+					+ patch_def(1000129u, 1) + patch_def(100100u, 2) + patch_def(0x10000u, 3)));
 
 				// ASSERT
 				assert_equal(1u, log.size());
-				assert_equal(101u, log.back().image_persistent_id);
-				assert_equal(rva1, log.back().functions_rva);
+				assert_equal(101u, log.back().module_id);
+				assert_equal(plural
+					+ patch_def(1000129u, 1)
+					+ patch_def(100100u, 2)
+					+ patch_def(0x10000u, 3), log.back().functions);
 
 				// ACT
-				patches->apply(191, mkrange(rva2));
+				patches->apply(191, mkrange(plural
+					+ patch_def(13u, 10) + patch_def(1000u, 11) + patch_def(0x10000u, 12) + patch_def(0x8000091u, 13)));
 
 				// ASSERT
 				assert_equal(2u, log.size());
-				assert_equal(191u, log.back().image_persistent_id);
-				assert_equal(rva2, log.back().functions_rva);
+				assert_equal(191u, log.back().module_id);
+				assert_equal(plural
+					+ patch_def(13u, 10)
+					+ patch_def(1000u, 11)
+					+ patch_def(0x10000u, 12)
+					+ patch_def(0x8000091u, 13), log.back().functions);
 			}
 
 
 			test( PatchApplicationSetsTableToRequestedState )
 			{
 				// INIT
-				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
-				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
 				const auto &idx = sdb::unique_index<keyer::symbol_id>(*patches);
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_revert_request &payload) {
 					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
 					{
-						auto p = idx.find(make_tuple(payload.image_persistent_id, *i));
+						auto p = idx.find(symbol_key(payload.module_id, *i));
 
 						assert_not_null(p);
-						assert_equal(make_patch(payload.image_persistent_id, *i, 0, true, patch_state::dormant), *p);
+						assert_equal(make_patch(payload.module_id, *i, 0, true, patch_state::dormant), *p);
 					}
 				});
 
 				// ACT
-				patches->apply(11, mkrange(rva1));
+				patches->apply(11, mkrange(plural
+					+ patch_def(1000129u, 1) + patch_def(100100u, 1) + patch_def(0x10000u, 1)));
 
 				// ASSERT
 				assert_equivalent(plural
@@ -139,7 +147,8 @@ namespace micro_profiler
 					+ make_patch(11, 0x10000u, 0, true, patch_state::dormant), *patches);
 
 				// ACT
-				patches->apply(191, mkrange(rva2));
+				patches->apply(191, mkrange(plural
+					+ patch_def(13u, 1) + patch_def(1000u, 1) + patch_def(0x10000u, 1) + patch_def(0x8000091u, 1)));
 
 				// ASSERT
 				assert_equivalent(plural
@@ -156,11 +165,8 @@ namespace micro_profiler
 			test( PatchResponseSetsActiveAndErrorStates )
 			{
 				// INIT
-				unsigned rva1[] = {	1, 2, 3,	};
-				unsigned rva2[] = {	2, 4, 5, 6, 7, 100,	};
-
-				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &resp, const patch_request &payload) {
-					switch (payload.image_persistent_id)
+				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &resp, const patch_apply_request &payload) {
+					switch (payload.module_id)
 					{
 					case 19:
 						resp.defer([] (ipc::server_session::response &resp) {
@@ -191,8 +197,9 @@ namespace micro_profiler
 					}
 				});
 
-				patches->apply(19, mkrange(rva1));
-				patches->apply(31, mkrange(rva2));
+				patches->apply(19, mkrange(plural + patch_def(1, 0) + patch_def(2, 0) + patch_def(3, 0)));
+				patches->apply(31, mkrange(plural + patch_def(2, 0) + patch_def(4, 0) + patch_def(5, 0) + patch_def(6, 0)
+					+ patch_def(7, 0) + patch_def(100, 0)));
 
 				// ACT
 				queue.run_one();
@@ -231,14 +238,10 @@ namespace micro_profiler
 			test( PatchingErroredOrActiveOrRequestedFunctionsDoesNotInvokeARequest )
 			{
 				// INIT
-				unsigned rva1[] = {	2, 3,	};
-				unsigned rva12[] = {	1, 2, 3,	};
-				unsigned rva2[] = {	2, 5,	};
-				unsigned rva22[] = {	2, 4, 5, 6, 7, 100,	};
-				vector<patch_request> log;
+				vector<patch_apply_request> log;
 
-				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_request &payload) {
-					switch (payload.image_persistent_id)
+				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_apply_request &payload) {
+					switch (payload.module_id)
 					{
 					case 19:
 						resp(response_patched, plural
@@ -254,32 +257,34 @@ namespace micro_profiler
 					}
 				});
 
-				patches->apply(19, mkrange(rva1));
-				patches->apply(20, mkrange(rva2));
+				patches->apply(19, mkrange(plural + patch_def(2, 0) + patch_def(3, 0)));
+				patches->apply(20, mkrange(plural + patch_def(2, 0) + patch_def(5, 0)));
 
-				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
+				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &, const patch_apply_request &payload) {
 					log.push_back(payload);
 				});
 
 				// ACT
-				patches->apply(19, mkrange(rva12));
+				patches->apply(19, mkrange(plural + patch_def(1, 0) + patch_def(2, 0) + patch_def(3, 0)));
 
 				// ASSERT
 				assert_equal(1u, log.size());
-				assert_equal(19u, log.back().image_persistent_id);
-				assert_equal(plural + 1u, log.back().functions_rva);
+				assert_equal(19u, log.back().module_id);
+				assert_equal(plural + patch_def(1, 0), log.back().functions);
 
 				// ACT
-				patches->apply(20, mkrange(rva22));
+				patches->apply(20, mkrange(plural + patch_def(2, 0) + patch_def(4, 0) + patch_def(5, 0) + patch_def(6, 0)
+					+ patch_def(7, 0) + patch_def(100, 0)));
 
 				// ASSERT
 				assert_equal(2u, log.size());
-				assert_equal(20u, log.back().image_persistent_id);
-				assert_equal(plural + 4u + 6u + 7u + 100u, log.back().functions_rva);
+				assert_equal(20u, log.back().module_id);
+				assert_equal(plural + patch_def(4, 0) + patch_def(6, 0) + patch_def(7, 0) + patch_def(100, 0),
+					log.back().functions);
 
 				// ACT
-				patches->apply(20, mkrange(rva2));
-				patches->apply(19, mkrange(rva12)); // '1' is in 'requested' state
+				patches->apply(20, mkrange(plural + patch_def(2, 0) + patch_def(5, 0)));
+				patches->apply(19, mkrange(plural + patch_def(1, 0) + patch_def(2, 0) + patch_def(3, 0))); // '1' is in 'requested' state
 
 				// ASSERT
 				assert_equal(2u, log.size());
@@ -289,9 +294,7 @@ namespace micro_profiler
 			test( RequestIsReleasedOnceResponsed )
 			{
 				// INIT
-				unsigned rva[] = {	1, 2, 3,	};
-
-				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_request &/*payload*/) {
+				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_apply_request &/*payload*/) {
 					resp(response_patched, plural
 						+ mkpatch_change(1, patch_change_result::ok, 1)
 						+ mkpatch_change(2, patch_change_result::unrecoverable_error, 0)
@@ -304,7 +307,7 @@ namespace micro_profiler
 					});
 				});
 
-				patches->apply(19, mkrange(rva));
+				patches->apply(19, mkrange(plural + patch_def(1, 0) + patch_def(2, 0) + patch_def(3, 0)));
 
 				// ACT
 				queue.run_one();
@@ -324,9 +327,8 @@ namespace micro_profiler
 				auto conn = patches->invalidate += [&] {
 					log.push_back(vector<patch_state_ex>(this->patches->begin(), this->patches->end()));
 				};
-				unsigned rva[] = {	1, 2, 3,	};
 
-				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
+				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &resp, const patch_apply_request &) {
 					// ACT
 					assert_is_false(log.empty());
 
@@ -339,7 +341,7 @@ namespace micro_profiler
 				});
 
 				// ACT / ASSERT
-				patches->apply(19, mkrange(rva));
+				patches->apply(19, mkrange(plural + patch_def(1, 0) + patch_def(2, 0) + patch_def(3, 0)));
 
 				// ASSERT
 				assert_equal(1u, log.size());
@@ -363,53 +365,53 @@ namespace micro_profiler
 			test( RevertingPatchFromActiveFunctionsSendsCorrespondingRequest )
 			{
 				// INIT
-				vector<patch_request> log;
-				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
-				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
+				vector<patch_revert_request> log;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
-				patches->apply(101, mkrange(rva1));
-				patches->apply(191, mkrange(rva2));
+				patches->apply(101, mkrange(plural + patch_def(1000129u, 0) + patch_def(100100u, 0)
+					+ patch_def(0x10000u, 0)));
+				patches->apply(191, mkrange(plural + patch_def(13u, 0) + patch_def(1000u, 0) + patch_def(0x10000u, 0)
+					+ patch_def(0x8000091u, 0)));
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_revert_request &payload) {
 					log.push_back(payload);
 				});
 
 				// ACT
-				patches->revert(101, mkrange(rva1));
+				patches->revert(101, mkrange(plural + 1000129u + 100100u + 0x10000u));
 
 				// ASSERT
 				assert_equal(1u, log.size());
-				assert_equal(101u, log.back().image_persistent_id);
-				assert_equal(rva1, log.back().functions_rva);
+				assert_equal(101u, log.back().module_id);
+				assert_equal(plural + 1000129u + 100100u + 0x10000u, log.back().functions_rva);
 
 				// ACT
-				patches->revert(191, mkrange(rva2));
+				patches->revert(191, mkrange(plural + 13u + 1000u + 0x10000u + 0x8000091u));
 
 				// ASSERT
 				assert_equal(2u, log.size());
-				assert_equal(191u, log.back().image_persistent_id);
-				assert_equal(rva2, log.back().functions_rva);
+				assert_equal(191u, log.back().module_id);
+				assert_equal(plural + 13u + 1000u + 0x10000u + 0x8000091u, log.back().functions_rva);
 			}
 
 
 			unsigned next_id;
-			unordered_map<unsigned, patch_change_result::errors> apply_results;
+			unordered_map<unsigned int /*rva*/, patch_change_result::errors> apply_results;
 
 			init( SetNextID )
 			{	next_id = 1;	}
 
-			function<void (ipc::server_session::response &resp, const patch_request &payload)> emulate_apply_fn()
+			function<void (ipc::server_session::response &resp, const patch_apply_request &payload)> emulate_apply_fn()
 			{
-				return [this] (ipc::server_session::response &resp, const patch_request &payload) {
+				return [this] (ipc::server_session::response &resp, const patch_apply_request &payload) {
 					vector<patch_change_result> aresults;
 
-					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
+					for (auto i = payload.functions.begin(); i != payload.functions.end(); ++i)
 					{
-						auto j = apply_results.find(*i);
+						auto j = apply_results.find(i->first);
 
-						aresults.push_back(mkpatch_change(*i, j != apply_results.end() ? j->second : patch_change_result::ok, next_id++));
+						aresults.push_back(mkpatch_change(i->first, j != apply_results.end() ? j->second : patch_change_result::ok, next_id++));
 					}
 					resp(response_patched, aresults);
 				};
@@ -419,19 +421,21 @@ namespace micro_profiler
 			test( PatchRevertSetsTableToRequestedState )
 			{
 				// INIT
-				unsigned rva10[] = {	1, 1000129u, 100100u, 0x10000u,	};
-				unsigned rva1[] = {	1000129u, 100100u, 0x10000u,	};
-				unsigned rva20[] = {	3u, 13u, 1000u, 0x10000u, 100u, 0x8000091u,	};
-				unsigned rva2[] = {	13u, 1000u, 0x10000u, 0x8000091u,	};
+				auto rva10 = plural + patch_def(1, 0) + patch_def(1000129u, 0) + patch_def(100100u, 0)
+					+ patch_def(0x10000u, 0);
+				auto rva1 = plural + 1000129u + 100100u + 0x10000u;
+				auto rva20 = plural + patch_def(3u, 0) + patch_def(13u, 0) + patch_def(1000u, 0) + patch_def(0x10000u, 0)
+					+ patch_def(100u, 0) + patch_def(0x8000091u, 0);
+				auto rva2 = plural + 13u + 1000u + 0x10000u + 0x8000091u;
 				vector< vector<patch_state_ex> > log;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_revert_request &payload) {
 					const auto &idx = sdb::multi_index(*this->patches, keyer::module_id());
 
 					log.resize(log.size() + 1);
-					for (auto r = idx.equal_range(payload.image_persistent_id); r.first != r.second; ++r.first)
+					for (auto r = idx.equal_range(payload.module_id); r.first != r.second; ++r.first)
 						log.back().push_back(*r.first);
 				});
 
@@ -467,18 +471,20 @@ namespace micro_profiler
 			test( RevertResponseSetsActiveAndErrorStates )
 			{
 				// INIT
-				unsigned rva10[] = {	1, 2, 20, 3, 100,	};
-				unsigned rva1[] = {	1, 2, 3,	};
-				unsigned rva20[] = {	2, 4, 5, 50, 6, 7, 100, 1001,	};
-				unsigned rva2[] = {	2, 4, 5, 6, 7, 100,	};
+				auto rva10 = plural + patch_def(1, 0) + patch_def(2, 0) + patch_def(20, 0) + patch_def(3, 0)
+					+ patch_def(100, 0);
+				auto rva1 = plural + 1u + 2u + 3u;
+				auto rva20 = plural + patch_def(2, 0) + patch_def(4, 0) + patch_def(5, 0) + patch_def(50, 0)
+					+ patch_def(6, 0) + patch_def(7, 0) + patch_def(100, 0) + patch_def(1001, 0);
+				auto rva2 = plural + 2u + 4u + 5u + 6u + 7u + 100u;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
 				patches->apply(19, mkrange(rva10));
 				patches->apply(31, mkrange(rva20));
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &payload) {
-					switch (payload.image_persistent_id)
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_revert_request &payload) {
+					switch (payload.module_id)
 					{
 					case 19:
 						resp.defer([] (ipc::server_session::response &resp) {
@@ -559,25 +565,24 @@ namespace micro_profiler
 			test( RevertingNotInstalledOrErroredOrInactiveOrRequestedFunctionsDoesNotInvokeARequest )
 			{
 				// INIT
-				unsigned rva0[] = {	2, 4, 5, 6, 7, 100,	};
-				unsigned rva_initial_revert[] = {	2,	};
-				unsigned rva_initial_requested[] = {	6,	};
-				unsigned rva[] = {	2 /*inactive*/, 5, 6, 7, 100 /*error*/, 193 /*missing*/,	};
-				vector<patch_request> log;
+				auto rva0 = plural + patch_def(2, 0) + patch_def(4, 0) + patch_def(5, 0) + patch_def(6, 0) + patch_def(7, 0)
+					+ patch_def(100, 0);
+				auto rva = plural + 2u /*inactive*/ + 5u + 6u + 7u + 100u /*error*/ + 193u /*missing*/;
+				vector<patch_revert_request> log;
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 				apply_results[100] = patch_change_result::unrecoverable_error;
 				patches->apply(99, mkrange(rva0));
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_revert_request &) {
 					resp(response_reverted, plural + mkpatch_change(2, patch_change_result::ok));
 				});
-				patches->revert(99, mkrange(rva_initial_revert));
+				patches->revert(99, mkrange(plural + 2u));
 
-				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &, const patch_request &) {	});
-				patches->revert(99, mkrange(rva_initial_requested));
+				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &, const patch_revert_request &) {	});
+				patches->revert(99, mkrange(plural + 6u));
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_revert_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -586,7 +591,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(1u, log.size());
-				assert_equal(99u, log.back().image_persistent_id);
+				assert_equal(99u, log.back().module_id);
 				assert_equal(plural + 5u + 7u, log.back().functions_rva);
 				assert_equivalent(plural
 					+ make_patch(99, 2, 1, false, patch_state::dormant)
@@ -614,19 +619,17 @@ namespace micro_profiler
 			test( RevertRequestIsReleasedOnceResponsed )
 			{
 				// INIT
-				unsigned rva[] = {	1,	};
-
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
-				patches->apply(99, mkrange(rva));
+				patches->apply(99, mkrange(plural + patch_def(1, 0)));
 
-				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &resp, const patch_request &) {
+				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &resp, const patch_revert_request &) {
 					resp(response_reverted, plural + mkpatch_change(1, patch_change_result::ok));
 					resp.defer([] (ipc::server_session::response &resp) {
 						resp(response_reverted, plural + mkpatch_change(1, patch_change_result::unrecoverable_error));
 					});
 				});
 
-				patches->revert(99, mkrange(rva));
+				patches->revert(99, mkrange(plural + 1u));
 
 				// ACT
 				queue.run_one();
@@ -642,16 +645,15 @@ namespace micro_profiler
 			{
 				// INIT
 				vector< vector<patch_state_ex> > log;
-				unsigned rva[] = {	1, 2, 3,	};
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
-				patches->apply(19, mkrange(rva));
+				patches->apply(19, mkrange(plural + patch_def(1, 0) + patch_def(2, 0) + patch_def(3, 0)));
 
 				auto conn = patches->invalidate += [&] {
 					log.push_back(vector<patch_state_ex>(this->patches->begin(), this->patches->end()));
 				};
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_request &) {
+				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_revert_request &) {
 					// ACT
 					assert_is_false(log.empty());
 
@@ -664,7 +666,7 @@ namespace micro_profiler
 				});
 
 				// ACT / ASSERT
-				patches->revert(19, mkrange(rva));
+				patches->revert(19, mkrange(plural + 1u + 2u + 3u));
 
 				// ASSERT
 				assert_equal(1u, log.size());

@@ -51,6 +51,14 @@ namespace micro_profiler
 			F T::*field;
 		};
 
+		template <unsigned int table_index, typename T, typename F>
+		struct prefixed_column
+		{
+			typedef F result_type;
+
+			F T::*field;
+		};
+
 		template <typename L, typename R>
 		struct operator_
 		{
@@ -70,6 +78,10 @@ namespace micro_profiler
 		template <typename T, typename F>
 		inline wrapped< column<T, F> > c(F T::*field)
 		{	return wrap(initialize< column<T, F> >(field));	}
+
+		template <unsigned int table_index, typename T, typename F>
+		inline wrapped< prefixed_column<table_index, T, F> > c(F T::*field)
+		{	return wrap(initialize< prefixed_column<table_index, T, F> >(field));	}
 
 		template <typename T>
 		inline wrapped< parameter<T> > p(T &object)

@@ -64,7 +64,7 @@ namespace micro_profiler
 	typedef std::vector<module::mapping_instance> loaded_modules;
 
 	// response_modules_unloaded
-	typedef std::vector<unsigned int> unloaded_modules;
+	typedef std::vector<id_t> unloaded_modules;
 
 	// response_module_metadata
 	struct module_info_metadata
@@ -72,14 +72,21 @@ namespace micro_profiler
 		std::string path;
 		std::uint32_t hash;
 		std::vector<symbol_info> symbols;
-		containers::unordered_map<unsigned int /*file_id*/, std::string /*file*/> source_files;
+		containers::unordered_map<id_t /*file_id*/, std::string /*file*/> source_files;
 	};
 
 	// request_apply_patches, request_revert_patches
-	struct patch_request
+	struct patch_revert_request
 	{
-		unsigned int image_persistent_id;
+		id_t module_id;
 		std::vector<unsigned int> functions_rva;
+	};
+
+	// request_apply_patches
+	struct patch_apply_request
+	{
+		id_t module_id;
+		std::vector<patch_manager::apply_request> functions;
 	};
 
 	// response_patched

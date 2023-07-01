@@ -105,13 +105,13 @@ namespace micro_profiler
 			resp(response_threads_info, *threads_buffer);
 		});
 
-		session.add_handler(request_apply_patches, [this, patch_results] (response &resp, const patch_request &payload) {
-			_patch_manager.apply(*patch_results, payload.image_persistent_id, make_range(payload.functions_rva));
+		session.add_handler(request_apply_patches, [this, patch_results] (response &resp, const patch_apply_request &payload) {
+			_patch_manager.apply(*patch_results, payload.module_id, make_range(payload.functions));
 			resp(response_patched, *patch_results);
 		});
 
-		session.add_handler(request_revert_patches, [this, patch_results] (response &resp, const patch_request &payload) {
-			_patch_manager.revert(*patch_results, payload.image_persistent_id, make_range(payload.functions_rva));
+		session.add_handler(request_revert_patches, [this, patch_results] (response &resp, const patch_revert_request &payload) {
+			_patch_manager.revert(*patch_results, payload.module_id, make_range(payload.functions_rva));
 			resp(response_reverted, *patch_results);
 		});
 

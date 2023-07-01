@@ -54,7 +54,7 @@ namespace micro_profiler
 		}, false);
 	}
 
-	bool threads_model::get_key(unsigned int &thread_id, index_type index) const throw()
+	bool threads_model::get_key(id_t &thread_id, index_type index) const throw()
 	{
 		if (!index--)
 			return false;

@@ -49,14 +49,18 @@ namespace micro_profiler
 		return true;
 	}
 
-	void translated_function_patch::init(void *target, size_t target_size, executable_memory_allocator &allocator_,
+	void translated_function_patch::init(void *target_, size_t target_size, executable_memory_allocator &allocator_,
 		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
 		if (target_size < c_jump_size)
 			throw inconsistent_function_range_exception("function to be patched is too small");
 
-		const byte_range src(static_cast<byte *>(target), target_size);
+		const auto target = static_cast<byte *>(target_);
+		const byte_range src(target, target_size);
 		const auto moved_size = static_cast<byte>(calculate_fragment_length(src, c_jump_size));
+		const auto continuation = target + moved_size;
+
+		validate_partial_function(const_byte_range(continuation, target_size - moved_size));
 
 		_prologue_backup_offset = static_cast<byte>(c_trampoline_size + moved_size + c_jump_size);
 		_trampoline = allocator_.allocate(_prologue_backup_offset + moved_size);
@@ -71,7 +75,7 @@ namespace micro_profiler
 		move_function(ptr, byte_range(_target, moved_size));
 		ptr += moved_size;
 
-		jump_initialize(ptr, src.begin() + moved_size);
+		jump_initialize(ptr, continuation);
 		ptr += c_jump_size;
 
 		mem_copy(ptr, _target, _prologue_size);

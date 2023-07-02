@@ -36,11 +36,11 @@ namespace micro_profiler
 			{
 			case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
 			case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
-			case 0xEB:
+			case /*jmp*/ 0xEB:
 				v.visit_byte(ptr);
 				return;
-			
-			case 0xE8: case 0xE9:
+
+			case /*call*/ 0xE8: case /*jmp*/ 0xE9:
 				v.visit_dword(ptr);
 				return;
 
@@ -162,5 +162,34 @@ namespace micro_profiler
 			i->restore();
 		rbuffer.clear();
 		throw;
+	}
+
+	void validate_partial_function(const_byte_range function_fragment)
+	{
+		struct jump_range_validator : displacement_visitor<const byte>
+		{
+			jump_range_validator(const_byte_range function_fragment)
+				: _function_fragment(function_fragment)
+			{	}
+
+			virtual void visit_dword(const byte *displacement) const
+			{
+				if (!is_target_inside<sdword>(displacement, _function_fragment))
+					throw inconsistent_function_range_exception("near relative jump outside the code fragment");
+			}
+
+			virtual void visit_byte(const byte *displacement) const
+			{
+				if (!is_target_inside<const sbyte>(displacement, _function_fragment))
+					throw inconsistent_function_range_exception("short relative jump outside the code fragment");
+			}
+
+		private:
+			const_byte_range _function_fragment;
+		} v(function_fragment);
+
+		for (instruction_iterator<const byte> i(function_fragment); i.fetch(); )
+			if (*i.ptr() != 0xE8 /*call*/)
+				visit_instruction(v, i);
 	}
 }

@@ -44,4 +44,6 @@ namespace micro_profiler
 
 	void offset_displaced_references(revert_buffer &rbuffer, byte_range source, const_byte_range displaced_region,
 		const byte *displaced_to);
+
+	void validate_partial_function(const_byte_range function_fragment);
 }

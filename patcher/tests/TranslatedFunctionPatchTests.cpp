@@ -63,6 +63,25 @@ namespace micro_profiler
 			}
 
 
+			test( FunctionCanNotBeMovedIfRemainingFragmentDependsOnMoved )
+			{
+				// INIT
+				const auto size = 10 * c_jump_size;
+				auto enough = static_pointer_cast<byte>(allocator.allocate(size));
+				
+				jump_initialize(enough.get(), enough.get() + 1000u);
+
+				// ACT / ASSERT
+				jump_initialize(enough.get() + c_jump_size, enough.get() + 10 * c_jump_size);
+				assert_throws(translated_function_patch(enough.get(), size, &trace, allocator),
+					inconsistent_function_range_exception);
+
+				// ACT / ASSERT
+				jump_initialize(enough.get() + c_jump_size, enough.get() + 10 * c_jump_size - 1);
+				translated_function_patch(enough.get(), size, &trace, allocator);
+			}
+
+
 			test( PatchIsNotActiveActiveAtConstruction )
 			{
 				// INIT / ACT

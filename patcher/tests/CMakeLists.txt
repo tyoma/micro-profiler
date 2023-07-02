@@ -11,8 +11,14 @@ set(PATCHER_TEST_SOURCES
 	JumperIntelTests.cpp
 	mocks.cpp
 	OffsetDisplacedReferencesTestsX86.cpp
-	TranslatedFunctionPatchTests.cpp
+	RangeValidationTests.cpp
 )
+
+if(NOT APPLE)
+	set(PATCHER_TEST_SOURCES ${PATCHER_TEST_SOURCES}
+		TranslatedFunctionPatchTests.cpp
+	)
+endif()
 
 add_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fpatchable-function-entry=14,12>"

@@ -25,6 +25,7 @@
 
 #include <common/formatting.h>
 #include <cstdint>
+#include <tuple>
 
 namespace micro_profiler
 {
@@ -128,12 +129,12 @@ namespace micro_profiler
 			void operator ()(F U::*field_, const char *column_name_) const
 			{
 				if (field_ == field)
-					column_name.append(column_name_);
+					column_name->append(column_name_);
 			}
 
 			template <typename U, typename F2>
-			void operator ()(const primary_key<U, F2> &field, const char *column_name)
-			{	(*this)(field.field, column_name);	}
+			void operator ()(const primary_key<U, F2> &field, const char *column_name_)
+			{	(*this)(field.field, column_name_);	}
 
 			template <typename U>
 			void operator ()(U)
@@ -144,7 +145,7 @@ namespace micro_profiler
 			{	}
 
 			F T::*field;
-			std::string &column_name;
+			std::string *column_name;
 		};
 
 
@@ -159,6 +160,9 @@ namespace micro_profiler
 			return r;
 		}
 
+		template <unsigned int table_index> inline void table_alias(std::string &output)
+		{	output += "t", itoa<10>(output, table_index);	}
+
 		template <typename T>
 		inline void format_table_source(std::string &output, T *)
 		{
@@ -172,8 +176,8 @@ namespace micro_profiler
 		{
 			table_source_visitor v = {	output	};
 
-			describe<T1>(v), output += " AS t0,";
-			describe<T2>(v), output += " AS t1";
+			describe<T1>(v), output += " AS ", table_alias<0>(output), output += ",";
+			describe<T2>(v), output += " AS ", table_alias<1>(output);
 		}
 
 		template <typename T1, typename T2, typename T3>
@@ -181,9 +185,9 @@ namespace micro_profiler
 		{
 			table_source_visitor v = {	output	};
 
-			describe<T1>(v), output += " AS t0,";
-			describe<T2>(v), output += " AS t1,";
-			describe<T3>(v), output += " AS t2";
+			describe<T1>(v), output += " AS ", table_alias<0>(output), output += ",";
+			describe<T2>(v), output += " AS ", table_alias<1>(output), output += ",";
+			describe<T3>(v), output += " AS ", table_alias<2>(output);
 		}
 
 
@@ -219,15 +223,15 @@ namespace micro_profiler
 		template <typename T, typename F>
 		inline void format_expression(std::string &output, const column<T, F> &e, unsigned int &/*index*/)
 		{
-			format_column_visitor<T, F> v = {	e.field, output	};
+			format_column_visitor<T, F> v = {	e.field, &output	};
 			describe<T>(v);
 		}
 
 		template <unsigned int table_index, typename T, typename F>
 		inline void format_expression(std::string &output, const prefixed_column<table_index, T, F> &e, unsigned int &/*index*/)
 		{
-			format_column_visitor<T, F> v = {	e.field, output	};
-			output += "t", output += std::to_string(table_index), output += ".", describe<T>(v);
+			format_column_visitor<T, F> v = {	e.field, &output	};
+			table_alias<table_index>(output), output += ".", describe<T>(v);
 		}
 
 		template <typename T>

@@ -8,6 +8,7 @@ conan_cmake_run(REQUIRES capstone/4.0.2
 	BUILD missing
 	BASIC_SETUP
 	CMAKE_TARGETS
+	ARCH ${MP_TARGET_ARCH}
 	OPTIONS capstone:arm=False;capstone:evm=False;capstone:m680x=False;capstone:m68k=False;capstone:mips=False;capstone:ppc=False;capstone:sparc=False;capstone:sysz=False;capstone:tms320c64x=False;capstone:xcore=False;)
 
 set(PATCHER_SOURCES

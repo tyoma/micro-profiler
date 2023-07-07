@@ -36,12 +36,12 @@ namespace micro_profiler
 		virtual bool revert() override;
 
 	private:
-		void init(void *target, std::size_t target_size, executable_memory_allocator &allocator_, void *interceptor,
+		void init(executable_memory_allocator &allocator_, void *interceptor,
 			hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit);
 
 	private:
-		std::shared_ptr<void> _trampoline;
-		byte *_target;
+		std::shared_ptr<const byte> _trampoline;
+		const byte_range _target_function;
 		byte _prologue_backup_offset, _prologue_size;
 		bool _active;
 	};
@@ -51,6 +51,6 @@ namespace micro_profiler
 	template <typename T>
 	inline translated_function_patch::translated_function_patch(void *target, std::size_t size, T *interceptor,
 			executable_memory_allocator &allocator_)
-		: _active(false)
-	{	init(target, size, allocator_, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
+		: _target_function(static_cast<byte *>(target), size), _active(false)
+	{	init(allocator_, interceptor, hooks<T>::on_enter(), hooks<T>::on_exit());	}
 }

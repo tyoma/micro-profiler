@@ -32,10 +32,12 @@ namespace micro_profiler
 
 	bool translated_function_patch::activate()
 	{
+		const auto unused = _target_function.prefix(_prologue_size).suffix(c_jump_size);
+
 		if (active())
 			return false;
-		jump_initialize(_target, _trampoline.get());
-		mem_set(_target + c_jump_size, 0xCC, _prologue_size - c_jump_size);
+		jump_initialize(_target_function.data(), _trampoline.get());
+		mem_set(unused.data(), 0xCC, unused.length());
 		_active = true;
 		return true;
 	}
@@ -44,40 +46,38 @@ namespace micro_profiler
 	{
 		if (!active())
 			return false;
-		mem_copy(_target, static_cast<byte *>(_trampoline.get()) + _prologue_backup_offset, _prologue_size);
+		mem_copy(_target_function.data(), _trampoline.get() + _prologue_backup_offset, _prologue_size);
 		_active = false;
 		return true;
 	}
 
-	void translated_function_patch::init(void *target_, size_t target_size, executable_memory_allocator &allocator_,
-		void *interceptor, hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
+	void translated_function_patch::init(executable_memory_allocator &allocator_, void *interceptor,
+		hooks<void>::on_enter_t *on_enter, hooks<void>::on_exit_t *on_exit)
 	{
-		if (target_size < c_jump_size)
+		if (_target_function.length() < c_jump_size)
 			throw inconsistent_function_range_exception("function to be patched is too small");
 
-		const auto target = static_cast<byte *>(target_);
-		const byte_range src(target, target_size);
-		const auto moved_size = static_cast<byte>(calculate_fragment_length(src, c_jump_size));
-		const auto continuation = target + moved_size;
+		const auto moved_size = static_cast<byte>(calculate_fragment_length(_target_function, c_jump_size));
+		const auto continuation = _target_function.suffix(moved_size);
 
-		validate_partial_function(const_byte_range(continuation, target_size - moved_size));
+		validate_partial_function(continuation);
 
 		_prologue_backup_offset = static_cast<byte>(c_trampoline_size + moved_size + c_jump_size);
-		_trampoline = allocator_.allocate(_prologue_backup_offset + moved_size);
+		const auto trampoline = static_pointer_cast<byte>(allocator_.allocate(_prologue_backup_offset + moved_size));
+		_trampoline = trampoline;
 		_prologue_size = moved_size;
-		_target = static_cast<byte *>(target);
 
-		auto ptr = static_cast<byte *>(_trampoline.get());
+		auto ptr = trampoline.get();
 
-		initialize_trampoline(ptr, target, interceptor, on_enter, on_exit);
+		initialize_trampoline(ptr, _target_function.data() /*id*/, interceptor, on_enter, on_exit);
 		ptr += c_trampoline_size;
 
-		move_function(ptr, byte_range(_target, moved_size));
+		move_function(ptr, _target_function.prefix(moved_size));
 		ptr += moved_size;
 
-		jump_initialize(ptr, continuation);
+		jump_initialize(ptr, continuation.data());
 		ptr += c_jump_size;
 
-		mem_copy(ptr, _target, _prologue_size);
+		mem_copy(ptr, _target_function.data(), _prologue_size);
 	}
 }

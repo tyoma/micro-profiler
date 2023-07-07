@@ -211,6 +211,10 @@ namespace micro_profiler
 			text << (micro_profiler::operator*)(item.path);
 		};
 
+		auto process_architecture = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
+			text << (item.architecture == micro_profiler::process_info::x86 ? "x86" : "x64");
+		};
+
 		auto process_pid = [] (agge::richtext_t &text, const process_model_context &, size_t, const process_info &item) {
 			micro_profiler::itoa<10>(text, item.pid);
 		};
@@ -281,6 +285,7 @@ namespace micro_profiler
 
 	const column_definition<process_info, process_model_context> c_processes_columns[] = {
 		{	"ProcessExe", "Process\n" + secondary + "executable", 384, agge::align_near, process_name, by_process_name, true,	},
+		{	"AchitectureID", "CPU\n" + secondary + "architecture", 50, agge::align_far, process_architecture,	},
 		{	"ProcessID", "PID" + secondary, 50, agge::align_far, process_pid, by_process_pid, true,	},
 		{	"ParentProcessID", "PID\n" + secondary + "parent", 50, agge::align_far, process_ppid, by_process_ppid, true,	},
 		{	"CPUTime", "CPU\n" + secondary + "time (user)", 50, agge::align_far, process_cpu_time, by_process_cpu_time, false,	},

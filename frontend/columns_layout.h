@@ -33,5 +33,5 @@ namespace micro_profiler
 	extern const column_definition<call_statistics, statistics_model_context> c_statistics_columns[9];
 	extern const column_definition<call_statistics, statistics_model_context> c_callee_statistics_columns[9];
 
-	extern const column_definition<process_info, process_model_context> c_processes_columns[5];
+	extern const column_definition<process_info, process_model_context> c_processes_columns[6];
 }

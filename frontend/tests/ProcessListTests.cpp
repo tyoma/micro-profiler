@@ -67,9 +67,9 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(2u, l->get_count());
 				assert_equal("foo", get_text(*l, 0, 0));
-				assert_equal("12", get_text(*l, 0, 1));
+				assert_equal("12", get_text(*l, 0, 2));
 				assert_equal("bar", get_text(*l, 1, 0));
-				assert_equal("12111", get_text(*l, 1, 1));
+				assert_equal("12111", get_text(*l, 1, 2));
 
 				// ACT
 				processes->clear();
@@ -82,11 +82,11 @@ namespace micro_profiler
 				// ASSERT
 				assert_equal(3u, l->get_count());
 				assert_equal("FOO", get_text(*l, 0, 0));
-				assert_equal("1", get_text(*l, 0, 1));
+				assert_equal("1", get_text(*l, 0, 2));
 				assert_equal("bar", get_text(*l, 1, 0));
-				assert_equal("11111", get_text(*l, 1, 1));
+				assert_equal("11111", get_text(*l, 1, 2));
 				assert_equal("BAZ", get_text(*l, 2, 0));
-				assert_equal("16111", get_text(*l, 2, 1));
+				assert_equal("16111", get_text(*l, 2, 2));
 			}
 
 
@@ -133,7 +133,7 @@ namespace micro_profiler
 				processes->invalidate();
 
 				// ACT
-				l->set_order(1, true);
+				l->set_order(2, true);
 
 				// ASSERT
 				assert_equal("Lorem", get_text(*l, 0, 0));
@@ -144,7 +144,7 @@ namespace micro_profiler
 				assert_equal("Amet", get_text(*l, 5, 0));
 
 				// ACT
-				l->set_order(1, false);
+				l->set_order(2, false);
 
 				// ASSERT
 				assert_equal("Amet", get_text(*l, 0, 0));
@@ -158,23 +158,23 @@ namespace micro_profiler
 				l->set_order(0, true);
 
 				// ASSERT
-				assert_equal("12111", get_text(*l, 0, 1));
-				assert_equal("12", get_text(*l, 1, 1));
-				assert_equal("1211", get_text(*l, 2, 1));
-				assert_equal("14", get_text(*l, 3, 1));
-				assert_equal("1212", get_text(*l, 4, 1));
-				assert_equal("13", get_text(*l, 5, 1));
+				assert_equal("12111", get_text(*l, 0, 2));
+				assert_equal("12", get_text(*l, 1, 2));
+				assert_equal("1211", get_text(*l, 2, 2));
+				assert_equal("14", get_text(*l, 3, 2));
+				assert_equal("1212", get_text(*l, 4, 2));
+				assert_equal("13", get_text(*l, 5, 2));
 
 				// ACT
 				l->set_order(0, false);
 
 				// ASSERT
-				assert_equal("13", get_text(*l, 0, 1));
-				assert_equal("1212", get_text(*l, 1, 1));
-				assert_equal("14", get_text(*l, 2, 1));
-				assert_equal("1211", get_text(*l, 3, 1));
-				assert_equal("12", get_text(*l, 4, 1));
-				assert_equal("12111", get_text(*l, 5, 1));
+				assert_equal("13", get_text(*l, 0, 2));
+				assert_equal("1212", get_text(*l, 1, 2));
+				assert_equal("14", get_text(*l, 2, 2));
+				assert_equal("1211", get_text(*l, 3, 2));
+				assert_equal("12", get_text(*l, 4, 2));
+				assert_equal("12111", get_text(*l, 5, 2));
 			}
 
 
@@ -194,9 +194,9 @@ namespace micro_profiler
 				processes->invalidate();
 
 				// ASSERT
-				assert_equal("12111", get_text(*l, 0, 1));
-				assert_equal("12", get_text(*l, 1, 1));
-				assert_equal("1211", get_text(*l, 2, 1));
+				assert_equal("12111", get_text(*l, 0, 2));
+				assert_equal("12", get_text(*l, 1, 2));
+				assert_equal("1211", get_text(*l, 2, 2));
 
 				// ACT
 				add_records(*processes, plural
@@ -204,10 +204,10 @@ namespace micro_profiler
 				processes->invalidate();
 
 				// ASSERT
-				assert_equal("12111", get_text(*l, 0, 1));
-				assert_equal("1311", get_text(*l, 1, 1));
-				assert_equal("12", get_text(*l, 2, 1));
-				assert_equal("1211", get_text(*l, 3, 1));
+				assert_equal("12111", get_text(*l, 0, 2));
+				assert_equal("1311", get_text(*l, 1, 2));
+				assert_equal("12", get_text(*l, 2, 2));
+				assert_equal("1211", get_text(*l, 3, 2));
 			}
 		end_test_suite
 	}

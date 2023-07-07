@@ -40,11 +40,14 @@ namespace micro_profiler
 
 		T *begin() const;
 		T *end() const;
+		T *data() const;
 		SizeT length() const;
 		bool inside(const T *ptr) const;
+		range prefix(SizeT length_) const;
+		range suffix(SizeT start) const;
 
 	private:
-		T *_start;
+		T *_data;
 		SizeT _length;
 	};
 #pragma pack(pop)	
@@ -57,21 +60,25 @@ namespace micro_profiler
 	template <typename T, typename SizeT>
 	template <typename U>
 	inline range<T, SizeT>::range(const range<U, SizeT> &u)
-		: _start(u.begin()), _length(u.length())
+		: _data(u.begin()), _length(u.length())
 	{	}
 
 	template <typename T, typename SizeT>
 	inline range<T, SizeT>::range(T *start, SizeT length)
-		: _start(start), _length(static_cast<SizeT>(length))
+		: _data(start), _length(static_cast<SizeT>(length))
 	{	}
 
 	template <typename T, typename SizeT>
 	inline T *range<T, SizeT>::begin() const
-	{	return _start;	}
+	{	return _data;	}
 
 	template <typename T, typename SizeT>
 	inline T *range<T, SizeT>::end() const
-	{	return _start + _length;	}
+	{	return _data + _length;	}
+
+	template <typename T, typename SizeT>
+	inline T *range<T, SizeT>::data() const
+	{	return _data;	}
 
 	template <typename T, typename SizeT>
 	inline SizeT range<T, SizeT>::length() const
@@ -80,6 +87,14 @@ namespace micro_profiler
 	template <typename T, typename SizeT>
 	inline bool range<T, SizeT>::inside(const T *ptr) const
 	{	return (begin() <= ptr) & (ptr < end());	}
+
+	template <typename T, typename SizeT>
+	inline range<T, SizeT> range<T, SizeT>::prefix(SizeT length_) const
+	{	return range(_data, length_);	}
+
+	template <typename T, typename SizeT>
+	inline range<T, SizeT> range<T, SizeT>::suffix(SizeT start) const
+	{	return range(_data + start, _length - start);	}
 
 
 	template <typename T>

@@ -8,6 +8,7 @@ set(COMMON_TEST_SOURCES
 	GapSearcherTests.cpp
 	ImageUtilitiesTests.cpp
 	MiscTests.cpp
+	NullableTests.cpp
 	PoolAllocatorTests.cpp
 	PrimitivesTests.cpp
 	SerializationTests.cpp
@@ -20,9 +21,9 @@ set(COMMON_TEST_SOURCES
 )
 
 if (NOT APPLE)
-    set(COMMON_TESTS_SOURCES ${COMMON_TESTS_SOURCES}
-        ImageInfoTests.cpp
-    )
+	set(COMMON_TESTS_SOURCES ${COMMON_TESTS_SOURCES}
+		ImageInfoTests.cpp
+	)
 endif()
 
 add_library(common.tests SHARED ${COMMON_TEST_SOURCES})

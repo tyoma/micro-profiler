@@ -23,10 +23,13 @@
 #include "integrated_index.h"
 #include "signal.h"
 
+#include <common/nullable.h>
 #include <tuple>
 
 namespace sdb
 {
+	using micro_profiler::nullable;
+
 	struct agnostic_key_tag {};
 	struct underlying_key_tag : agnostic_key_tag {};
 	struct aggregated_key_tag : agnostic_key_tag {};
@@ -34,27 +37,66 @@ namespace sdb
 	template <typename Table1T, typename Table2T>
 	class joined_record;
 
-	template <typename TableT>
-	struct joined_prime {	typedef typename TableT::const_reference type;	};
+	template <typename I>
+	struct joined_prime;
 
-	template <typename Table1T, typename Table2T, typename C>
-	struct joined_prime< table<joined_record<Table1T, Table2T>, C> > {	typedef typename joined_prime<Table1T>::type type;	};
+	template <typename T>
+	struct joined_leftmost {	typedef T type;	};
 
-	template <typename Table1T, typename Table2T>
+	template <typename I1, typename I2>
+	struct joined_leftmost< joined_record<I1, I2> > {	typedef typename joined_prime<I1>::type type;	};
+
+	template <typename I>
+	struct joined_prime {	typedef typename joined_leftmost<typename std::iterator_traits<I>::value_type>::type type;	};
+
+	template <typename I>
+	struct iterator_reference {	typedef typename std::iterator_traits<I>::reference type;	};
+
+	template <typename I>
+	struct iterator_reference< nullable<I> > {	typedef nullable<typename iterator_reference<I>::type> type;	};
+
+	template <typename I>
+	inline typename iterator_reference<I>::type dereference(const I &iterator)
+	{	return *iterator;	}
+
+	template <typename I>
+	inline nullable<typename iterator_reference<I>::type> dereference(const nullable<I> &iterator)
+	{	return iterator.and_then([] (const I &i) -> typename iterator_reference<I>::type {	return *i;	});	}
+
+	template <typename I1, typename I2>
 	class joined_record
 	{
 	public:
+		typedef typename iterator_reference<I1>::type left_reference;
+		typedef typename std::remove_all_extents<left_reference>::type left_type;
+		typedef typename iterator_reference<I2>::type right_reference;
+
+	public:
 		joined_record() {	}
-		joined_record(typename Table1T::const_iterator left_, typename Table2T::const_iterator right_) : _left(left_), _right(right_) {	}
+		joined_record(I1 left_, I2 right_) : _left(left_), _right(right_) {	}
 
-		typename Table1T::const_reference left() const {	return *_left;	}
-		typename Table2T::const_reference right() const {	return *_right;	}
+		left_reference left() const {	return dereference(_left);	}
+		right_reference right() const {	return dereference(_right);	}
 
-		operator typename joined_prime<Table1T>::type() const {	return *_left;	}
+		operator const typename joined_prime<I1>::type &() const {	return *_left;	}
 
 	private:
-		typename Table1T::const_iterator _left;
-		typename Table2T::const_iterator _right;
+		I1 _left;
+		I2 _right;
+	};
+
+	template <typename LeftTableT, typename RightTableT>
+	struct joined
+	{
+		typedef joined_record<typename LeftTableT::const_iterator, typename RightTableT::const_iterator> value_type;
+		typedef table<value_type> table_type;
+	};
+
+	template <typename LeftTableT, typename RightTableT>
+	struct left_joined
+	{
+		typedef joined_record< typename LeftTableT::const_iterator, nullable<typename RightTableT::const_iterator> > value_type;
+		typedef table<value_type> table_type;
 	};
 
 
@@ -138,11 +180,11 @@ namespace sdb
 	}
 
 	template <typename LeftKeyerT, typename RightKeyerT, typename LeftT, typename RightT>
-	inline std::shared_ptr< const table< joined_record<LeftT, RightT> > > join(const LeftT &left, const RightT &right,
+	inline std::shared_ptr<const typename joined<LeftT, RightT>::table_type> join(const LeftT &left, const RightT &right,
 		const LeftKeyerT &left_by = LeftKeyerT(), const RightKeyerT &right_by = RightKeyerT())
 	{
-		typedef joined_record<LeftT, RightT> value_type;
-		typedef table<value_type> joined_table_t;
+		typedef typename joined<LeftT, RightT>::value_type value_type;
+		typedef typename joined<LeftT, RightT>::table_type joined_table_t;
 
 		const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<slot_connection> > >();
 		auto &joined = std::get<0>(*composite);
@@ -169,5 +211,39 @@ namespace sdb
 			add_from_left(i);
 
 		return std::shared_ptr<joined_table_t>(composite, &joined);
+	}
+
+	template <typename LeftKeyerT, typename RightKeyerT, typename LeftT, typename RightT>
+	inline std::shared_ptr<const typename left_joined<LeftT, RightT>::table_type> left_join(const LeftT &left, const RightT &right,
+		const LeftKeyerT &left_by = LeftKeyerT(), const RightKeyerT &right_by = RightKeyerT())
+	{
+		typedef typename left_joined<LeftT, RightT>::value_type value_type;
+		typedef typename left_joined<LeftT, RightT>::table_type joined_table_t;
+
+		auto composite = std::make_shared<joined_table_t>();
+		auto &joined = *composite;
+		auto &right_index = multi_index(right, right_by);
+
+		for (auto i = std::begin(left); i != std::end(left); ++i)
+		{
+			const auto matches = right_index.equal_range(left_by(*i));
+
+			if (matches.first == matches.second)
+			{
+				auto r = joined.create();
+
+				*r = value_type(i, nullable<typename RightT::const_iterator>());
+				r.commit();
+			}
+			else for (auto j = matches.first; j != matches.second; ++j)
+			{
+				auto r = joined.create();
+
+				*r = value_type(i, nullable<typename RightT::const_iterator>(j.underlying()->second));
+				r.commit();
+			}
+		}
+
+		return composite;
 	}
 }

@@ -31,9 +31,9 @@ namespace sdb
 				table4_t t4;
 
 				// INIT / ACT / ASSERT
-				shared_ptr< const table< joined_record<table1_t, table2_t> > > j1 = join<key_second, key_first>(t1, t2);
-				shared_ptr< const table< joined_record<table2_t, table3_t> > > j2 = join<key_first, key_first>(t2, t3);
-				shared_ptr< const table< joined_record<table3_t, table4_t> > > j3 = join<key_second, key_first>(t3, t4);
+				shared_ptr<const joined<table1_t, table2_t>::table_type> j1 = join<key_second, key_first>(t1, t2);
+				shared_ptr<const joined<table2_t, table3_t>::table_type> j2 = join<key_first, key_first>(t2, t3);
+				shared_ptr<const joined<table3_t, table4_t>::table_type> j3 = join<key_second, key_first>(t3, t4);
 			}
 
 
@@ -358,7 +358,7 @@ namespace sdb
 				typedef tuple<string, double, int> type2_t;
 				typedef table<type1_t> table1_t;
 				typedef table<type2_t> table2_t;
-				typedef joined_record<table1_t, table2_t> joined_t;
+				typedef joined<table1_t, table2_t>::value_type joined_t;
 
 				// INIT
 				table1_t t1;

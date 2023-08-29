@@ -17,22 +17,16 @@ namespace micro_profiler
 			{
 			public:
 				instance(int &references)
-					: _references(&references), _moved_away(false)
-				{	references = 101;	}
+					: _references(&references)
+				{	references = 1;	}
 
 				instance(const instance &other)
-					: _references(other._references), _moved_away(false)
-				{	*_references += 101;	}
-
-				instance(instance &&other) throw()
-					: _references(other._references), _moved_away(false)
-				{	other._moved_away = true, *_references += 1;	}
+					: _references(other._references)
+				{	*_references += 1;	}
 
 				~instance()
 				{
 					*_references -= 1;
-					if (!_moved_away)
-						*_references -= 100;
 					_references = nullptr;
 				}
 
@@ -40,8 +34,7 @@ namespace micro_profiler
 				instance &operator =(const instance &rhs);
 
 			private:
-				int *_references; // decimal CCNN - CC is the number of cloned states, NN is the amount of cloned objects.
-				bool _moved_away;
+				int *_references;
 			};
 		}
 
@@ -94,28 +87,6 @@ namespace micro_profiler
 			}
 
 
-			test( MovingANullableMovesItsValue )
-			{
-				// INIT
-				nullable<string> n;
-				nullable<string> nv(string("lorem ipsum"));
-				nullable<const int &> nri(130);
-
-				// INIT / ACT
-				nullable<string> mn(move(n));
-				nullable<string> mnv(move(nv));
-				nullable<const int &> mnri(move(nri));
-
-				// ACT / ASSERT
-				assert_is_false(n.has_value());
-				assert_is_false(mn.has_value());
-				assert_is_false(nv.has_value());
-				assert_is_true(mnv.has_value());
-				assert_is_false(nri.has_value());
-				assert_is_true(mnri.has_value());
-			}
-
-
 			test( ContainedObjectLifetimeIsGuardedByTheNullable )
 			{
 				// INIT
@@ -125,72 +96,25 @@ namespace micro_profiler
 				unique_ptr< nullable<instance> > n(new nullable<instance>(instance(references)));
 
 				// ASSERT
-				assert_equal(101, references);
+				assert_equal(1, references);
 
 				// INIT / ACT
 				unique_ptr< nullable<instance> > cn(new nullable<instance>(*n));
 
 				// ASSERT
-				assert_equal(202, references);
+				assert_equal(2, references);
 
 				// ACT
 				n.reset();
 
 				// ASSERT
-				assert_equal(101, references);
+				assert_equal(1, references);
 
 				// ACT
 				cn.reset();
 
 				// ASSERT
 				assert_equal(0, references);
-			}
-
-
-			test( MovingObjectToNullableAtConstructionWorks )
-			{
-				// INIT
-				auto references = 0;
-				unique_ptr< nullable<instance> > n;
-
-				{
-					instance original(references);
-
-				// ACT
-					n.reset(new nullable<instance>(move(original)));
-
-				// ASSERT
-					assert_equal(102, references);
-
-				// ACT
-				}
-
-				// ASSERT
-				assert_equal(101, references);
-			}
-
-
-			test( MovingNullableToNullableAtConstructionWorks )
-			{
-				// INIT
-				auto references = 0;
-				unique_ptr< nullable<instance> > n;
-
-				{
-					nullable<instance> original((instance(references)));
-
-					// ACT
-					n.reset(new nullable<instance>(move(original)));
-
-					// ASSERT
-					assert_equal(101, references);
-					assert_is_false(original.has_value());
-
-					// ACT
-				}
-
-				// ASSERT
-				assert_equal(101, references);
 			}
 
 
@@ -245,22 +169,7 @@ namespace micro_profiler
 				assert_is_true(nstring.has_value());
 				assert_equal("lorem ipsum amet dolor", *nstring);
 				assert_is_true(ninstance.has_value());
-				assert_equal(202, references);
-			}
-
-
-			test( FromEmptyMoveAssigningUnderlyingWorks )
-			{
-				// INIT
-				auto references = 0;
-				instance insvalue(references);
-				nullable<instance> ninstance;
-
-				// ACT / ASSERT
-				ninstance = move(insvalue);
-
-				// ASSERT
-				assert_equal(102, references);
+				assert_equal(2, references);
 			}
 
 
@@ -277,7 +186,7 @@ namespace micro_profiler
 
 				// ASSERT
 				assert_equal(0, references1);
-				assert_equal(202, references2);
+				assert_equal(2, references2);
 			}
 
 

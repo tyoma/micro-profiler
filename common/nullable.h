@@ -22,8 +22,8 @@ namespace micro_profiler
 	public:
 		nullable();
 		nullable(const nullable &other);
-		nullable(nullable &&other);
-		explicit nullable(T &&from);
+		explicit nullable(const T &from);
+
 		~nullable();
 
 		template <typename F>
@@ -33,11 +33,8 @@ namespace micro_profiler
 		T &operator *();
 		const T &operator *() const;
 
-		template <typename U>
-		nullable &operator =(U &&from);
-
-	private:
-		void operator =(const nullable &rhs);
+		nullable &operator =(const nullable &from);
+		nullable &operator =(const T &from);
 
 	private:
 		unsigned char _buffer[sizeof(T)];
@@ -50,7 +47,6 @@ namespace micro_profiler
 	public:
 		nullable();
 		nullable(const nullable &other);
-		nullable(nullable &&other);
 		explicit nullable(T &from);
 
 		bool has_value() const;
@@ -58,7 +54,7 @@ namespace micro_profiler
 		const T &operator *() const;
 
 	private:
-		nullable &operator =(const T &from);
+		nullable &operator =(const nullable &from);
 
 	private:
 		T *_object;
@@ -86,20 +82,9 @@ namespace micro_profiler
 	}
 
 	template <typename T>
-	inline nullable<T>::nullable(nullable &&other)
-		: _has_value(other._has_value)
-	{
-		if (!_has_value)
-			return;
-		new(_buffer) T(std::move(*other));
-		(*other).~T();
-		other._has_value = false;
-	}
-
-	template <typename T>
-	inline nullable<T>::nullable(T &&from)
+	inline nullable<T>::nullable(const T &from)
 		: _has_value(true)
-	{	new(_buffer) T(std::forward<T>(from));	}
+	{	new(_buffer) T(from);	}
 
 	template <typename T>
 	inline nullable<T>::~nullable()
@@ -129,14 +114,22 @@ namespace micro_profiler
 	inline const T &nullable<T>::operator *() const
 	{	return *reinterpret_cast<const T *>(_buffer);	}
 
-
 	template <typename T>
-	template <typename U>
-	inline nullable<T> &nullable<T>::operator =(U &&from)
+	inline nullable<T> &nullable<T>::operator =(const nullable &from)
 	{
 		if (_has_value)
-			(**this).~T();
-		new(_buffer) T(std::forward<U>(from));
+			(**this).~T(), _has_value = false;
+		if (from.has_value())
+			new(_buffer) T(*from), _has_value = true;
+		return *this;
+	}
+
+	template <typename T>
+	inline nullable<T> &nullable<T>::operator =(const T &from)
+	{
+		if (_has_value)
+			(**this).~T(); // TODO: reset value presence to protect from construction exception below.
+		new(_buffer) T(from);
 		_has_value = true;
 		return *this;
 	}
@@ -151,11 +144,6 @@ namespace micro_profiler
 	inline nullable<T &>::nullable(const nullable &other)
 		: _object(other._object)
 	{	}
-
-	template <typename T>
-	inline nullable<T &>::nullable(nullable &&other)
-		: _object(other._object)
-	{	other._object = nullptr;	}
 
 	template <typename T>
 	inline nullable<T &>::nullable(T &from)

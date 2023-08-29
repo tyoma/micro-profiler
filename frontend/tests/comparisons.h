@@ -2,6 +2,7 @@
 
 #include <frontend/database.h>
 #include <frontend/primitives.h>
+#include <sdb/transforms.h>
 #include <test-helpers/comparisons.h>
 #include <tuple>
 
@@ -61,4 +62,11 @@ namespace micro_profiler
 				: static_cast<const T &>(lhs) < static_cast<const T &>(rhs);
 		}
 	}
+}
+
+namespace sdb
+{
+	template <typename I1, typename I2>
+	inline bool operator <(const joined_record<I1, I2> &lhs, const joined_record<I1, I2> &rhs)
+	{	return lhs.left() < rhs.left() ? true : rhs.left() < lhs.left() ? false : lhs.right() < rhs.right();	}
 }

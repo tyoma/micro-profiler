@@ -28,8 +28,9 @@ namespace micro_profiler
 {
 	typedef sdb::table<id_t> selector_table;
 	typedef std::shared_ptr<selector_table> selector_table_ptr;
-	typedef sdb::joined_record<calls_statistics_table, selector_table> filtered_entry;
-	typedef sdb::table<filtered_entry> filtered_calls_statistics_table;
+
+	typedef sdb::joined<calls_statistics_table, selector_table>::value_type filtered_entry;
+	typedef sdb::joined<calls_statistics_table, selector_table>::table_type filtered_calls_statistics_table;
 	typedef std::shared_ptr<const filtered_calls_statistics_table> filtered_calls_statistics_table_cptr;
 
 	enum thread_mode {	threads_all, threads_cumulative, threads_filtered	};

@@ -8,6 +8,7 @@ set(SAVANT_DB_TESTS_SOURCES
 	IndexedSerializationTests.cpp
 	IntegratedIndexTests.cpp
 	JoiningTests.cpp
+	LeftJoiningTests.cpp
 	OrderedIndexTests.cpp
 	TableSerializationTests.cpp
 	TableTests.cpp

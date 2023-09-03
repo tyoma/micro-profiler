@@ -184,6 +184,203 @@ namespace sdb
 					+ make_pair(type1_t(0.75, "ipsum", 9), nullable<type2_t>(type2_t(9, "lorem"))), *j);
 			}
 
+
+			test( UnmatchedUpdatesToRightAreIgnored )
+			{
+				typedef tuple<double, string, int> type1_t;
+				typedef pair<int, string> type2_t;
+				typedef table<type1_t> table1_t;
+				typedef table<type2_t> table2_t;
+
+				// INIT
+				table1_t t1;
+				table2_t t2;
+				type1_t data1[] = {
+					type1_t(0.71, "lorem", 4),
+					type1_t(0.72, "ipsum", 3),
+					type1_t(0.73, "amet", 7),
+					type1_t(0.76, "dolor", 4),
+				};
+				type2_t data2[] = {
+					type2_t(5, "Jive"),
+					type2_t(8, "Samba"),
+				};
+
+				add_records(t1, data1);
+
+				// INIT / ACT
+				auto j = left_join<key_n<2>, key_first>(t1, t2);
+
+				// ACT
+				add_records(t2, data2);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair(type1_t(0.71, "lorem", 4), nullable<type2_t>())
+					+ make_pair(type1_t(0.72, "ipsum", 3), nullable<type2_t>())
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>())
+					+ make_pair(type1_t(0.76, "dolor", 4), nullable<type2_t>()), *j);
+			}
+
+
+			test( MatchedAdditionsToRightAreAddedToExistingMatches )
+			{
+				typedef tuple<double, string, int> type1_t;
+				typedef pair<int, string> type2_t;
+				typedef table<type1_t> table1_t;
+				typedef table<type2_t> table2_t;
+
+				// INIT
+				table1_t t1;
+				table2_t t2;
+				type1_t data1[] = {
+					type1_t(0.71, "lorem", 4),
+					type1_t(0.72, "ipsum", 3),
+					type1_t(0.73, "amet", 7),
+					type1_t(0.76, "dolor", 4),
+				};
+				type2_t data21[] = {
+					type2_t(4, "Jive"),
+					type2_t(7, "Samba"),
+				};
+				type2_t data22[] = {
+					type2_t(4, "Reggae"),
+					type2_t(7, "Rumba"),
+				};
+
+				add_records(t1, data1);
+				add_records(t2, data21);
+
+				// INIT / ACT
+				auto j = left_join<key_n<2>, key_first>(t1, t2);
+
+				// ACT
+				add_records(t2, data22);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair(type1_t(0.71, "lorem", 4), nullable<type2_t>(type2_t(4, "Jive")))
+					+ make_pair(type1_t(0.71, "lorem", 4), nullable<type2_t>(type2_t(4, "Reggae")))
+					+ make_pair(type1_t(0.72, "ipsum", 3), nullable<type2_t>())
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>(type2_t(7, "Samba")))
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>(type2_t(7, "Rumba")))
+					+ make_pair(type1_t(0.76, "dolor", 4), nullable<type2_t>(type2_t(4, "Jive")))
+					+ make_pair(type1_t(0.76, "dolor", 4), nullable<type2_t>(type2_t(4, "Reggae"))), *j);
+			}
+
+
+			test( MatchedAdditionsToRightReplaceExistingNullRecords )
+			{
+				typedef tuple<double, string, int> type1_t;
+				typedef pair<int, string> type2_t;
+				typedef table<type1_t> table1_t;
+				typedef table<type2_t> table2_t;
+
+				// INIT
+				table1_t t1;
+				table2_t t2;
+				type1_t data1[] = {
+					type1_t(0.71, "lorem", 4),
+					type1_t(0.72, "ipsum", 3),
+					type1_t(0.73, "amet", 7),
+					type1_t(0.76, "dolor", 4),
+				};
+				type2_t data21[] = {
+					type2_t(4, "Jive"),
+					type2_t(7, "Samba"),
+				};
+				type2_t data22[] = {
+					type2_t(3, "Reggae"),
+					type2_t(7, "HipHop"),
+				};
+
+				add_records(t1, data1);
+
+				// INIT / ACT
+				auto j = left_join<key_n<2>, key_first>(t1, t2);
+
+				// ACT
+				add_records(t2, data21);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair(type1_t(0.71, "lorem", 4), nullable<type2_t>(type2_t(4, "Jive")))
+					+ make_pair(type1_t(0.72, "ipsum", 3), nullable<type2_t>())
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>(type2_t(7, "Samba")))
+					+ make_pair(type1_t(0.76, "dolor", 4), nullable<type2_t>(type2_t(4, "Jive"))), *j);
+
+				// ACT
+				add_records(t2, data22);
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair(type1_t(0.71, "lorem", 4), nullable<type2_t>(type2_t(4, "Jive")))
+					+ make_pair(type1_t(0.72, "ipsum", 3), nullable<type2_t>(type2_t(3, "Reggae")))
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>(type2_t(7, "Samba")))
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>(type2_t(7, "HipHop")))
+					+ make_pair(type1_t(0.76, "dolor", 4), nullable<type2_t>(type2_t(4, "Jive"))), *j);
+			}
+
+
+			test( RemovalsFromLeftRemoveMultiplesAndCreateLeftNullsForTheLastRemovals )
+			{
+				typedef tuple<double, string, int> type1_t;
+				typedef pair<int, string> type2_t;
+				typedef table<type1_t> table1_t;
+				typedef table<type2_t> table2_t;
+
+				// INIT
+				table1_t t1;
+				table2_t t2;
+				type1_t data1[] = {
+					type1_t(0.71, "lorem", 4),
+					type1_t(0.72, "ipsum", 3),
+					type1_t(0.73, "amet", 7),
+					type1_t(0.76, "dolor", 4),
+				};
+				type2_t data2[] = {
+					type2_t(4, "Reggae"),
+					type2_t(4, "Jive"),
+					type2_t(7, "Samba"),
+				};
+
+				add_records(t1, data1);
+				auto iterators2 = add_records(t2, data2);
+
+				// INIT / ACT
+				auto j = left_join<key_n<2>, key_first>(t1, t2);
+
+				// ACT
+				t2.modify(iterators2[1]).remove();
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair(type1_t(0.71, "lorem", 4), nullable<type2_t>(type2_t(4, "Reggae")))
+					+ make_pair(type1_t(0.72, "ipsum", 3), nullable<type2_t>())
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>(type2_t(7, "Samba")))
+					+ make_pair(type1_t(0.76, "dolor", 4), nullable<type2_t>(type2_t(4, "Reggae"))), *j);
+
+				// ACT
+				t2.modify(iterators2[2]).remove();
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair(type1_t(0.71, "lorem", 4), nullable<type2_t>(type2_t(4, "Reggae")))
+					+ make_pair(type1_t(0.72, "ipsum", 3), nullable<type2_t>())
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>())
+					+ make_pair(type1_t(0.76, "dolor", 4), nullable<type2_t>(type2_t(4, "Reggae"))), *j);
+
+				// ACT
+				t2.modify(iterators2[0]).remove();
+
+				// ASSERT
+				assert_equivalent(plural
+					+ make_pair(type1_t(0.71, "lorem", 4), nullable<type2_t>())
+					+ make_pair(type1_t(0.72, "ipsum", 3), nullable<type2_t>())
+					+ make_pair(type1_t(0.73, "amet", 7), nullable<type2_t>())
+					+ make_pair(type1_t(0.76, "dolor", 4), nullable<type2_t>()), *j);
+			}
+
 		end_test_suite
 	}
 }

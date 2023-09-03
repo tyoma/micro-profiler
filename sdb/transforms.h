@@ -190,7 +190,7 @@ namespace sdb
 	{
 		typedef typename joined<LeftT, RightT>::value_type value_type;
 		typedef typename joined<LeftT, RightT>::table_type joined_table_t;
-		typedef typename joined<LeftT, RightT>::table_ptr jointed_table_ptr_t;
+		typedef typename joined<LeftT, RightT>::table_ptr joined_table_ptr_t;
 
 		const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<slot_connection> > >();
 		auto &joined = std::get<0>(*composite);
@@ -218,7 +218,7 @@ namespace sdb
 		for (auto i = left.begin(); i != left.end(); ++i)
 			add_from_left(i);
 
-		return jointed_table_ptr_t(composite, &joined);
+		return joined_table_ptr_t(composite, &joined);
 	}
 
 	template <typename LeftKeyerT, typename RightKeyerT, typename LeftT, typename RightT>
@@ -228,28 +228,55 @@ namespace sdb
 		typedef typename left_joined<LeftT, RightT>::value_type value_type;
 		typedef nullable<typename RightT::const_iterator> nullable_type;
 		typedef typename left_joined<LeftT, RightT>::table_type joined_table_t;
-		typedef typename left_joined<LeftT, RightT>::table_ptr jointed_table_ptr_t;
+		typedef typename left_joined<LeftT, RightT>::table_ptr joined_table_ptr_t;
 
 		const auto composite = std::make_shared< std::tuple< joined_table_t, std::vector<slot_connection> > >();
 		auto &joined = std::get<0>(*composite);
 		auto &connections = std::get<1>(*composite);
+		auto &left_index = multi_index(left, left_by);
+		auto &joined_left_index = multi_index(joined, [left_by] (const value_type &j) {	return std::make_tuple(left_by(j.left()), j.right().has_value());	});
+		auto add_stub = [&joined] (typename LeftT::const_iterator i) {
+			auto r = joined.create();
+
+			*r = value_type(i, nullable_type());
+			r.commit();
+		};
 		auto add_from_left = maintain_joined(joined, connections, left, left_by, multi_index(right, right_by),
 			[] (typename LeftT::const_iterator i, typename RightT::const_iterator j) {
 			return value_type(i, nullable_type(j));
-		}, [&joined] (typename LeftT::const_iterator i) {
-				auto r = joined.create();
-
-				*r = value_type(i, nullable_type());
-				r.commit();
-		}, [] (const value_type &jrecord) {
+		}, add_stub, [] (const value_type &jrecord) {
 			return &jrecord.left();
 		}, [] (typename LeftT::const_iterator record) {
 			return &*record;
 		});
 
+		connections.push_back(right.created += [&joined, &joined_left_index, right_by] (typename RightT::const_iterator i) {
+			for (auto j = joined_left_index.equal_range(std::make_tuple(right_by(*i), false)); j.first != j.second; )
+				joined.modify(j.first++.underlying()->second).remove();
+		});
+
+		maintain_joined(joined, connections, right, right_by, left_index,
+			[] (typename RightT::const_iterator i, typename LeftT::const_iterator j) {
+			return value_type(j, nullable_type(i));
+		}, [] (typename RightT::const_iterator /*i*/) {
+		}, [] (const value_type &jrecord) {
+			return jrecord.right().has_value() ? &*jrecord.right() : nullptr;
+		}, [] (typename RightT::const_iterator record) {
+			return &*record;
+		});
+
+		connections.push_back(right.removed += [right_by, &joined, &left_index, &joined_left_index, add_stub] (typename RightT::const_iterator i) {
+			auto k = right_by(*i);
+			auto j = joined_left_index.equal_range(std::make_tuple(k, true));
+
+			if (j.first == j.second)
+				for (auto l = left_index.equal_range(k); l.first != l.second; ++l.first)
+					add_stub(l.first.underlying()->second);
+		});
+
 		for (auto i = left.begin(); i != left.end(); ++i)
 			add_from_left(i);
 
-		return jointed_table_ptr_t(composite, &joined);
+		return joined_table_ptr_t(composite, &joined);
 	}
 }

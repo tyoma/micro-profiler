@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.13)
 
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/bigobj>")
+
 set(FRONTEND_LIB_SOURCES
 	columns_layout.cpp
+	database_views.cpp
 	derived_statistics.cpp
 	frontend.cpp
 	frontend_manager.cpp

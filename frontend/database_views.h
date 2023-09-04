@@ -20,40 +20,33 @@
 
 #pragma once
 
+#include "database.h"
 #include "keyer.h"
 
 #include <sdb/transform_types.h>
 
 namespace micro_profiler
 {
-	typedef sdb::table<id_t> selector_table;
-	typedef std::shared_ptr<selector_table> selector_table_ptr;
-
-	typedef sdb::joined<calls_statistics_table, selector_table>::value_type filtered_entry;
-	typedef sdb::joined<calls_statistics_table, selector_table>::table_type filtered_calls_statistics_table;
-	typedef std::shared_ptr<const filtered_calls_statistics_table> filtered_calls_statistics_table_cptr;
-
-	enum thread_mode {	threads_all, threads_cumulative, threads_filtered	};
-
-	template <bool callstacks, thread_mode mode>
-	struct representation
+	namespace tables
 	{
-		static representation create(calls_statistics_table_cptr source);
+		typedef sdb::left_joined<
+			sdb::left_joined<
+				sdb::left_joined<
+					sdb::joined<
+						symbols,
+						modules
+					>::table_type,
+					source_files
+				>::table_type,
+				module_mappings
+			>::table_type,
+			patches
+		>::table_type patched_symbols;
+	}
 
-		calls_statistics_table_cptr main, callers, callees;
-		selector_table_ptr selection_main, selection_callers, selection_callees;
-		std::function<void ()> activate_callers, activate_callees;
-	};
-
-	template <bool callstacks>
-	struct representation<callstacks, threads_filtered>
-	{
-		static representation create(calls_statistics_table_cptr source, id_t thread_id);
-
-		selector_table_ptr selection_threads;
-
-		filtered_calls_statistics_table_cptr main, callers, callees;
-		selector_table_ptr selection_main, selection_callers, selection_callees;
-		std::function<void ()> activate_callers, activate_callees;
-	};
+	std::shared_ptr<const tables::patched_symbols> patched_symbols(std::shared_ptr<const tables::symbols> symbols,
+		std::shared_ptr<const tables::modules> modules,
+		std::shared_ptr<const tables::source_files> source_files,
+		std::shared_ptr<const tables::module_mappings> mappings,
+		std::shared_ptr<const tables::patches> patches);
 }

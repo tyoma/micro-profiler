@@ -49,7 +49,8 @@ namespace micro_profiler
 
 	public:
 		image_patch_model(std::shared_ptr<const tables::patches> patches, std::shared_ptr<const tables::modules> modules,
-			std::shared_ptr<const tables::module_mappings> mappings);
+			std::shared_ptr<const tables::module_mappings> mappings, std::shared_ptr<const tables::symbols> symbols,
+			std::shared_ptr<const tables::source_files> source_files);
 
 		template <typename Predicate>
 		void set_filter(const Predicate &predicate);

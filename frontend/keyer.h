@@ -26,7 +26,9 @@
 #include <common/auto_increment.h>
 #include <common/hash.h>
 #include <tuple>
+#include <sdb/hash.h>
 #include <sdb/integrated_index.h>
+#include <sdb/transform_types.h>
 
 namespace sdb
 {
@@ -134,6 +136,10 @@ namespace micro_profiler
 			id_t operator ()(const T &record) const
 			{	return record.module_id;	}
 
+			template <typename I1, typename I2>
+			id_t operator ()(const sdb::joined_record<I1, I2> &record) const
+			{	return (*this)(record.left());	}
+
 			template <typename IndexT, typename T>
 			void operator ()(IndexT &, T &record, id_t key) const
 			{	record.module_id = key;	}
@@ -145,9 +151,24 @@ namespace micro_profiler
 			unsigned int operator ()(const T &record) const
 			{	return record.rva;	}
 
+			template <typename I1, typename I2>
+			unsigned int operator ()(const sdb::joined_record<I1, I2> &record) const
+			{	return (*this)(record.left());	}
+
 			template <typename IndexT, typename T>
 			void operator ()(IndexT &, T &record, unsigned int key) const
 			{	record.rva = key;	}
+		};
+
+		struct file_id
+		{
+			template <typename T>
+			id_t operator ()(const T &record) const
+			{	return record.file_id;	}
+
+			template <typename I1, typename I2>
+			id_t operator ()(const sdb::joined_record<I1, I2> &record) const
+			{	return (*this)(record.left());	}
 		};
 
 		struct thread_id

@@ -22,6 +22,7 @@
 
 #include <common/formatting.h>
 #include <common/path.h>
+#include <frontend/database_views.h>
 #include <frontend/keyer.h>
 #include <frontend/selection_model.h>
 #include <frontend/trackables_provider.h>
@@ -76,10 +77,13 @@ namespace micro_profiler
 
 
 	image_patch_model::image_patch_model(shared_ptr<const tables::patches> patches,
-			shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings)
+			shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings,
+			shared_ptr<const tables::symbols> symbols, shared_ptr<const tables::source_files> source_files)
 		: _patches(patches), _modules(modules), _flatten_view(*modules), _filter_view(_flatten_view),
 			_ordered_view(_filter_view), _trackables(new trackables_provider<ordered_view_t>(_ordered_view))
 	{
+		auto patches_complete = patched_symbols(symbols, modules, source_files, mappings, patches);
+
 		auto invalidate_me = [this] {
 			_ordered_view.fetch();
 			fetch();

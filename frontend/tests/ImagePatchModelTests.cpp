@@ -26,6 +26,8 @@ namespace micro_profiler
 			shared_ptr<tables::patches> patches;
 			shared_ptr<tables::module_mappings> mappings;
 			shared_ptr<tables::modules> modules;
+			shared_ptr<tables::symbols> symbols;
+			shared_ptr<tables::source_files> source_files;
 			map<unsigned, tables::modules::metadata_ready_cb> requests;
 
 			void emulate_response(unsigned module_id, const vector<symbol_info> &symbols_)
@@ -44,6 +46,8 @@ namespace micro_profiler
 				patches = make_shared<tables::patches>();
 				mappings = make_shared<tables::module_mappings>();
 				modules = make_shared<tables::modules>();
+				symbols = make_shared<tables::symbols>();
+				source_files = make_shared<tables::source_files>();
 
 				modules->request_presence = [this] (shared_ptr<void> &req, unsigned id,
 					tables::modules::metadata_ready_cb ready) {
@@ -66,7 +70,7 @@ namespace micro_profiler
 				add_records(*mappings, plural + make_mapping(0, 1, 0x1299100));
 
 				// INIT / ACT
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 
 				// ACT / ASSERT
 				assert_equal(0u, model.get_count());
@@ -93,7 +97,7 @@ namespace micro_profiler
 				add_metadata(*modules, 140, data1);
 
 				// INIT / ACT
-				image_patch_model model1(patches, modules, mappings);
+				image_patch_model model1(patches, modules, mappings, symbols, source_files);
 
 				// ACT / ASSERT
 				string reference1[][3] = {
@@ -116,7 +120,7 @@ namespace micro_profiler
 				add_metadata(*modules, 11, data2);
 
 				// INIT / ACT
-				image_patch_model model2(patches, modules, mappings);
+				image_patch_model model2(patches, modules, mappings, symbols, source_files);
 				patches.reset(); // image_patch_model must hold shared_ptrs to the tables on its own.
 				modules.reset();
 				mappings.reset();
@@ -145,7 +149,7 @@ namespace micro_profiler
 				modules->clear();
 				add_records(*mappings, plural + make_mapping(0u, 140u, 0u) + make_mapping(1u, 141u, 0u));
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 				symbol_info data1[] = {
 					{	"gc_collect", 0x901A9010, 15,	},
 					{	"malloc", 0x00001234, 150,	},
@@ -247,7 +251,7 @@ namespace micro_profiler
 				add_metadata(*modules, 140, data1);
 				add_metadata(*modules, 11, data2);
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 				vector< vector< vector<string> > > log;
 				auto conn = model.invalidate += [&] (...) {
 					log.push_back(get_text(model, columns));
@@ -322,7 +326,7 @@ namespace micro_profiler
 					+ make_mapping(0u, 11u, 0u, "/usr/bin/module.so")
 					+ make_mapping(1u, 17u, 0u, "/bin/Profiler"));
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 
 				// ACT
 				auto text = get_text(model, columns);
@@ -382,7 +386,7 @@ namespace micro_profiler
 				add_metadata(*modules, 1, data1);
 				add_metadata(*modules, 2, data2);
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 				vector< vector< vector<string> > > log;
 				auto conn = model.invalidate += [&] (image_patch_model::index_type item) {
 					log.push_back(get_text(model, columns));
@@ -484,7 +488,7 @@ namespace micro_profiler
 					+ make_patch(1, 0x00000021, 4, false, patch_state::active)
 					+ make_patch(1, 0x00000031, 5, true, patch_state::active));
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 
 				// ACT
 				model.set_order(2, true);
@@ -532,7 +536,7 @@ namespace micro_profiler
 					+ make_mapping(1u, 17u, 0u, "d:\\bin\\Profiler")
 					+ make_mapping(3u, 19u, 0u, "c:\\dev\\micro-profiler.exe"));
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 
 				// ACT
 				model.set_order(4, true);
@@ -601,7 +605,7 @@ namespace micro_profiler
 					+ make_mapping(2u, 7u, 0x1299100, "c:\\dev\\app.exe", 1123));
 
 				// INIT / ACT
-				image_patch_model model1(patches, modules, mappings);
+				image_patch_model model1(patches, modules, mappings, symbols, source_files);
 
 				// ASSERT
 				assert_equivalent(plural + 1u + 13u + 7u, log);
@@ -613,7 +617,7 @@ namespace micro_profiler
 				log.clear();
 
 				// INIT / ACT
-				image_patch_model model2(patches, modules, mappings);
+				image_patch_model model2(patches, modules, mappings, symbols, source_files);
 
 				// ASSERT
 				assert_equivalent(plural + 1u + 13u + 7u + 11u + 9u, log);
@@ -623,7 +627,7 @@ namespace micro_profiler
 			test( ImagePatchModelProvidesSelection )
 			{
 				// INIT
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 
 				// INIT / ACT
 				auto sel = model.create_selection();
@@ -653,7 +657,7 @@ namespace micro_profiler
 				add_metadata(*modules, 1, data1);
 				add_metadata(*modules, 3, data2);
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 				auto sel = model.create_selection();
 
 				model.set_order(1, true);
@@ -716,7 +720,7 @@ namespace micro_profiler
 				add_metadata(*modules, 3, data2);
 				add_records(*mappings, plural + make_mapping(0u, 1u, 0u) + make_mapping(1u, 3u, 0u));
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 				auto sel = model.create_selection();
 
 				model.set_order(1, true);
@@ -753,7 +757,7 @@ namespace micro_profiler
 					+ make_mapping(1u, 3u, 0u)
 					+ make_mapping(2u, 4u, 0u));
 
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 				unsigned columns[] = {	1, 3,	};
 				symbol_info data1[] = {
 					{	"Gc_collect", 1, 15,	},
@@ -852,7 +856,7 @@ namespace micro_profiler
 					+ make_mapping(2u, 4u, 0u));
 
 				// INIT / ACT
-				image_patch_model model(patches, modules, mappings);
+				image_patch_model model(patches, modules, mappings, symbols, source_files);
 
 				// ASSERT
 				assert_equal(3u, requests.size());

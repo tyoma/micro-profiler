@@ -73,6 +73,7 @@ namespace micro_profiler
 		{
 			id_t module_id;
 		};
+		typedef sdb::table<symbol_info> symbols;
 
 
 		struct source_file : identity
@@ -80,6 +81,7 @@ namespace micro_profiler
 			id_t module_id;
 			std::string path;
 		};
+		typedef sdb::table<source_file> source_files;
 
 
 		struct patches : sdb::table<patch_state_ex>
@@ -104,6 +106,8 @@ namespace micro_profiler
 		tables::statistics statistics;
 		tables::module_mappings mappings;
 		tables::modules modules;
+		tables::symbols symbols;
+		tables::source_files source_files;
 		tables::patches patches;
 		tables::threads threads;
 	};
@@ -121,6 +125,12 @@ namespace micro_profiler
 
 	inline std::shared_ptr<tables::modules> modules(std::shared_ptr<profiling_session> session)
 	{	return make_shared_aspect(session, &session->modules);	}
+
+	inline std::shared_ptr<tables::symbols> symbols(std::shared_ptr<profiling_session> session)
+	{	return make_shared_aspect(session, &session->symbols);	}
+
+	inline std::shared_ptr<tables::source_files> source_files(std::shared_ptr<profiling_session> session)
+	{	return make_shared_aspect(session, &session->source_files);	}
 
 	inline std::shared_ptr<tables::threads> threads(std::shared_ptr<profiling_session> session)
 	{	return make_shared_aspect(session, &session->threads);	}

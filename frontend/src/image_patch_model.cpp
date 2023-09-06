@@ -32,35 +32,23 @@ using namespace std;
 
 namespace micro_profiler
 {
-	image_patch_model::image_patch_model(shared_ptr<const tables::patches> patches,
-			shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings,
-			shared_ptr<const tables::symbols> symbols, shared_ptr<const tables::source_files> source_files)
-		: _modules(modules), _patched_symbols(patched_symbols(symbols, modules, source_files, mappings, patches)),
-			_filter_view(make_shared<filter_view_t>(*_patched_symbols)),
-			_model(_filter_view, initialize<image_patch_model_context>())
+	image_patch_model::image_patch_model(shared_ptr<filter_view_t> underlying, shared_ptr<const tables::modules> modules)
+		: table_model_impl<wpl::richtext_table_model, views::filter<tables::patched_symbols>, image_patch_model_context>(
+			underlying, initialize<image_patch_model_context>()), _underlying(underlying), _modules(modules)
+	{	add_columns(c_patched_symbols_columns);	}
+
+	shared_ptr<image_patch_model> image_patch_model::create(shared_ptr<const tables::patches> patches,
+		shared_ptr<const tables::modules> modules, shared_ptr<const tables::module_mappings> mappings,
+		shared_ptr<const tables::symbols> symbols, shared_ptr<const tables::source_files> source_files)
 	{
-		_connections[0] = _patched_symbols->invalidate += [this] {	_model.fetch();	};
-		_connections[1] = mappings->invalidate += [this, mappings] {	request_missing(*mappings);	};
-		_connections[2] = _model.invalidate += [this] (index_type index) {	invalidate(index);	};
+		const auto ps = patched_symbols(symbols, modules, source_files, mappings, patches);
+		const auto m = shared_ptr<image_patch_model>(new image_patch_model(make_shared<filter_view_t>(*ps), modules));
+		const auto result = make_shared_aspect(make_shared_copy(make_tuple(ps, m, ps->invalidate += [m] {	m->fetch();	},
+			mappings->invalidate += [m, mappings] {	m->request_missing(*mappings);	})), m.get());
 
-		_model.add_columns(c_patched_symbols_columns);
-		request_missing(*mappings);
+		m->request_missing(*mappings);
+		return result;
 	}
-
-	void image_patch_model::set_order(index_type column, bool ascending)
-	{	_model.set_order(column, ascending);	}
-
-	const image_patch_model::ordered_view_t &image_patch_model::ordered() const
-	{	return _model.ordered();	}
-
-	image_patch_model::index_type image_patch_model::get_count() const throw()
-	{	return _model.get_count();	}
-
-	shared_ptr<const wpl::trackable> image_patch_model::track(index_type row) const
-	{	return _model.track(row);	}
-
-	void image_patch_model::get_text(index_type row, index_type column, agge::richtext_t &value) const
-	{	_model.get_text(row, column, value);	}
 
 	wpl::slot_connection image_patch_model::maintain_legacy_symbols(tables::modules &modules,
 		shared_ptr<tables::symbols> symbols, shared_ptr<tables::source_files> source_files)
@@ -97,7 +85,7 @@ namespace micro_profiler
 			if (!req.second)
 				continue;
 			_modules->request_presence(req.first->second, i->module_id, [this] (const module_info_metadata &/*metadata*/) {
-				_model.fetch();
+				fetch();
 			});
 		}
 	}

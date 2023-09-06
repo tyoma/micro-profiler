@@ -90,17 +90,17 @@ namespace micro_profiler
 				add_records(*mappings, plural + make_mapping(0, 1, 0x1299100));
 
 				// INIT / ACT
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
 				// ACT / ASSERT
-				assert_equal(0u, model.get_count());
+				assert_equal(0u, model->get_count());
 
 				// INIT
 				add_records(*mappings, plural + make_mapping(1, 10, 0x10000));
 				mappings->invalidate();
 
 				// ACT / ASSERT
-				assert_equal(0u, model.get_count());
+				assert_equal(0u, model->get_count());
 			}
 
 
@@ -117,7 +117,7 @@ namespace micro_profiler
 				add_metadata(*modules, *symbols, 140, data1);
 
 				// INIT / ACT
-				image_patch_model model1(patches, modules, mappings, symbols, source_files);
+				auto model1 = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
 				// ACT / ASSERT
 				string reference1[][3] = {
@@ -126,7 +126,7 @@ namespace micro_profiler
 					{	"00000001", "free", "115", 	},
 				};
 
-				assert_equivalent(mkvector(reference1), get_text(model1, columns));
+				assert_equivalent(mkvector(reference1), get_text(*model1, columns));
 
 				// INIT
 				symbol_info data2[] = {
@@ -140,7 +140,7 @@ namespace micro_profiler
 				add_metadata(*modules, *symbols, 11, data2);
 
 				// INIT / ACT
-				image_patch_model model2(patches, modules, mappings, symbols, source_files);
+				auto model2 = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 				patches.reset(); // image_patch_model must hold shared_ptrs to the tables on its own.
 				modules.reset();
 				mappings.reset();
@@ -157,7 +157,7 @@ namespace micro_profiler
 					{	"00000031", "string::find", "15", 	},
 				};
 
-				assert_equivalent(mkvector(reference2), get_text(model2, columns));
+				assert_equivalent(mkvector(reference2), get_text(*model2, columns));
 			}
 
 
@@ -169,7 +169,7 @@ namespace micro_profiler
 				modules->clear();
 				add_records(*mappings, plural + make_mapping(0u, 140u, 0u) + make_mapping(1u, 141u, 0u));
 
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 				symbol_info data1[] = {
 					{	"gc_collect", 0x901A9010, 15,	},
 					{	"malloc", 0x00001234, 150,	},
@@ -186,8 +186,8 @@ namespace micro_profiler
 					{	"string::clear", 0x00000021, 14,	},
 				};
 				vector< vector< vector<string> > > log;
-				auto conn = model.invalidate += [&] (image_patch_model::index_type item) {
-					log.push_back(get_text(model, columns));
+				auto conn = model->invalidate += [&] (image_patch_model::index_type item) {
+					log.push_back(get_text(*model, columns));
 					assert_equal(image_patch_model::npos(), item);
 				};
 
@@ -271,10 +271,10 @@ namespace micro_profiler
 				add_metadata(*modules, *symbols, 140, data1);
 				add_metadata(*modules, *symbols, 11, data2);
 
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 				vector< vector< vector<string> > > log;
-				auto conn = model.invalidate += [&] (...) {
-					log.push_back(get_text(model, columns));
+				auto conn = model->invalidate += [&] (...) {
+					log.push_back(get_text(*model, columns));
 				};
 
 				// ACT
@@ -343,10 +343,10 @@ namespace micro_profiler
 				add_metadata(*modules, *symbols, 13, data2);
 				add_metadata(*modules, *symbols, 17, data3, "/bin/Profiler");
 
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
 				// ACT
-				auto text = get_text(model, columns);
+				auto text = get_text(*model, columns);
 
 				// ASSERT
 				string reference1[][3] = {
@@ -360,8 +360,8 @@ namespace micro_profiler
 
 				// INIT
 				vector< vector< vector<string> > > log;
-				auto conn = model.invalidate += [&] (...) {
-					log.push_back(get_text(model, columns));
+				auto conn = model->invalidate += [&] (...) {
+					log.push_back(get_text(*model, columns));
 				};
 
 				// ACT
@@ -400,15 +400,15 @@ namespace micro_profiler
 				add_metadata(*modules, *symbols, 1, data1);
 				add_metadata(*modules, *symbols, 2, data2);
 
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 				vector< vector< vector<string> > > log;
-				auto conn = model.invalidate += [&] (image_patch_model::index_type item) {
-					log.push_back(get_text(model, columns));
+				auto conn = model->invalidate += [&] (image_patch_model::index_type item) {
+					log.push_back(get_text(*model, columns));
 					assert_equal(image_patch_model::npos(), item);
 				};
 
 				// ACT
-				model.set_order(0, true);
+				model->set_order(0, true);
 
 				// ASSERT
 				string reference1[][3] = {
@@ -426,7 +426,7 @@ namespace micro_profiler
 				assert_equal(mkvector(reference1), log.back());
 
 				// ACT
-				model.set_order(0, false);
+				model->set_order(0, false);
 
 				// ASSERT
 				string reference2[][3] = {
@@ -444,7 +444,7 @@ namespace micro_profiler
 				assert_equal(mkvector(reference2), log.back());
 
 				// ACT
-				model.set_order(1, true);
+				model->set_order(1, true);
 
 				// ASSERT
 				string reference3[][3] = {
@@ -462,7 +462,7 @@ namespace micro_profiler
 				assert_equal(mkvector(reference3), log.back());
 
 				// ACT
-				model.set_order(3, true);
+				model->set_order(3, true);
 
 				// ASSERT
 				string reference4[][3] = {
@@ -502,10 +502,10 @@ namespace micro_profiler
 					+ make_patch(1, 0x00000021, 4, false, patch_state::active)
 					+ make_patch(1, 0x00000031, 5, true, patch_state::active));
 
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
 				// ACT
-				model.set_order(2, true);
+				model->set_order(2, true);
 
 				// ASSERT
 				string reference[][2] = {
@@ -517,7 +517,7 @@ namespace micro_profiler
 					{	"string::operator []", "applying", 	},
 				};
 
-				assert_equal(mkvector(reference), get_text(model, columns));
+				assert_equal(mkvector(reference), get_text(*model, columns));
 			}
 
 
@@ -546,11 +546,11 @@ namespace micro_profiler
 				add_metadata(*modules, *symbols, 17, data3, "d:\\bin\\Profiler");
 				add_metadata(*modules, *symbols, 19, data4, "c:\\dev\\micro-profiler.exe");
 
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
 				// ACT
-				model.set_order(4, true);
-				auto t = get_text(model, columns);
+				model->set_order(4, true);
+				auto t = get_text(*model, columns);
 
 				// ASSERT (13 -> 19 -> 11 -> 17)
 				string reference1[][3] = {
@@ -563,7 +563,7 @@ namespace micro_profiler
 					{	"f4", "Profiler", "d:\\bin\\Profiler",	},
 				};
 
-				assert_equal(mkvector(reference1), get_text(model, columns));
+				assert_equal(mkvector(reference1), get_text(*model, columns));
 
 				// ACT
 				add_metadata(*modules, *symbols, 13, vector<symbol_info>(), "/bin/mmapping");
@@ -579,10 +579,10 @@ namespace micro_profiler
 					{	"f4", "Profiler", "d:\\bin\\Profiler",	},
 				};
 
-				assert_equal(mkvector(reference2), get_text(model, columns));
+				assert_equal(mkvector(reference2), get_text(*model, columns));
 
 				// ACT
-				model.set_order(5, true);
+				model->set_order(5, true);
 
 				// ASSERT (19 -> 13 -> 11 -> 17)
 				string reference3[][3] = {
@@ -595,7 +595,7 @@ namespace micro_profiler
 					{	"f4", "Profiler", "d:\\bin\\Profiler",	},
 				};
 
-				assert_equal(mkvector(reference3), get_text(model, columns));
+				assert_equal(mkvector(reference3), get_text(*model, columns));
 			}
 
 
@@ -613,7 +613,7 @@ namespace micro_profiler
 					+ make_mapping(2u, 7u, 0x1299100, "c:\\dev\\app.exe", 1123));
 
 				// INIT / ACT
-				image_patch_model model1(patches, modules, mappings, symbols, source_files);
+				auto model1 = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
 				// ASSERT
 				assert_equivalent(plural + 1u + 13u + 7u, log);
@@ -625,7 +625,7 @@ namespace micro_profiler
 				log.clear();
 
 				// INIT / ACT
-				image_patch_model model2(patches, modules, mappings, symbols, source_files);
+				auto model2 = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
 				// ASSERT
 				assert_equivalent(plural + 1u + 13u + 7u + 11u + 9u, log);
@@ -655,20 +655,20 @@ namespace micro_profiler
 				add_metadata(*modules, *symbols, 3, data2);
 				add_records(*mappings, plural + make_mapping(0u, 1u, 0u) + make_mapping(1u, 3u, 0u));
 
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
-				model.set_order(1, true);
+				model->set_order(1, true);
 
 				// INIT / ACT
-				auto t1 = model.track(1);
-				auto t2 = model.track(3);
+				auto t1 = model->track(1);
+				auto t2 = model->track(3);
 
 				// ACT / ASSERT
 				assert_equal(1u, t1->index());
 				assert_equal(3u, t2->index());
 
 				// ACT
-				model.set_order(1, false);
+				model->set_order(1, false);
 
 				// ACT / ASSERT
 				assert_equal(6u, t1->index());
@@ -691,7 +691,7 @@ namespace micro_profiler
 					+ make_mapping(1u, 3u, 0u)
 					+ make_mapping(2u, 4u, 0u));
 
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 				unsigned columns[] = {	1, 3,	};
 				symbol_info data1[] = {
 					{	"Gc_collect", 1, 15,	},
@@ -713,18 +713,18 @@ namespace micro_profiler
 				emulate_response(3, mkvector(data2));
 				emulate_response(4, mkvector(data3));
 
-				model.set_order(0, true);
-				auto t_compress = model.track(3);
-				auto t_clear = model.track(7);
+				model->set_order(0, true);
+				auto t_compress = model->track(3);
+				auto t_clear = model->track(7);
 
 				vector< vector< vector<string> > > log;
-				auto conn = model.invalidate += [&] (image_patch_model::index_type index) {
-					log.push_back(get_text(model, columns));
+				auto conn = model->invalidate += [&] (image_patch_model::index_type index) {
+					log.push_back(get_text(*model, columns));
 					assert_equal(image_patch_model::npos(), index);
 				};
 
 				// ACT
-				model.set_filter([] (const tables::patched_symbol_adaptor &r) {
+				model->set_filter([] (const tables::patched_symbol_adaptor &r) {
 					return string::npos != r.symbol().name.find("::");
 				});
 
@@ -744,7 +744,7 @@ namespace micro_profiler
 				assert_equal(4u, t_clear->index());
 
 				// ACT
-				model.set_filter([] (const tables::patched_symbol_adaptor &r) {
+				model->set_filter([] (const tables::patched_symbol_adaptor &r) {
 					return string::npos != r.symbol().name.find("z::");
 				});
 
@@ -759,7 +759,7 @@ namespace micro_profiler
 				assert_equal(image_patch_model::npos(), t_clear->index());
 
 				// ACT
-				model.set_filter();
+				model->set_filter();
 
 				// ASSERT
 				string reference3[][2] = {
@@ -790,7 +790,7 @@ namespace micro_profiler
 					+ make_mapping(2u, 4u, 0u));
 
 				// INIT / ACT
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
+				auto model = image_patch_model::create(patches, modules, mappings, symbols, source_files);
 
 				// ASSERT
 				assert_equal(3u, requests.size());

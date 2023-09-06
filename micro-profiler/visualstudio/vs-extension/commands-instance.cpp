@@ -106,7 +106,7 @@ namespace micro_profiler
 			});
 
 			target.add_command(cmdidProfileScope, [&running_objects, &factory, session] (unsigned) {
-				const auto patch_ui = make_shared<image_patch_ui>(factory, make_shared<image_patch_model>(patches(session),
+				const auto patch_ui = make_shared<image_patch_ui>(factory, image_patch_model::create(patches(session),
 					modules(session), mappings(session), symbols(session), source_files(session)), patches(session));
 
 				ui_helpers::show_dialog(running_objects, factory, patch_ui, 800, 530,

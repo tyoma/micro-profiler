@@ -104,8 +104,8 @@ namespace micro_profiler
 			));
 		};
 		const auto show_patcher = [&] (agge::point<int> center, shared_ptr<form> new_form, shared_ptr<profiling_session> session) {
-			auto model = make_shared<image_patch_model>(patches(session), modules(session), mappings(session),
-				symbols(session), source_files(session));
+			auto model = image_patch_model::create(patches(session), modules(session), mappings(session), symbols(session),
+				source_files(session));
 			const auto root = make_shared<overlay>();
 				root->add(factory.create_control<control>("background"));
 				auto patcher = make_shared<image_patch_ui>(factory, model, patches(session));
@@ -123,7 +123,8 @@ namespace micro_profiler
 			auto &app2 = app;
 			auto show_patcher2 = show_patcher;
 			auto ui = make_shared<standalone_ui>(app.get_configuration(), factory, session);
-			const auto _legacy_symbols_maintainer = image_patch_model::maintain_legacy_symbols(session->modules, symbols(session), source_files(session));
+			const auto _legacy_symbols_maintainer = image_patch_model::maintain_legacy_symbols(session->modules,
+				symbols(session), source_files(session));
 			auto poller = make_shared<statistics_poll>(statistics(session), app.get_ui_queue());
 
 			poller->enable(true);

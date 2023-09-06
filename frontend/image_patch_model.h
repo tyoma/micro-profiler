@@ -45,26 +45,23 @@ namespace micro_profiler
 	};
 
 
-	class image_patch_model : public wpl::richtext_table_model, noncopyable
+	class image_patch_model : public table_model_impl<wpl::richtext_table_model, views::filter<tables::patched_symbols>,
+		image_patch_model_context>
 	{
 	public:
 		typedef views::filter<tables::patched_symbols> filter_view_t;
-		typedef views::ordered<filter_view_t> ordered_view_t;
+
+	private:
+		image_patch_model(std::shared_ptr<filter_view_t> underlying, std::shared_ptr<const tables::modules> modules);
 
 	public:
-		image_patch_model(std::shared_ptr<const tables::patches> patches, std::shared_ptr<const tables::modules> modules,
-			std::shared_ptr<const tables::module_mappings> mappings, std::shared_ptr<const tables::symbols> symbols,
-			std::shared_ptr<const tables::source_files> source_files);
+		static std::shared_ptr<image_patch_model> create(std::shared_ptr<const tables::patches> patches,
+			std::shared_ptr<const tables::modules> modules, std::shared_ptr<const tables::module_mappings> mappings,
+			std::shared_ptr<const tables::symbols> symbols, std::shared_ptr<const tables::source_files> source_files);
 
 		template <typename Predicate>
 		void set_filter(const Predicate &predicate);
 		void set_filter();
-		void set_order(index_type column, bool ascending);
-		const ordered_view_t &ordered() const;
-
-		virtual index_type get_count() const throw() override;
-		virtual std::shared_ptr<const wpl::trackable> track(index_type row) const override;
-		virtual void get_text(index_type row, index_type column, agge::richtext_t &value) const override;
 
 		static wpl::slot_connection maintain_legacy_symbols(tables::modules &modules,
 			std::shared_ptr<tables::symbols> symbols, std::shared_ptr<tables::source_files> source_files);
@@ -73,10 +70,8 @@ namespace micro_profiler
 		void request_missing(const tables::module_mappings &mappings);
 
 	private:
+		const std::shared_ptr<filter_view_t> _underlying;
 		const std::shared_ptr<const tables::modules> _modules;
-		const std::shared_ptr<const tables::patched_symbols> _patched_symbols;
-		const std::shared_ptr<filter_view_t> _filter_view;
-		table_model_impl<wpl::richtext_table_model, filter_view_t, image_patch_model_context> _model;
 		wpl::slot_connection _connections[3];
 		containers::unordered_map< id_t, std::shared_ptr<void> > _requests;
 	};
@@ -86,13 +81,13 @@ namespace micro_profiler
 	template <typename Predicate>
 	inline void image_patch_model::set_filter(const Predicate &predicate)
 	{
-		_filter_view->set_filter(predicate);
-		_model.fetch();
+		_underlying->set_filter(predicate);
+		fetch();
 	}
 
 	inline void image_patch_model::set_filter()
 	{
-		_filter_view->set_filter();
-		_model.fetch();
+		_underlying->set_filter();
+		fetch();
 	}
 }

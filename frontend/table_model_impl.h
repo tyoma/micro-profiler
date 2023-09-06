@@ -43,7 +43,6 @@ namespace micro_profiler
 		typedef T value_type;
 		typedef column_definition<value_type, CtxT> column_type;
 		typedef typename BaseT::index_type index_type;
-		typedef typename key_traits<value_type>::key_type key_type;
 
 	public:
 		table_model_impl(std::shared_ptr<U> underlying, const CtxT &context_);

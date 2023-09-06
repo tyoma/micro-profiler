@@ -32,9 +32,6 @@
 
 namespace sdb
 {
-	template <typename Table1T, typename Table2T>
-	class joined_record;
-
 	template <typename T>
 	class hash< std::vector<T> >
 	{

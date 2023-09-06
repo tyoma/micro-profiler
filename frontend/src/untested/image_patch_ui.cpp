@@ -15,19 +15,6 @@ namespace micro_profiler
 {
 	namespace
 	{
-		const auto secondary = style::height_scale(0.85);
-		const auto dummy_get = [] (agge::richtext_t &, const statistics_model_context &, size_t, const call_statistics &) {};
-		const auto dummy_compare = [] (const statistics_model_context &, const call_statistics &, const call_statistics &) {	return false;	};
-
-		const column_definition<call_statistics, statistics_model_context> c_columns_symbols[] = {
-			{	"Rva", "RVA" + secondary, 28, agge::align_far, dummy_get, dummy_compare, true,	},
-			{	"Function", "Function\n" + secondary + "qualified name", 384, agge::align_near, dummy_get, dummy_compare, true,	},
-			{	"Status", "Profiling\n" + secondary + "status", 64, agge::align_near, dummy_get, dummy_compare, false,	},
-			{	"Size", "Size\n" + secondary + "bytes", 64, agge::align_far, dummy_get, dummy_compare, false,	},
-			{	"ModuleName", "Module\n" + secondary + "name", 120, agge::align_near, dummy_get, dummy_compare, true,	},
-			{	"ModulePath", "Module\n" + secondary + "path", 150, agge::align_near, dummy_get, dummy_compare, true,	},
-		};
-
 		struct nocase_equal
 		{
 			static char toupper(char c)
@@ -36,7 +23,6 @@ namespace micro_profiler
 			bool operator ()(char lhs, char rhs) const
 			{	return toupper(lhs) == toupper(rhs);	}
 		};
-
 	}
 
 	image_patch_ui::image_patch_ui(const factory &factory_, shared_ptr<image_patch_model> model,
@@ -48,8 +34,8 @@ namespace micro_profiler
 		shared_ptr<label> lbl;
 		shared_ptr<editbox> eb;
 		shared_ptr<listview> lvsymbols;
-		auto header_model = make_shared<headers_model>(c_columns_symbols, headers_model::npos(), false);
-		auto selection_ = model->create_selection();
+		const auto header_model = make_shared<headers_model>(c_patched_symbols_columns, headers_model::npos(), false);
+		const auto selection_ = make_shared< sdb::table<selected_symbol> >();
 
 		set_spacing(5);
 
@@ -63,18 +49,19 @@ namespace micro_profiler
 					string filter;
 
 					eb->get_value(filter);
-					model->set_filter([filter] (const image_patch_model::record_type &r) -> bool {
-						const auto b = r.symbol->name.begin();
-						const auto e = r.symbol->name.end();
-
-						return e != search(b, e, filter.begin(), filter.end(), nocase_equal());
+					model->set_filter([filter] (const tables::patched_symbol_adaptor &r) {
+						return end(r.symbol().name) != search(begin(r.symbol().name), end(r.symbol().name),
+							filter.begin(), filter.end(), nocase_equal());
 					});
 				});
 
 		add(lvsymbols = factory_.create_control<listview>("listview"), percents(100), false, 1);
 			lvsymbols->set_model(model);
 			lvsymbols->set_columns_model(header_model);
-			lvsymbols->set_selection_model(selection_);
+			lvsymbols->set_selection_model(make_shared< selection<selected_symbol> >(selection_, [model] (size_t item_index) -> selected_symbol {
+				const tables::patched_symbol_adaptor item(model->ordered()[item_index]);
+				return make_tuple(item.symbol().module_id, item.symbol().rva, item.symbol().size);
+			}));
 
 		add(toolbar = factory_.create_control<stack>("hstack"), pixels(24), false);
 			toolbar->set_spacing(5);

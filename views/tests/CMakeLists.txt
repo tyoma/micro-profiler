@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.13)
 set(FRONTEND_TESTS_SOURCES
 	AnyKeyTests.cpp
 	FilterViewTests.cpp
-	FlattenViewTests.cpp
 	OrderedViewTests.cpp
 )
 

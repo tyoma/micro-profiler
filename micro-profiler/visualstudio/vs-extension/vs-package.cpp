@@ -35,6 +35,7 @@
 #include <frontend/frontend.h>
 #include <frontend/frontend_manager.h>
 #include <frontend/frontend_ui.h>
+#include <frontend/image_patch_model.h>
 #include <frontend/ipc_manager.h>
 #include <frontend/patch_moderator.h>
 #include <frontend/profiling_cache_sqlite.h>
@@ -167,7 +168,8 @@ namespace micro_profiler
 			}, [this, cache] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
 				const auto moderator = make_shared<patch_moderator>(session, cache, cache, *_worker_queue, *_ui_queue);
 				const auto ui = make_shared<frontend_pane>(get_factory(), session, _configuration, _ui_queue);
-				const auto complex = make_shared_copy(make_pair(moderator, ui));
+				const auto _legacy_symbols_maintainer = image_patch_model::maintain_legacy_symbols(session->modules, symbols(session), source_files(session));
+				const auto complex = make_shared_copy(make_tuple(moderator, ui, _legacy_symbols_maintainer));
 
 				ui->add_open_source_listener(bind(&profiler_package::on_open_source, this, _1, _2));
 				return make_shared_aspect(complex, ui.get());

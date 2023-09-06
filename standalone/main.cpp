@@ -123,6 +123,7 @@ namespace micro_profiler
 			auto &app2 = app;
 			auto show_patcher2 = show_patcher;
 			auto ui = make_shared<standalone_ui>(app.get_configuration(), factory, session);
+			const auto _legacy_symbols_maintainer = image_patch_model::maintain_legacy_symbols(session->modules, symbols(session), source_files(session));
 			auto poller = make_shared<statistics_poll>(statistics(session), app.get_ui_queue());
 
 			poller->enable(true);
@@ -133,6 +134,7 @@ namespace micro_profiler
 				ui->show_patcher += [show_patcher2, session] (agge::point<int> center, shared_ptr<form> new_form) {
 					show_patcher2(center, new_form, session);
 				},
+				_legacy_symbols_maintainer,
 				poller
 			)), ui.get());
 		};

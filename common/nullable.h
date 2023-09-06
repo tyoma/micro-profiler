@@ -49,6 +49,9 @@ namespace micro_profiler
 		nullable(const nullable &other);
 		explicit nullable(T &from);
 
+		template <typename F>
+		nullable<typename invoke_result_1<F, T>::type> and_then(F &&transform) const;
+
 		bool has_value() const;
 		T &operator *();
 		const T &operator *() const;
@@ -149,6 +152,15 @@ namespace micro_profiler
 	inline nullable<T &>::nullable(T &from)
 		: _object(&from)
 	{	}
+
+	template <typename T>
+	template <typename F>
+	inline nullable<typename invoke_result_1<F, T>::type> nullable<T &>::and_then(F &&transform) const
+	{
+		typedef nullable<typename invoke_result_1<F, T>::type> result_type;
+
+		return _object ? result_type(transform(**this)) : result_type();
+	}
 
 	template <typename T>
 	inline bool nullable<T &>::has_value() const

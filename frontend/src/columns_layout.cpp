@@ -28,6 +28,7 @@
 #include <explorer/process.h>
 #include <frontend/constructors.h>
 #include <frontend/database.h>
+#include <frontend/database_views.h>
 #include <frontend/helpers.h>
 #include <frontend/model_context.h>
 #include <frontend/primitives.h>
@@ -40,15 +41,29 @@ using namespace agge;
 
 namespace micro_profiler
 {
+	typedef tables::patched_symbol_adaptor patched_symbol;
+
 	const auto en_dash = "\xE2\x80\x93";
 	const auto secondary = style::height_scale(0.85);
 	const auto indent_spaces = "    ";
+	const char *c_complete_patch_states[] = {	"", "active", "inactive", "unpatchable", "",	};
+	const char *c_requested_patch_states[] = {	"", "removing", "applying", "unpatchable", "",	};
 
-	struct char_compare
+	struct utf_char_compare
 	{
 		int operator ()(utfia::utf8::codepoint lhs, utfia::utf8::codepoint rhs) const
 		{	return micro_profiler::compare(std::towupper(lhs), std::towupper(rhs));	}
 	};
+
+	static int encode_state(const nullable<const patch_state_ex &> &p)
+	{	return p.has_value() ? (((*p).in_transit ? 1 : 0) << 8) | static_cast<int>((*p).state) : -1;	}
+
+	static void format_patch_status(agge::richtext_t &text, const nullable<const patch_state_ex &> &p)
+	{
+		p.and_then([&] (const patch_state_ex &patch) {
+			return text << (patch.in_transit ? c_requested_patch_states : c_complete_patch_states)[patch.state], true;
+		});
+	}
 
 	namespace
 	{
@@ -188,7 +203,7 @@ namespace micro_profiler
 
 		auto by_process_name = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {
 			return utfia::compare<utfia::utf8>((micro_profiler::operator*)(lhs.path), (micro_profiler::operator*)(rhs.path),
-				micro_profiler::char_compare());
+				micro_profiler::utf_char_compare());
 		};
 
 		auto by_process_pid = [] (const process_model_context &, const process_info &lhs, const process_info &rhs) {
@@ -243,6 +258,55 @@ namespace micro_profiler
 				text << micro_profiler::en_dash;
 			}
 		};
+
+
+		auto by_patched_symbol_rva = [] (const image_patch_model_context &, const patched_symbol &lhs, const patched_symbol &rhs) {
+			return micro_profiler::compare(lhs.symbol().rva, rhs.symbol().rva);
+		};
+
+		auto by_patched_symbol_name = [] (const image_patch_model_context &, const patched_symbol &lhs, const patched_symbol &rhs) {
+			return utfia::compare<utfia::utf8>(lhs.symbol().name, rhs.symbol().name, micro_profiler::utf_char_compare());
+		};
+
+		auto by_patched_symbol_status = [] (const image_patch_model_context &, const patched_symbol &lhs, const patched_symbol &rhs) {
+			return encode_state(lhs.patch()) - encode_state(rhs.patch());
+		};
+
+		auto by_patched_symbol_size = [] (const image_patch_model_context &, const patched_symbol &lhs, const patched_symbol &rhs) {
+			return micro_profiler::compare(lhs.symbol().size, rhs.symbol().size);
+		};
+
+		auto by_patched_symbol_module_name = [] (const image_patch_model_context &, const patched_symbol &lhs, const patched_symbol &rhs) {
+			return utfia::compare<utfia::utf8>(*lhs.module().path, *rhs.module().path, micro_profiler::utf_char_compare());
+		};
+
+		auto by_patched_symbol_path = [] (const image_patch_model_context &, const patched_symbol &lhs, const patched_symbol &rhs) {
+			return utfia::compare<utfia::utf8>(lhs.module().path, rhs.module().path, micro_profiler::utf_char_compare());
+		};
+
+		auto patched_symbol_rva = [] (agge::richtext_t &text, const image_patch_model_context &, size_t, const patched_symbol &item) {
+			micro_profiler::itoa<16>(text, item.symbol().rva, 8);
+		};
+
+		auto patched_symbol_name = [] (agge::richtext_t &text, const image_patch_model_context &, size_t, const patched_symbol &item) {
+			text.append(item.symbol().name.begin(), item.symbol().name.end());
+		};
+
+		auto patched_symbol_status = [] (agge::richtext_t &text, const image_patch_model_context &, size_t, const patched_symbol &item) {
+			micro_profiler::format_patch_status(text, item.patch());
+		};
+
+		auto patched_symbol_size = [] (agge::richtext_t &text, const image_patch_model_context &, size_t, const patched_symbol &item) {
+			micro_profiler::itoa<10>(text, item.symbol().size);
+		};
+
+		auto patched_symbol_module_name = [] (agge::richtext_t &text, const image_patch_model_context &, size_t, const patched_symbol &item) {
+			text << (micro_profiler::operator *)(item.module().path);
+		};
+
+		auto patched_symbol_module_path = [] (agge::richtext_t &text, const image_patch_model_context &, size_t, const patched_symbol &item) {
+			text << item.module().path.c_str();
+		};
 	}
 
 
@@ -290,5 +354,15 @@ namespace micro_profiler
 		{	"ParentProcessID", "PID\n" + secondary + "parent", 50, agge::align_far, process_ppid, by_process_ppid, true,	},
 		{	"CPUTime", "CPU\n" + secondary + "time (user)", 50, agge::align_far, process_cpu_time, by_process_cpu_time, false,	},
 		{	"CPUUsage", "CPU (%)\n" + secondary + "usage (user)", 50, agge::align_far, process_cpu_usage, by_process_cpu_usage, false,	},
+	};
+
+
+	const column_definition<tables::patched_symbols::value_type, image_patch_model_context> c_patched_symbols_columns[] = {
+		{	"Rva", "RVA" + secondary, 28, agge::align_far, patched_symbol_rva, by_patched_symbol_rva, true,	},
+		{	"Function", "Function\n" + secondary + "qualified name", 384, agge::align_near, patched_symbol_name, by_patched_symbol_name, true,	},
+		{	"Status", "Profiling\n" + secondary + "status", 64, agge::align_near, patched_symbol_status, by_patched_symbol_status, false,	},
+		{	"Size", "Size\n" + secondary + "bytes", 64, agge::align_far, patched_symbol_size, by_patched_symbol_size, false,	},
+		{	"ModuleName", "Module\n" + secondary + "name", 120, agge::align_near, patched_symbol_module_name, by_patched_symbol_module_name, true,	},
+		{	"ModulePath", "Module\n" + secondary + "path", 150, agge::align_near, patched_symbol_module_path, by_patched_symbol_path, true,	},
 	};
 }

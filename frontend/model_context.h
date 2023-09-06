@@ -41,4 +41,8 @@ namespace micro_profiler
 	struct process_model_context
 	{
 	};
+
+	struct image_patch_model_context
+	{
+	};
 }

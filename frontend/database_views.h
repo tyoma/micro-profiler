@@ -42,6 +42,28 @@ namespace micro_profiler
 			>::table_type,
 			patches
 		>::table_type patched_symbols;
+
+		class patched_symbol_adaptor
+		{
+		public:
+			patched_symbol_adaptor(const patched_symbols::value_type &underlying)
+				: _underlying(underlying)
+			{	}
+
+			const tables::symbol_info &symbol() const
+			{	return _underlying.left().left().left().left();	}
+
+			const tables::module &module() const
+			{	return _underlying.left().left().left().right();	}
+
+			nullable<const tables::source_file &> source_file() const;
+			nullable<const tables::module_mapping &> mapping() const;
+			nullable<const patch_state_ex&> patch() const
+			{	return _underlying.right();	}
+
+		private:
+			const patched_symbols::value_type &_underlying;
+		};
 	}
 
 	std::shared_ptr<const tables::patched_symbols> patched_symbols(std::shared_ptr<const tables::symbols> symbols,

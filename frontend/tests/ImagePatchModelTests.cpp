@@ -20,6 +20,26 @@ namespace micro_profiler
 			template <typename KeyT>
 			vector<KeyT> get_selected(const selection<KeyT> &selection_)
 			{	return vector<KeyT>(selection_.begin(), selection_.end());	}
+
+			template <typename SymbolsT>
+			void add_metadata(tables::modules &mtable, tables::symbols &table, id_t module_id, const SymbolsT &symbols, const string &path = string())
+			{
+				auto r = sdb::unique_index(mtable, keyer::external_id())[module_id];
+				
+				(*r).path = path;
+				r.commit();
+				mtable.invalidate();
+
+				for (auto i = begin(symbols); i != end(symbols); ++i)
+				{
+					auto rec = table.create();
+
+					(*rec).module_id = module_id;
+					static_cast<symbol_info&>(*rec) = *i;
+					rec.commit();
+				}
+				table.invalidate();
+			}
 		}
 
 		begin_test_suite( ImagePatchModelTests )
@@ -36,9 +56,9 @@ namespace micro_profiler
 
 				assert_not_equal(requests.end(), i);
 
-				auto &m = add_metadata(*modules, module_id, symbols_);
+				add_metadata(*modules, *symbols, module_id, symbols_);
 
-				i->second(m);
+				i->second(module_info_metadata());
 			}
 
 			init( CreateTables )
@@ -94,7 +114,7 @@ namespace micro_profiler
 					{	"free", 0x00000001, 115,	},
 				};
 
-				add_metadata(*modules, 140, data1);
+				add_metadata(*modules, *symbols, 140, data1);
 
 				// INIT / ACT
 				image_patch_model model1(patches, modules, mappings, symbols, source_files);
@@ -117,7 +137,7 @@ namespace micro_profiler
 					{	"string::find", 0x00000031, 15,	},
 				};
 
-				add_metadata(*modules, 11, data2);
+				add_metadata(*modules, *symbols, 11, data2);
 
 				// INIT / ACT
 				image_patch_model model2(patches, modules, mappings, symbols, source_files);
@@ -180,7 +200,7 @@ namespace micro_profiler
 					{	"00001234", "malloc", "150", 	},
 				};
 
-				assert_equal(1u, log.size());
+				assert_equal(3u, log.size());
 				assert_equivalent(mkvector(reference1), log.back());
 
 				// ACT
@@ -194,7 +214,7 @@ namespace micro_profiler
 					{	"00000031", "string::find", "15", 	},
 				};
 
-				assert_equal(2u, log.size());
+				assert_equal(6u, log.size());
 				assert_equivalent(mkvector(reference2), log.back());
 
 				// ACT
@@ -209,7 +229,7 @@ namespace micro_profiler
 					{	"00000031", "string::find", "15", 	},
 				};
 
-				assert_equal(3u, log.size());
+				assert_equal(9u, log.size());
 				assert_equivalent(mkvector(reference3), log.back());
 
 				// ACT
@@ -226,7 +246,7 @@ namespace micro_profiler
 					{	"00000021", "string::clear", "14",	},
 				};
 
-				assert_equal(4u, log.size());
+				assert_equal(12u, log.size());
 				assert_equivalent(mkvector(reference4), log.back());
 			}
 
@@ -248,8 +268,8 @@ namespace micro_profiler
 					{	"string::find", 0x00000031, 15,	},
 				};
 
-				add_metadata(*modules, 140, data1);
-				add_metadata(*modules, 11, data2);
+				add_metadata(*modules, *symbols, 140, data1);
+				add_metadata(*modules, *symbols, 11, data2);
 
 				image_patch_model model(patches, modules, mappings, symbols, source_files);
 				vector< vector< vector<string> > > log;
@@ -319,12 +339,9 @@ namespace micro_profiler
 					{	"f4",	},
 				};
 
-				add_metadata(*modules, 11, data1);
-				add_metadata(*modules, 13, data2);
-				add_metadata(*modules, 17, data3);
-				add_records(*mappings, plural
-					+ make_mapping(0u, 11u, 0u, "/usr/bin/module.so")
-					+ make_mapping(1u, 17u, 0u, "/bin/Profiler"));
+				add_metadata(*modules, *symbols, 11, data1, "/usr/bin/module.so");
+				add_metadata(*modules, *symbols, 13, data2);
+				add_metadata(*modules, *symbols, 17, data3, "/bin/Profiler");
 
 				image_patch_model model(patches, modules, mappings, symbols, source_files);
 
@@ -348,10 +365,7 @@ namespace micro_profiler
 				};
 
 				// ACT
-				add_records(*mappings, plural
-					+ make_mapping(2u, 13u, 0u, "c:\\KERNEL32.exe"));
-				sdb::unique_index<keyer::external_id>(*mappings)[1].remove();
-				mappings->invalidate();
+				add_metadata(*modules, *symbols, 13, vector<symbol_info>(), "c:\\KERNEL32.exe");
 
 				// ASSERT
 				string reference2[][3] = {
@@ -361,7 +375,7 @@ namespace micro_profiler
 					{	"f4", "Profiler", "/bin/Profiler",	},
 				};
 
-				assert_equal(1u, log.size());
+				assert_equal(2u, log.size());
 				assert_equivalent(mkvector(reference2), log.back());
 			}
 
@@ -383,8 +397,8 @@ namespace micro_profiler
 					{	"string::Find", 0x00000031, 17,	},
 				};
 
-				add_metadata(*modules, 1, data1);
-				add_metadata(*modules, 2, data2);
+				add_metadata(*modules, *symbols, 1, data1);
+				add_metadata(*modules, *symbols, 2, data2);
 
 				image_patch_model model(patches, modules, mappings, symbols, source_files);
 				vector< vector< vector<string> > > log;
@@ -480,7 +494,7 @@ namespace micro_profiler
 					{	"string::Find", 0x00000031, 17,	},
 				};
 
-				add_metadata(*modules, 1, data);
+				add_metadata(*modules, *symbols, 1, data);
 				add_records(*patches, plural
 					+ make_patch(1, 0x901A9010, 1, false, patch_state::unrecoverable_error)
 					+ make_patch(1, 0x901A9011, 2, false, patch_state::dormant)
@@ -527,14 +541,10 @@ namespace micro_profiler
 					{	"f5",	},
 				};
 
-				add_metadata(*modules, 11, data1);
-				add_metadata(*modules, 13, data2);
-				add_metadata(*modules, 17, data3);
-				add_metadata(*modules, 19, data4);
-				add_records(*mappings, plural
-					+ make_mapping(0u, 11u, 0u, "/usr/bin/module.so")
-					+ make_mapping(1u, 17u, 0u, "d:\\bin\\Profiler")
-					+ make_mapping(3u, 19u, 0u, "c:\\dev\\micro-profiler.exe"));
+				add_metadata(*modules, *symbols, 11, data1, "/usr/bin/module.so");
+				add_metadata(*modules, *symbols, 13, data2);
+				add_metadata(*modules, *symbols, 17, data3, "d:\\bin\\Profiler");
+				add_metadata(*modules, *symbols, 19, data4, "c:\\dev\\micro-profiler.exe");
 
 				image_patch_model model(patches, modules, mappings, symbols, source_files);
 
@@ -556,9 +566,7 @@ namespace micro_profiler
 				assert_equal(mkvector(reference1), get_text(model, columns));
 
 				// ACT
-				add_records(*mappings, plural
-					+ make_mapping(2u, 13u, 0u, "/bin/mmapping"));
-				mappings->invalidate();
+				add_metadata(*modules, *symbols, 13, vector<symbol_info>(), "/bin/mmapping");
 
 				// ASSERT (19 -> 13 -> 11 -> 17)
 				string reference2[][3] = {
@@ -624,79 +632,6 @@ namespace micro_profiler
 			}
 
 
-			test( ImagePatchModelProvidesSelection )
-			{
-				// INIT
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
-
-				// INIT / ACT
-				auto sel = model.create_selection();
-
-				// ASSERT
-				assert_not_null(sel);
-				assert_is_empty(get_selected(*sel));
-			}
-
-
-			test( SelectionOperatesOnModuleSymbols )
-			{
-				// INIT
-				symbol_info data1[] = {
-					{	"Gc_collect", 0x901A9010, 15,	},
-					{	"malloc", 0x00001234, 150,	},
-					{	"free", 0x00000001, 115,	},
-				};
-				symbol_info data2[] = {
-					{	"string::String", 0x901A9010, 11,	},
-					{	"string::~string", 0x00001230, 12,	},
-					{	"string::operator []", 0x00000011, 13,	},
-					{	"string::clear", 0x00000021, 14,	},
-					{	"string::Find", 0x00000031, 17,	},
-				};
-
-				add_metadata(*modules, 1, data1);
-				add_metadata(*modules, 3, data2);
-
-				image_patch_model model(patches, modules, mappings, symbols, source_files);
-				auto sel = model.create_selection();
-
-				model.set_order(1, true);
-
-				// ACT
-				sel->add(1);
-				sel->add(3);
-
-				// ASSERT
-				selected_symbol reference1[] = {
-					selected_symbol(1, 0x901A9010, 15), selected_symbol(3, 0x00000021, 14),
-				};
-
-				assert_equivalent(reference1, get_selected(*sel));
-				assert_is_false(sel->contains(0));
-				assert_is_true(sel->contains(1));
-				assert_is_false(sel->contains(2));
-				assert_is_true(sel->contains(3));
-				assert_is_false(sel->contains(4));
-				assert_is_false(sel->contains(5));
-				assert_is_false(sel->contains(6));
-				assert_is_false(sel->contains(7));
-
-				// ACT
-				model.set_order(1, false);
-
-				// ASSERT
-				assert_equivalent(reference1, get_selected(*sel));
-				assert_is_false(sel->contains(0));
-				assert_is_false(sel->contains(1));
-				assert_is_false(sel->contains(2));
-				assert_is_false(sel->contains(3));
-				assert_is_true(sel->contains(4));
-				assert_is_false(sel->contains(5));
-				assert_is_true(sel->contains(6));
-				assert_is_false(sel->contains(7));
-			}
-
-
 			test( ImagePatchModelProvidesTrackables )
 			{
 				// INIT
@@ -716,12 +651,11 @@ namespace micro_profiler
 					{	"string::Find", 0x00000031, 17,	},
 				};
 
-				add_metadata(*modules, 1, data1);
-				add_metadata(*modules, 3, data2);
+				add_metadata(*modules, *symbols, 1, data1);
+				add_metadata(*modules, *symbols, 3, data2);
 				add_records(*mappings, plural + make_mapping(0u, 1u, 0u) + make_mapping(1u, 3u, 0u));
 
 				image_patch_model model(patches, modules, mappings, symbols, source_files);
-				auto sel = model.create_selection();
 
 				model.set_order(1, true);
 
@@ -790,8 +724,8 @@ namespace micro_profiler
 				};
 
 				// ACT
-				model.set_filter([] (const image_patch_model::record_type &r) {
-					return string::npos != r.symbol->name.find("::");
+				model.set_filter([] (const tables::patched_symbol_adaptor &r) {
+					return string::npos != r.symbol().name.find("::");
 				});
 
 				// ASSERT
@@ -810,8 +744,8 @@ namespace micro_profiler
 				assert_equal(4u, t_clear->index());
 
 				// ACT
-				model.set_filter([] (const image_patch_model::record_type &r) {
-					return string::npos != r.symbol->name.find("z::");
+				model.set_filter([] (const tables::patched_symbol_adaptor &r) {
+					return string::npos != r.symbol().name.find("z::");
 				});
 
 				// ASSERT

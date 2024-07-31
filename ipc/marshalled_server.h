@@ -24,7 +24,7 @@
 
 #include <common/noncopyable.h>
 
-namespace scheduler
+namespace tasker
 {
 	struct queue;
 }
@@ -38,7 +38,7 @@ namespace micro_profiler
 		class marshalled_server : public server, noncopyable
 		{
 		public:
-			marshalled_server(std::shared_ptr<server> underlying, scheduler::queue &apartment_queue);
+			marshalled_server(std::shared_ptr<server> underlying, tasker::queue &apartment_queue);
 			~marshalled_server();
 
 			void stop();
@@ -49,7 +49,7 @@ namespace micro_profiler
 		private:
 			const std::shared_ptr<lifetime> _lifetime;
 			std::shared_ptr<server> _underlying;
-			scheduler::queue &_apartment_queue;
+			tasker::queue &_apartment_queue;
 		};
 	}
 }

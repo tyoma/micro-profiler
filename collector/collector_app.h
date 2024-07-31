@@ -40,7 +40,7 @@ namespace micro_profiler
 
 		void connect(const active_server_app::client_factory_t &factory, bool injected);
 
-		scheduler::queue &get_queue();
+		tasker::queue &get_queue();
 
 	private:
 		virtual void initialize_session(ipc::server_session &session) override;

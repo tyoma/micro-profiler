@@ -18,3 +18,4 @@ endif()
 
 
 add_library(logger STATIC ${LOGGER_SOURCES})
+target_link_libraries(logger mt)

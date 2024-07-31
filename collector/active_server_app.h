@@ -24,8 +24,8 @@
 #include <memory>
 #include <mt/chrono.h>
 #include <mt/thread.h>
-#include <scheduler/scheduler.h>
-#include <scheduler/task_queue.h>
+#include <tasker/scheduler.h>
+#include <tasker/task_queue.h>
 
 namespace micro_profiler
 {
@@ -38,7 +38,7 @@ namespace micro_profiler
 		typedef std::shared_ptr<channel> channel_ptr_t;
 	}
 
-	class active_server_app : public scheduler::queue, noncopyable
+	class active_server_app : public tasker::queue, noncopyable
 	{
 	public:
 		struct events;
@@ -60,7 +60,7 @@ namespace micro_profiler
 		events &_events;
 		ipc::server_session *_session;
 		bool _exit_requested, _exit_confirmed;
-		scheduler::task_queue _queue;
+		tasker::task_queue _queue;
 		std::unique_ptr<ipc::marshalled_active_session> _active_session;
 		mt::thread _thread;
 	};

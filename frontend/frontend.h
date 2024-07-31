@@ -30,7 +30,7 @@
 #include <list>
 #include <reqm/multiplexing_request.h>
 
-namespace scheduler
+namespace tasker
 {
 	struct queue;
 }
@@ -46,7 +46,7 @@ namespace micro_profiler
 
 	public:
 		frontend(ipc::channel &outbound, std::shared_ptr<profiling_cache> cache,
-			scheduler::queue &worker, scheduler::queue &apartment);
+			tasker::queue &worker, tasker::queue &apartment);
 		~frontend();
 
 	public:
@@ -84,7 +84,7 @@ namespace micro_profiler
 		requests_t::iterator new_request_handle();
 
 	private:
-		scheduler::queue &_worker_queue, &_apartment_queue;
+		tasker::queue &_worker_queue, &_apartment_queue;
 		const std::shared_ptr<profiling_session> _db;
 		const std::shared_ptr<profiling_cache> _cache;
 		module_hashes_t _module_hashes;

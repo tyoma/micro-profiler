@@ -26,8 +26,8 @@ namespace micro_profiler
 {
 	namespace ipc
 	{
-		server_session::server_session(channel &outbound, scheduler::queue *apartment)
-			: _outbound(outbound), _apartment_queue(apartment ? new scheduler::private_queue(*apartment) : nullptr)
+		server_session::server_session(channel &outbound, tasker::queue *apartment)
+			: _outbound(outbound), _apartment_queue(apartment ? new tasker::private_queue(*apartment) : nullptr)
 		{	}
 
 		void server_session::set_disconnect_handler(const function<void ()> &handler)

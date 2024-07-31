@@ -34,7 +34,7 @@
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
 #include <logger/writer.h>
-#include <scheduler/thread_queue.h>
+#include <tasker/thread_queue.h>
 #include <wpl/factory.h>
 #include <wpl/form.h>
 #include <wpl/helpers.h>

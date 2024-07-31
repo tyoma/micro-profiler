@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scheduler/scheduler.h>
+#include <tasker/scheduler.h>
 
 #include <deque>
 #include <ut/assert.h>
@@ -12,7 +12,7 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			class queue : public scheduler::queue
+			class queue : public tasker::queue
 			{
 			public:
 				virtual void schedule(std::function<void ()> &&task, mt::milliseconds defer_by = mt::milliseconds(0)) override;

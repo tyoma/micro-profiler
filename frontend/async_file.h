@@ -21,7 +21,7 @@
 #pragma once
 
 #include <common/file_stream.h>
-#include <scheduler/private_queue.h>
+#include <tasker/private_queue.h>
 
 namespace micro_profiler
 {
@@ -29,28 +29,28 @@ namespace micro_profiler
 	struct async_file_request
 	{
 		async_file_request(const std::string &path, const OperationCB &operation_, const ReadyCB &ready_,
-			scheduler::queue &worker, scheduler::queue &apartment);
+			tasker::queue &worker, tasker::queue &apartment);
 
 		const std::string path;
 		const OperationCB operation;
 		const ReadyCB ready;
-		scheduler::private_worker_queue queue;
+		tasker::private_worker_queue queue;
 	};
 
 
 
 	template <typename O, typename R>
 	inline async_file_request<O, R>::async_file_request(const std::string &path_, const O &operation_, const R &ready_,
-			scheduler::queue &worker, scheduler::queue &apartment)
+			tasker::queue &worker, tasker::queue &apartment)
 		: path(path_), operation(operation_), ready(ready_), queue(worker, apartment)
 	{	}
 
 
 	template <typename T, typename ReaderCB, typename ReadyCB>
-	inline void async_file_read(std::shared_ptr<void> &request, scheduler::queue &worker, scheduler::queue &apartment,
+	inline void async_file_read(std::shared_ptr<void> &request, tasker::queue &worker, tasker::queue &apartment,
 		const std::string &path, const ReaderCB &reader, const ReadyCB &ready)
 	{
-		using namespace scheduler;
+		using namespace tasker;
 
 		auto req = std::make_shared< async_file_request<ReaderCB, ReadyCB> >(path, reader, ready, worker, apartment);
 		auto &rreq = *req;
@@ -75,10 +75,10 @@ namespace micro_profiler
 	}
 
 	template <typename WriterCB, typename ReadyCB>
-	inline void async_file_write(std::shared_ptr<void> &request, scheduler::queue &worker, scheduler::queue &apartment,
+	inline void async_file_write(std::shared_ptr<void> &request, tasker::queue &worker, tasker::queue &apartment,
 		const std::string &path, const WriterCB &writer, const ReadyCB &ready)
 	{
-		using namespace scheduler;
+		using namespace tasker;
 
 		auto req = std::make_shared< async_file_request<WriterCB, ReadyCB> >(path, writer, ready, worker, apartment);
 		auto &rreq = *req;

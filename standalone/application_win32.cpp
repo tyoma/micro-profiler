@@ -33,9 +33,9 @@
 #include <frontend/factory.h>
 #include <frontend/system_stylesheet.h>
 #include <ipc/com/init.h>
-#include <scheduler/thread_queue.h>
-#include <scheduler/ui_queue.h>
 #include <ShellAPI.h>
+#include <tasker/thread_queue.h>
+#include <tasker/ui_queue.h>
 #include <wpl/factory.h>
 #include <wpl/freetype2/font_loader.h>
 #include <wpl/win32/cursor_manager.h>
@@ -102,7 +102,7 @@ namespace micro_profiler
 	{
 		const auto clock_raw = &clock;
 		const auto clock_mt = [clock_raw] {	return mt::milliseconds(clock_raw());	};
-		const auto queue = make_shared<scheduler::ui_queue>(clock_mt);
+		const auto queue = make_shared<tasker::ui_queue>(clock_mt);
 		const auto text_engine = create_text_engine();
 		const factory_context context = {
 			make_shared<gcontext::surface_type>(1, 1, 16),
@@ -118,7 +118,7 @@ namespace micro_profiler
 
 		_factory = wpl::factory::create_default(context);
 		_queue = queue;
-		_worker_queue.reset(new scheduler::thread_queue(clock_mt));
+		_worker_queue.reset(new tasker::thread_queue(clock_mt));
 		_config = open_configuration(c_configuration_path);
 		setup_factory(*_factory);
 	}
@@ -126,10 +126,10 @@ namespace micro_profiler
 	application::~application()
 	{	_queue->stop();	}
 
-	scheduler::queue &application::get_ui_queue()
+	tasker::queue &application::get_ui_queue()
 	{	return *_queue;	}
 
-	scheduler::queue &application::get_worker_queue()
+	tasker::queue &application::get_worker_queue()
 	{	return *_worker_queue;	}
 
 	void application::run()

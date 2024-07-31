@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace scheduler
+namespace tasker
 {
 	struct queue;
 	class thread_queue;
@@ -48,8 +48,8 @@ namespace micro_profiler
 
 		const std::vector<std::string> &get_arguments() const;
 		wpl::factory &get_factory();
-		scheduler::queue &get_ui_queue();
-		scheduler::queue &get_worker_queue();
+		tasker::queue &get_ui_queue();
+		tasker::queue &get_worker_queue();
 		std::shared_ptr<hive> get_configuration();
 
 		void run();
@@ -68,8 +68,8 @@ namespace micro_profiler
 		std::shared_ptr<wpl::factory> _factory;
 		std::unique_ptr<impl> _impl;
 		std::shared_ptr<hive> _config;
-		std::shared_ptr<scheduler::ui_queue> _queue;
-		std::shared_ptr<scheduler::thread_queue> _worker_queue;
+		std::shared_ptr<tasker::ui_queue> _queue;
+		std::shared_ptr<tasker::thread_queue> _worker_queue;
 		std::vector<std::string> _arguments;
 	};
 

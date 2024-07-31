@@ -53,7 +53,7 @@ namespace micro_profiler
 		_server.connect(factory);
 	}
 
-	scheduler::queue &collector_app::get_queue()
+	tasker::queue &collector_app::get_queue()
 	{	return _server;	}
 
 	void collector_app::initialize_session(ipc::server_session &session)

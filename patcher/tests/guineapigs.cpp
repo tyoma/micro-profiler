@@ -1,4 +1,5 @@
-#include <common/compiler.h>
+#include "guineapigs.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <string>

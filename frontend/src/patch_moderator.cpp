@@ -22,11 +22,11 @@
 
 #include <frontend/keyer.h>
 #include <frontend/profiling_cache.h>
-#include <scheduler/task.h>
 #include <sdb/integrated_index.h>
+#include <tasker/task.h>
 
-using namespace scheduler;
 using namespace std;
+using namespace tasker;
 
 namespace micro_profiler
 {

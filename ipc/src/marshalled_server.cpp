@@ -26,7 +26,7 @@
 #include <ipc/marshalled_session.h>
 #include <logger/log.h>
 #include <mt/mutex.h>
-#include <scheduler/scheduler.h>
+#include <tasker/scheduler.h>
 #include <vector>
 
 #define PREAMBLE "Marshalled Server: "
@@ -40,7 +40,7 @@ namespace micro_profiler
 		namespace
 		{
 			template <typename PtrT>
-			void schedule_destroy(scheduler::queue &queue, PtrT &ptr)
+			void schedule_destroy(tasker::queue &queue, PtrT &ptr)
 			{
 				function<void ()> destroy = [ptr] {	};
 
@@ -49,7 +49,7 @@ namespace micro_profiler
 			}
 		}
 
-		marshalled_server::marshalled_server(shared_ptr<ipc::server> underlying, scheduler::queue &apartment_queue)
+		marshalled_server::marshalled_server(shared_ptr<ipc::server> underlying, tasker::queue &apartment_queue)
 			: _lifetime(make_shared<lifetime>()), _underlying(underlying), _apartment_queue(apartment_queue)
 		{	}
 

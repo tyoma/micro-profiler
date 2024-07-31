@@ -27,4 +27,4 @@ if (NOT APPLE)
 endif()
 
 add_library(common.tests SHARED ${COMMON_TEST_SOURCES})
-target_link_libraries(common.tests common mt test-helpers)
+target_link_libraries(common.tests common test-helpers)

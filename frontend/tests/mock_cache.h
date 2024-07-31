@@ -4,7 +4,7 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <scheduler/task.h>
+#include <tasker/task.h>
 
 namespace micro_profiler
 {
@@ -14,9 +14,9 @@ namespace micro_profiler
 		{
 			struct profiling_cache_tasks : micro_profiler::profiling_cache_tasks
 			{
-				virtual scheduler::task<id_t> persisted_module_id(unsigned hash) override;
+				virtual tasker::task<id_t> persisted_module_id(unsigned hash) override;
 
-				std::map< unsigned /*hash*/, std::shared_ptr< scheduler::task_node<id_t> > > tasks;
+				std::map< unsigned /*hash*/, std::shared_ptr< tasker::task_node<id_t> > > tasks;
 			};
 
 			class profiling_cache : public micro_profiler::profiling_cache
@@ -43,15 +43,15 @@ namespace micro_profiler
 
 
 
-			inline scheduler::task<id_t> profiling_cache_tasks::persisted_module_id(unsigned hash)
+			inline tasker::task<id_t> profiling_cache_tasks::persisted_module_id(unsigned hash)
 			{
 				const auto i = tasks.find(hash);
 
 				if (i != tasks.end())
-					return scheduler::task<id_t>(std::shared_ptr< scheduler::task_node<id_t> >(i->second));
-				auto n = std::make_shared< scheduler::task_node<id_t> >();
+					return tasker::task<id_t>(std::shared_ptr< tasker::task_node<id_t> >(i->second));
+				auto n = std::make_shared< tasker::task_node<id_t> >();
 				tasks.insert(std::make_pair(hash, n));
-				return scheduler::task<id_t>(std::move(n));
+				return tasker::task<id_t>(std::move(n));
 			}
 
 			inline std::shared_ptr<module_info_metadata> profiling_cache::load_metadata(unsigned int hash)

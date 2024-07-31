@@ -1,6 +1,7 @@
 #include <patcher/function_patch.h>
 
 #include "allocator.h"
+#include "guineapigs.h"
 #include "helpers.h"
 #include "mocks.h"
 
@@ -15,9 +16,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		int recursive_factorial(int v);
-		int guinea_snprintf(char *buffer, size_t count, const char *format, ...);
-
 		begin_test_suite( FunctionPatchTests )
 			this_module_allocator allocator;
 			mocks::trace_events trace;

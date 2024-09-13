@@ -23,9 +23,9 @@
 #include "endpoint.h"
 
 #include <common/noncopyable.h>
-#include <scheduler/private_queue.h>
+#include <tasker/private_queue.h>
 
-namespace scheduler
+namespace tasker
 {
 	struct queue;
 }
@@ -41,7 +41,7 @@ namespace micro_profiler
 		public:
 			template <typename ConnectionFactoryT, typename ServerSessionFactoryT>
 			marshalled_active_session(const ConnectionFactoryT &connection_factory,
-				scheduler::queue &apartment_queue, const ServerSessionFactoryT &server_session_factory);
+				tasker::queue &apartment_queue, const ServerSessionFactoryT &server_session_factory);
 
 		private:
 			virtual void disconnect() throw() override;
@@ -49,14 +49,14 @@ namespace micro_profiler
 
 		private:
 			channel_ptr_t _connection_outbound, _server_inbound;
-			scheduler::private_queue _apartment_queue;
+			tasker::private_queue _apartment_queue;
 		};
 
 
 		class marshalled_passive_session : public channel, noncopyable
 		{
 		public:
-			marshalled_passive_session(scheduler::queue &apartment_queue, channel &outbound);
+			marshalled_passive_session(tasker::queue &apartment_queue, channel &outbound);
 			~marshalled_passive_session();
 
 			void create_underlying(std::shared_ptr<server> underlying_server);
@@ -70,7 +70,7 @@ namespace micro_profiler
 
 		private:
 			const std::shared_ptr<lifetime> _lifetime;
-			scheduler::queue &_apartment_queue;
+			tasker::queue &_apartment_queue;
 			channel_ptr_t _underlying;
 			std::shared_ptr<outbound_wrapper> _outbound;
 		};
@@ -95,7 +95,7 @@ namespace micro_profiler
 
 		template <typename ConnectionFactoryT, typename ServerSessionFactoryT>
 		inline marshalled_active_session::marshalled_active_session(const ConnectionFactoryT &connection_factory,
-				scheduler::queue &apartment_queue, const ServerSessionFactoryT &server_session_factory)
+				tasker::queue &apartment_queue, const ServerSessionFactoryT &server_session_factory)
 			: _apartment_queue(apartment_queue)
 		{
 			_connection_outbound = connection_factory(*this);

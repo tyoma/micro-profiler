@@ -23,18 +23,18 @@
 #include "profiling_cache.h"
 
 #include <mt/mutex.h>
-#include <scheduler/task.h>
+#include <tasker/task.h>
 
 namespace micro_profiler
 {
 	class profiling_cache_sqlite : public profiling_cache, public profiling_cache_tasks
 	{
 	public:
-		profiling_cache_sqlite(const std::string &preferences_db, scheduler::queue &worker);
+		profiling_cache_sqlite(const std::string &preferences_db, tasker::queue &worker);
 
 		static void create_database(const std::string &preferences_db);
 
-		virtual scheduler::task<id_t> persisted_module_id(unsigned int hash) override;
+		virtual tasker::task<id_t> persisted_module_id(unsigned int hash) override;
 
 		virtual std::shared_ptr<module_info_metadata> load_metadata(unsigned int hash) override;
 		virtual void store_metadata(const module_info_metadata &metadata) override;
@@ -44,14 +44,14 @@ namespace micro_profiler
 			std::vector<unsigned int> remove_rva) override;
 
 	private:
-		std::shared_ptr< scheduler::task_node<id_t> > get_cached_module_id_task(unsigned int hash);
-		static void find_module(std::shared_ptr< scheduler::task_node<id_t> > task, const std::string &preferences_db,
+		std::shared_ptr< tasker::task_node<id_t> > get_cached_module_id_task(unsigned int hash);
+		static void find_module(std::shared_ptr< tasker::task_node<id_t> > task, const std::string &preferences_db,
 			unsigned int hash);
 
 	private:
 		mt::mutex _mtx;
 		const std::string _preferences_db;
-		scheduler::queue &_worker;
-		std::unordered_map< unsigned int /*hash*/, std::shared_ptr< scheduler::task_node<id_t> > > _module_mapping_tasks;
+		tasker::queue &_worker;
+		std::unordered_map< unsigned int /*hash*/, std::shared_ptr< tasker::task_node<id_t> > > _module_mapping_tasks;
 	};
 }

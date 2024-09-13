@@ -25,7 +25,7 @@
 #include <functional>
 #include <logger/log.h>
 #include <mt/mutex.h>
-#include <scheduler/scheduler.h>
+#include <tasker/scheduler.h>
 #include <vector>
 
 #define PREAMBLE "Marshalled Session: "
@@ -39,7 +39,7 @@ namespace micro_profiler
 		namespace
 		{
 			template <typename PtrT>
-			void schedule_destroy(scheduler::queue &queue, PtrT &ptr)
+			void schedule_destroy(tasker::queue &queue, PtrT &ptr)
 			{
 				function<void ()> destroy = [ptr] {	};
 
@@ -66,7 +66,7 @@ namespace micro_profiler
 		}
 
 
-		marshalled_passive_session::marshalled_passive_session(scheduler::queue &apartment_queue, ipc::channel &outbound)
+		marshalled_passive_session::marshalled_passive_session(tasker::queue &apartment_queue, ipc::channel &outbound)
 			: _lifetime(make_shared<lifetime>()), _apartment_queue(apartment_queue),
 				_outbound(make_shared<outbound_wrapper>(outbound))
 		{	}

@@ -24,5 +24,5 @@ set(PATCHER_SOURCES
 )
 
 add_library(patcher STATIC ${PATCHER_SOURCES})
-target_link_libraries(patcher CONAN_PKG::capstone)
+target_link_libraries(patcher CONAN_PKG::capstone mt)
 target_compile_definitions(patcher PUBLIC SDB_NO_SIGNALS)

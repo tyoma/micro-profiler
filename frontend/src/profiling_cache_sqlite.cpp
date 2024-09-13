@@ -22,12 +22,12 @@
 
 #include <frontend/profiling_preferences_db.h>
 #include <logger/log.h>
-#include <scheduler/task.h>
 #include <sqlite++/database.h>
+#include <tasker/task.h>
 
 #define PREAMBLE "Profiling Cache (sqlite): "
 
-using namespace scheduler;
+using namespace tasker;
 using namespace std;
 
 namespace micro_profiler
@@ -52,8 +52,8 @@ namespace micro_profiler
 	{
 	}
 
-	scheduler::task<id_t> profiling_cache_sqlite::persisted_module_id(unsigned int hash)
-	{	return scheduler::task<id_t>(get_cached_module_id_task(hash));	}
+	tasker::task<id_t> profiling_cache_sqlite::persisted_module_id(unsigned int hash)
+	{	return tasker::task<id_t>(get_cached_module_id_task(hash));	}
 
 	shared_ptr<module_info_metadata> profiling_cache_sqlite::load_metadata(unsigned int hash)
 	{
@@ -141,7 +141,7 @@ namespace micro_profiler
 		tx.commit();
 	}
 
-	shared_ptr< scheduler::task_node<id_t> > profiling_cache_sqlite::get_cached_module_id_task(unsigned int hash)
+	shared_ptr< tasker::task_node<id_t> > profiling_cache_sqlite::get_cached_module_id_task(unsigned int hash)
 	{
 		mt::lock_guard<mt::mutex> l(_mtx);
 		const auto i = _module_mapping_tasks.find(hash);
@@ -157,7 +157,7 @@ namespace micro_profiler
 		return task;
 	}
 
-	void profiling_cache_sqlite::find_module(shared_ptr< scheduler::task_node<id_t> > task, const string &preferences_db,
+	void profiling_cache_sqlite::find_module(shared_ptr< tasker::task_node<id_t> > task, const string &preferences_db,
 		unsigned int hash)
 	{
 		sql::transaction tx(sql::create_connection(preferences_db.c_str()));

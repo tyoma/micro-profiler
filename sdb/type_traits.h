@@ -27,7 +27,9 @@ namespace sdb
 	template <typename F, typename Arg1T>
 	struct result
 	{
-		typedef decltype((*static_cast<F *>(nullptr))(*static_cast<Arg1T *>(nullptr))) type_rcv;
+		static F value_f();
+		static Arg1T value_arg1();
+		typedef decltype(value_f()(value_arg1())) type_rcv;
 		typedef typename std::remove_reference<type_rcv>::type type_cv;
 		typedef typename std::remove_cv<type_cv>::type type;
 	};

@@ -41,10 +41,10 @@
 #include <frontend/profiling_cache_sqlite.h>
 #include <frontend/tables_ui.h>
 #include <logger/log.h>
-#include <scheduler/thread_queue.h>
-#include <scheduler/ui_queue.h>
 #include <setup/environment.h>
 #include <sqlite++/database.h>
+#include <tasker/thread_queue.h>
+#include <tasker/ui_queue.h>
 #include <visualstudio/dispatch.h>
 #include <wpl/layout.h>
 #include <wpl/vs/factory.h>
@@ -65,7 +65,7 @@ namespace micro_profiler
 
 		void init_instance_menu(wpl::vs::command_target &target, list< shared_ptr<void> > &running_objects,
 			const wpl::vs::factory &factory, shared_ptr<profiling_session> session, tables_ui &ui,
-			shared_ptr<scheduler::queue> queue);
+			shared_ptr<tasker::queue> queue);
 
 		namespace
 		{
@@ -80,7 +80,7 @@ namespace micro_profiler
 			{
 			public:
 				frontend_pane(const wpl::vs::factory &factory, shared_ptr<profiling_session> ui_context,
-						shared_ptr<hive> configuration_, shared_ptr<scheduler::queue> queue)
+						shared_ptr<hive> configuration_, shared_ptr<tasker::queue> queue)
 					: _pane(factory.create_pane(c_guidInstanceCmdSet, IDM_MP_PANE_TOOLBAR)),
 						_tables_ui(make_shared<tables_ui>(factory, ui_context, *configuration_)), _configuration(configuration_)
 				{
@@ -138,9 +138,9 @@ namespace micro_profiler
 
 		wpl::queue profiler_package::initialize_queue()
 		{
-			auto q = _ui_queue = make_shared<scheduler::ui_queue>(_clock);
+			auto q = _ui_queue = make_shared<tasker::ui_queue>(_clock);
 
-			_worker_queue = make_shared<scheduler::thread_queue>(_clock);
+			_worker_queue = make_shared<tasker::thread_queue>(_clock);
 			return [q] (wpl::queue_task t, wpl::timespan defer_by) {
 				return q->schedule(move(t), mt::milliseconds(defer_by)), true;
 			};

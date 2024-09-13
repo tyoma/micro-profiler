@@ -41,7 +41,7 @@ namespace micro_profiler
 	}
 
 	frontend::frontend(ipc::channel &outbound, shared_ptr<profiling_cache> cache,
-			scheduler::queue &worker, scheduler::queue &apartment)
+			tasker::queue &worker, tasker::queue &apartment)
 		: client_session(outbound), _worker_queue(worker), _apartment_queue(apartment),
 			_db(make_shared<profiling_session>()), _cache(cache), _initialized(false),
 			_mx_metadata_requests(make_shared<mx_metadata_requests_t::map_type>())

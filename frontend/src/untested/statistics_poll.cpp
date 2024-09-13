@@ -26,7 +26,7 @@ using namespace std;
 
 namespace micro_profiler
 {
-	statistics_poll::statistics_poll(shared_ptr<const tables::statistics> statistics, scheduler::queue &apartment_queue)
+	statistics_poll::statistics_poll(shared_ptr<const tables::statistics> statistics, tasker::queue &apartment_queue)
 		: _statistics(statistics), _apartment_queue(apartment_queue)
 	{	}
 

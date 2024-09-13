@@ -28,7 +28,7 @@ namespace micro_profiler
 		{
 			struct emulator_ : ipc::channel, noncopyable
 			{
-				emulator_(scheduler::queue &queue)
+				emulator_(tasker::queue &queue)
 					: server_session(*this, &queue), outbound(nullptr)
 				{	}
 

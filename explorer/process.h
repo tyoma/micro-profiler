@@ -20,10 +20,9 @@
 
 #pragma once
 
-#include <mt/chrono.h>
 #include <common/types.h>
 #include <cstdint>
-#include <scheduler/private_queue.h>
+#include <tasker/private_queue.h>
 #include <sdb/table.h>
 
 namespace micro_profiler
@@ -61,14 +60,14 @@ namespace micro_profiler
 	class process_explorer : public tables::processes
 	{
 	public:
-		process_explorer(mt::milliseconds update_interval, scheduler::queue &apartment_queue,
+		process_explorer(mt::milliseconds update_interval, tasker::queue &apartment_queue,
 			const std::function<mt::milliseconds ()> &clock);
 
 	private:
 		void update();
 
 	private:
-		scheduler::private_queue _apartment;
+		tasker::private_queue _apartment;
 		const std::function<mt::milliseconds ()> _clock;
 		const mt::milliseconds _update_interval;
 		mt::milliseconds _last_update;

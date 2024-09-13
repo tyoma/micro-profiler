@@ -22,7 +22,7 @@
 
 #include "database.h"
 
-namespace scheduler
+namespace tasker
 {
 	struct queue;
 	template <typename T> class task;
@@ -38,7 +38,7 @@ namespace micro_profiler
 	{
 	public:
 		patch_moderator(std::shared_ptr<profiling_session> session, std::shared_ptr<profiling_cache_tasks> mapping,
-			std::shared_ptr<profiling_cache> cache, scheduler::queue &worker, scheduler::queue &apartment);
+			std::shared_ptr<profiling_cache> cache, tasker::queue &worker, tasker::queue &apartment);
 
 	private:
 		enum patch_state {	patch_saved, patch_added, patch_removed,	};
@@ -52,7 +52,7 @@ namespace micro_profiler
 			std::shared_ptr<changes_log> changes, profiling_cache_tasks &tasks);
 
 	private:
-		scheduler::queue &_worker, &_apartment;
+		tasker::queue &_worker, &_apartment;
 		std::vector<wpl::slot_connection> _connection;
 	};
 }

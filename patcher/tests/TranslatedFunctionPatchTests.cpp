@@ -1,6 +1,7 @@
 #include <patcher/translated_function_patch.h>
 
 #include "allocator.h"
+#include "guineapigs.h"
 #include "helpers.h"
 #include "mocks.h"
 
@@ -31,9 +32,6 @@ namespace micro_profiler
 				return 123;
 			}
 		}
-
-		int recursive_factorial(int v);
-		int guinea_snprintf(char *buffer, size_t count, const char *format, ...);
 
 		begin_test_suite( TranslatedFunctionPatchTests )
 			this_module_allocator allocator;

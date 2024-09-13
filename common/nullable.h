@@ -4,16 +4,12 @@
 
 namespace micro_profiler
 {
-	template <typename T>
-	struct generate_value
-	{
-		static T value();
-	};
-
 	template <typename F, typename T>
 	struct invoke_result_1
 	{
-		typedef decltype(generate_value<F>::value()(generate_value<T>::value())) type;
+		static T value_t();
+		static F value_f();
+		typedef decltype(value_f()(value_t())) type;
 	};
 
 	template <typename T>

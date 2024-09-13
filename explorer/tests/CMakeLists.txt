@@ -13,5 +13,5 @@ add_custom_command(OUTPUT copy-guineas.x
 )
 
 add_library(explorer.tests SHARED ${EXPLORER_TEST_SOURCES} copy-guineas.x)
-target_link_libraries(explorer.tests explorer ipc scheduler logger mt test-helpers)
+target_link_libraries(explorer.tests explorer ipc logger test-helpers)
 add_dependencies(explorer.tests guinea_runner)

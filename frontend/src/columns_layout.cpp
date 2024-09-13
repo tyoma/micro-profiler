@@ -277,7 +277,7 @@ namespace micro_profiler
 		};
 
 		auto by_patched_symbol_module_name = [] (const image_patch_model_context &, const patched_symbol &lhs, const patched_symbol &rhs) {
-			return utfia::compare<utfia::utf8>(*lhs.module().path, *rhs.module().path, micro_profiler::utf_char_compare());
+			return utfia::compare<utfia::utf8>((micro_profiler::operator *)(lhs.module().path), (micro_profiler::operator *)(rhs.module().path), micro_profiler::utf_char_compare());
 		};
 
 		auto by_patched_symbol_path = [] (const image_patch_model_context &, const patched_symbol &lhs, const patched_symbol &rhs) {

@@ -49,7 +49,8 @@ namespace sdb
 	template <typename F>
 	struct component_type
 	{
-		typedef decltype((*static_cast<F *>(nullptr))()) type_;
+		static F value_f();
+		typedef decltype(value_f()()) type_;
 		typedef typename std::remove_pointer<type_>::type type;
 	};
 

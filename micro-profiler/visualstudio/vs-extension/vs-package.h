@@ -29,7 +29,7 @@
 #include <wpl/vs/ole-command-target.h>
 #include <wpl/vs/package.h>
 
-namespace scheduler
+namespace tasker
 {
 	class thread_queue;
 	class ui_queue;
@@ -80,8 +80,8 @@ namespace micro_profiler
 
 		private:
 			std::function<mt::milliseconds ()> _clock;
-			std::shared_ptr<scheduler::ui_queue> _ui_queue;
-			std::shared_ptr<scheduler::thread_queue> _worker_queue;
+			std::shared_ptr<tasker::ui_queue> _ui_queue;
+			std::shared_ptr<tasker::thread_queue> _worker_queue;
 			CComPtr<_DTE> _dte;
 			std::shared_ptr<hive> _configuration;
 			std::shared_ptr<frontend_manager> _frontend_manager;

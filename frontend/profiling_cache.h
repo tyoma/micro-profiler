@@ -22,7 +22,7 @@
 
 #include "database.h"
 
-namespace scheduler
+namespace tasker
 {
 	template <typename T>
 	class task;
@@ -37,7 +37,7 @@ namespace micro_profiler
 
 	struct profiling_cache_tasks
 	{
-		virtual scheduler::task<id_t> persisted_module_id(unsigned int hash) = 0;
+		virtual tasker::task<id_t> persisted_module_id(unsigned int hash) = 0;
 	};
 
 	struct profiling_cache

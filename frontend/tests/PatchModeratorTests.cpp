@@ -8,13 +8,13 @@
 #include <frontend/constructors.h>
 #include <frontend/database.h>
 #include <frontend/keyer.h>
-#include <scheduler/task.h>
+#include <tasker/task.h>
 #include <test-helpers/mock_queue.h>
 #include <test-helpers/file_helpers.h>
 #include <ut/assert.h>
 #include <ut/test.h>
 
-using namespace scheduler;
+using namespace tasker;
 using namespace std;
 
 namespace micro_profiler

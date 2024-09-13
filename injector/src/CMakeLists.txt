@@ -5,3 +5,4 @@ set(INJECTOR_LIB_SOURCES
 )
 
 add_library(injector STATIC ${INJECTOR_LIB_SOURCES})
+target_link_libraries(injector mt)

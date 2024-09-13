@@ -16,9 +16,9 @@ jobs:
     strategy:
       matrix:
         config:
-          - os: ubuntu-20.04
-          - os: windows-latest
-          - os: macos-latest
+          - os: ubuntu-22.04
+          - os: windows-2019
+          - os: macos-12
 
     steps:
     - uses: actions/checkout@v2

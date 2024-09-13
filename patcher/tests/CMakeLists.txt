@@ -21,13 +21,15 @@ if(NOT APPLE)
 endif()
 
 add_compile_options(
-	"$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fpatchable-function-entry=14,12>"
 	"$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<EQUAL:4,${CMAKE_SIZEOF_VOID_P}>>:-hotpatch>"
 )
-add_link_options("$<$<CXX_COMPILER_ID:MSVC>:-functionpadmin:24>")
+add_link_options(
+	"$<$<CXX_COMPILER_ID:MSVC>:-functionpadmin:24>"
+)
 
 set_source_files_properties(guineapigs.cpp PROPERTIES
 	COMPILE_FLAGS "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-O0>"
+	COMPILE_FLAGS "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fpatchable-function-entry=14,12>"
 	COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:-Od>"
 )
 

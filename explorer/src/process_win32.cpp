@@ -58,7 +58,7 @@ namespace micro_profiler
 	}
 
 
-	process_explorer::process_explorer(mt::milliseconds update_interval, scheduler::queue &apartment_queue,
+	process_explorer::process_explorer(mt::milliseconds update_interval, tasker::queue &apartment_queue,
 			const function<mt::milliseconds ()> &clock)
 		: _apartment(apartment_queue), _clock(clock), _update_interval(update_interval), _cycle(0)
 	{	update();	}

@@ -30,7 +30,7 @@ namespace micro_profiler
 	{
 		void init_instance_menu(command_target &target, list< shared_ptr<void> > &running_objects,
 			const wpl::vs::factory &factory, shared_ptr<profiling_session> session, tables_ui &ui,
-			shared_ptr<scheduler::queue> queue)
+			shared_ptr<tasker::queue> queue)
 		{
 			const auto statistics = micro_profiler::statistics(session);
 			const auto injected = !!session->process_info.injected;

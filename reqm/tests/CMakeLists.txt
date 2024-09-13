@@ -5,4 +5,4 @@ set(FRONTEND_TESTS_SOURCES
 )
 
 add_library(reqm.tests SHARED ${FRONTEND_TESTS_SOURCES})
-target_link_libraries(reqm.tests)
+target_link_libraries(reqm.tests mt)

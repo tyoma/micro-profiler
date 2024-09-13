@@ -40,9 +40,9 @@
 #include <frontend/statistic_models.h>
 #include <frontend/threads_model.h>
 #include <logger/log.h>
-#include <scheduler/ui_queue.h>
 #include <strmd/deserializer.h>
 #include <strmd/serializer.h>
+#include <tasker/ui_queue.h>
 #include <wpl/form.h>
 #include <wpl/vs/factory.h>
 

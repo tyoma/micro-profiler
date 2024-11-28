@@ -90,10 +90,10 @@ namespace micro_profiler
 		shared_ptr<changes_log> changes, const tables::module_mapping &mapping, profiling_cache_tasks &tasks)
 	{
 		tasks.persisted_module_id(mapping.hash)
-			.continue_with([cache] (const async_result<id_t> &cached_module_id) {
+			.then([cache] (const async_result<id_t> &cached_module_id) {
 				return cache->load_default_patches(*cached_module_id);
 			}, _worker)
-			.continue_with([patches, changes, mapping] (const async_result< vector<cached_patch> > &loaded) {
+			.then([patches, changes, mapping] (const async_result< vector<cached_patch> > &loaded) {
 				vector<tables::patches::patch_def> rva;
 				auto &changes_symbol_idx = sdb::unique_index(*changes, keyer::symbol_id());
 
@@ -127,7 +127,7 @@ namespace micro_profiler
 			if (added->empty() && removed->empty())
 				continue;
 			tasks.persisted_module_id(m->hash)
-				.continue_with([cache, added, removed] (const async_result<id_t> &cached_module_id) {
+				.then([cache, added, removed] (const async_result<id_t> &cached_module_id) {
 					cache->update_default_patches(*cached_module_id, *added, *removed);
 				}, _worker);
 		}

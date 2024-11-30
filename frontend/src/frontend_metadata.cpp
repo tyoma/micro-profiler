@@ -74,7 +74,7 @@ namespace micro_profiler
 		const auto req = make_shared< shared_ptr<void> >();
 		const weak_ptr< shared_ptr<void> > wreq = req;
 		const auto cache = _cache;
-		auto request_with_caching = task<module_ptr>::run([cache, hash] {
+		auto request_with_caching = schedule_task([cache, hash] {
 				return cache->load_metadata(hash);
 			}, _worker_queue)
 			.then([this, module_id, wreq] (const async_result<module_ptr> &m) -> task< pair<module_ptr, bool> > {

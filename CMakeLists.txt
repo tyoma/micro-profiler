@@ -16,15 +16,12 @@ set(sandbox "micro-profiler_sandbox_${archid}")
 
 enable_testing()
 
-set(SPECIFIC_CONFIGS CMAKE_C_FLAGS_DEBUG CMAKE_CXX_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS_RELEASE CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_MINSIZEREL)
-foreach(v ${SPECIFIC_CONFIGS})
-   string(REPLACE /MDd /MTd ${v} ${${v}})
-   string(REPLACE /MD /MT ${v} ${${v}})
-endforeach()
-
 # Setup include directories
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories($<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_LIST_DIR}/compat/win32>)
+if (MSVC)
+	include_directories($<$<VERSION_LESS_EQUAL:${MSVC_VERSION},1600>:${CMAKE_CURRENT_LIST_DIR}/compat/msvc10->)
+endif ()
 
 
 # Add definitions: global, platform-based, compiler-based
@@ -51,7 +48,6 @@ if (UNIX OR (MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8))
 endif()
 
 if (MSVC)
-	include_directories($<$<VERSION_LESS_EQUAL:${MSVC_VERSION},1600>:${CMAKE_CURRENT_LIST_DIR}/compat/msvc10->)
 	add_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -D_WINSOCK_DEPRECATED_NO_WARNINGS)
 	add_definitions(-DUNICODE -D_UNICODE)
 endif ()
@@ -85,6 +81,8 @@ set(MSVC_COMPILER_OPTIONS ${MSVC_COMPILER_OPTIONS} -MP;-W4;-GR-;-GS-;-Gy;-Zi)
 set(MSVC_COMPILER_OPTIONS_DEBUG ${MSVC_COMPILER_OPTIONS})
 set(MSVC_COMPILER_OPTIONS_RELEASE ${MSVC_COMPILER_OPTIONS} -GL)
 set(MSVC_COMPILER_OPTIONS_RELEASE_MAX -Ox;-Ob2;-Oi;-Ot;-Oy)
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_compile_options(
 	"$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:$<$<COMPILE_LANGUAGE:C>:${GCC_CLANG_COMPILER_OPTIONS_C}>>"

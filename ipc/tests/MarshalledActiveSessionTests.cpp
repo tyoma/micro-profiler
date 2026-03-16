@@ -7,6 +7,7 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -16,6 +17,10 @@ namespace micro_profiler
 		namespace tests
 		{
 			using namespace micro_profiler::tests;
+
+			template <typename T, size_t size>
+			inline coipc::range<T, size_t> mkrange(T (&array_ptr)[size])
+			{	return coipc::range<T, size_t>(array_ptr, size);	}
 
 			begin_test_suite( MarshalledActiveSessionTests )
 				shared_ptr<micro_profiler::tests::mocks::queue> queue;
@@ -74,7 +79,7 @@ namespace micro_profiler
 					vector< vector<byte> > log;
 					auto disconnects = 0;
 
-					ss->on_message = [&] (const_byte_range r) {	log.push_back(vector<byte>(r.begin(), r.end()));	};
+					ss->on_message = [&] (coipc::const_byte_range r) {	log.push_back(vector<byte>(r.begin(), r.end()));	};
 					ss->on_disconnect = [&] {	disconnects++;	};
 
 					// ACT
@@ -137,7 +142,7 @@ namespace micro_profiler
 					auto zero = 0;
 					byte data[1];
 
-					ss->on_message = [&] (const_byte_range) {	zero++;	};
+					ss->on_message = [&] (coipc::const_byte_range) {	zero++;	};
 					ss->on_disconnect = [&] {	zero++;	};
 
 					// ACT
@@ -173,7 +178,7 @@ namespace micro_profiler
 					byte message1[] = "hello, client!";
 					byte message2[] = "give me some symbols!";
 
-					conn->on_message = [&] (const_byte_range r) {	log.push_back(vector<byte>(r.begin(), r.end()));	};
+					conn->on_message = [&] (coipc::const_byte_range r) {	log.push_back(vector<byte>(r.begin(), r.end()));	};
 
 					// ACT
 					outbound->message(mkrange(message1));

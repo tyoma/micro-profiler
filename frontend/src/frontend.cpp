@@ -28,6 +28,7 @@
 
 #define PREAMBLE "Frontend: "
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -40,7 +41,7 @@ namespace micro_profiler
 		const auto detached_frontend_stub2 = bind([] {});
 	}
 
-	frontend::frontend(ipc::channel &outbound, shared_ptr<profiling_cache> cache,
+	frontend::frontend(channel &outbound, shared_ptr<profiling_cache> cache,
 			tasker::queue &worker, tasker::queue &apartment)
 		: client_session(outbound), _worker_queue(worker), _apartment_queue(apartment),
 			_db(make_shared<profiling_session>()), _cache(cache), _initialized(false),
@@ -56,12 +57,12 @@ namespace micro_profiler
 			request_metadata(request, module_id, ready);
 		};
 
-		subscribe(*new_request_handle(), init_v1, [this] (ipc::deserializer &) {
+		subscribe(*new_request_handle(), init_v1, [this] (deserializer &) {
 			LOGE(PREAMBLE "attempt to connect from an older collector - disconnecting!");
 			disconnect_session();
 		});
 
-		subscribe(*new_request_handle(), init, [this] (ipc::deserializer &d) {
+		subscribe(*new_request_handle(), init, [this] (deserializer &d) {
 			if (!_initialized)
 			{
 				d(_db->process_info);
@@ -78,7 +79,7 @@ namespace micro_profiler
 			}
 		});
 
-		subscribe(*new_request_handle(), exiting, [this] (ipc::deserializer &) {	finalize();	});
+		subscribe(*new_request_handle(), exiting, [this] (deserializer &) {	finalize();	});
 
 		_requests.push_back(_db->mappings.created += [this] (tables::module_mappings::const_iterator i) {
 			_module_hashes[i->module_id] = i->hash;
@@ -101,7 +102,7 @@ namespace micro_profiler
 
 	void frontend::disconnect() throw()
 	{
-		ipc::client_session::disconnect();
+		client_session::disconnect();
 		LOG(PREAMBLE "disconnected by remote...") % A(this);
 	}
 
@@ -111,12 +112,12 @@ namespace micro_profiler
 		if (request_)
 			return;
 
-		auto modules_callback = [this] (ipc::deserializer &d) {
+		auto modules_callback = [this] (deserializer &d) {
 			sdb::scontext::indexed_by<keyer::external_id, void> as_map;
 
 			d(_db->mappings, as_map);
 		};
-		auto update_callback = [this, &request_, on_update] (ipc::deserializer &d) {
+		auto update_callback = [this, &request_, on_update] (deserializer &d) {
 			d(_db->statistics, _serialization_context);
 			update_threads(_serialization_context.threads);
 			on_update(request_);
@@ -148,7 +149,7 @@ namespace micro_profiler
 				thread_ids.push_back(i->id);
 		}
 
-		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (ipc::deserializer &d) {
+		request(*req, request_threads_info, thread_ids, response_threads_info, [this, req] (deserializer &d) {
 			sdb::scontext::indexed_by<keyer::external_id, void> as_map;
 
 			d(_db->threads, as_map);

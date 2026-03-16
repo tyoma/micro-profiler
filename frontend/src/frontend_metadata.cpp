@@ -105,7 +105,7 @@ namespace micro_profiler
 	{
 		LOG(PREAMBLE "requesting from remote...") % A(this) % A(module_id);
 		request(request_, request_module_metadata, module_id, response_module_metadata,
-			[this, module_id, ready] (ipc::deserializer &d) {
+			[this, module_id, ready] (coipc::deserializer &d) {
 
 			auto m = make_shared<module_info_metadata>();
 

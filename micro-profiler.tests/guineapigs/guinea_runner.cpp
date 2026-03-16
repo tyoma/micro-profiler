@@ -1,8 +1,8 @@
 #include "guinea_runner.h"
 
 #include <common/time.h>
-#include <ipc/endpoint_spawn.h>
-#include <ipc/server_session.h>
+#include <coipc/endpoint_spawn.h>
+#include <coipc/server_session.h>
 #include <map>
 #include <test-helpers/helpers.h>
 
@@ -14,36 +14,36 @@
 	#include <unistd.h>
 #endif
 
+using namespace coipc;
+using namespace micro_profiler;
 using namespace std;
 
-namespace micro_profiler
+
+channel_ptr_t spawn::create_session(const vector<string> &/*arguments*/, channel &outbound)
 {
 	using namespace tests;
 
-	ipc::channel_ptr_t ipc::spawn::create_session(const vector<string> &/*arguments*/, ipc::channel &outbound)
-	{
-		auto session = make_shared<ipc::server_session>(outbound);
-		auto images = make_shared< map<string, image> >();
+	auto session = make_shared<server_session>(outbound);
+	auto images = make_shared< map<string, image> >();
 
-		session->add_handler(load_module, [images] (ipc::server_session::response &resp, const string &path) {
-			images->insert(make_pair(path, image(path)));
-			resp(1);
-		});
-		session->add_handler(unload_module, [images] (ipc::server_session::response &resp, const string &path) {
-			images->erase(path);
-			resp(1);
-		});
-		session->add_handler(get_process_id, [images] (ipc::server_session::response &resp, int) {
-			resp(1, static_cast<unsigned>(getpid()));
-		});
-		session->add_handler(run_load, [] (ipc::server_session::response &resp, int cpu_time_ms) {
-			auto t0 = clock();
+	session->add_handler(load_module, [images] (server_session::response &resp, const string &path) {
+		images->insert(make_pair(path, image(path)));
+		resp(1);
+	});
+	session->add_handler(unload_module, [images] (server_session::response &resp, const string &path) {
+		images->erase(path);
+		resp(1);
+	});
+	session->add_handler(get_process_id, [images] (server_session::response &resp, int) {
+		resp(1, static_cast<unsigned>(getpid()));
+	});
+	session->add_handler(run_load, [] (server_session::response &resp, int cpu_time_ms) {
+		auto t0 = micro_profiler::clock();
 
-			while (clock() - t0 < cpu_time_ms)
-				for (volatile int n = 10000; n; n--)
-				{	}
-			resp(1);
-		});
-		return session;
-	}
+		while (micro_profiler::clock() - t0 < cpu_time_ms)
+			for (volatile int n = 10000; n; n--)
+			{	}
+		resp(1);
+	});
+	return session;
 }

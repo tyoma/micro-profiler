@@ -106,45 +106,4 @@ namespace micro_profiler
 		}
 		return utf16;
 	}
-
-	string to_string(const guid_t &id)
-	{
-		string result;
-		const byte (&v)[16] = id.values;
-
-		result += '{';
-		itoa<16>(result, *reinterpret_cast<const unsigned int *>(&v[0]), 8, '0');
-		result += '-';
-		itoa<16>(result, *reinterpret_cast<const unsigned short *>(&v[4]), 4, '0');
-		result += '-';
-		itoa<16>(result, *reinterpret_cast<const unsigned short *>(&v[6]), 4, '0');
-		result += '-';
-		itoa<16>(result, v[8], 2, '0');
-		itoa<16>(result, v[9], 2, '0');
-		result += '-';
-		itoa<16>(result, v[10], 2, '0');
-		itoa<16>(result, v[11], 2, '0');
-		itoa<16>(result, v[12], 2, '0');
-		itoa<16>(result, v[13], 2, '0');
-		itoa<16>(result, v[14], 2, '0');
-		itoa<16>(result, v[15], 2, '0');
-		result += '}';
-		return result;
-	}
-
-	guid_t from_string(const string &text)
-	{
-		struct {
-			int padding1;
-			guid_t id;
-			int padding2;
-		} x;
-		byte (&v)[16] = x.id.values;
-
-		sscanf(text.c_str(), "{%08X-%04hX-%04hX-%02hhX%02hhX-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX}",
-			reinterpret_cast<unsigned int *>(&v[0]),
-			reinterpret_cast<unsigned short *>(&v[4]),  reinterpret_cast<unsigned short *>(&v[6]),
-			&v[8], &v[9], &v[10], &v[11], &v[12], &v[13], &v[14], &v[15]);
-		return x.id;
-	}
 }

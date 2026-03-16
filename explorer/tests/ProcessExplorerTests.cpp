@@ -1,8 +1,8 @@
 #include <explorer/process.h>
 
+#include <coipc/client_session.h>
+#include <coipc/endpoint_spawn.h>
 #include <common/path.h>
-#include <ipc/client_session.h>
-#include <ipc/endpoint_spawn.h>
 #include <sdb/integrated_index.h>
 #include <set>
 #include <micro-profiler.tests/guineapigs/guinea_runner.h>
@@ -21,6 +21,7 @@
 	#include <unistd.h>
 #endif
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -33,16 +34,16 @@ namespace micro_profiler
 			bool is_empty_range(const pair<T, T> &range_)
 			{	return range_.first == range_.second;	}
 
-			pair<shared_ptr<ipc::client_session>, unsigned /*pid*/> run_guinea(string path)
+			pair<shared_ptr<client_session>, unsigned /*pid*/> run_guinea(string path)
 			{
 				mt::event ready;
 				shared_ptr<void> req;
 				unsigned pid;
-				auto c = make_shared<ipc::client_session>([path] (ipc::channel &outbound) {
-					return ipc::spawn::connect_client(path, vector<string>(), outbound);
+				auto c = make_shared<client_session>([path] (channel &outbound) {
+					return spawn::connect_client(path, vector<string>(), outbound);
 				});
 
-				c->request(req, get_process_id, 0, 1, [&] (ipc::deserializer &dser) {	dser(pid), ready.set();	});
+				c->request(req, get_process_id, 0, 1, [&] (deserializer &dser) {	dser(pid), ready.set();	});
 				ready.wait();
 				return make_pair(c, pid);
 			}
@@ -208,8 +209,8 @@ namespace micro_profiler
 				auto t02 = p2->cpu_time;
 
 				// ACT
-				child1.first->request(req[0], run_load, 130, 1, [&] (ipc::deserializer &) {	ready[0].set();	});
-				child2.first->request(req[1], run_load, 480, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				child1.first->request(req[0], run_load, 130, 1, [&] (deserializer &) {	ready[0].set();	});
+				child2.first->request(req[1], run_load, 480, 1, [&] (deserializer &) {	ready[1].set();	});
 				ready[1].wait();
 				ready[0].wait();
 				queue.run_one();
@@ -223,7 +224,7 @@ namespace micro_profiler
 				t02 = p2->cpu_time;
 
 				// ACT
-				child2.first->request(req[1], run_load, 250, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				child2.first->request(req[1], run_load, 250, 1, [&] (deserializer &) {	ready[1].set();	});
 				ready[1].wait();
 				queue.run_one();
 
@@ -265,8 +266,8 @@ namespace micro_profiler
 				auto t02 = p2->cpu_time;
 
 				// ACT
-				child1.first->request(req[0], run_load, 130, 1, [&] (ipc::deserializer &) {	ready[0].set();	});
-				child2.first->request(req[1], run_load, 360, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				child1.first->request(req[0], run_load, 130, 1, [&] (deserializer &) {	ready[0].set();	});
+				child2.first->request(req[1], run_load, 360, 1, [&] (deserializer &) {	ready[1].set();	});
 				ready[1].wait();
 				ready[0].wait();
 				now = mt::milliseconds(700);
@@ -281,7 +282,7 @@ namespace micro_profiler
 				t02 = p2->cpu_time;
 
 				// ACT
-				child2.first->request(req[1], run_load, 250, 1, [&] (ipc::deserializer &) {	ready[1].set();	});
+				child2.first->request(req[1], run_load, 250, 1, [&] (deserializer &) {	ready[1].set();	});
 				ready[1].wait();
 				now = mt::milliseconds(731);
 				queue.run_one();

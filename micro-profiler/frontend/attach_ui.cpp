@@ -20,6 +20,8 @@
 
 #include "attach_ui.h"
 
+#include <coipc/client_session.h>
+#include <coipc/endpoint_spawn.h>
 #include <common/constants.h>
 #include <common/module.h>
 #include <common/path.h>
@@ -28,8 +30,6 @@
 #include <frontend/process_list.h>
 #include <frontend/selection_model.h>
 #include <injector/injector.h>
-#include <ipc/client_session.h>
-#include <ipc/endpoint_spawn.h>
 #include <logger/log.h>
 #include <wpl/controls.h>
 #include <wpl/controls/integrated.h>
@@ -37,6 +37,7 @@
 
 #define PREAMBLE "Injector controller: "
 
+using namespace coipc;
 using namespace std;
 using namespace wpl;
 
@@ -81,7 +82,7 @@ namespace micro_profiler
 					auto &req = *_requests.insert(_requests.end(), shared_ptr<void>());
 
 					LOG(PREAMBLE "requesting injection...") % A(this) % A(process.pid);
-					injector->request(req, request_injection, info, response_injected, [this, process] (ipc::deserializer &dser) {
+					injector->request(req, request_injection, info, response_injected, [this, process] (deserializer &dser) {
 						injection_response_data rdata;
 
 						dser(rdata);
@@ -91,15 +92,15 @@ namespace micro_profiler
 			}
 
 		private:
-			shared_ptr<ipc::client_session> create_injector(string sandbox, string injector)
+			shared_ptr<client_session> create_injector(string sandbox, string injector)
 			{
 				sandbox = _dir & sandbox;
 				injector = _dir & injector;
 
 				try
 				{
-					auto injector_ = make_shared<ipc::client_session>([this, sandbox, injector] (ipc::channel &inbound) {
-						return ipc::spawn::connect_client(sandbox, vector<string>(1, injector), inbound);
+					auto injector_ = make_shared<client_session>([this, sandbox, injector] (channel &inbound) {
+						return spawn::connect_client(sandbox, vector<string>(1, injector), inbound);
 					});
 
 					LOG(PREAMBLE "injector created...") % A(this) % A(sandbox) % A(injector);
@@ -115,7 +116,7 @@ namespace micro_profiler
 		private:
 			const string _dir;
 			const string _frontend_endpoint_id;
-			shared_ptr<ipc::client_session> _injector_32, _injector_64;
+			shared_ptr<client_session> _injector_32, _injector_64;
 			vector< shared_ptr<void> > _requests;
 		};
 	}

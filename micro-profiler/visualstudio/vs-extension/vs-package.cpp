@@ -52,6 +52,7 @@
 
 #define PREAMBLE "VS Package: "
 
+using namespace coipc;
 using namespace std;
 using namespace placeholders;
 
@@ -163,7 +164,7 @@ namespace micro_profiler
 			});
 			setup_factory(factory);
 			register_path(*processes, false);
-			_frontend_manager.reset(new frontend_manager([this, cache] (ipc::channel &outbound) {
+			_frontend_manager.reset(new frontend_manager([this, cache] (channel &outbound) {
 				return new frontend(outbound, cache, *_worker_queue, *_ui_queue);
 			}, [this, cache] (shared_ptr<profiling_session> session) -> shared_ptr<frontend_ui> {
 				const auto moderator = make_shared<patch_moderator>(session, cache, cache, *_worker_queue, *_ui_queue);
@@ -178,7 +179,7 @@ namespace micro_profiler
 				*_ui_queue,
 				make_pair(static_cast<unsigned short>(6100u), static_cast<unsigned short>(10u)),
 				&constants::integrated_frontend_id));
-			setenv(constants::frontend_id_ev, ipc::sockets_endpoint_id(ipc::localhost,
+			setenv(constants::frontend_id_ev, sockets_endpoint_id(localhost,
 				_ipc_manager->get_sockets_port()).c_str(), 1);
 			init_menu(processes);
 		}

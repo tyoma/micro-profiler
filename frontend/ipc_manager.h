@@ -20,9 +20,9 @@
 
 #pragma once
 
+#include <coipc/endpoint.h>
+#include <coipc/misc.h>
 #include <common/noncopyable.h>
-#include <ipc/endpoint.h>
-#include <ipc/misc.h>
 
 namespace tasker
 {
@@ -42,8 +42,8 @@ namespace micro_profiler
 		typedef std::pair<unsigned short /*start*/, unsigned short /*size*/> port_range;
 
 	public:
-		ipc_manager(std::shared_ptr<ipc::server> server, tasker::queue &apartment_queue, port_range range_,
-			const guid_t *com_server_id);
+		ipc_manager(std::shared_ptr<coipc::server> server, tasker::queue &apartment_queue, port_range range_,
+			const coipc::guid_t *com_server_id);
 		~ipc_manager();
 
 		unsigned short get_sockets_port() const;
@@ -54,8 +54,8 @@ namespace micro_profiler
 		void enable_com(bool enable);
 
 	private:
-		static std::shared_ptr<void> probe_create_server(const std::shared_ptr<ipc::server> &server,
-			ipc::ip_v4 interface_, unsigned short &port, port_range range_);
+		static std::shared_ptr<void> probe_create_server(const std::shared_ptr<coipc::server> &server,
+			coipc::ip_v4 interface_, unsigned short &port, port_range range_);
 
 	private:
 		std::shared_ptr<void> _sockets_server_handle;

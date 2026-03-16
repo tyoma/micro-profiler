@@ -5,9 +5,9 @@
 #include "mock_cache.h"
 #include "mock_channel.h"
 
+#include <coipc/server_session.h>
 #include <common/file_stream.h>
 #include <common/serialization.h>
-#include <ipc/server_session.h>
 #include <strmd/serializer.h>
 #include <test-helpers/comparisons.h>
 #include <test-helpers/file_helpers.h>
@@ -17,6 +17,7 @@
 
 #pragma warning(disable: 4355)
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -31,7 +32,7 @@ namespace micro_profiler
 			typedef strmd::serializer<write_file_stream, strmd::varint> file_serializer;
 			typedef strmd::deserializer<read_file_stream, strmd::varint> file_deserializer;
 
-			struct emulator_ : ipc::channel, noncopyable
+			struct emulator_ : channel, noncopyable
 			{
 				emulator_()
 					: server_session(*this), outbound(nullptr)
@@ -40,11 +41,11 @@ namespace micro_profiler
 				virtual void disconnect() throw() override
 				{	outbound->disconnect();	}
 
-				virtual void message(const_byte_range payload) override
+				virtual void message(coipc::const_byte_range payload) override
 				{	outbound->message(payload);	}
 
-				ipc::server_session server_session;
-				ipc::channel *outbound;
+				server_session server_session;
+				channel *outbound;
 			};
 
 			initialization_data make_initialization_data(const string &executable, timestamp_t ticks_per_second)
@@ -54,8 +55,8 @@ namespace micro_profiler
 			}
 
 			template <typename T>
-			function<void (ipc::serializer &s)> format(const T &v)
-			{	return [v] (ipc::serializer &s) {	s(v);	};	}
+			function<void (serializer &s)> format(const T &v)
+			{	return [v] (serializer &s) {	s(v);	};	}
 
 			template <typename SymbolT, size_t symbols_size, typename FileT, size_t files_size>
 			module_info_metadata create_metadata_info(uint32_t hash_, SymbolT (&symbols)[symbols_size], FileT (&files)[files_size])
@@ -73,7 +74,7 @@ namespace micro_profiler
 		begin_test_suite( FrontendMetadataTests )
 			mocks::queue worker, apartment;
 			shared_ptr<profiling_session> context;
-			shared_ptr<ipc::server_session> emulator;
+			shared_ptr<server_session> emulator;
 			shared_ptr<void> req[10];
 			temporary_directory dir;
 			shared_ptr<mocks::profiling_cache> preferences_db;
@@ -98,7 +99,7 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				vector<unsigned> log;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_modules_loaded, plural
 						+ make_mapping_pair(1, 11, 0x00100000u, "a", 1)
 						+ make_mapping_pair(2, 13, 0x00100000u, "b", 1)
@@ -106,7 +107,7 @@ namespace micro_profiler
 						+ make_mapping_pair(5, 191, 0x01100000u, "d", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned module_id) {
+				emulator->add_handler(request_module_metadata, [&] (server_session::response &, unsigned module_id) {
 					log.push_back(module_id);
 				});
 
@@ -166,14 +167,14 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				vector<unsigned> log;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_modules_loaded, plural
 						+ make_mapping_pair(1, 11, 0x00100000u, "a", 1)
 						+ make_mapping_pair(2, 17, 0x00100000u, "b", 1)
 						+ make_mapping_pair(3, 19, 0x00100000u, "c", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned module_id) {
+				emulator->add_handler(request_module_metadata, [&] (server_session::response &, unsigned module_id) {
 					log.push_back(module_id);
 				});
 
@@ -210,7 +211,7 @@ namespace micro_profiler
 			{
 				// INIT
 				auto frontend_ = create_frontend();
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned module_id) {
+				emulator->add_handler(request_module_metadata, [&] (server_session::response &resp, unsigned module_id) {
 					symbol_info symbols17[] = {	{	"foo", 0x0100, 1	},	},
 						symbols99[] = { { "FOO", 0x0001, 1 }, { "BAR", 0x0100, 1 }, },
 						symbols1000[] = {	{	"baz", 0x0010, 1	},	};
@@ -226,7 +227,7 @@ namespace micro_profiler
 					}
 				});
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_modules_loaded, plural
 						+ make_mapping_pair(1, 17, 0x00100000u, "a", 10)
 						+ make_mapping_pair(2, 99, 0x00100000u, "b", 100)
@@ -278,14 +279,14 @@ namespace micro_profiler
 					files1000[] = {	make_pair(7, "local.cpp"),	};
 				vector<const module_info_metadata *> log;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_modules_loaded, plural
 						+ make_mapping_pair(1, 17, 0x00100000u, "foo.dll", 0x00100201)
 						+ make_mapping_pair(2, 99, 0x00100000u, "/lib/some_long_name.so", 0x10100201)
 						+ make_mapping_pair(3, 1000, 0x00100000u, "/lib64/test/libc.so", 1));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &, unsigned) {	assert_is_false(true);	});
+				emulator->add_handler(request_module_metadata, [&] (server_session::response &, unsigned) {	assert_is_false(true);	});
 				preferences_db->on_load_metadata = [&] (unsigned hash) -> unique_ptr<module_info_metadata> {
 					assert_equal(0x00100201u, hash);
 					return unique_ptr<module_info_metadata>(new module_info_metadata(create_metadata_info(0x00100201, symbols17, files17)));
@@ -340,7 +341,7 @@ namespace micro_profiler
 				vector<const module_info_metadata *> log;
 				map<unsigned /*hash*/, module_info_metadata> cache_log;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_modules_loaded, plural
 						+ make_mapping_pair(1, 17, 0x00100000u, "foo.dll", 0x90100201)
 						+ make_mapping_pair(3, 170, 0x00100000u, "c:\\windows\\kernel32.dll", 0x1));
@@ -353,7 +354,7 @@ namespace micro_profiler
 				// ACT
 				modules(context)->request_presence(req[0], 17u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 				worker.run_one();
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
+				emulator->add_handler(request_module_metadata, [&] (server_session::response &resp, unsigned) {
 					resp(response_module_metadata, create_metadata_info(0x90100201, symbols17, files17));
 				});
 				apartment.run_one();
@@ -380,7 +381,7 @@ namespace micro_profiler
 				// ACT
 				modules(context)->request_presence(req[1], 170u, [&] (const module_info_metadata &md) {	log.push_back(&md);	});
 				worker.run_one();
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
+				emulator->add_handler(request_module_metadata, [&] (server_session::response &resp, unsigned) {
 					resp(response_module_metadata, create_metadata_info(1, symbols99, files99));
 				});
 				apartment.run_till_end();
@@ -401,7 +402,7 @@ namespace micro_profiler
 				pair<unsigned, string> files17[] = {	make_pair(0, "handlers.cpp"), make_pair(1, "models.cpp"),	};
 				vector<const module_info_metadata *> log;
 
-				emulator->add_handler(request_module_metadata, [&] (ipc::server_session::response &resp, unsigned) {
+				emulator->add_handler(request_module_metadata, [&] (server_session::response &resp, unsigned) {
 					resp(response_module_metadata, create_metadata_info(17, symbols17, files17));
 				});
 				emulator->message(init, format(make_initialization_data("", 1)));

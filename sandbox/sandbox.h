@@ -20,12 +20,12 @@
 
 #pragma once
 
-#include <ipc/endpoint.h>
+#include <coipc/endpoint.h>
 #include <vector>
 
 #ifndef MP_EXPORT_PREFIX
 	#define MP_EXPORT_PREFIX
 #endif
 
-extern "C" MP_EXPORT_PREFIX void ipc_spawn_server(micro_profiler::ipc::channel_ptr_t &session,
-	const std::vector<std::string> &arguments, micro_profiler::ipc::channel &outbound);
+extern "C" MP_EXPORT_PREFIX void ipc_spawn_server(coipc::channel_ptr_t &session,
+	const std::vector<std::string> &arguments, coipc::channel &outbound);

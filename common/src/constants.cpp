@@ -20,10 +20,12 @@
 
 #include <common/constants.h>
 
+#include <coipc/types.h>
 #include <common/path.h>
 #include <common/string.h>
 #include <stdlib.h>
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler

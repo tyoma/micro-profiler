@@ -26,13 +26,14 @@
 
 #include <atlbase.h>
 #include <atlcom.h>
+#include <coipc/com/init.h>
+#include <coipc/misc.h>
 #include <common/constants.h>
 #include <common/string.h>
 #include <common/time.h>
 #include <common/win32/configuration_registry.h>
 #include <frontend/factory.h>
 #include <frontend/system_stylesheet.h>
-#include <ipc/com/init.h>
 #include <ShellAPI.h>
 #include <tasker/thread_queue.h>
 #include <tasker/ui_queue.h>
@@ -40,6 +41,7 @@
 #include <wpl/freetype2/font_loader.h>
 #include <wpl/win32/cursor_manager.h>
 
+using namespace coipc;
 using namespace std;
 using namespace wpl;
 
@@ -186,7 +188,7 @@ try
 	}
 	else
 	{
-		ipc::com::com_initialize ci;
+		com::com_initialize ci;
 		application app(nullptr, 0);
 
 		main(app);

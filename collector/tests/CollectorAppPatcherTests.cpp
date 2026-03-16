@@ -5,9 +5,9 @@
 #include "mocks_allocator.h"
 #include "mocks_patch_manager.h"
 
+#include <coipc/client_session.h>
 #include <collector/module_tracker.h>
 #include <collector/serialization.h>
-#include <ipc/client_session.h>
 #include <mt/event.h>
 #include <test-helpers/comparisons.h>
 #include <test-helpers/constants.h>
@@ -15,6 +15,7 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
+using namespace coipc;
 using namespace std;
 using namespace placeholders;
 
@@ -27,8 +28,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			using ipc::deserializer;
-
 			typedef vector<patch_change_result> patch_change_results;
 
 			const overhead c_overhead(0, 0);
@@ -43,7 +42,7 @@ namespace micro_profiler
 		begin_test_suite( CollectorAppPatcherTests )
 			mocks::allocator allocator_;
 			active_server_app::client_factory_t factory;
-			shared_ptr<ipc::client_session> client;
+			shared_ptr<client_session> client;
 			mocks::tracer collector;
 			mocks::thread_monitor threads;
 			mocks::module_helper module_helper;
@@ -63,8 +62,8 @@ namespace micro_profiler
 				img2.reset(new image(c_symbol_container_2));
 				img3.reset(new image(c_symbol_container_3_nosymbols));
 				pmanager.reset(new mocks::patch_manager);
-				factory = [this] (ipc::channel &outbound_) -> ipc::channel_ptr_t {
-					client = make_shared<ipc::client_session>(outbound_);
+				factory = [this] (channel &outbound_) -> channel_ptr_t {
+					client = make_shared<client_session>(outbound_);
 					auto p = client.get();
 					client->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
 					client_ready.set();

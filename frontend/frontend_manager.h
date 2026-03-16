@@ -20,10 +20,10 @@
 
 #pragma once
 
+#include <coipc/endpoint.h>
 #include <common/argument_traits.h>
 #include <common/noncopyable.h>
 #include <common/types.h>
-#include <ipc/endpoint.h>
 #include <list>
 #include <logger/log.h>
 #include <type_traits>
@@ -31,16 +31,16 @@
 
 #define PREAMBLE "Frontend manager: "
 
+namespace coipc
+{
+	class client_session;
+}
+
 namespace micro_profiler
 {
 	struct frontend_ui;
 
-	namespace ipc
-	{
-		class client_session;
-	}
-
-	class frontend_manager : public ipc::server, noncopyable
+	class frontend_manager : public coipc::server, noncopyable
 	{
 	public:
 		struct instance
@@ -63,15 +63,15 @@ namespace micro_profiler
 		template <typename ContextT>
 		void load_session(const ContextT &ui_context);
 
-		// ipc::server methods
-		virtual ipc::channel_ptr_t create_session(ipc::channel &outbound) override;
+		// coipc::server methods
+		virtual coipc::channel_ptr_t create_session(coipc::channel &outbound) override;
 
 	private:
 		struct instance_impl : instance
 		{
-			instance_impl(ipc::client_session *frontend_);
+			instance_impl(coipc::client_session *frontend_);
 
-			ipc::client_session *frontend;
+			coipc::client_session *frontend;
 			wpl::slot_connection ui_activated_connection;
 			wpl::slot_connection ui_closed_connection;
 		};
@@ -79,7 +79,7 @@ namespace micro_profiler
 		typedef std::list<instance_impl> instance_container;
 
 	private:
-		std::pair<ipc::channel_ptr_t, instance_container::iterator> attach(ipc::client_session *session);
+		std::pair<coipc::channel_ptr_t, instance_container::iterator> attach(coipc::client_session *session);
 		void set_ui(instance_container::iterator i, std::shared_ptr<frontend_ui> ui);
 
 		void on_ui_activated(instance_container::iterator i);
@@ -90,7 +90,7 @@ namespace micro_profiler
 	private:
 		const std::shared_ptr<instance_container> _instances;
 		const std::shared_ptr<const instance_impl *> _active_instance;
-		std::function<ipc::channel_ptr_t (ipc::channel &outbound)> _frontend_factory;
+		std::function<coipc::channel_ptr_t (coipc::channel &outbound)> _frontend_factory;
 		std::function<void (const void *)> _load_session;
 	};
 
@@ -110,7 +110,7 @@ namespace micro_profiler
 				set_ui(i, ui);
 		};
 
-		_frontend_factory = [this, frontend_factory, prepare_ui] (ipc::channel &o) -> ipc::channel_ptr_t {
+		_frontend_factory = [this, frontend_factory, prepare_ui] (coipc::channel &o) -> coipc::channel_ptr_t {
 			const auto prepare_ui_ = prepare_ui;
 			const auto frontend = frontend_factory(o);
 			const auto channel_instance = attach(frontend);

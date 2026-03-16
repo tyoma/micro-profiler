@@ -19,9 +19,9 @@ namespace micro_profiler
 			void outbound_channel::disconnect() throw()
 			{	disconnected = true;	}
 
-			void outbound_channel::message(const_byte_range payload)
+			void outbound_channel::message(coipc::const_byte_range payload)
 			{
-				buffer_reader reader(payload);
+				buffer_reader reader(const_byte_range(payload.data(), payload.length()));
 				strmd::deserializer<buffer_reader, packer> d(reader);
 				messages_id c;
 				unsigned token;

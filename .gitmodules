@@ -30,3 +30,7 @@
 	path = libraries/tasker
 	url = ../tasker.git
 	branch = master
+[submodule "libraries/cohesion-ipc"]
+	path = libraries/cohesion-ipc
+	url = ../cohesion-ipc.git
+	branch = master

@@ -1,7 +1,6 @@
 #include <test-helpers/helpers.h>
 
 #include <common/memory.h>
-#include <common/time.h>
 
 using namespace std;
 
@@ -9,26 +8,6 @@ namespace micro_profiler
 {
 	namespace tests
 	{
-		namespace
-		{
-			byte rand()
-			{	return static_cast<byte>(::rand());	}
-		}
-
-		guid_t generate_id()
-		{
-			static bool seed_initialized = false;
-
-			if (!seed_initialized)
-				srand(static_cast<unsigned int>(clock())), seed_initialized = true;
-
-			guid_t id;
-
-			generate(begin(id.values), end(id.values), &rand);
-			return id;
-		}
-
-
 		vector_adapter::vector_adapter()
 			: ptr(0)
 		{	}

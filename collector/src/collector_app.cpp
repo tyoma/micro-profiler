@@ -25,15 +25,16 @@
 #include <collector/serialization.h>
 #include <collector/thread_monitor.h>
 
+#include <coipc/server_session.h>
 #include <common/constants.h>
 #include <common/protocol.h>
 #include <common/time.h>
-#include <ipc/server_session.h>
 #include <logger/log.h>
 #include <patcher/interface.h>
 
 #define PREAMBLE "Collector app: "
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -56,9 +57,9 @@ namespace micro_profiler
 	tasker::queue &collector_app::get_queue()
 	{	return _server;	}
 
-	void collector_app::initialize_session(ipc::server_session &session)
+	void collector_app::initialize_session(server_session &session)
 	{
-		typedef ipc::server_session::response response;
+		typedef server_session::response response;
 
 		// Keep buffer objects to avoid excessive allocations.
 		auto history_key = make_shared<module_tracker::mapping_history_key>();
@@ -116,7 +117,7 @@ namespace micro_profiler
 		});
 
 
-		session.message(init, [this] (ipc::serializer &ser) {
+		session.message(init, [this] (serializer &ser) {
 			initialization_data idata = {
 				_module_tracker.helper().executable(),
 				ticks_per_second(),
@@ -129,10 +130,10 @@ namespace micro_profiler
 		_server.schedule([this] {	collect_and_reschedule();	}, mt::milliseconds(10));
 	}
 
-	bool collector_app::finalize_session(ipc::server_session &session)
+	bool collector_app::finalize_session(server_session &session)
 	{
 		_collector.read_collected(*_analyzer);
-		session.message(exiting, [] (ipc::serializer &) {	});
+		session.message(exiting, [] (serializer &) {	});
 		return true;
 	}
 

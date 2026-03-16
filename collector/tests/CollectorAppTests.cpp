@@ -5,6 +5,7 @@
 #include "mocks_allocator.h"
 #include "mocks_patch_manager.h"
 
+#include <coipc/client_session.h>
 #include <collector/module_tracker.h>
 #include <collector/serialization.h>
 #include <common/constants.h>
@@ -12,7 +13,6 @@
 #include <common/smart_ptr.h>
 #include <common/string.h>
 #include <common/time.h>
-#include <ipc/client_session.h>
 #include <mt/event.h>
 #include <mt/thread.h>
 #include <test-helpers/constants.h>
@@ -23,6 +23,7 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
+using namespace coipc;
 using namespace std;
 using namespace std::placeholders;
 
@@ -32,7 +33,6 @@ namespace micro_profiler
 	{
 		namespace
 		{
-			using ipc::deserializer;
 			typedef pair<unsigned, call_graph_types<unsigned>::node> addressed_statistics;
 			typedef containers::unordered_map<unsigned /*threadid*/, call_graph_types<unsigned>::nodes_map>
 				thread_statistics_map;
@@ -43,8 +43,8 @@ namespace micro_profiler
 		begin_test_suite( CollectorAppTests )
 			mocks::allocator allocator_;
 			active_server_app::client_factory_t factory;
-			shared_ptr<ipc::client_session> client;
-			function<void (ipc::client_session &client_)> initialize_client;
+			shared_ptr<client_session> client;
+			function<void (client_session &client_)> initialize_client;
 			mocks::tracer collector;
 			mocks::thread_monitor threads;
 			mocks::module_helper module_helper;
@@ -59,8 +59,8 @@ namespace micro_profiler
 			init( Init )
 			{
 				pmanager.reset(new mocks::patch_manager);
-				factory = [this] (ipc::channel &outbound) -> ipc::channel_ptr_t {
-					client = make_shared<ipc::client_session>(outbound);
+				factory = [this] (channel &outbound) -> channel_ptr_t {
+					client = make_shared<client_session>(outbound);
 					auto p = client.get();
 					client->subscribe(new_subscription(), exiting, [p] (deserializer &) {	p->disconnect_session();	});
 					if (initialize_client)
@@ -88,10 +88,10 @@ namespace micro_profiler
 					d(id);
 					initialized.set();
 				};
-				auto unique_name = to_string(generate_id());
+				string unique_name = "lorem-ipsum-1234-dolor";
 				shared_ptr<void> subscription;
 
-				initialize_client = [&] (ipc::client_session &c) {
+				initialize_client = [&] (client_session &c) {
 					c.subscribe(subscription, init, on_init);
 				};
 				module_helper.on_get_executable = [&] {	return unique_name;	};
@@ -119,7 +119,7 @@ namespace micro_profiler
 				};
 				shared_ptr<void> subscription;
 
-				initialize_client = [&] (ipc::client_session &c) {
+				initialize_client = [&] (client_session &c) {
 					c.subscribe(subscription, init, on_init);
 				};
 
@@ -140,9 +140,9 @@ namespace micro_profiler
 				shared_ptr<void> subs;
 				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, threads, *module_tracker, *pmanager));
 
-				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
+				app->connect([&] (channel &outbound) -> channel_ptr_t {
 					auto &stopping_ = stopping;
-					auto client_ = make_shared<ipc::client_session>(outbound);
+					auto client_ = make_shared<client_session>(outbound);
 
 					client_->subscribe(subs, exiting, [client_, &stopping_] (deserializer &) {
 						stopping_.set();
@@ -274,8 +274,8 @@ namespace micro_profiler
 				unique_ptr<collector_app> app(new collector_app(collector, c_overhead, threads, *module_tracker,
 					*pmanager));
 
-				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
-					auto client_ = make_shared<ipc::client_session>(outbound);
+				app->connect([&] (channel &outbound) -> channel_ptr_t {
+					auto client_ = make_shared<client_session>(outbound);
 					auto &flushed_ = flushed;
 					auto &flushed_at_exit_ = flushed_at_exit;
 
@@ -310,7 +310,7 @@ namespace micro_profiler
 				auto trace = mkvector(trace1);
 				thread_statistics_map u;
 				shared_ptr<void> req;
-				ipc::client_session *pclient = nullptr;
+				client_session *pclient = nullptr;
 
 				collector.on_read_collected = [&] (calls_collector_i::acceptor &a) {
 					if (trace.empty())
@@ -323,8 +323,8 @@ namespace micro_profiler
 					*pmanager));
 				mt::thread t([&] {	app.reset();	}); // TODO: dangerous - app can get destroyed before the next line executes.
 
-				app->connect([&] (ipc::channel &outbound) -> ipc::channel_ptr_t {
-					auto client_ = make_shared<ipc::client_session>(outbound);
+				app->connect([&] (channel &outbound) -> channel_ptr_t {
+					auto client_ = make_shared<client_session>(outbound);
 					auto &ready_ = ready;
 
 					pclient = client_.get();
@@ -455,8 +455,8 @@ namespace micro_profiler
 			{
 				// INIT
 				mt::event ready, client_destroyed;
-				ipc::client_session *pclient = nullptr;
-				const auto destroy_client = [&] (ipc::client_session *p) {
+				client_session *pclient = nullptr;
+				const auto destroy_client = [&] (client_session *p) {
 					delete p;
 					client_destroyed.set();
 				};
@@ -465,8 +465,8 @@ namespace micro_profiler
 
 				collector_app app(collector, c_overhead, threads, *module_tracker, *pmanager);
 
-				app.connect([&] (ipc::channel &c) -> ipc::channel_ptr_t {
-					shared_ptr<ipc::client_session> client_(new ipc::client_session(c), destroy_client);
+				app.connect([&] (channel &c) -> channel_ptr_t {
+					shared_ptr<client_session> client_(new client_session(c), destroy_client);
 
 					pclient = client_.get();
 					client_ready.set();

@@ -93,7 +93,7 @@ namespace micro_profiler
 			return;
 		_db->patches.invalidate();
 		request(*req, request_apply_patches, _patch_apply_payload, response_patched,
-			[this, module_id, req, &idx] (ipc::deserializer &d) {
+			[this, module_id, req, &idx] (coipc::deserializer &d) {
 
 			d(_patched_buffer);
 			for (auto i = _patched_buffer.begin(); i != _patched_buffer.end(); ++i)
@@ -133,7 +133,7 @@ namespace micro_profiler
 			return;
 		_db->patches.invalidate();
 		request(*req, request_revert_patches, _patch_revert_payload, response_reverted,
-			[this, module_id, req, &idx] (ipc::deserializer &d) {
+			[this, module_id, req, &idx] (coipc::deserializer &d) {
 
 			d(_reverted_buffer);
 			for (auto i = _reverted_buffer.begin(); i != _reverted_buffer.end(); ++i)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ipc/endpoint.h>
+#include <coipc/endpoint.h>
 #include <vector>
 
 namespace micro_profiler
@@ -9,7 +9,7 @@ namespace micro_profiler
 	{
 		namespace mocks
 		{
-			class outbound_channel : public ipc::channel
+			class outbound_channel : public coipc::channel
 			{
 			public:
 				outbound_channel();
@@ -22,7 +22,7 @@ namespace micro_profiler
 
 			private:
 				virtual void disconnect() throw();
-				virtual void message(const_byte_range payload);
+				virtual void message(coipc::const_byte_range payload);
 			};
 		}
 	}

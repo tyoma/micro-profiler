@@ -20,39 +20,39 @@
 
 #include "main.h"
 
+#include <coipc/endpoint.h>
+#include <coipc/endpoint_spawn.h>
+#include <coipc/server_session.h>
 #include <common/constants.h>
 #include <common/module.h>
 #include <common/stream.h>
 #include <injector/injector.h>
 #include <injector/process.h>
-#include <ipc/endpoint.h>
-#include <ipc/endpoint_spawn.h>
-#include <ipc/server_session.h>
 #include <sandbox/sandbox.h>
 #include <strmd/deserializer.h>
 #include <strmd/packer.h>
 
+using namespace coipc;
 using namespace micro_profiler;
-using namespace micro_profiler::ipc;
 using namespace std;
 
 namespace
 {
-	void inject_profiler_worker(const_byte_range payload)
+	void inject_profiler_worker(micro_profiler::const_byte_range payload)
 	{
-		buffer_reader r(payload);
-		strmd::deserializer<buffer_reader, strmd::varint> d(r);
+		micro_profiler::buffer_reader r(payload);
+		strmd::deserializer<micro_profiler::buffer_reader, strmd::varint> d(r);
 		injection_info injection;
 
 		d(injection);
-		g_instance.connect([injection] (ipc::channel &inbound) {
-			return ipc::connect_client(injection.frontend_endpoint_id, inbound);
+		g_instance.connect([injection] (channel &inbound) {
+			return connect_client(injection.frontend_endpoint_id, inbound);
 		});
 	}
 }
 
-extern "C" void ipc_spawn_server(micro_profiler::ipc::channel_ptr_t &session_, const vector<string> &/*arguments*/,
-	micro_profiler::ipc::channel &outbound)
+extern "C" void ipc_spawn_server(channel_ptr_t &session_, const vector<string> &/*arguments*/,
+	channel &outbound)
 {
 	g_instance.block_auto_connect();
 
@@ -65,11 +65,11 @@ extern "C" void ipc_spawn_server(micro_profiler::ipc::channel_ptr_t &session_, c
 		{
 			auto p = make_shared<process>(injection.pid);
 			pod_vector<byte> buffer;
-			buffer_writer< pod_vector<byte> > w(buffer);
-			strmd::serializer<buffer_writer< pod_vector<byte> >, strmd::varint> s(w);
+			micro_profiler::buffer_writer< pod_vector<byte> > w(buffer);
+			strmd::serializer<micro_profiler::buffer_writer< pod_vector<byte> >, strmd::varint> s(w);
 
 			s(injection);
-			p->remote_execute(&inject_profiler_worker, const_byte_range(buffer.data(), buffer.size()));
+			p->remote_execute(&inject_profiler_worker, micro_profiler::const_byte_range(buffer.data(), buffer.size()));
 			rdata.ok = 1;
 		}
 		catch (exception &e)

@@ -24,14 +24,14 @@
 
 #ifdef _MSC_VER
 	#include <intrin.h>
-#elif !defined(__arm__)
+#elif !defined(__arm__) && !defined(__arm64__)
 	#include <x86intrin.h>
 #endif
 
 namespace micro_profiler
 {
 	timestamp_t read_tick_counter()
-#if !defined(__arm__)
+#if !defined(__arm__) && !defined(__arm64__)
 	{	return __rdtsc();	}
 #else
 	{

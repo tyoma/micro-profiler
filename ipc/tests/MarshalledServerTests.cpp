@@ -7,6 +7,7 @@
 #include <ut/assert.h>
 #include <ut/test.h>
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -16,6 +17,10 @@ namespace micro_profiler
 		namespace tests
 		{
 			using namespace micro_profiler::tests;
+
+			template <typename T, size_t size>
+			inline coipc::range<T, size_t> mkrange(T (&array_ptr)[size])
+			{	return coipc::range<T, size_t>(array_ptr, size);	}
 
 			begin_test_suite( MarshalledServerTests )
 				shared_ptr<ipc::tests::mocks::server> server;
@@ -33,7 +38,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 
 					// ACT
 					auto msession = s.create_session(outbound);
@@ -63,7 +68,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data1[] = "I celebrate myself, and sing myself,";
 					byte data2[] = "And what I assume you shall assume,";
@@ -106,7 +111,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data1[] = "foo";
 					byte data2[] = "bar";
@@ -135,7 +140,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
 					queue->run_one();
@@ -159,7 +164,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
 					// ACT
@@ -175,7 +180,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
 					// ACT
@@ -191,7 +196,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data[] = "zzzaaabbb";
 
@@ -211,7 +216,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
 					queue->run_till_end();
@@ -230,7 +235,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
 					queue->run_till_end();
@@ -292,7 +297,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 
 					ms.stop();
 
@@ -308,7 +313,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data1[] = "zzzaaabbb";
 					byte data2[] = "zabzab";
@@ -337,7 +342,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 
 					queue->run_one();
@@ -354,7 +359,7 @@ namespace micro_profiler
 				{
 					// INIT
 					marshalled_server ms(server, *queue);
-					ipc::server &s = ms;
+					coipc::server &s = ms;
 					auto msession = s.create_session(outbound);
 					byte data[] = "zzz";
 

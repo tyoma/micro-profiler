@@ -53,6 +53,7 @@
 
 #pragma warning(disable:4996)
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -374,7 +375,7 @@ namespace micro_profiler
 			add_command(cmdidProfileProcess, [this, processes] (unsigned) {
 				const auto &f = get_factory();
 				const auto attach = make_shared<attach_ui>(f, processes,
-					ipc::sockets_endpoint_id(ipc::localhost, _ipc_manager->get_sockets_port()));
+					sockets_endpoint_id(localhost, _ipc_manager->get_sockets_port()));
 
 				ui_helpers::show_dialog(_running_objects, f, attach, 600, 400, "MicroProfiler - Select a Process to Profile",
 					[attach] (vector<wpl::slot_connection> &connections, function<void()> onclose) {

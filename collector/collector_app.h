@@ -43,8 +43,8 @@ namespace micro_profiler
 		tasker::queue &get_queue();
 
 	private:
-		virtual void initialize_session(ipc::server_session &session) override;
-		virtual bool finalize_session(ipc::server_session &session) override;
+		virtual void initialize_session(coipc::server_session &session) override;
+		virtual bool finalize_session(coipc::server_session &session) override;
 
 		void collect_and_reschedule();
 

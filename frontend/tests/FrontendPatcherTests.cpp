@@ -5,9 +5,9 @@
 #include "mock_cache.h"
 #include "primitive_helpers.h"
 
+#include <coipc/server_session.h>
 #include <common/serialization.h>
 #include <frontend/keyer.h>
-#include <ipc/server_session.h>
 #include <patcher/interface.h>
 #include <test-helpers/helpers.h>
 #include <test-helpers/mock_queue.h>
@@ -16,6 +16,7 @@
 
 #pragma warning(disable: 4355)
 
+using namespace coipc;
 using namespace std;
 using namespace std::placeholders;
 
@@ -30,7 +31,7 @@ namespace micro_profiler
 		{
 			typedef tables::patches::patch_def patch_def;
 
-			struct emulator_ : ipc::channel, noncopyable
+			struct emulator_ : channel, noncopyable
 			{
 				emulator_(tasker::queue &queue)
 					: server_session(*this, &queue), outbound(nullptr)
@@ -39,11 +40,11 @@ namespace micro_profiler
 				virtual void disconnect() throw() override
 				{	outbound->disconnect();	}
 
-				virtual void message(const_byte_range payload) override
+				virtual void message(coipc::const_byte_range payload) override
 				{	outbound->message(payload);	}
 
-				ipc::server_session server_session;
-				ipc::channel *outbound;
+				server_session server_session;
+				channel *outbound;
 			};
 
 			patch_change_result mkpatch_change(unsigned rva, patch_change_result::errors status, id_t id = 0u)
@@ -55,7 +56,7 @@ namespace micro_profiler
 
 		begin_test_suite( FrontendPatcherTests )
 			mocks::queue queue, worker_queue;
-			shared_ptr<ipc::server_session> emulator;
+			shared_ptr<server_session> emulator;
 			shared_ptr<frontend> frontend_;
 			shared_ptr<const tables::patches> patches;
 
@@ -73,7 +74,7 @@ namespace micro_profiler
 				frontend_->initialized = [&] (shared_ptr<profiling_session> context_) {
 					context = context_;
 				};
-				emulator->message(init, [] (ipc::serializer &s) {
+				emulator->message(init, [] (serializer &s) {
 					initialization_data idata = {	"", 1	};
 					s(idata);
 				});
@@ -90,7 +91,7 @@ namespace micro_profiler
 				// INIT
 				vector<patch_apply_request> log;
 
-				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &, const patch_apply_request &payload) {
+				emulator->add_handler(request_apply_patches, [&] (server_session::response &, const patch_apply_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -126,7 +127,7 @@ namespace micro_profiler
 				// INIT
 				const auto &idx = sdb::unique_index<keyer::symbol_id>(*patches);
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_revert_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (server_session::response &, const patch_revert_request &payload) {
 					for (auto i = payload.functions_rva.begin(); i != payload.functions_rva.end(); ++i)
 					{
 						auto p = idx.find(symbol_key(payload.module_id, *i));
@@ -165,11 +166,11 @@ namespace micro_profiler
 			test( PatchResponseSetsActiveAndErrorStates )
 			{
 				// INIT
-				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &resp, const patch_apply_request &payload) {
+				emulator->add_handler(request_apply_patches, [&] (server_session::response &resp, const patch_apply_request &payload) {
 					switch (payload.module_id)
 					{
 					case 19:
-						resp.defer([] (ipc::server_session::response &resp) {
+						resp.defer([] (server_session::response &resp) {
 							resp(response_patched, plural
 								// Succeeded...
 								+ mkpatch_change(1, patch_change_result::ok, 1)
@@ -181,7 +182,7 @@ namespace micro_profiler
 						break;
 
 					case 31:
-						resp.defer([] (ipc::server_session::response &resp) {
+						resp.defer([] (server_session::response &resp) {
 							resp(response_patched, plural
 								// Succeeded...
 								+ mkpatch_change(2, patch_change_result::ok, 11)
@@ -240,7 +241,7 @@ namespace micro_profiler
 				// INIT
 				vector<patch_apply_request> log;
 
-				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_apply_request &payload) {
+				emulator->add_handler(request_apply_patches, [] (server_session::response &resp, const patch_apply_request &payload) {
 					switch (payload.module_id)
 					{
 					case 19:
@@ -260,7 +261,7 @@ namespace micro_profiler
 				patches->apply(19, mkrange(plural + patch_def(2, 0) + patch_def(3, 0)));
 				patches->apply(20, mkrange(plural + patch_def(2, 0) + patch_def(5, 0)));
 
-				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &, const patch_apply_request &payload) {
+				emulator->add_handler(request_apply_patches, [&] (server_session::response &, const patch_apply_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -294,12 +295,12 @@ namespace micro_profiler
 			test( RequestIsReleasedOnceResponsed )
 			{
 				// INIT
-				emulator->add_handler(request_apply_patches, [] (ipc::server_session::response &resp, const patch_apply_request &/*payload*/) {
+				emulator->add_handler(request_apply_patches, [] (server_session::response &resp, const patch_apply_request &/*payload*/) {
 					resp(response_patched, plural
 						+ mkpatch_change(1, patch_change_result::ok, 1)
 						+ mkpatch_change(2, patch_change_result::unrecoverable_error, 0)
 						+ mkpatch_change(3, patch_change_result::ok, 2));
-					resp.defer([] (ipc::server_session::response &resp) {
+					resp.defer([] (server_session::response &resp) {
 						resp(response_patched, plural
 							+ mkpatch_change(1, patch_change_result::unrecoverable_error, 0)
 							+ mkpatch_change(2, patch_change_result::ok, 1)
@@ -328,11 +329,11 @@ namespace micro_profiler
 					log.push_back(vector<patch_state_ex>(this->patches->begin(), this->patches->end()));
 				};
 
-				emulator->add_handler(request_apply_patches, [&] (ipc::server_session::response &resp, const patch_apply_request &) {
+				emulator->add_handler(request_apply_patches, [&] (server_session::response &resp, const patch_apply_request &) {
 					// ACT
 					assert_is_false(log.empty());
 
-					resp.defer([] (ipc::server_session::response &resp) {
+					resp.defer([] (server_session::response &resp) {
 						resp(response_patched, plural
 							+ mkpatch_change(1, patch_change_result::unrecoverable_error, 0)
 							+ mkpatch_change(2, patch_change_result::ok, 1)
@@ -374,7 +375,7 @@ namespace micro_profiler
 				patches->apply(191, mkrange(plural + patch_def(13u, 0) + patch_def(1000u, 0) + patch_def(0x10000u, 0)
 					+ patch_def(0x8000091u, 0)));
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_revert_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (server_session::response &, const patch_revert_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -402,9 +403,9 @@ namespace micro_profiler
 			init( SetNextID )
 			{	next_id = 1;	}
 
-			function<void (ipc::server_session::response &resp, const patch_apply_request &payload)> emulate_apply_fn()
+			function<void (server_session::response &resp, const patch_apply_request &payload)> emulate_apply_fn()
 			{
-				return [this] (ipc::server_session::response &resp, const patch_apply_request &payload) {
+				return [this] (server_session::response &resp, const patch_apply_request &payload) {
 					vector<patch_change_result> aresults;
 
 					for (auto i = payload.functions.begin(); i != payload.functions.end(); ++i)
@@ -431,7 +432,7 @@ namespace micro_profiler
 
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_revert_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (server_session::response &, const patch_revert_request &payload) {
 					const auto &idx = sdb::multi_index(*this->patches, keyer::module_id());
 
 					log.resize(log.size() + 1);
@@ -483,11 +484,11 @@ namespace micro_profiler
 				patches->apply(19, mkrange(rva10));
 				patches->apply(31, mkrange(rva20));
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_revert_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (server_session::response &resp, const patch_revert_request &payload) {
 					switch (payload.module_id)
 					{
 					case 19:
-						resp.defer([] (ipc::server_session::response &resp) {
+						resp.defer([] (server_session::response &resp) {
 							resp(response_reverted, plural
 								// Succeeded...
 								+ mkpatch_change(1, patch_change_result::ok)
@@ -499,7 +500,7 @@ namespace micro_profiler
 						break;
 
 					case 31:
-						resp.defer([] (ipc::server_session::response &resp) {
+						resp.defer([] (server_session::response &resp) {
 							resp(response_reverted, plural
 								// Succeeded...
 								+ mkpatch_change(2, patch_change_result::ok)
@@ -574,15 +575,15 @@ namespace micro_profiler
 				apply_results[100] = patch_change_result::unrecoverable_error;
 				patches->apply(99, mkrange(rva0));
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_revert_request &) {
+				emulator->add_handler(request_revert_patches, [&] (server_session::response &resp, const patch_revert_request &) {
 					resp(response_reverted, plural + mkpatch_change(2, patch_change_result::ok));
 				});
 				patches->revert(99, mkrange(plural + 2u));
 
-				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &, const patch_revert_request &) {	});
+				emulator->add_handler(request_revert_patches, [] (server_session::response &, const patch_revert_request &) {	});
 				patches->revert(99, mkrange(plural + 6u));
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &, const patch_revert_request &payload) {
+				emulator->add_handler(request_revert_patches, [&] (server_session::response &, const patch_revert_request &payload) {
 					log.push_back(payload);
 				});
 
@@ -622,9 +623,9 @@ namespace micro_profiler
 				emulator->add_handler(request_apply_patches, emulate_apply_fn());
 				patches->apply(99, mkrange(plural + patch_def(1, 0)));
 
-				emulator->add_handler(request_revert_patches, [] (ipc::server_session::response &resp, const patch_revert_request &) {
+				emulator->add_handler(request_revert_patches, [] (server_session::response &resp, const patch_revert_request &) {
 					resp(response_reverted, plural + mkpatch_change(1, patch_change_result::ok));
-					resp.defer([] (ipc::server_session::response &resp) {
+					resp.defer([] (server_session::response &resp) {
 						resp(response_reverted, plural + mkpatch_change(1, patch_change_result::unrecoverable_error));
 					});
 				});
@@ -653,11 +654,11 @@ namespace micro_profiler
 					log.push_back(vector<patch_state_ex>(this->patches->begin(), this->patches->end()));
 				};
 
-				emulator->add_handler(request_revert_patches, [&] (ipc::server_session::response &resp, const patch_revert_request &) {
+				emulator->add_handler(request_revert_patches, [&] (server_session::response &resp, const patch_revert_request &) {
 					// ACT
 					assert_is_false(log.empty());
 
-					resp.defer([] (ipc::server_session::response &resp) {
+					resp.defer([] (server_session::response &resp) {
 						resp(response_reverted, plural
 							+ mkpatch_change(1, patch_change_result::activation_error)
 							+ mkpatch_change(2, patch_change_result::ok)

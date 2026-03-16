@@ -58,8 +58,6 @@ namespace micro_profiler
 		inline hack_caster<V> address_cast_hack2(V v)
 		{	return hack_caster<V>(v);	}
 
-		guid_t generate_id();
-
 		class image : private std::shared_ptr<void>
 		{
 		public:

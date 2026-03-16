@@ -23,10 +23,10 @@
 #include "database.h"
 #include "serialization_context.h"
 
+#include <coipc/client_session.h>
 #include <common/noncopyable.h>
 #include <common/protocol.h>
 #include <functional>
-#include <ipc/client_session.h>
 #include <list>
 #include <reqm/multiplexing_request.h>
 
@@ -39,13 +39,13 @@ namespace micro_profiler
 {
 	struct profiling_cache;
 
-	class frontend : public ipc::client_session, noncopyable
+	class frontend : public coipc::client_session, noncopyable
 	{
 	public:
 		typedef std::shared_ptr<profiling_session> session_type;
 
 	public:
-		frontend(ipc::channel &outbound, std::shared_ptr<profiling_cache> cache,
+		frontend(coipc::channel &outbound, std::shared_ptr<profiling_cache> cache,
 			tasker::queue &worker, tasker::queue &apartment);
 		~frontend();
 
@@ -59,7 +59,7 @@ namespace micro_profiler
 		typedef std::list< std::shared_ptr<void> > requests_t;
 
 	private:
-		// ipc::channel methods
+		// coipc::channel methods
 		virtual void disconnect() throw() override;
 
 		void init_patcher();

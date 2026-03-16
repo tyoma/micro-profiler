@@ -41,4 +41,4 @@ if(WIN32)
 endif()
 
 add_library(frontend STATIC ${FRONTEND_LIB_SOURCES})
-target_link_libraries(frontend PUBLIC wpl agge.text strmd sqlite++ tasker mt)
+target_link_libraries(frontend PUBLIC wpl agge.text strmd sqlite++ cohesion-ipc tasker mt)

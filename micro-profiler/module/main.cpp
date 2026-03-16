@@ -28,13 +28,13 @@
 #include <direct.h>
 #include <frontend/frontend.h>
 #include <frontend/profiling_cache_sqlite.h>
-#include <ipc/com/endpoint.h>
 #include <logger/log.h>
 #include <logger/multithreaded_logger.h>
 #include <logger/writer.h>
 
 #define PREAMBLE "VSPackage Module: "
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler

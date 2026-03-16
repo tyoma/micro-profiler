@@ -20,16 +20,17 @@
 
 #include <frontend/frontend_manager.h>
 
+#include <coipc/client_session.h>
 #include <frontend/frontend_ui.h>
-#include <ipc/client_session.h>
 
+using namespace coipc;
 using namespace std;
 
 #define PREAMBLE "Frontend manager: "
 
 namespace micro_profiler
 {
-	frontend_manager::instance_impl::instance_impl(ipc::client_session *frontend_)
+	frontend_manager::instance_impl::instance_impl(client_session *frontend_)
 		: frontend(frontend_)
 	{	}
 
@@ -64,17 +65,17 @@ namespace micro_profiler
 	const frontend_manager::instance *frontend_manager::get_active() const throw()
 	{	return *_active_instance;	}
 
-	ipc::channel_ptr_t frontend_manager::create_session(ipc::channel &outbound)
+	coipc::channel_ptr_t frontend_manager::create_session(coipc::channel &outbound)
 	{	return _frontend_factory(outbound);	}
 
-	pair<ipc::channel_ptr_t, frontend_manager::instance_container::iterator> frontend_manager::attach(ipc::client_session *pfrontend)
+	pair<coipc::channel_ptr_t, frontend_manager::instance_container::iterator> frontend_manager::attach(coipc::client_session *pfrontend)
 	{
-		unique_ptr<ipc::client_session> uf(pfrontend);
+		unique_ptr<coipc::client_session> uf(pfrontend);
 		const auto instances = _instances;
 		const auto active_instance = _active_instance;
 		const auto i = _instances->insert(_instances->end(), instance_impl(uf.get()));
 
-		return make_pair(shared_ptr<ipc::client_session>(uf.release(),  [instances, active_instance, i] (ipc::client_session *p) {
+		return make_pair(shared_ptr<coipc::client_session>(uf.release(),  [instances, active_instance, i] (coipc::client_session *p) {
 			if (*active_instance == &*i)
 				*active_instance = nullptr;
 			delete p;

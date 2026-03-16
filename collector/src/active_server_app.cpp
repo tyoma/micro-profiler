@@ -20,14 +20,15 @@
 
 #include <collector/active_server_app.h>
 
+#include <coipc/server_session.h>
 #include <common/time.h>
 #include <ipc/marshalled_session.h>
-#include <ipc/server_session.h>
 #include <logger/log.h>
 #include <tasker/scheduler.h>
 
 #define PREAMBLE "Active server: "
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler

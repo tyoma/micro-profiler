@@ -31,6 +31,7 @@
 
 #define PREAMBLE "Marshalled Server: "
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -49,7 +50,7 @@ namespace micro_profiler
 			}
 		}
 
-		marshalled_server::marshalled_server(shared_ptr<ipc::server> underlying, tasker::queue &apartment_queue)
+		marshalled_server::marshalled_server(shared_ptr<server> underlying, tasker::queue &apartment_queue)
 			: _lifetime(make_shared<lifetime>()), _underlying(underlying), _apartment_queue(apartment_queue)
 		{	}
 
@@ -65,7 +66,7 @@ namespace micro_profiler
 			_underlying = nullptr;
 		}
 
-		channel_ptr_t marshalled_server::create_session(ipc::channel &outbound)
+		channel_ptr_t marshalled_server::create_session(channel &outbound)
 		{
 			shared_ptr<marshalled_passive_session> msession;
 

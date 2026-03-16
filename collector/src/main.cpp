@@ -20,14 +20,14 @@
 
 #include "main.h"
 
+#include <coipc/endpoint.h>
+#include <coipc/misc.h>
 #include <collector/calibration.h>
 #include <collector/thread_monitor.h>
 #include <common/constants.h>
 #include <common/module.h>
 #include <common/path.h>
 #include <common/time.h>
-#include <ipc/endpoint.h>
-#include <ipc/misc.h>
 #include <logger/writer.h>
 #include <mt/thread_callbacks.h>
 #include <patcher/function_patch.h>
@@ -51,6 +51,7 @@
 
 #define PREAMBLE "Profiler Instance: "
 
+using namespace coipc;
 using namespace std;
 
 const size_t c_trace_limit = 5000000;
@@ -66,29 +67,29 @@ namespace micro_profiler
 {
 	namespace
 	{
-		struct null_channel : ipc::channel
+		struct null_channel : channel
 		{
-			null_channel(ipc::channel &inbound)
+			null_channel(channel &inbound)
 				: _inbound(inbound)
 			{	}
 
 			virtual void disconnect() throw()
 			{	}
 
-			virtual void message(const_byte_range /*payload*/)
+			virtual void message(coipc::const_byte_range /*payload*/)
 			{	_inbound.disconnect();	}
 
-			ipc::channel &_inbound;
+			channel &_inbound;
 		};
 	}
 
 
-	ipc::channel_ptr_t collector_app_instance::probe_create_channel(ipc::channel &inbound)
+	channel_ptr_t collector_app_instance::probe_create_channel(channel &inbound)
 	{
 		const string c_candidate_endpoints[] = {
-			ipc::sockets_endpoint_id(ipc::localhost, 6100),
-			ipc::com_endpoint_id(constants::integrated_frontend_id),
-			ipc::com_endpoint_id(constants::standalone_frontend_id),
+			sockets_endpoint_id(localhost, 6100),
+			com_endpoint_id(constants::integrated_frontend_id),
+			com_endpoint_id(constants::standalone_frontend_id),
 		};
 
 		vector<string> candidate_endpoints(c_candidate_endpoints, c_candidate_endpoints
@@ -102,7 +103,7 @@ namespace micro_profiler
 			try
 			{
 				LOG(PREAMBLE "connecting...") % A(*i);
-				const auto channel = ipc::connect_client(i->c_str(), inbound);
+				const auto channel = connect_client(i->c_str(), inbound);
 				LOG(PREAMBLE "connected...") % A(channel.get());
 				return channel;
 			}

@@ -20,8 +20,7 @@
 
 #pragma once
 
-#include "endpoint.h"
-
+#include <coipc/endpoint.h>
 #include <common/noncopyable.h>
 
 namespace tasker
@@ -35,16 +34,16 @@ namespace micro_profiler
 	{
 		class lifetime;
 
-		class marshalled_server : public server, noncopyable
+		class marshalled_server : public coipc::server, noncopyable
 		{
 		public:
-			marshalled_server(std::shared_ptr<server> underlying, tasker::queue &apartment_queue);
+			marshalled_server(std::shared_ptr<coipc::server> underlying, tasker::queue &apartment_queue);
 			~marshalled_server();
 
 			void stop();
 
 		private:
-			virtual channel_ptr_t create_session(channel &outbound) override;
+			virtual coipc::channel_ptr_t create_session(coipc::channel &outbound) override;
 
 		private:
 			const std::shared_ptr<lifetime> _lifetime;

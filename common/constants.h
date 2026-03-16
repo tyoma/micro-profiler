@@ -20,9 +20,12 @@
 
 #pragma once
 
-#include "types.h"
-
 #include <string>
+
+namespace coipc
+{
+	struct guid_t;
+}
 
 namespace micro_profiler
 {
@@ -33,8 +36,8 @@ namespace micro_profiler
 		static const char *profiler_name;
 		static const char *profilerdir_ev;
 		static const char *frontend_id_ev;
-		static const guid_t standalone_frontend_id;
-		static const guid_t integrated_frontend_id;
+		static const coipc::guid_t standalone_frontend_id;
+		static const coipc::guid_t integrated_frontend_id;
 
 		// C++-style constants - made functions to be safe for access
 		static std::string data_directory();

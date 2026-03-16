@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <coipc/misc.h>
+
 #include <common/noncopyable.h>
 #include <memory>
 #include <mt/chrono.h>
@@ -27,15 +29,19 @@
 #include <tasker/scheduler.h>
 #include <tasker/task_queue.h>
 
+namespace coipc
+{
+	struct channel;
+	class server_session;
+
+	typedef std::shared_ptr<channel> channel_ptr_t;
+}
+
 namespace micro_profiler
 {
 	namespace ipc
 	{
-		struct channel;
 		class marshalled_active_session;
-		class server_session;
-
-		typedef std::shared_ptr<channel> channel_ptr_t;
 	}
 
 	class active_server_app : public tasker::queue, noncopyable
@@ -43,7 +49,7 @@ namespace micro_profiler
 	public:
 		struct events;
 
-		typedef std::function<ipc::channel_ptr_t (ipc::channel &inbound)> client_factory_t;
+		typedef std::function<coipc::channel_ptr_t (coipc::channel &inbound)> client_factory_t;
 
 	public:
 		active_server_app(events &events_);
@@ -58,7 +64,7 @@ namespace micro_profiler
 
 	private:
 		events &_events;
-		ipc::server_session *_session;
+		coipc::server_session *_session;
 		bool _exit_requested, _exit_confirmed;
 		tasker::task_queue _queue;
 		std::unique_ptr<ipc::marshalled_active_session> _active_session;
@@ -67,7 +73,7 @@ namespace micro_profiler
 
 	struct active_server_app::events
 	{
-		virtual void initialize_session(ipc::server_session &session) = 0;
-		virtual bool finalize_session(ipc::server_session &session) = 0;
+		virtual void initialize_session(coipc::server_session &session) = 0;
+		virtual bool finalize_session(coipc::server_session &session) = 0;
 	};
 }

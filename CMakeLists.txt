@@ -26,6 +26,7 @@ endif ()
 
 # Add definitions: global, platform-based, compiler-based
 set(AGGE_NO_TESTS ON)
+set(COIPC_NO_TESTS ON)
 set(POLYQ_NO_TESTS ON)
 set(STRMD_NO_TESTS ON)
 set(TASKER_NO_TESTS ON)
@@ -130,6 +131,7 @@ add_subdirectory(libraries/tasker)
 add_subdirectory(libraries/utfia)
 
 add_subdirectory(libraries/agge)
+add_subdirectory(libraries/cohesion-ipc)
 
 add_subdirectory(libraries/wpl)
 

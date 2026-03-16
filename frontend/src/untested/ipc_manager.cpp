@@ -27,61 +27,62 @@
 
 #define PREAMBLE "IPC manager: "
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
 {
 	namespace
 	{
-		class logging_server : public ipc::server, noncopyable
+		class logging_server : public server, noncopyable
 		{
 		public:
-			logging_server(const shared_ptr<ipc::server> &server, const string &endpoint_id)
+			logging_server(const shared_ptr<server> &server, const string &endpoint_id)
 				: _server(server), _endpoint_id(endpoint_id)
 			{	}
 
-			virtual ipc::channel_ptr_t create_session(ipc::channel &outbound) override
+			virtual channel_ptr_t create_session(channel &outbound) override
 			{
 				LOG(PREAMBLE "creating frontend server session...") % A(_endpoint_id);
 				return _server->create_session(outbound);
 			}
 
 		private:
-			const shared_ptr<ipc::server> _server;
+			const shared_ptr<server> _server;
 			const string _endpoint_id;
 		};
 
-		shared_ptr<void> try_run_server(const string &endpoint_id, const shared_ptr<ipc::server> &server)
+		shared_ptr<void> try_run_server(const string &endpoint_id, const shared_ptr<coipc::server> &server)
 		try
 		{
 			LOG(PREAMBLE "attempting server creation...") % A(endpoint_id);
-			shared_ptr<ipc::server> lserver(new logging_server(server, endpoint_id));
+			shared_ptr<coipc::server> lserver(new logging_server(server, endpoint_id));
 			shared_ptr<void> hserver = run_server(endpoint_id, lserver);
 			LOG(PREAMBLE "succeeded.");
 			return hserver;
 		}
-		catch (const ipc::initialization_failed &e)
+		catch (const initialization_failed &e)
 		{
 			LOG(PREAMBLE "failed.") % A(e.what());
 			return shared_ptr<void>();
 		}
 	}
 
-	ipc_manager::ipc_manager(shared_ptr<ipc::server> server, tasker::queue &apartment_queue, port_range range_,
+	ipc_manager::ipc_manager(shared_ptr<coipc::server> server, tasker::queue &apartment_queue, port_range range_,
 			const guid_t *com_server_id)
 		: _server(new ipc::marshalled_server(server, apartment_queue)), _range(range_), _remote_enabled(false), _port(0)
 	{
 		if (com_server_id)
 		{
 #ifdef _WIN32
-			const string endpoint_id = ipc::com_endpoint_id(*com_server_id);
-			shared_ptr<ipc::server> lserver(new logging_server(_server, endpoint_id));
+			const string endpoint_id = com_endpoint_id(*com_server_id);
+			shared_ptr<coipc::server> lserver(new logging_server(_server, endpoint_id));
 	
 			_com_server_handle = run_server(endpoint_id, lserver);
 #endif
 		}
 
-		_sockets_server_handle = probe_create_server(_server, ipc::localhost, _port, _range);
+		_sockets_server_handle = probe_create_server(_server, localhost, _port, _range);
 	}
 
 	ipc_manager::~ipc_manager()
@@ -98,7 +99,7 @@ namespace micro_profiler
 		if (enable == _remote_enabled)
 			return;
 		_sockets_server_handle.reset(); // Free the port before reopening.
-		_sockets_server_handle = probe_create_server(_server, enable ? ipc::all_interfaces : ipc::localhost, _port, _range);
+		_sockets_server_handle = probe_create_server(_server, enable ? all_interfaces : localhost, _port, _range);
 		_remote_enabled = enable;
 		LOG(PREAMBLE "enable remote...") % A(enable);
 	}
@@ -106,15 +107,15 @@ namespace micro_profiler
 	//bool ipc_manager::com_enabled() const;
 	//void ipc_manager::enable_com(bool enable);
 
-	shared_ptr<void> ipc_manager::probe_create_server(const shared_ptr<ipc::server> &server,
-		ipc::ip_v4 interface_, unsigned short &port, port_range range_)
+	shared_ptr<void> ipc_manager::probe_create_server(const shared_ptr<server> &server,
+		ip_v4 interface_, unsigned short &port, port_range range_)
 	{
-		shared_ptr<void> hserver = port ? try_run_server(ipc::sockets_endpoint_id(interface_, port), server)
+		shared_ptr<void> hserver = port ? try_run_server(sockets_endpoint_id(interface_, port), server)
 			: shared_ptr<void>();
 
 		for (unsigned short p = range_.first, last = range_.first + range_.second; !hserver && p != last; ++p)
 		{
-			hserver = try_run_server(ipc::sockets_endpoint_id(interface_, p), server);
+			hserver = try_run_server(sockets_endpoint_id(interface_, p), server);
 			if (hserver)
 				port = p;
 		}

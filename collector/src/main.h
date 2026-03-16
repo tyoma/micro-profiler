@@ -44,7 +44,7 @@ namespace micro_profiler
 		void block_auto_connect();
 		void connect(const active_server_app::client_factory_t &frontend_factory);
 
-		static ipc::channel_ptr_t probe_create_channel(ipc::channel &inbound);
+		static coipc::channel_ptr_t probe_create_channel(coipc::channel &inbound);
 
 	private:
 		void platform_specific_init();

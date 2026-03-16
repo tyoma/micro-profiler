@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.13)
 
 set(MP_OUTDIR $<TARGET_FILE_DIR:${micro-profiler}>)
 
@@ -70,7 +70,7 @@ add_custom_target(dbghelp_redist
 
 add_library(collector STATIC ${COLLECTOR_LIB_SOURCES})
 target_compile_definitions(collector PUBLIC SDB_NO_SIGNALS)
-target_link_libraries(collector polyq strmd mt tasker)
+target_link_libraries(collector ipc polyq strmd mt tasker)
 
 add_library(${micro-profiler} SHARED ${COLLECTOR_SOURCES} $<TARGET_OBJECTS:mt.thread_callbacks>)
 add_dependencies(${micro-profiler} dbghelp_redist)

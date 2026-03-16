@@ -26,8 +26,6 @@
 #include <stdexcept>
 #include <string>
 
-typedef struct _GUID GUID;
-
 namespace micro_profiler
 {
 	typedef unsigned char byte;
@@ -35,15 +33,6 @@ namespace micro_profiler
 	typedef long long timestamp_t;
 	typedef unsigned long long int long_address_t;
 	typedef unsigned int id_t;
-
-#pragma pack(push, 1)
-	struct guid_t
-	{
-		byte values[16];
-
-		operator const GUID &() const;
-	};
-#pragma pack(pop)
 
 	struct overhead
 	{
@@ -86,10 +75,6 @@ namespace micro_profiler
 		size_t _max_buffers, _max_empty, _min_empty;
 	};
 
-
-
-	inline guid_t::operator const GUID &() const
-	{	return *reinterpret_cast<const GUID *>(values);	}
 
 
 	inline overhead::overhead(timestamp_t inner_, timestamp_t outer_)

@@ -20,8 +20,7 @@
 
 #pragma once
 
-#include "endpoint.h"
-
+#include <coipc/endpoint.h>
 #include <common/noncopyable.h>
 #include <tasker/private_queue.h>
 
@@ -36,7 +35,7 @@ namespace micro_profiler
 	{
 		class lifetime;
 
-		class marshalled_active_session : channel, noncopyable
+		class marshalled_active_session : coipc::channel, noncopyable
 		{
 		public:
 			template <typename ConnectionFactoryT, typename ServerSessionFactoryT>
@@ -45,50 +44,50 @@ namespace micro_profiler
 
 		private:
 			virtual void disconnect() throw() override;
-			virtual void message(const_byte_range payload) override;
+			virtual void message(coipc::const_byte_range payload) override;
 
 		private:
-			channel_ptr_t _connection_outbound, _server_inbound;
+			coipc::channel_ptr_t _connection_outbound, _server_inbound;
 			tasker::private_queue _apartment_queue;
 		};
 
 
-		class marshalled_passive_session : public channel, noncopyable
+		class marshalled_passive_session : public coipc::channel, noncopyable
 		{
 		public:
-			marshalled_passive_session(tasker::queue &apartment_queue, channel &outbound);
+			marshalled_passive_session(tasker::queue &apartment_queue, coipc::channel &outbound);
 			~marshalled_passive_session();
 
-			void create_underlying(std::shared_ptr<server> underlying_server);
+			void create_underlying(std::shared_ptr<coipc::server> underlying_server);
 
 		private:
 			class outbound_wrapper;
 
 		private:
 			virtual void disconnect() throw() override;
-			virtual void message(const_byte_range payload) override;
+			virtual void message(coipc::const_byte_range payload) override;
 
 		private:
 			const std::shared_ptr<lifetime> _lifetime;
 			tasker::queue &_apartment_queue;
-			channel_ptr_t _underlying;
+			coipc::channel_ptr_t _underlying;
 			std::shared_ptr<outbound_wrapper> _outbound;
 		};
 
-		class marshalled_passive_session::outbound_wrapper : public channel, noncopyable
+		class marshalled_passive_session::outbound_wrapper : public coipc::channel, noncopyable
 		{
 		public:
-			outbound_wrapper(channel &underlying);
+			outbound_wrapper(coipc::channel &underlying);
 
 			void stop();
 
 		private:
 			virtual void disconnect() throw() override;
-			virtual void message(const_byte_range payload) override;
+			virtual void message(coipc::const_byte_range payload) override;
 
 		private:
 			const std::shared_ptr<lifetime> _lifetime;
-			channel &_underlying;
+			coipc::channel &_underlying;
 		};
 
 
@@ -101,6 +100,5 @@ namespace micro_profiler
 			_connection_outbound = connection_factory(*this);
 			_server_inbound = server_session_factory(*_connection_outbound);
 		}
-
 	}
 }

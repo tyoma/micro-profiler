@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.13)
 
 add_definitions(-D_ATL_SINGLE_THREADED)
 

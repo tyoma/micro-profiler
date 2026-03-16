@@ -5,9 +5,9 @@
 #include "mock_cache.h"
 #include "mock_channel.h"
 
+#include <coipc/server_session.h>
 #include <collector/serialization.h> // TODO: remove?
 #include <common/serialization.h>
-#include <ipc/server_session.h>
 #include <strmd/serializer.h>
 #include <test-helpers/mock_queue.h>
 #include <ut/assert.h>
@@ -15,6 +15,7 @@
 
 #pragma warning(disable: 4355)
 
+using namespace coipc;
 using namespace std;
 
 namespace micro_profiler
@@ -29,7 +30,7 @@ namespace micro_profiler
 			typedef tables::patches::patch_def patch_def;
 			typedef call_graph_types<unsigned> unthreaded_statistic_types;
 
-			struct emulator_ : ipc::channel, noncopyable
+			struct emulator_ : channel, noncopyable
 			{
 				emulator_()
 					: server_session(*this), outbound(nullptr)
@@ -38,11 +39,11 @@ namespace micro_profiler
 				virtual void disconnect() throw() override
 				{	outbound->disconnect();	}
 
-				virtual void message(const_byte_range payload) override
+				virtual void message(coipc::const_byte_range payload) override
 				{	outbound->message(payload);	}
 
-				ipc::server_session server_session;
-				ipc::channel *outbound;
+				server_session server_session;
+				channel *outbound;
 			};
 
 			initialization_data make_initialization_data(const string &executable, timestamp_t ticks_per_second)
@@ -52,15 +53,15 @@ namespace micro_profiler
 			}
 
 			template <typename T>
-			function<void (ipc::serializer &s)> format(const T &v)
-			{	return [v] (ipc::serializer &s) {	s(v);	};	}
+			function<void (serializer &s)> format(const T &v)
+			{	return [v] (serializer &s) {	s(v);	};	}
 		}
 
 
 		begin_test_suite( FrontendTests )
 			mocks::queue worker, apartment;
 			shared_ptr<profiling_session> context;
-			shared_ptr<ipc::server_session> emulator;
+			shared_ptr<server_session> emulator;
 			shared_ptr<void> req[10];
 
 			shared_ptr<frontend> create_frontend()
@@ -140,7 +141,7 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				auto update_requests = 0;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &) {
+				emulator->add_handler(request_update, [&] (server_session::response &) {
 					update_requests++;
 				});
 
@@ -164,11 +165,11 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				vector<unsigned int> log;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
 						+ make_pair(1321222u, unthreaded_statistic_types::node()), 12));
 				});
-				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &, const vector<unsigned int> &ids) {
+				emulator->add_handler(request_threads_info, [&] (server_session::response &, const vector<unsigned int> &ids) {
 					log.insert(log.end(), ids.begin(), ids.end());
 				});
 
@@ -179,7 +180,7 @@ namespace micro_profiler
 				assert_equal(plural + 12u, log);
 
 				// INIT (replace handler)
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
 						+ make_pair(1321222u, unthreaded_statistic_types::node()), 17));
 				});
@@ -191,7 +192,7 @@ namespace micro_profiler
 				assert_equivalent(plural + 12u + 12u + 17u, log);
 
 				// INIT (replace handler)
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_statistics_update, plural
 						+ make_pair(17u, plural + make_pair(1321222u, unthreaded_statistic_types::node()))
 						+ make_pair(135u, plural + make_pair(1321222u, unthreaded_statistic_types::node())));
@@ -210,11 +211,11 @@ namespace micro_profiler
 				// INIT
 				auto frontend_ = create_frontend();
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
 						+ make_pair(1321222u, unthreaded_statistic_types::node()), 0));
 				});
-				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &) {
+				emulator->add_handler(request_threads_info, [&] (server_session::response &resp, const vector<unsigned int> &) {
 					resp(response_threads_info, plural
 						+ make_thread_info_pair(0u, 1717, "thread 1", false)
 						+ make_thread_info_pair(1u, 11717, "thread 2", false));
@@ -230,7 +231,7 @@ namespace micro_profiler
 					+ make_thread_info(1u, 11717, "thread 2", false), threads);
 
 				// INIT
-				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &) {
+				emulator->add_handler(request_threads_info, [&] (server_session::response &resp, const vector<unsigned int> &) {
 					resp(response_threads_info, plural
 						+ make_pair(1u, make_thread_info(117, "", mt::milliseconds(), mt::milliseconds(), mt::milliseconds(), true)));
 				});
@@ -251,11 +252,11 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				vector< vector<unsigned> > log;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
 						+ make_pair(1321222u, unthreaded_statistic_types::node()), 0));
 				});
-				emulator->add_handler(request_threads_info, [&] (ipc::server_session::response &resp, const vector<unsigned int> &ids) {
+				emulator->add_handler(request_threads_info, [&] (server_session::response &resp, const vector<unsigned int> &ids) {
 					log.push_back(ids);
 					resp(response_threads_info, plural
 						+ make_thread_info_pair(0u, 1717, "thread 1", false)
@@ -281,7 +282,7 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				auto update_requests = 0;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					update_requests++;
 
 				// ACT
@@ -306,7 +307,7 @@ namespace micro_profiler
 				// INIT
 				auto frontend_ = create_frontend();
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
 						+ make_pair(1321222u, unthreaded_statistic_types::node())
 						+ make_pair(1321221u, unthreaded_statistic_types::node())));
@@ -325,7 +326,7 @@ namespace micro_profiler
 				assert_equal(2u, context->statistics.size());
 
 				// INIT
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					resp(response_statistics_update, make_single_threaded(plural
 						+ make_pair(13u, unthreaded_statistic_types::node())));
 				});
@@ -344,7 +345,7 @@ namespace micro_profiler
 				auto frontend_ = create_frontend();
 				auto called = 0;
 
-				emulator->add_handler(request_update, [&] (ipc::server_session::response &resp) {
+				emulator->add_handler(request_update, [&] (server_session::response &resp) {
 					called++;
 					resp(response_statistics_update, make_single_threaded(plural
 						+ make_pair(1321222u, unthreaded_statistic_types::node())));

@@ -22,6 +22,7 @@
 
 #include "lifetime.h"
 
+#include <common/types.h>
 #include <functional>
 #include <logger/log.h>
 #include <mt/mutex.h>
@@ -30,7 +31,9 @@
 
 #define PREAMBLE "Marshalled Session: "
 
+using namespace coipc;
 using namespace std;
+using namespace tasker;
 
 namespace micro_profiler
 {
@@ -39,7 +42,7 @@ namespace micro_profiler
 		namespace
 		{
 			template <typename PtrT>
-			void schedule_destroy(tasker::queue &queue, PtrT &ptr)
+			void schedule_destroy(queue &queue, PtrT &ptr)
 			{
 				function<void ()> destroy = [ptr] {	};
 
@@ -66,7 +69,7 @@ namespace micro_profiler
 		}
 
 
-		marshalled_passive_session::marshalled_passive_session(tasker::queue &apartment_queue, ipc::channel &outbound)
+		marshalled_passive_session::marshalled_passive_session(queue &apartment_queue, channel &outbound)
 			: _lifetime(make_shared<lifetime>()), _apartment_queue(apartment_queue),
 				_outbound(make_shared<outbound_wrapper>(outbound))
 		{	}
@@ -80,7 +83,7 @@ namespace micro_profiler
 			schedule_destroy(_apartment_queue, _underlying);
 		}
 
-		void marshalled_passive_session::create_underlying(shared_ptr<ipc::server> underlying_server)
+		void marshalled_passive_session::create_underlying(shared_ptr<server> underlying_server)
 		{
 			LOG(PREAMBLE "scheduling an underlying session creation...") % A(this) % A(underlying_server.get());
 			lifetime::schedule_safe(_lifetime, _apartment_queue, [this, underlying_server] {
@@ -105,7 +108,7 @@ namespace micro_profiler
 		}
 
 
-		marshalled_passive_session::outbound_wrapper::outbound_wrapper(ipc::channel &underlying)
+		marshalled_passive_session::outbound_wrapper::outbound_wrapper(channel &underlying)
 			: _lifetime(make_shared<lifetime>()), _underlying(underlying)
 		{	}
 
